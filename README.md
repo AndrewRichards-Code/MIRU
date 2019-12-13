@@ -3,6 +3,8 @@
 # MIRU
 Low level Graphics API wrapper over D3D12 and Vulkan
 
+<img src="./logo.png" height="200px" valign="top" halign="left">
+
 # Supports:
 API: D3D12 and Vulkan
 
