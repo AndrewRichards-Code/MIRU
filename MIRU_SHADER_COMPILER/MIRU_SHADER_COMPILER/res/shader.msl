@@ -1,0 +1,62 @@
+#MIRU_SHADER_LANGUAGE
+
+#shader_type VERTEX
+#entry_point main
+#includes ""
+
+#vertex_input
+{
+	vec4 positions : 0, POSITION;
+}
+
+#interface_out
+{
+	vec4 positions : 0, POSITION;
+}
+
+#shader_resources
+{
+	struct cameraConstants : 0, UNIFORM
+	{
+		mat4 proj;
+		mat4 view;
+	};
+	struct modelConstants : 1, UNIFORM
+	{
+		mat4 modl;
+	};
+}
+
+#functions
+void main()
+{
+	interface_out.positions = shader_resources.cameraConstants.proj * shader_resources.cameraConstants.view * shader_resources.modelConstants.modl * vertex_input.positions;
+}
+
+#shader_end
+
+#shader_type FRAGMENT
+#entry_point main
+#includes ""
+
+#fragment_output 
+{
+	vec4 colour : 0, COLOUR;
+}
+
+#shader_resources
+{
+	struct fragmentConstants : 0, UNIFORM
+	{
+		vec4 colour;
+	};
+}
+
+#functions 
+void main()
+{
+	fragment_output.colour = shader_resources.fragmentConstants.colour;
+}
+
+#shader_end
+#END_OF_FILE

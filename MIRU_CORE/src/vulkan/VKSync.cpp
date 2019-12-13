@@ -1,0 +1,183 @@
+#include "common.h"
+#include "VKSync.h"
+
+#include "VKBuffer.h"
+#include "VKImage.h"
+
+using namespace miru;
+using namespace vulkan;
+
+//Fence
+Fence::Fence(Fence::CreateInfo* pCreateInfo)
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+{
+	m_CI = *pCreateInfo;
+
+	m_FenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	m_FenceCI.pNext = nullptr;
+	m_FenceCI.flags = m_CI.signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+
+	MIRU_ASSERT(vkCreateFence(m_Device, &m_FenceCI, nullptr, &m_Fence), "ERROR: VULKAN: Failed to a create Fence.");
+	VKSetName<VkFence>(m_Device, (uint64_t)m_Fence, m_CI.debugName);
+}
+
+Fence::~Fence()
+{
+	vkDestroyFence(m_Device, m_Fence, nullptr);
+}
+
+void Fence::Reset()
+{
+	MIRU_ASSERT(vkResetFences(m_Device, 1, &m_Fence), "ERROR: VULKAN: Failed to reset Fence.");
+}
+
+bool Fence::GetStatus()
+{
+	VkResult result = vkGetFenceStatus(m_Device, m_Fence);
+	if (result == VK_SUCCESS)
+		return false;
+	else if (result == VK_NOT_READY)
+		return true;
+	else if (result)
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to get status of Fence.");
+		return true;
+	}
+	else
+		return true;
+}
+
+bool Fence::Wait()
+{
+	VkResult result = vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, m_CI.timeout);
+	if (result == VK_SUCCESS)
+		return false;
+	else if (result == VK_TIMEOUT)
+		return true;
+	else if (result)
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to wait for Fence.");
+		return false;
+	}
+	else
+		return true;
+}
+
+//Semaphore
+Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+{
+	m_CI = *pCreateInfo;
+
+	m_SemaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	m_SemaphoreCI.pNext = nullptr;
+	m_SemaphoreCI.flags = 0;
+
+	MIRU_ASSERT(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create Semaphore.");
+	VKSetName<VkSemaphore>(m_Device, (uint64_t)m_Semaphore, m_CI.debugName);
+}
+
+Semaphore::~Semaphore()
+{
+	vkDestroySemaphore(m_Device, m_Semaphore, nullptr);
+}
+
+//Event
+Event::Event(Event::CreateInfo* pCreateInfo)
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+{
+	m_CI = *pCreateInfo;
+
+	m_EventCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	m_EventCI.pNext = nullptr;
+	m_EventCI.flags = 0;
+
+	MIRU_ASSERT(vkCreateEvent(m_Device, &m_EventCI, nullptr, &m_Event), "ERROR: VULKAN: Failed to a create Event.");
+	VKSetName<VkEvent>(m_Device, (uint64_t)m_Event, m_CI.debugName);
+}
+
+Event::~Event()
+{
+	vkDestroyEvent(m_Device, m_Event, nullptr);
+}
+
+void Event::Set()
+{
+	MIRU_ASSERT(vkSetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to set Event.");
+}
+
+void Event::Reset()
+{
+	MIRU_ASSERT(vkResetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to reset Event.");
+}
+
+bool Event::GetStatus()
+{
+	VkResult result = vkGetEventStatus(m_Device, m_Event);
+	if (result == VK_EVENT_SET)
+		return false;
+	else if (result == VK_EVENT_RESET)
+		return true;
+	else if (result)
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to get status of Event.");
+		return true;
+	}
+	else
+		return true;
+}
+
+//Barrier
+Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
+{
+	m_CI = *pCreateInfo;
+
+	switch (m_CI.type)
+	{
+	case Type::MEMORY:
+		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		m_MB.pNext = nullptr;
+		m_MB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
+		m_MB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
+	
+	case Type::BUFFER:
+		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		m_BMB.pNext = nullptr;
+		m_BMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
+		m_BMB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
+		m_BMB.srcQueueFamilyIndex = m_CI.srcQueueFamilyIndex;
+		m_BMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
+		m_BMB.buffer = std::dynamic_pointer_cast<vulkan::Buffer>(m_CI.pBuffer)->m_Buffer;
+		m_BMB.offset = m_CI.offset;
+		m_BMB.size = m_CI.size;
+
+	case Type::IMAGE:
+
+		if (std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentLayout != static_cast<VkImageLayout>(m_CI.oldLayout))
+			MIRU_WARN(true, "WARN: VULKAN: Provided oldLayout Layout does not match CurrentLayout. Using the CurrentLayout in Barrier.");
+
+		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		m_IMB.pNext = nullptr;
+		m_IMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
+		m_IMB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
+		m_IMB.srcQueueFamilyIndex = m_CI.srcQueueFamilyIndex;
+		m_IMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
+		m_IMB.oldLayout = static_cast<VkImageLayout>(m_CI.oldLayout);
+		m_IMB.newLayout = static_cast<VkImageLayout>(m_CI.newLayout);
+		m_IMB.image = std::dynamic_pointer_cast<vulkan::Image>(m_CI.pImage)->m_Image;
+		m_IMB.subresourceRange.aspectMask = static_cast<VkImageAspectFlagBits>(m_CI.subresoureRange.aspect);
+		m_IMB.subresourceRange.baseMipLevel = m_CI.subresoureRange.baseMipLevel;
+		m_IMB.subresourceRange.levelCount = m_CI.subresoureRange.mipLevelCount;
+		m_IMB.subresourceRange.baseArrayLayer = m_CI.subresoureRange.baseArrayLayer;
+		m_IMB.subresourceRange.layerCount= m_CI.subresoureRange.arrayLayerCount;
+
+		std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentLayout = static_cast<VkImageLayout>(m_CI.newLayout);
+
+	default:
+		return;
+	}
+}
+
+Barrier::~Barrier()
+{
+}

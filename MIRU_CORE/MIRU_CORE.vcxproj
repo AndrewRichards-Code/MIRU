@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{A85CAE6B-D45E-46B3-9FAF-CC609220443E}</ProjectGuid>
+    <RootNamespace>GEN</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>MIRU_CORE</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)/MIRU_CORE/src</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>common.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)/MIRU_CORE/src</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>common.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="src\crossplatform\Allocator.h" />
+    <ClInclude Include="src\crossplatform\CommandPoolBuffer.h" />
+    <ClInclude Include="src\crossplatform\DescriptorPoolSet.h" />
+    <ClInclude Include="src\crossplatform\Sync.h" />
+    <ClInclude Include="src\debug\RenderDoc.h" />
+    <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
+    <ClInclude Include="src\directx12\D3D12Sync.h" />
+    <ClInclude Include="src\directx12\D3D12Allocator.h" />
+    <ClInclude Include="src\miru_core.h" />
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\crossplatform\Buffer.h" />
+    <ClInclude Include="src\crossplatform\Context.h" />
+    <ClInclude Include="src\crossplatform\GraphicsAPI.h" />
+    <ClInclude Include="src\crossplatform\Image.h" />
+    <ClInclude Include="src\crossplatform\Swapchain.h" />
+    <ClInclude Include="src\directx12\D3D12Buffer.h" />
+    <ClInclude Include="src\directx12\D3D12Context.h" />
+    <ClInclude Include="src\directx12\D3D12Image.h" />
+    <ClInclude Include="src\directx12\D3D12Swapchain.h" />
+    <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
+    <ClInclude Include="src\vulkan\VKSync.h" />
+    <ClInclude Include="src\vulkan\VKAllocator.h" />
+    <ClInclude Include="src\vulkan\VKBuffer.h" />
+    <ClInclude Include="src\vulkan\VKCommandPoolBuffer.h" />
+    <ClInclude Include="src\vulkan\VKContext.h" />
+    <ClInclude Include="src\vulkan\VKImage.h" />
+    <ClInclude Include="src\vulkan\VKSwapchain.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\common.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">common.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="src\crossplatform\Allocator.cpp" />
+    <ClCompile Include="src\crossplatform\Buffer.cpp" />
+    <ClCompile Include="src\crossplatform\CommandPoolBuffer.cpp" />
+    <ClCompile Include="src\crossplatform\Context.cpp" />
+    <ClCompile Include="src\crossplatform\DescriptorPoolSet.cpp" />
+    <ClCompile Include="src\crossplatform\GraphicsAPI.cpp" />
+    <ClCompile Include="src\crossplatform\Sync.cpp" />
+    <ClCompile Include="src\crossplatform\Image.cpp" />
+    <ClCompile Include="src\crossplatform\Swapchain.cpp" />
+    <ClCompile Include="src\debug\RenderDoc.cpp" />
+    <ClCompile Include="src\directx12\D3D12Buffer.cpp" />
+    <ClCompile Include="src\directx12\D3D12Context.cpp" />
+    <ClCompile Include="src\directx12\D3D12Swapchain.cpp" />
+    <ClCompile Include="src\directx12\D3D12Sync.cpp" />
+    <ClCompile Include="src\directx12\D3D12Image.cpp" />
+    <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
+    <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
+    <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
+    <ClCompile Include="src\vulkan\VKAllocator.cpp" />
+    <ClCompile Include="src\vulkan\VkBuffer.cpp" />
+    <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
+    <ClCompile Include="src\vulkan\VKContext.cpp" />
+    <ClCompile Include="src\vulkan\VKSync.cpp" />
+    <ClCompile Include="src\vulkan\VKImage.cpp" />
+    <ClCompile Include="src\vulkan\VKSwapchain.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
