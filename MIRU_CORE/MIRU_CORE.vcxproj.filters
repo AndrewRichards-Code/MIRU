@@ -116,9 +116,6 @@
     <ClCompile Include="src\vulkan\VKAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkan\VkBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vulkan\VKContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -174,6 +171,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vulkan\VkBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

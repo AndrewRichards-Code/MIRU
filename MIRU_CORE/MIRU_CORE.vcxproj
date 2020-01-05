@@ -150,9 +150,9 @@
     <ClCompile Include="src\directx12\D3D12Image.cpp" />
     <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
+    <ClCompile Include="src\vulkan\VKBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />
-    <ClCompile Include="src\vulkan\VkBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKContext.cpp" />
     <ClCompile Include="src\vulkan\VKSync.cpp" />
