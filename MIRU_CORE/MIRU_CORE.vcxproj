@@ -106,6 +106,7 @@
     <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
     <ClInclude Include="src\directx12\D3D12Sync.h" />
     <ClInclude Include="src\directx12\D3D12Allocator.h" />
+    <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h" />
     <ClInclude Include="src\miru_core.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\crossplatform\Buffer.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="src\directx12\D3D12Image.cpp" />
     <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
+    <ClCompile Include="src\directx12\D3D12DescriptorPoolSet.cpp" />
     <ClCompile Include="src\vulkan\VKBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />

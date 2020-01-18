@@ -128,18 +128,21 @@ namespace shader_compiler
 {
 	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
-	//Example utils::BuildShaderBin("res/shaders/GLSL/basic.vert", "res/shaders/SPIR-V");
-	static void BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "")
+	//Example miru::shader_compiler::BuildCSO("res/shaders/basic.vert.hlsl", "res/bin");
+	static void BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Get DXC Directory
-#if _WIN64
+	#if _WIN64
 		std::string binDir = "\\x64";
-#elif _WIN32
+	#elif _WIN32
 		std::string binDir = "\\x86";
-#endif
+	#endif
 
 		std::string winKitSDKDir = "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0";
 		std::string dxcLocation = winKitSDKDir + binDir;
+
+		if (!compiler_dir.empty())
+			dxcLocation = compiler_dir;
 
 		size_t fileNamePos = filepath.find_last_of('/');
 		size_t hlslExtPos = filepath.find(".hlsl");
@@ -151,12 +154,12 @@ namespace shader_compiler
 
 		std::string shaderType;
 		{
-			if (filepath.find(".vert") != std::string::npos) { shaderType = "vs_";}
-			if (filepath.find(".tesc") != std::string::npos) { shaderType = "hs_";}
-			if (filepath.find(".tese") != std::string::npos) { shaderType = "ds_";}
-			if (filepath.find(".geom") != std::string::npos) { shaderType = "gs_";}
-			if (filepath.find(".frag") != std::string::npos) { shaderType = "ps_";}
-			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_";}
+			if (filepath.find(".vert") != std::string::npos) { shaderType = "vs_"; }
+			if (filepath.find(".tesc") != std::string::npos) { shaderType = "hs_"; }
+			if (filepath.find(".tese") != std::string::npos) { shaderType = "ds_"; }
+			if (filepath.find(".geom") != std::string::npos) { shaderType = "gs_"; }
+			if (filepath.find(".frag") != std::string::npos) { shaderType = "ps_"; }
+			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_"; }
 		}
 		const std::string shaderModel = "6_0";
 
@@ -164,7 +167,7 @@ namespace shader_compiler
 
 		//Run dxc
 		printf("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
-		printf(("Execute: " + dxcLocation + "> " + command + "\n").c_str());
+		printf(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
 		system(("cd " + dxcLocation + " && " + command).c_str());
 		printf("\n");
 	}

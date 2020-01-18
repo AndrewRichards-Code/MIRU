@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <filesystem>
+
 /*
 Usage: glslangValidator [option]... [file]...
 
@@ -167,48 +168,52 @@ namespace shader_compiler
 {
 	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
-	//Example utils::BuildSPIRV("res/shaders/GLSL/basic.vert", "res/shaders/SPIR-V");
-	static void BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& additionCommandlineArgs = "")
+	//Example miru::shader_compiler::BuildSPV("res/shaders/basic.vert.hlsl", "res/bin");
+	void BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Vulkan SDK Directory
-#if _WIN64
+	#if _WIN64
 		std::string binDir = "\\Bin";
-#elif _WIN32
+	#elif _WIN32
 		std::string binDir = "\\Bin32";
-#elif __linux__ && (__x86_64__ || _M_X64)
+	#elif __linux__ && (__x86_64__ || _M_X64)
 		std::string binDir = "\\x86_64\\bin";
-#elif __linux__ && (__i386 || _M_IX86)
+	#elif __linux__ && (__i386 || _M_IX86)
 		std::string binDir = "\\x86\\bin";
-#endif
+	#endif
 
-#if !(_CRT_SECURE_NO_WARNINGS) && (_WIN32)
+	#if !(_CRT_SECURE_NO_WARNINGS) && (_WIN32)
 		char* buffer = nullptr;
 		size_t size = 0;
 		_dupenv_s(&buffer, &size, "VULKAN_SDK");
 		std::string vulkanSDKDir = (buffer != nullptr) ? std::string(buffer) : std::string("");
-#else
+	#else
 		std::string vulkanSDKDir = std::getenv("VULKAN_SDK");
-#endif
+	#endif
 
 		std::string glslValiditorLocation = vulkanSDKDir + binDir;
 
+		if (!compiler_dir.empty())
+			glslValiditorLocation = compiler_dir;
+
 		size_t fileNamePos = filepath.find_last_of('/');
-		std::string filename = filepath.substr(fileNamePos);
+		size_t hlslExtPos = filepath.find(".hlsl");
+		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
 		std::string currentWorkingDir = std::filesystem::current_path().string();
 		std::string absoluteSrcDir = currentWorkingDir + "/" + filepath;
 		std::string absoluteDstDir = currentWorkingDir + "/" + outputDirectory + filename + ".spv";
 
-		std::string command = "glslangValidator -V " + absoluteSrcDir + " -o " + absoluteDstDir + additionCommandlineArgs;
+		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir + additionCommandlineArgs;
 
 		//Run glslangValidator
-		printf("MIRU_SHADER_COMPILER: GLSL -> SPV using GLSLANGVALIDATOR\n");
-		printf(("Execute: " + glslValiditorLocation + "> " + command + "\n").c_str());
+		printf("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
+		printf(("Executing: " + glslValiditorLocation + "> " + command + "\n").c_str());
 		system(("cd " + glslValiditorLocation + " && " + command).c_str());
 		printf("\n");
 	}
 
-	static void ClearConsoleScreenSPV()
+	void ClearConsoleScreenSPV()
 	{
 		system("CLS");
 	}
