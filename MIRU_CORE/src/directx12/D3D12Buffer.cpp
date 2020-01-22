@@ -93,51 +93,35 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 
 	switch (m_CI.type)
 	{
-		case Type::STORAGE:
 		case Type::UNIFORM_TEXEL:
-		{
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
-			srvDesc.Format = resourceDesc.Format;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-			srvDesc.Shader4ComponentMapping = D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0;
-			srvDesc.Buffer.FirstElement = m_CI.offset;
-			srvDesc.Buffer.NumElements = m_CI.size;
-			srvDesc.Buffer.StructureByteStride = m_CI.stride;
-			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-			m_Device->CreateShaderResourceView(buffer, &srvDesc, descriptorHandle);
-		}
-		case Type::STORAGE_TEXEL:
-		{
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
-			uavDesc.Format = resourceDesc.Format;
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-			uavDesc.Buffer.FirstElement = m_CI.offset;
-			uavDesc.Buffer.NumElements = m_CI.size;
-			uavDesc.Buffer.StructureByteStride = m_CI.stride;
-			uavDesc.Buffer.CounterOffsetInBytes = 0;
-			uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-			m_Device->CreateUnorderedAccessView(buffer, nullptr, &uavDesc, descriptorHandle);
-		}
 		case Type::UNIFORM:
 		{
-			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-			cbvDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			cbvDesc.SizeInBytes = m_CI.size;
-			m_Device->CreateConstantBufferView(&cbvDesc, descriptorHandle);
+			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_CBVDesc.SizeInBytes = m_CI.size;
+		}
+		case Type::STORAGE_TEXEL:
+		case Type::STORAGE:
+		{
+			m_UAVDesc.Format = resourceDesc.Format;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			m_UAVDesc.Buffer.FirstElement = m_CI.offset;
+			m_UAVDesc.Buffer.NumElements = m_CI.size;
+			m_UAVDesc.Buffer.StructureByteStride = m_CI.stride;
+			m_UAVDesc.Buffer.CounterOffsetInBytes = 0;
+			m_UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 		}
 		case Type::INDEX:
 		{
-			D3D12_INDEX_BUFFER_VIEW ibv;
-			ibv.BufferLocation = buffer->GetGPUVirtualAddress();
-			ibv.SizeInBytes = m_CI.size;
-			ibv.Format = m_CI.stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+			
+			m_IBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_IBVDesc.SizeInBytes = m_CI.size;
+			m_IBVDesc.Format = m_CI.stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 		}
 		case Type::VERTEX:
 		{
-			D3D12_VERTEX_BUFFER_VIEW vbv;
-			vbv.BufferLocation = buffer->GetGPUVirtualAddress();
-			vbv.SizeInBytes = m_CI.size;
-			vbv.StrideInBytes = m_CI.stride;
+			m_VBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_VBVDesc.SizeInBytes = m_CI.size;
+			m_VBVDesc.StrideInBytes = m_CI.stride;
 		}
 		/*case Type::TRANSFORM_FEEDBACK:
 		{

@@ -16,8 +16,10 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		ID3D12DescriptorHeap* m_DescriptorPool[2]; //[0] == HEAP_TYPE_SAMPLER and [1] == HEAP_TYPE_CBV_SRV_UAV
-		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDesc;
+		//[0] == HEAP_TYPE_SAMPLER and [1] == HEAP_TYPE_CBV_SRV_UAV
+		//[2] == HEAP_TYPE_RTV and [3] == HEAP_TYPE_DSV
+		ID3D12DescriptorHeap* m_DescriptorPool[4] = {};
+		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDesc[4] = {};
 	};
 
 	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
@@ -32,7 +34,7 @@ namespace d3d12
 		ID3D12Device* m_Device;
 
 		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRanges;
-		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTable
+		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTable;
 	};
 
 	class DescriptorSet final : public crossplatform::DescriptorSet //DescriptorTables???
@@ -46,21 +48,15 @@ namespace d3d12
 		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		void Update() override;
 
-	private:
-		VkDescriptorType BufferViewTypeToVkDescriptorType(crossplatform::BufferView::Type type);
-		VkDescriptorType ImageUsageToVkDescriptorType(crossplatform::Image::UsageBit usage, bool sampler, bool image);
-
 		//Members
 	public:
-		VkDevice& m_Device;
+		ID3D12Device* m_Device;
+		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 
-		std::vector<VkDescriptorSet> m_DescriptorSets;
-		VkDescriptorSetAllocateInfo m_DescriptorSetAI;
-		std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
-
-		std::vector<VkWriteDescriptorSet> m_WriteDescriptorSets;
-		std::map<uint32_t, std::map<uint32_t, std::vector<VkDescriptorBufferInfo>>> m_DescriptorBufferInfo;
-		std::map<uint32_t, std::map<uint32_t, std::vector<VkDescriptorImageInfo>>> m_DescriptorImageInfo;
+		D3D12_CPU_DESCRIPTOR_HANDLE m_CBV_SRV_UAV_DescHeapCPUHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_Sampler_DescHeapCPUHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_RTV_DescHeapCPUHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_DSV_DescHeapCPUHandle = {};
 	};
 }
 }

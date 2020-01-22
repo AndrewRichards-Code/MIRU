@@ -35,6 +35,9 @@ namespace crossplatform
 		UNIFORM_BUFFER_DYNAMIC = 8,
 		STORAGE_BUFFER_DYNAMIC = 9,
 		INPUT_ATTACHMENT = 10,
+
+		D3D12_RENDER_TARGET_VIEW = 0x1000001, 
+		D3D12_DEPTH_STENCIL_VIEW = 0x1000002
 	};
 	class DescriptorPool
 	{		
@@ -120,7 +123,7 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
-		virtual void AddImage(uint32_t iIndex, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
+		virtual void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		virtual void Update() = 0;
 
 	protected:

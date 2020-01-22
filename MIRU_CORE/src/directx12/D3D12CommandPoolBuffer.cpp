@@ -191,36 +191,36 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 	{
 		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
 		{
-			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-			rtvDesc.Format = resourceDesc.Format;
+			D3D12_RENDER_TARGET_VIEW_DESC m_RTVDesc = {};
+			m_RTVDesc.Format = resourceDesc.Format;
 			switch (resourceDesc.Dimension)
 			{
 			case D3D12_RESOURCE_DIMENSION_UNKNOWN:
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_UNKNOWN;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_UNKNOWN;
 				break;
 			}
 			case D3D12_RESOURCE_DIMENSION_BUFFER:
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
-				rtvDesc.Buffer.FirstElement = 0;
-				rtvDesc.Buffer.NumElements = static_cast<UINT>(resourceDesc.Width);
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
+				m_RTVDesc.Buffer.FirstElement = 0;
+				m_RTVDesc.Buffer.NumElements = static_cast<UINT>(resourceDesc.Width);
 				break;
 			}
 			case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
 			{
 				if (resourceDesc.DepthOrArraySize > 1)
 				{
-					rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
-					rtvDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-					rtvDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-					rtvDesc.Texture1DArray.MipSlice = i;
+					m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+					m_RTVDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+					m_RTVDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+					m_RTVDesc.Texture1DArray.MipSlice = i;
 					break;
 				}
 				else
 				{
-					rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-					rtvDesc.Texture1D.MipSlice = i;
+					m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+					m_RTVDesc.Texture1D.MipSlice = i;
 					break;
 				}
 			}
@@ -230,18 +230,18 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 				{
 					if (resourceDesc.SampleDesc.Count > 1)
 					{
-						rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
-						rtvDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						rtvDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+						m_RTVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+						m_RTVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
 						break;
 					}
 					else
 					{
-						rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-						rtvDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						rtvDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						rtvDesc.Texture2D.MipSlice = i;
-						rtvDesc.Texture2D.PlaneSlice = 0;
+						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+						m_RTVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+						m_RTVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+						m_RTVDesc.Texture2D.MipSlice = i;
+						m_RTVDesc.Texture2D.PlaneSlice = 0;
 						break;
 					}
 				}
@@ -249,34 +249,34 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 				{
 					if (resourceDesc.SampleDesc.Count > 1)
 					{
-						rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 						break;
 					}
 					else
 					{
-						rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-						rtvDesc.Texture2D.MipSlice = i;
-						rtvDesc.Texture2D.PlaneSlice = 0;
+						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+						m_RTVDesc.Texture2D.MipSlice = i;
+						m_RTVDesc.Texture2D.PlaneSlice = 0;
 						break;
 					}
 				}
 			}
 			case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-				rtvDesc.Texture3D.FirstWSlice = subresourceRanges[h].baseArrayLayer;
-				rtvDesc.Texture3D.WSize = subresourceRanges[h].arrayLayerCount;
-				rtvDesc.Texture3D.MipSlice = i;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+				m_RTVDesc.Texture3D.FirstWSlice = subresourceRanges[h].baseArrayLayer;
+				m_RTVDesc.Texture3D.WSize = subresourceRanges[h].arrayLayerCount;
+				m_RTVDesc.Texture3D.MipSlice = i;
 				break;
 			}
 			}
-			m_Device->CreateRenderTargetView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&rtvDesc*/, handle);
+			m_Device->CreateRenderTargetView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&m_RTVDesc*/, handle);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(handle, clear.float32, 0, nullptr);
 			handle.ptr += rtvDescriptorSize;
 		}
 	}
 
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(handle, clear.float32, 0, nullptr);
 	SAFE_RELEASE(heap);
 }
 void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
@@ -302,31 +302,31 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	{
 		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
 		{
-			D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-			dsvDesc.Format = resourceDesc.Format;
+			D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc;
+			m_DSVDesc.Format = resourceDesc.Format;
 			switch (resourceDesc.Dimension)
 			{
 			case D3D12_RESOURCE_DIMENSION_BUFFER:
 			case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
 			case D3D12_RESOURCE_DIMENSION_UNKNOWN:
 			{
-				dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_UNKNOWN;
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_UNKNOWN;
 				break;
 			}
 			case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
 			{
 				if (resourceDesc.DepthOrArraySize > 1)
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
-					dsvDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-					dsvDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-					dsvDesc.Texture1DArray.MipSlice = i;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+					m_DSVDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+					m_DSVDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+					m_DSVDesc.Texture1DArray.MipSlice = i;
 					break;
 				}
 				else
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
-					dsvDesc.Texture1D.MipSlice = i;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+					m_DSVDesc.Texture1D.MipSlice = i;
 					break;
 				}
 			}
@@ -336,17 +336,17 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 				{
 					if (resourceDesc.SampleDesc.Count > 1)
 					{
-						dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
-						dsvDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						dsvDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
+						m_DSVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+						m_DSVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
 						break;
 					}
 					else
 					{
-						dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-						dsvDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						dsvDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						dsvDesc.Texture2D.MipSlice = i;
+						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+						m_DSVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
+						m_DSVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
+						m_DSVDesc.Texture2D.MipSlice = i;
 						break;
 					}
 				}
@@ -354,19 +354,19 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 				{
 					if (resourceDesc.SampleDesc.Count > 1)
 					{
-						dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 						break;
 					}
 					else
 					{
-						dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-						dsvDesc.Texture2D.MipSlice = i;
+						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+						m_DSVDesc.Texture2D.MipSlice = i;
 						break;
 					}
 				}
 			}
 			}
-			m_Device->CreateDepthStencilView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&dsvDesc*/, handle);
+			m_Device->CreateDepthStencilView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&m_DSVDesc*/, handle);
 			handle.ptr += rtvDescriptorSize;
 			descriptorCount++;
 		}

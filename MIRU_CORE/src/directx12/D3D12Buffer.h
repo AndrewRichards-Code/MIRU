@@ -34,6 +34,11 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC m_CBVDesc;
+		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc;
+		D3D12_INDEX_BUFFER_VIEW m_IBVDesc;
+		D3D12_VERTEX_BUFFER_VIEW m_VBVDesc;
 	};
 }
 }

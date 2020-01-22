@@ -21,13 +21,13 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ResourceDesc.SampleDesc.Quality = 0;
 	m_ResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	D3D12_CLEAR_VALUE* clear = nullptr;
-	m_CurrentResourceState = ToD3D12ImageLayout(m_CI.layout);
+
+	m_CurrentResourceState = D3D12_RESOURCE_STATE_GENERIC_READ; // ToD3D12ImageLayout(m_CI.layout);
 
 	D3D12_RESOURCE_ALLOCATION_INFO ai = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
 
 	m_Resource.device = m_Device;
-	m_Resource.type = crossplatform::Resource::Type::BUFFER;
+	m_Resource.type = crossplatform::Resource::Type::IMAGE;
 	m_Resource.resource = (uint64_t)m_Image; // This image handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
 	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);;
 	m_Resource.size = ai.SizeInBytes;
@@ -37,6 +37,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	{
 		m_CI.pMemoryBlock->AddResource(m_Resource);
 
+		D3D12_CLEAR_VALUE* clear = nullptr;
 		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_CurrentResourceState, clear, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 		D3D12SetName(m_Image, m_CI.debugName);
 
@@ -350,52 +351,49 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 	D3D12_RESOURCE_DESC resourceDesc = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_ResourceDesc;
 	ID3D12Resource* image = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_Image;
-	D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = {0};
 
 	//RTV
-	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 	{
-		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-		rtvDesc.Format = resourceDesc.Format;
+		m_RTVDesc.Format = resourceDesc.Format;
 
 		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{
-			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-			rtvDesc.Texture1D.MipSlice = i;
+			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+			m_RTVDesc.Texture1D.MipSlice = i;
 			break;
 		}
 		case Image::Type::TYPE_2D:
 		{
 			if (resourceDesc.SampleDesc.Count > 1)
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 				break;
 			}
 			else
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-				rtvDesc.Texture2D.MipSlice = i;
-				rtvDesc.Texture2D.PlaneSlice = 0;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+				m_RTVDesc.Texture2D.MipSlice = i;
+				m_RTVDesc.Texture2D.PlaneSlice = 0;
 				break;
 			}
 		}
 		case  Image::Type::TYPE_3D:
 		{
-			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-			rtvDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
-			rtvDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
-			rtvDesc.Texture3D.MipSlice = i;
+			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+			m_RTVDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
+			m_RTVDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
+			m_RTVDesc.Texture3D.MipSlice = i;
 			break;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
 		{
-			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
-			rtvDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-			rtvDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			rtvDesc.Texture1DArray.MipSlice = i;
+			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+			m_RTVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+			m_RTVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+			m_RTVDesc.Texture1DArray.MipSlice = i;
 			break;
 		}
 		case Image::Type::TYPE_CUBE:
@@ -404,64 +402,60 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		{
 			if (resourceDesc.SampleDesc.Count > 1)
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
-				rtvDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				rtvDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+				m_RTVDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_RTVDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
 				break;
 			}
 			else
 			{
-				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-				rtvDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				rtvDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-				rtvDesc.Texture2DArray.MipSlice = i;
-				rtvDesc.Texture2DArray.PlaneSlice = 0;
+				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+				m_RTVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_RTVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_RTVDesc.Texture2DArray.MipSlice = i;
+				m_RTVDesc.Texture2DArray.PlaneSlice = 0;
 				break;
 			}
 		}
 		}
-		m_Device->CreateRenderTargetView(image, &rtvDesc, descriptorHandle);
-		descriptorHandle.ptr += rtvDescriptorSize;
 	}
 
 	//DSV
 	if(std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
 	{
-		UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 		{
-			D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-			dsvDesc.Format = resourceDesc.Format;
-			dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+			m_DSVDesc.Format = resourceDesc.Format;
+			m_DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
 			switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 			{
 			case Image::Type::TYPE_1D:
 			{
-				dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
-				dsvDesc.Texture1D.MipSlice = i;
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+				m_DSVDesc.Texture1D.MipSlice = i;
 				break;
 			}
 			case Image::Type::TYPE_2D:
 			{
 				if (resourceDesc.SampleDesc.Count > 1)
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 					break;
 				}
 				else
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-					dsvDesc.Texture2D.MipSlice = i;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+					m_DSVDesc.Texture2D.MipSlice = i;
 					break;
 				}
 			}
 			case Image::Type::TYPE_1D_ARRAY:
 			{
-				dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
-				dsvDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				dsvDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-				dsvDesc.Texture1DArray.MipSlice = i;
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+				m_DSVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_DSVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_DSVDesc.Texture1DArray.MipSlice = i;
 				break;
 			}
 			case Image::Type::TYPE_3D:
@@ -471,169 +465,159 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			{
 				if (resourceDesc.SampleDesc.Count > 1)
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
-					dsvDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-					dsvDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
+					m_DSVDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+					m_DSVDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
 					break;
 				}
 				else
 				{
-					dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-					dsvDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-					dsvDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-					dsvDesc.Texture2DArray.MipSlice = i;
+					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+					m_DSVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+					m_DSVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+					m_DSVDesc.Texture2DArray.MipSlice = i;
 					break;
 				}
 			}
 			}
-			m_Device->CreateDepthStencilView(image, &dsvDesc, descriptorHandle);
-			descriptorHandle.ptr += dsvDescriptorSize;
 		}
 	}
 
 	//SRV
-	UINT srvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
-		srvDesc.Format = resourceDesc.Format;
+		m_SRVDesc.Format = resourceDesc.Format;
 
 		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
-			srvDesc.Texture1D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-			srvDesc.Texture1D.MipLevels = m_CI.subresourceRange.mipLevelCount;
-			srvDesc.Texture1D.ResourceMinLODClamp = 0.0f;
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+			m_SRVDesc.Texture1D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+			m_SRVDesc.Texture1D.MipLevels = m_CI.subresourceRange.mipLevelCount;
+			m_SRVDesc.Texture1D.ResourceMinLODClamp = 0.0f;
 			break;
 		}
 		case Image::Type::TYPE_2D:
 		{
 			if (resourceDesc.SampleDesc.Count > 1)
 			{
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+				m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 				break;
 			}
 			else
 			{
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				srvDesc.Texture2D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-				srvDesc.Texture2D.MipLevels = m_CI.subresourceRange.mipLevelCount;
-				srvDesc.Texture2D.PlaneSlice = 0;
-				srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+				m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				m_SRVDesc.Texture2D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+				m_SRVDesc.Texture2D.MipLevels = m_CI.subresourceRange.mipLevelCount;
+				m_SRVDesc.Texture2D.PlaneSlice = 0;
+				m_SRVDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 				break;
 			}
 		}
 		case  Image::Type::TYPE_3D:
 		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-			srvDesc.Texture3D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-			srvDesc.Texture3D.MipLevels = m_CI.subresourceRange.mipLevelCount;
-			srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+			m_SRVDesc.Texture3D.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+			m_SRVDesc.Texture3D.MipLevels = m_CI.subresourceRange.mipLevelCount;
+			m_SRVDesc.Texture3D.ResourceMinLODClamp = 0.0f;
 			break;
 		}
 		case Image::Type::TYPE_CUBE:
 		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-			srvDesc.TextureCube.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-			srvDesc.TextureCube.MipLevels = m_CI.subresourceRange.mipLevelCount;
-			srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+			m_SRVDesc.TextureCube.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+			m_SRVDesc.TextureCube.MipLevels = m_CI.subresourceRange.mipLevelCount;
+			m_SRVDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
 		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
-			srvDesc.Texture1DArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-			srvDesc.Texture1DArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
-			srvDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-			srvDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			srvDesc.Texture1DArray.ResourceMinLODClamp = 0.0f;
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+			m_SRVDesc.Texture1DArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+			m_SRVDesc.Texture1DArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
+			m_SRVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+			m_SRVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+			m_SRVDesc.Texture1DArray.ResourceMinLODClamp = 0.0f;
 			break;
 		}
 		case Image::Type::TYPE_2D_ARRAY:
 		{
 			if (resourceDesc.SampleDesc.Count > 1)
 			{
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
-				srvDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				srvDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+				m_SRVDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_SRVDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
 				break;
 			}
 			else
 			{
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-				srvDesc.Texture2DArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
-				srvDesc.Texture2DArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
-				srvDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				srvDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-				srvDesc.Texture2DArray.PlaneSlice = 0;
-				srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
+				m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+				m_SRVDesc.Texture2DArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
+				m_SRVDesc.Texture2DArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
+				m_SRVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_SRVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_SRVDesc.Texture2DArray.PlaneSlice = 0;
+				m_SRVDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
 				break;
 			}
 		}
 		case Image::Type::TYPE_CUBE_ARRAY:
 		{
-			srvDesc.TextureCubeArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;;
-			srvDesc.TextureCubeArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
-			srvDesc.TextureCubeArray.First2DArrayFace = 0;
-			srvDesc.TextureCubeArray.NumCubes = resourceDesc.DepthOrArraySize / 6;
-			srvDesc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
+			m_SRVDesc.TextureCubeArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;;
+			m_SRVDesc.TextureCubeArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
+			m_SRVDesc.TextureCubeArray.First2DArrayFace = 0;
+			m_SRVDesc.TextureCubeArray.NumCubes = resourceDesc.DepthOrArraySize / 6;
+			m_SRVDesc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
 		}
 		}
-		m_Device->CreateShaderResourceView(image, &srvDesc, descriptorHandle);
-		descriptorHandle.ptr += srvDescriptorSize;
 	}
 
 	//UAV
-	UINT uavDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 	{
-		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
-		uavDesc.Format = resourceDesc.Format;
+		m_UAVDesc.Format = resourceDesc.Format;
 
 		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
-			uavDesc.Texture1D.MipSlice = i;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+			m_UAVDesc.Texture1D.MipSlice = i;
 			break;
 		}
 		case Image::Type::TYPE_2D:
 		{
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			uavDesc.Texture2D.MipSlice = i;
-			uavDesc.Texture2D.PlaneSlice = 0;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			m_UAVDesc.Texture2D.MipSlice = i;
+			m_UAVDesc.Texture2D.PlaneSlice = 0;
 			break;
 		}
 		case Image::Type::TYPE_3D:
 		{
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-			uavDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
-			uavDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
-			uavDesc.Texture3D.MipSlice = i;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+			m_UAVDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
+			m_UAVDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
+			m_UAVDesc.Texture3D.MipSlice = i;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
 		{
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
-			uavDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-			uavDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			uavDesc.Texture1DArray.MipSlice = i;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+			m_UAVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+			m_UAVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+			m_UAVDesc.Texture1DArray.MipSlice = i;
 			break;
 		}
 		case Image::Type::TYPE_CUBE:
 		case Image::Type::TYPE_CUBE_ARRAY:
 		case Image::Type::TYPE_2D_ARRAY:
 		{
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-			uavDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-			uavDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			uavDesc.Texture2DArray.MipSlice = i;
-			uavDesc.Texture2DArray.PlaneSlice = 0;
+			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+			m_UAVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+			m_UAVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+			m_UAVDesc.Texture2DArray.MipSlice = i;
+			m_UAVDesc.Texture2DArray.PlaneSlice = 0;
 			break;
 		}
 		}
-		m_Device->CreateUnorderedAccessView(image, nullptr, &uavDesc, descriptorHandle);
-		descriptorHandle.ptr += uavDescriptorSize;
 	}
 }
 

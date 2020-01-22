@@ -25,8 +25,8 @@ int main()
 	GraphicsAPI api;
 	//api.LoadRenderDoc();
 	api.SetUseSetName();
-	api.SetAPI(GraphicsAPI::API::D3D12);
-	//api.SetAPI(GraphicsAPI::API::VULKAN);
+	//api.SetAPI(GraphicsAPI::API::D3D12);
+	api.SetAPI(GraphicsAPI::API::VULKAN);
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
@@ -76,23 +76,65 @@ int main()
 	cmdBufferCI.commandBufferCount = 2;
 	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
-	/*MemoryBlock::CreateInfo mbCI;
+	MemoryBlock::CreateInfo mbCI;
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
 	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_1MB;
 	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
 
-	float data = 5.0f;
-	Buffer::CreateInfo bufferCI;
-	bufferCI.debugName = "Buffer";
-	bufferCI.device = context->GetDevice();
-	bufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
-	bufferCI.size = 4;
-	bufferCI.data = &data;
-	bufferCI.pMemoryBlock = cpu_mb_0;
-	Ref<Buffer> buffer0 = Buffer::Create(&bufferCI);
-	Ref<Buffer> buffer1 = Buffer::Create(&bufferCI);*/
+	float data[16] =
+	{
+		0.00f, 0.00f, 0.00f, 0.00f,
+		0.33f, 0.33f, 0.33f, 0.33f,
+		0.66f, 0.66f, 0.66f, 0.66f,
+		1.00f, 1.00f, 1.00f, 1.00f
+	};
+	Image::CreateInfo texture1CI;
+	texture1CI.debugName = "Texture1";
+	texture1CI.device = context->GetDevice();
+	texture1CI.type = Image::Type::TYPE_2D;
+	texture1CI.format = Image::Format::B8G8R8A8_UNORM;
+	texture1CI.width = 2;
+	texture1CI.height = 2; 
+	texture1CI.depth = 1;
+	texture1CI.mipLevels = 1;
+	texture1CI.arrayLayers = 1;
+	texture1CI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	texture1CI.usage = Image::UsageBit::SAMPLED_BIT;
+	texture1CI.layout = Image::Layout::UNKNOWN;
+	texture1CI.size = sizeof(data);
+	texture1CI.data = data;
+	texture1CI.pMemoryBlock = cpu_mb_0;
+	Ref<Image> texture1 = Image::Create(&texture1CI);
+
+	ImageView::CreateInfo texture1viewCI;
+	texture1viewCI.debugName = "Texture1View";
+	texture1viewCI.device = context->GetDevice();
+	texture1viewCI.pImage = texture1;
+	texture1viewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+	Ref<ImageView> texture1view = ImageView::Create(&texture1viewCI);
+
+	DescriptorPool::CreateInfo descPoolCI;
+	descPoolCI.debugName = "DescriptorPool1";
+	descPoolCI.device = context->GetDevice();
+	descPoolCI.poolSizes = { {DescriptorType::SAMPLED_IMAGE, 1} };
+	descPoolCI.maxSets = 1;
+	Ref<DescriptorPool> descPool = DescriptorPool::Create(&descPoolCI);
+
+	DescriptorSetLayout::CreateInfo descSetLayoutCI;
+	descSetLayoutCI.debugName = "DescriptorSetLayout1";
+	descSetLayoutCI.device = context->GetDevice();
+	descSetLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::SAMPLED_IMAGE, 1, ShaderStageBit::ALL_GRAPHICS} };
+	Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::Create(&descSetLayoutCI);
+
+	DescriptorSet::CreateInfo descSetCI;
+	descSetCI.debugName = "DescriptorSetLayout1";
+	descSetCI.pDescriptorPool = descPool;
+	descSetCI.pDescriptorSetLayouts = { descSetLayout };
+	Ref<DescriptorSet> descSet = DescriptorSet::Create(&descSetCI);
+	descSet->AddImage(0, 0, { { nullptr, texture1view, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descSet->Update();
 
 	Image::CreateInfo swapchainTexCI;
 	swapchainTexCI.debugName = "";

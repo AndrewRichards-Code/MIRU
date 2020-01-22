@@ -40,6 +40,13 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
+
+		D3D12_RENDER_TARGET_VIEW_DESC m_RTVDesc = {};
+		D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc = {};
+		D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc = {};
+		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc = {};
+
+
 	};
 }
 }

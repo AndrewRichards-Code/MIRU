@@ -217,5 +217,5 @@ namespace miru
 #endif
 
 //Triggered if x != 0
-#define MIRU_ASSERT(x, y) if(x != 0) { printf("MIRU_ASSERT: %s(%d): ERROR_CODE: %d - %s\n", __FILE__, __LINE__, static_cast<int>(x), y); DEBUG_BREAK; }
-#define MIRU_WARN(x, y) if(x != 0) { printf("MIRU_WARN: %s(%d): ERROR_CODE: %d - %s\n", __FILE__, __LINE__, static_cast<int>(x), y); }
+#define MIRU_ASSERT(x, y) if(x != 0) { printf("MIRU_ASSERT: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); DEBUG_BREAK; }
+#define MIRU_WARN(x, y) if(x != 0) { printf("MIRU_WARN: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); }

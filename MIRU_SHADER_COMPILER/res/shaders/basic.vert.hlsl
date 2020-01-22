@@ -1,27 +1,30 @@
 struct VS_IN
 {
-    float4 position : POSITION;
+    [[vk::location(0)]] float4 position : POSITION;
 };
 
 struct VS_OUT
 {
-    float4 position : SV_POSITION;
+    [[vk::location(0)]] float4 position : SV_POSITION;
 };
 
-cbuffer Camera: register(b0)
+struct Camera
 {
     float4x4 proj;
     float4x4 view;
-}
+};
+[[vk::binding(0, 0)]] ConstantBuffer<Camera> camera;
 
-cbuffer Model: register(b1)
+struct Model
 {
     float4x4 modl;
-}
+};
+[[vk::binding(1, 0)]] ConstantBuffer<Model> model;
+
 
 VS_OUT main(VS_IN IN)
 {
     VS_OUT OUT;
-    OUT.position = mul(proj * view * modl, IN.position);
+    OUT.position = mul(camera.proj * camera.view * model.modl, IN.position);
 	return OUT;
 }
