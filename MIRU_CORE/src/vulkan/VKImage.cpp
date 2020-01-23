@@ -48,10 +48,13 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 Image::~Image()
 {
-	vkDestroyImage(m_Device, m_Image, nullptr);
+	if (!m_SwapchainImage)
+	{
+		vkDestroyImage(m_Device, m_Image, nullptr);
 
-	if(m_CI.pMemoryBlock)
-		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+		if (m_CI.pMemoryBlock)
+			m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+	}
 }
 
 void Image::GenerateMipmaps()

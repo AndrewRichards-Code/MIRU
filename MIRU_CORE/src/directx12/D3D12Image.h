@@ -9,12 +9,12 @@ namespace d3d12
 	{
 		//Methods
 	public:
+		Image() {};
 		Image(Image::CreateInfo* pCreateInfo);
 		~Image();
 
-		void GenerateMipmaps() override;
-
 	private:
+		void GenerateMipmaps();
 		D3D12_RESOURCE_DIMENSION ToD3D12ImageType(Image::Type type) const;
 		DXGI_FORMAT ToD3D12ImageFormat(Image::Format format) const;
 

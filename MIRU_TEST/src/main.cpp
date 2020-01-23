@@ -1,8 +1,4 @@
 #include "miru_core.h"
-#include "vulkan/VKImage.h"
-#include "directx12/D3D12Image.h"
-#include "vulkan/VKSwapchain.h"
-#include "directx12/D3D12Swapchain.h"
 
 using namespace miru;
 using namespace crossplatform;
@@ -27,7 +23,7 @@ int main()
 	api.SetUseSetName();
 	api.SetAPI(GraphicsAPI::API::D3D12);
 	//api.SetAPI(GraphicsAPI::API::VULKAN);
-
+	
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
 	contextCI.api_version_minor = 1;
@@ -144,42 +140,9 @@ int main()
 	descSet->AddImage(0, 0, { { nullptr, texture1view, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descSet->Update();
 
-	Image::CreateInfo swapchainTexCI;
-	swapchainTexCI.debugName = "";
-	swapchainTexCI.device = context->GetDevice();
-	swapchainTexCI.type = Image::Type::TYPE_2D;
-	swapchainTexCI.format = Image::Format::B8G8R8A8_UNORM;
-	swapchainTexCI.width = swapchainTexCI.height = swapchainTexCI.depth = 1;
-	swapchainTexCI.mipLevels = 1;
-	swapchainTexCI.arrayLayers = 1;
-	swapchainTexCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
-	swapchainTexCI.usage = Image::UsageBit::TRANSFER_DST_BIT;
-	swapchainTexCI.layout = Image::Layout::UNKNOWN;
-	swapchainTexCI.size = 0;
-	swapchainTexCI.data = nullptr;
-	swapchainTexCI.pMemoryBlock = nullptr;
-	Ref<Image> swapchainTex = Image::Create(&swapchainTexCI);
-
-	uint64_t oldTextureID = 0;
-	if(api.GetAPI() == GraphicsAPI::API::D3D12)
-		oldTextureID = (uint64_t)std::dynamic_pointer_cast<d3d12::Image>(swapchainTex)->m_Image;
-	else
-		oldTextureID = (uint64_t)std::dynamic_pointer_cast<vulkan::Image>(swapchainTex)->m_Image;
-
 	for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
 	{
 		cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-
-		if (api.GetAPI() == GraphicsAPI::API::D3D12)
-		{
-			std::dynamic_pointer_cast<d3d12::Image>(swapchainTex)->m_Image = reinterpret_cast<d3d12::Swapchain*>(swapchain.get())->m_SwapchainRTVs[i];
-			std::dynamic_pointer_cast<d3d12::Image>(swapchainTex)->m_CurrentResourceState = D3D12_RESOURCE_STATE_COMMON;
-		}
-		else
-		{
-			std::dynamic_pointer_cast<vulkan::Image>(swapchainTex)->m_Image = reinterpret_cast<vulkan::Swapchain*>(swapchain.get())->m_SwapchainImages[i];
-			std::dynamic_pointer_cast<vulkan::Image>(swapchainTex)->m_CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		}
 
 		crossplatform::Image::ClearColourValue clear = { 1.0f, 0.0f, 0.0f, 1.0f };
 		crossplatform::Image::SubresourceRange subres = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
@@ -190,7 +153,7 @@ int main()
 		b1CI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		b1CI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 		b1CI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		b1CI.pImage = swapchainTex;
+		b1CI.pImage = swapchain->m_SwapchianImages[i];
 		b1CI.oldLayout = Image::Layout::UNKNOWN;
 		b1CI.newLayout = api.GetAPI() == GraphicsAPI::API::D3D12 ? Image::Layout::COLOR_ATTACHMENT_OPTIMAL : Image::Layout::TRANSFER_DST_OPTIMAL;
 		b1CI.subresoureRange = subres;
@@ -202,22 +165,17 @@ int main()
 		b2CI.dstAccess = Barrier::AccessBit::TRANSFER_READ_BIT;
 		b2CI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 		b2CI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		b2CI.pImage = swapchainTex;
+		b2CI.pImage = swapchain->m_SwapchianImages[i];
 		b2CI.oldLayout = api.GetAPI() == GraphicsAPI::API::D3D12 ? Image::Layout::COLOR_ATTACHMENT_OPTIMAL : Image::Layout::TRANSFER_DST_OPTIMAL;
 		b2CI.newLayout = Image::Layout::PRESENT_SRC;
 		b2CI.subresoureRange = subres;
 		Ref<Barrier> b2 = Barrier::Create(&b2CI);
 		
 		cmdBuffer->PipelineBarrier(i, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::TRANSFER_BIT, { b1 });
-		cmdBuffer->ClearColourImage(i, swapchainTex, crossplatform::Image::Layout::TRANSFER_DST_OPTIMAL, clear, { subres });
+		cmdBuffer->ClearColourImage(i, swapchain->m_SwapchianImages[i], crossplatform::Image::Layout::TRANSFER_DST_OPTIMAL, clear, { subres });
 		cmdBuffer->PipelineBarrier(i, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, { b2 });
 		cmdBuffer->End(i);
 	}
-
-	if (api.GetAPI() == GraphicsAPI::API::D3D12)
-		std::dynamic_pointer_cast<d3d12::Image>(swapchainTex)->m_Image = (ID3D12Resource*)(void*)oldTextureID;
-	else
-		std::dynamic_pointer_cast<vulkan::Image>(swapchainTex)->m_Image = (VkImage)oldTextureID;
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";

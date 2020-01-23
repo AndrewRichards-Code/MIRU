@@ -132,6 +132,13 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 		m_SwapchainImageViews.push_back(imageView);
 	}
+
+	std::vector<VkImage*> images;
+	for (auto& swapchainImage : m_SwapchainImages)
+	{
+		images.push_back(&swapchainImage);
+	}
+	FillSwapchainImages((void**)images.data());
 }
 
 Swapchain::~Swapchain()

@@ -6,6 +6,7 @@ namespace miru
 {
 namespace crossplatform
 {
+	class Swapchain;
 	class Image
 	{
 		//enums/structs
@@ -249,14 +250,13 @@ namespace crossplatform
 		static Ref<Image> Create(CreateInfo* pCreateInfo);
 		virtual ~Image() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
-
-	protected:
-		virtual void GenerateMipmaps() = 0;
+		friend Swapchain;
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 		Resource m_Resource;
+		bool m_SwapchainImage = false;
 	};
 
 	class ImageView

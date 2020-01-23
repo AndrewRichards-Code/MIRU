@@ -49,10 +49,13 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 Image::~Image()
 {
-	SAFE_RELEASE(m_Image);
+	if (!m_SwapchainImage)
+	{
+		SAFE_RELEASE(m_Image);
 
-	if (m_CI.pMemoryBlock)
-		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+		if (m_CI.pMemoryBlock)
+			m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+	}
 }
 
 void Image::GenerateMipmaps()

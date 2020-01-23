@@ -1,5 +1,6 @@
 #pragma once
 #include "common.h"
+#include "Image.h"
 
 namespace miru
 {
@@ -28,8 +29,14 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
+
+	protected:
+		void FillSwapchainImages(void** pImages);
 		
 		//Members
+	public:
+		std::vector<Ref<Image>> m_SwapchianImages;
+
 	protected:
 		CreateInfo m_CI = {};
 	};

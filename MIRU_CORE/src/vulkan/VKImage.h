@@ -9,17 +9,17 @@ namespace vulkan
 	{
 		//Methods
 	public:
+		Image() {};
 		Image(Image::CreateInfo* pCreateInfo);
 		~Image();
 
-		void GenerateMipmaps() override;
-
 	private:
+		void GenerateMipmaps();
 		VkImageAspectFlags GetVkImageAspect(Image::Format format);
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkImage m_Image;
 		VkImageCreateInfo m_ImageCI = {};

@@ -57,6 +57,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		m_SwapchainRTVs.push_back(swapchainRTV);
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
+
+	FillSwapchainImages((void**)m_SwapchainRTVs.data());
 }
 
 Swapchain::~Swapchain()
