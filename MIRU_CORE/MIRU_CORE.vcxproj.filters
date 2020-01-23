@@ -99,6 +99,15 @@
     <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\crossplatform\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vulkan\VKShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\directx12\D3D12Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\crossplatform\Buffer.cpp">
@@ -180,6 +189,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\directx12\D3D12DescriptorPoolSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\crossplatform\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vulkan\VKShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\directx12\D3D12Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

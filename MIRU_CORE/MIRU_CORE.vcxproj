@@ -103,9 +103,11 @@
     <ClInclude Include="src\crossplatform\Allocator.h" />
     <ClInclude Include="src\crossplatform\CommandPoolBuffer.h" />
     <ClInclude Include="src\crossplatform\DescriptorPoolSet.h" />
+    <ClInclude Include="src\crossplatform\Shader.h" />
     <ClInclude Include="src\crossplatform\Sync.h" />
     <ClInclude Include="src\debug\RenderDoc.h" />
     <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
+    <ClInclude Include="src\directx12\D3D12Shader.h" />
     <ClInclude Include="src\directx12\D3D12Sync.h" />
     <ClInclude Include="src\directx12\D3D12Allocator.h" />
     <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h" />
@@ -121,6 +123,7 @@
     <ClInclude Include="src\directx12\D3D12Image.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
     <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
+    <ClInclude Include="src\vulkan\VKShader.h" />
     <ClInclude Include="src\vulkan\VKSync.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
     <ClInclude Include="src\vulkan\VKBuffer.h" />
@@ -142,12 +145,14 @@
     <ClCompile Include="src\crossplatform\Context.cpp" />
     <ClCompile Include="src\crossplatform\DescriptorPoolSet.cpp" />
     <ClCompile Include="src\crossplatform\GraphicsAPI.cpp" />
+    <ClCompile Include="src\crossplatform\Shader.cpp" />
     <ClCompile Include="src\crossplatform\Sync.cpp" />
     <ClCompile Include="src\crossplatform\Image.cpp" />
     <ClCompile Include="src\crossplatform\Swapchain.cpp" />
     <ClCompile Include="src\debug\RenderDoc.cpp" />
     <ClCompile Include="src\directx12\D3D12Buffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Context.cpp" />
+    <ClCompile Include="src\directx12\D3D12Shader.cpp" />
     <ClCompile Include="src\directx12\D3D12Swapchain.cpp" />
     <ClCompile Include="src\directx12\D3D12Sync.cpp" />
     <ClCompile Include="src\directx12\D3D12Image.cpp" />
@@ -159,6 +164,7 @@
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />
     <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKContext.cpp" />
+    <ClCompile Include="src\vulkan\VKShader.cpp" />
     <ClCompile Include="src\vulkan\VKSync.cpp" />
     <ClCompile Include="src\vulkan\VKImage.cpp" />
     <ClCompile Include="src\vulkan\VKSwapchain.cpp" />

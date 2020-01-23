@@ -25,8 +25,8 @@ int main()
 	GraphicsAPI api;
 	//api.LoadRenderDoc();
 	api.SetUseSetName();
-	//api.SetAPI(GraphicsAPI::API::D3D12);
-	api.SetAPI(GraphicsAPI::API::VULKAN);
+	api.SetAPI(GraphicsAPI::API::D3D12);
+	//api.SetAPI(GraphicsAPI::API::VULKAN);
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
@@ -61,6 +61,14 @@ int main()
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	Ref<Swapchain> swapchain = Swapchain::Create(&swapchainCI);
+
+	Shader::CreateInfo shaderCI;
+	shaderCI.debugName = "Basic_Vertex";
+	shaderCI.device = context->GetDevice();
+	shaderCI.stage = ShaderStageBit::VERTEX_BIT;
+	shaderCI.filepath = "../MIRU_SHADER_COMPILER/res/bin/basic.vert.spv";
+	shaderCI.entryPoint = "main";
+	Ref<Shader> shader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
