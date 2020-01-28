@@ -627,3 +627,43 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 ImageView::~ImageView()
 {
 }
+
+Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
+	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+{
+	m_CI = *pCreateInfo;
+
+	m_SamplerDesc.Filter = ToD3D12Filter(m_CI.magFilter, m_CI.minFilter, m_CI.mipmapMode, m_CI.anisotropyEnable);
+	m_SamplerDesc.AddressU = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(static_cast<uint32_t>(m_CI.addressModeU) + 1);
+	m_SamplerDesc.AddressV = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(static_cast<uint32_t>(m_CI.addressModeV) + 1);
+	m_SamplerDesc.AddressW = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(static_cast<uint32_t>(m_CI.addressModeW) + 1);
+	m_SamplerDesc.MipLODBias = m_CI.mipLodBias;
+	m_SamplerDesc.MaxAnisotropy = static_cast<UINT>(m_CI.maxAnisotropy);
+	m_SamplerDesc.ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.compareOp) + 1);
+	m_SamplerDesc.BorderColor[0] = m_CI.borderColour < BorderColour::FLOAT_OPAQUE_WHITE ? 0.0f : 1.0f;
+	m_SamplerDesc.BorderColor[1] = m_CI.borderColour < BorderColour::FLOAT_OPAQUE_WHITE ? 0.0f : 1.0f;
+	m_SamplerDesc.BorderColor[2] = m_CI.borderColour < BorderColour::FLOAT_OPAQUE_WHITE ? 0.0f : 1.0f;
+	m_SamplerDesc.BorderColor[3] = m_CI.borderColour < BorderColour::FLOAT_OPAQUE_BLACK ? 0.0f : 1.0f;
+	m_SamplerDesc.MinLOD = m_CI.minLod;
+	m_SamplerDesc.MaxLOD = m_CI.maxLod;
+}
+
+Sampler::~Sampler()
+{
+}
+
+D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, SamplerMipmapMode mipmapMode, bool anisotropic)
+{
+	if (anisotropic)
+		return D3D12_FILTER_ANISOTROPIC;
+
+	uint32_t res = 0;
+	if (mipmapMode == SamplerMipmapMode::LINEAR)
+		res += 1;
+	if (magFilter == Filter::LINEAR)
+		res += 4;
+	if (minFilter == Filter::LINEAR)
+		res += 16;
+
+	return static_cast<D3D12_FILTER>(res);
+}

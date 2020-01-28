@@ -6,6 +6,7 @@
 #include "crossplatform/DescriptorPoolSet.h"
 #include "crossplatform/GraphicsAPI.h"
 #include "crossplatform/Image.h"
+#include "crossplatform/Pipeline.h"
 #include "crossplatform/Shader.h"
 #include "crossplatform/Swapchain.h"
 #include "crossplatform/Sync.h"

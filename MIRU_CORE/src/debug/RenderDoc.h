@@ -8,6 +8,8 @@
 
 namespace miru
 {
+namespace debug
+{
 	class RenderDoc
 	{
 		//Methods
@@ -23,10 +25,12 @@ namespace miru
 		HMODULE m_HModule;
 	};
 }
-
+}
 #else
 
 namespace miru
+{
+namespace debug
 {
 	class RenderDoc
 	{
@@ -43,5 +47,5 @@ namespace miru
 		void* m_Module;
 	};
 }
-
+}
 #endif

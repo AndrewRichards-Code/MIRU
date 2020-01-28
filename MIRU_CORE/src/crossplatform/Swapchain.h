@@ -35,7 +35,7 @@ namespace crossplatform
 		
 		//Members
 	public:
-		std::vector<Ref<Image>> m_SwapchianImages;
+		std::vector<Ref<Image>> m_SwapchainImages;
 
 	protected:
 		CreateInfo m_CI = {};

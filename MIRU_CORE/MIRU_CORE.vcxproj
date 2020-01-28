@@ -103,6 +103,8 @@
     <ClInclude Include="src\crossplatform\Allocator.h" />
     <ClInclude Include="src\crossplatform\CommandPoolBuffer.h" />
     <ClInclude Include="src\crossplatform\DescriptorPoolSet.h" />
+    <ClInclude Include="src\crossplatform\Pipeline.h" />
+    <ClInclude Include="src\crossplatform\PipelineHelper.h" />
     <ClInclude Include="src\crossplatform\Shader.h" />
     <ClInclude Include="src\crossplatform\Sync.h" />
     <ClInclude Include="src\debug\RenderDoc.h" />
@@ -123,6 +125,7 @@
     <ClInclude Include="src\directx12\D3D12Image.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
     <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
+    <ClInclude Include="src\vulkan\VKPipeline.h" />
     <ClInclude Include="src\vulkan\VKShader.h" />
     <ClInclude Include="src\vulkan\VKSync.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
@@ -145,6 +148,7 @@
     <ClCompile Include="src\crossplatform\Context.cpp" />
     <ClCompile Include="src\crossplatform\DescriptorPoolSet.cpp" />
     <ClCompile Include="src\crossplatform\GraphicsAPI.cpp" />
+    <ClCompile Include="src\crossplatform\Pipeline.cpp" />
     <ClCompile Include="src\crossplatform\Shader.cpp" />
     <ClCompile Include="src\crossplatform\Sync.cpp" />
     <ClCompile Include="src\crossplatform\Image.cpp" />
@@ -164,6 +168,7 @@
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />
     <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKContext.cpp" />
+    <ClCompile Include="src\vulkan\VKPipeline.cpp" />
     <ClCompile Include="src\vulkan\VKShader.cpp" />
     <ClCompile Include="src\vulkan\VKSync.cpp" />
     <ClCompile Include="src\vulkan\VKImage.cpp" />

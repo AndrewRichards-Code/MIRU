@@ -9,7 +9,7 @@ bool GraphicsAPI::s_ApiInitialised = false;
 bool GraphicsAPI::s_UseSetName = false;
 bool GraphicsAPI::s_UseSetNameInitialised = false;
 
-RenderDoc GraphicsAPI::s_RenderDoc = {};
+debug::RenderDoc GraphicsAPI::s_RenderDoc = {};
 
 void GraphicsAPI::SetAPI(GraphicsAPI::API api)
 {
@@ -31,5 +31,5 @@ void GraphicsAPI::SetUseSetName(bool useSetName)
 
 void GraphicsAPI::LoadRenderDoc()
 {
-	s_RenderDoc = RenderDoc();
+	s_RenderDoc = debug::RenderDoc();
 }

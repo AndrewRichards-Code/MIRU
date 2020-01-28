@@ -24,7 +24,7 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 
 void Swapchain::FillSwapchainImages(void** pImages)
 {
-	m_SwapchianImages.resize(m_CI.swapchainCount);
+	m_SwapchainImages.resize(m_CI.swapchainCount);
 
 	Image::CreateInfo swapchainImageCI;
 	swapchainImageCI.debugName = "";
@@ -44,7 +44,7 @@ void Swapchain::FillSwapchainImages(void** pImages)
 	swapchainImageCI.pMemoryBlock = nullptr;
 	
 	size_t i = 0;
-	for (auto& swapchainImage : m_SwapchianImages)
+	for (auto& swapchainImage : m_SwapchainImages)
 	{
 		if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
 		{

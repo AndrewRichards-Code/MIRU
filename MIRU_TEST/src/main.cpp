@@ -21,8 +21,8 @@ int main()
 	GraphicsAPI api;
 	//api.LoadRenderDoc();
 	api.SetUseSetName();
-	api.SetAPI(GraphicsAPI::API::D3D12);
-	//api.SetAPI(GraphicsAPI::API::VULKAN);
+	//api.SetAPI(GraphicsAPI::API::D3D12);
+	api.SetAPI(GraphicsAPI::API::VULKAN);
 	
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
@@ -61,7 +61,7 @@ int main()
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic_Vertex";
 	shaderCI.device = context->GetDevice();
-	shaderCI.stage = ShaderStageBit::VERTEX_BIT;
+	shaderCI.stage = Shader::StageBit::VERTEX_BIT;
 	shaderCI.filepath = "../MIRU_SHADER_COMPILER/res/bin/basic.vert.spv";
 	shaderCI.entryPoint = "main";
 	Ref<Shader> shader = Shader::Create(&shaderCI);
@@ -119,6 +119,26 @@ int main()
 	texture1viewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
 	Ref<ImageView> texture1view = ImageView::Create(&texture1viewCI);
 
+	Sampler::CreateInfo samplerCI;
+	samplerCI.debugName = "sampler";
+	samplerCI.device = context->GetDevice();
+	samplerCI.magFilter = Sampler::Filter::NEAREST;
+	samplerCI.minFilter = Sampler::Filter::NEAREST;
+	samplerCI.mipmapMode = Sampler::MipmapMode::NEAREST;
+	samplerCI.addressModeU = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.addressModeV = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.addressModeW = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.mipLodBias = 0;
+	samplerCI.anisotropyEnable = false;
+	samplerCI.maxAnisotropy = 1;
+	samplerCI.compareEnable = false;
+	samplerCI.compareOp = CompareOp::NEVER;
+	samplerCI.minLod = 0.0f;
+	samplerCI.maxLod = 0.0f;
+	samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
+	samplerCI.unnormalisedCoordinates = false;
+	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
+
 	DescriptorPool::CreateInfo descPoolCI;
 	descPoolCI.debugName = "DescriptorPool1";
 	descPoolCI.device = context->GetDevice();
@@ -129,7 +149,7 @@ int main()
 	DescriptorSetLayout::CreateInfo descSetLayoutCI;
 	descSetLayoutCI.debugName = "DescriptorSetLayout1";
 	descSetLayoutCI.device = context->GetDevice();
-	descSetLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::SAMPLED_IMAGE, 1, ShaderStageBit::ALL_GRAPHICS} };
+	descSetLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::SAMPLED_IMAGE, 1, Shader::StageBit::ALL_GRAPHICS} };
 	Ref<DescriptorSetLayout> descSetLayout = DescriptorSetLayout::Create(&descSetLayoutCI);
 
 	DescriptorSet::CreateInfo descSetCI;
@@ -137,8 +157,60 @@ int main()
 	descSetCI.pDescriptorPool = descPool;
 	descSetCI.pDescriptorSetLayouts = { descSetLayout };
 	Ref<DescriptorSet> descSet = DescriptorSet::Create(&descSetCI);
-	descSet->AddImage(0, 0, { { nullptr, texture1view, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descSet->AddImage(0, 0, { { sampler, texture1view, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descSet->Update();
+
+	RenderPass::CreateInfo renderPassCI;
+	renderPassCI.debugName = "Basic";
+	renderPassCI.device = context->GetDevice();
+	renderPassCI.attachments = { 
+		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
+		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+		RenderPass::AttachmentLoadOp::CLEAR,
+		RenderPass::AttachmentStoreOp::STORE,
+		RenderPass::AttachmentLoadOp::DONT_CARE,
+		RenderPass::AttachmentStoreOp::DONT_CARE,
+		Image::Layout::UNKNOWN,
+		Image::Layout::PRESENT_SRC
+		} 
+	};
+	renderPassCI.subpassDescriptions = {
+		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOR_ATTACHMENT_OPTIMAL}}, {},{},{} }
+	};
+	renderPassCI.subpassDependencies = {
+		{MIRU_SUBPASS_EXTERNAL, 0,
+		PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, 
+		(Barrier::AccessBit)0, Barrier::AccessBit::COLOR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOR_ATTACHMENT_WRITE_BIT}
+	};
+	Ref<RenderPass> renderPass = RenderPass::Create(&renderPassCI);
+
+	Pipeline::CreateInfo pCI;
+	pCI.debugName = "Basic";
+	pCI.device = context->GetDevice();
+	pCI.type = PipelineType::GRAPHICS;
+	pCI.shaders = { shader };
+	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, 16, VertexInputRate::VERTEX} };
+	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0} };
+	pCI.inputAssemblyState = {PrimitiveTopology::TRIANGLE_LIST, false};
+	pCI.tessellationState = {};
+	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
+	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
+	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::BACK_BIT, FrontFace::COUNTER_CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
+	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
+	pCI.depthStencilState = { true, true, CompareOp::LESS, false, false, {}, {}, 0.0f, 1.0f };
+	pCI.colourBlendState.logicOpEnable = false;
+	pCI.colourBlendState.logicOp = LogicOp::COPY;
+	pCI.colourBlendState.attachments = { {true, BlendFactor::SRC_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA, BlendOp::ADD, 
+											BlendFactor::ONE, BlendFactor::ZERO, BlendOp::ADD, (ColourComponentBit)15 } };
+	pCI.colourBlendState.blendConstants[0] = 0.0f;
+	pCI.colourBlendState.blendConstants[1] = 0.0f;
+	pCI.colourBlendState.blendConstants[2] = 0.0f;
+	pCI.colourBlendState.blendConstants[3] = 0.0f;
+	pCI.dynamicStates = {};
+	pCI.layout = { {descSetLayout}, {} };
+	pCI.renderPass = renderPass;
+	pCI.subpassIndex = 0;
+	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
 
 	for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
 	{
@@ -153,7 +225,7 @@ int main()
 		b1CI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		b1CI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 		b1CI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		b1CI.pImage = swapchain->m_SwapchianImages[i];
+		b1CI.pImage = swapchain->m_SwapchainImages[i];
 		b1CI.oldLayout = Image::Layout::UNKNOWN;
 		b1CI.newLayout = api.GetAPI() == GraphicsAPI::API::D3D12 ? Image::Layout::COLOR_ATTACHMENT_OPTIMAL : Image::Layout::TRANSFER_DST_OPTIMAL;
 		b1CI.subresoureRange = subres;
@@ -165,14 +237,14 @@ int main()
 		b2CI.dstAccess = Barrier::AccessBit::TRANSFER_READ_BIT;
 		b2CI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 		b2CI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		b2CI.pImage = swapchain->m_SwapchianImages[i];
+		b2CI.pImage = swapchain->m_SwapchainImages[i];
 		b2CI.oldLayout = api.GetAPI() == GraphicsAPI::API::D3D12 ? Image::Layout::COLOR_ATTACHMENT_OPTIMAL : Image::Layout::TRANSFER_DST_OPTIMAL;
 		b2CI.newLayout = Image::Layout::PRESENT_SRC;
 		b2CI.subresoureRange = subres;
 		Ref<Barrier> b2 = Barrier::Create(&b2CI);
 		
 		cmdBuffer->PipelineBarrier(i, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::TRANSFER_BIT, { b1 });
-		cmdBuffer->ClearColourImage(i, swapchain->m_SwapchianImages[i], crossplatform::Image::Layout::TRANSFER_DST_OPTIMAL, clear, { subres });
+		cmdBuffer->ClearColourImage(i, swapchain->m_SwapchainImages[i], crossplatform::Image::Layout::TRANSFER_DST_OPTIMAL, clear, { subres });
 		cmdBuffer->PipelineBarrier(i, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, { b2 });
 		cmdBuffer->End(i);
 	}

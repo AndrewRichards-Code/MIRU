@@ -42,5 +42,20 @@ namespace vulkan
 		VkImageView m_ImageView;
 		VkImageViewCreateInfo m_ImageViewCI = {};
 	};
+
+	class Sampler final : public crossplatform::Sampler
+	{
+		//Methods
+	public:
+		Sampler(Sampler::CreateInfo* pCreateInfo);
+		~Sampler();
+
+		//Members
+	public:
+		VkDevice& m_Device;
+
+		VkSampler m_Sampler;
+		VkSamplerCreateInfo m_SamplerCI = {};
+	};
 }
 }

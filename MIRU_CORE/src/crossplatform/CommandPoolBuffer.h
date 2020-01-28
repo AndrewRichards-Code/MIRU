@@ -3,7 +3,7 @@
 
 #include "Context.h"
 #include "Swapchain.h"
-#include "Sync.h"
+#include "Pipeline.h"
 
 namespace miru
 {

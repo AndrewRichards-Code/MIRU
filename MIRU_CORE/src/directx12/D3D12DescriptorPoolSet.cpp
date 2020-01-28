@@ -264,7 +264,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_Sampler_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (samplerDescriptorSize * index);
 
-		m_Device->CreateSampler(nullptr, descriptorWriteLocation);
+		m_Device->CreateSampler(&std::dynamic_pointer_cast<Sampler>(descriptorImageInfos[0].sampler)->m_SamplerDesc, descriptorWriteLocation);
 	}
 }
 

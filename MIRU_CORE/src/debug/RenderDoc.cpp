@@ -2,6 +2,7 @@
 #include "RenderDoc.h"
 
 using namespace miru;
+using namespace debug;
 
 #if defined(_WIN64)
 #include <Windows.h>

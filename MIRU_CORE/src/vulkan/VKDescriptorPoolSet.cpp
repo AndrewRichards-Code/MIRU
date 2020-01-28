@@ -126,7 +126,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	for (auto& descriptorImageInfos : descriptorImageInfos)
 	{
 		m_DescriptorImageInfo[index][bindingIndex].push_back({
-			VK_NULL_HANDLE,//std::dynamic_pointer_cast<Sampler>(descriptorImageInfos.pSampler)->m_Sampler,
+			std::dynamic_pointer_cast<Sampler>(descriptorImageInfos.sampler)->m_Sampler,
 			std::dynamic_pointer_cast<ImageView>(descriptorImageInfos.imageView)->m_ImageView,
 			static_cast<VkImageLayout>(descriptorImageInfos.imageLayout)
 			});

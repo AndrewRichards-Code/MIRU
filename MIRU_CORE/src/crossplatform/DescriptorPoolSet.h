@@ -58,10 +58,10 @@ namespace crossplatform
 	public:
 		struct DescriptorSetLayoutBinding
 		{
-			uint32_t		binding;
-			DescriptorType	type;
-			uint32_t		descriptorCount; //Number of descriptor in a single binding, accessed as an array.
-			ShaderStageBit	stage;
+			uint32_t			binding;
+			DescriptorType		type;
+			uint32_t			descriptorCount; //Number of descriptor in a single binding, accessed as an array.
+			Shader::StageBit	stage;
 		};
 		struct CreateInfo
 		{

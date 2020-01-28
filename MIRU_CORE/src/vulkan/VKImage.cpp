@@ -301,9 +301,43 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	};
 
 	MIRU_ASSERT(vkCreateImageView(m_Device, &m_ImageViewCI, nullptr, &m_ImageView), "ERROR: VULKAN: Failed to create ImageView.");
+	VKSetName<VkImageView>(m_Device, (uint64_t)m_ImageView, m_CI.debugName);
 }
 
 ImageView::~ImageView() 
 {
 	vkDestroyImageView(m_Device, m_ImageView, nullptr);
+}
+
+Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+{
+	m_CI = *pCreateInfo;
+	
+	m_SamplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	m_SamplerCI.pNext = nullptr;
+	m_SamplerCI.flags = 0;
+	m_SamplerCI.magFilter = static_cast<VkFilter>(m_CI.magFilter);
+	m_SamplerCI.minFilter = static_cast<VkFilter>(m_CI.minFilter);
+	m_SamplerCI.mipmapMode = static_cast<VkSamplerMipmapMode>(m_CI.mipmapMode);
+	m_SamplerCI.addressModeU = static_cast<VkSamplerAddressMode>(m_CI.addressModeU);
+	m_SamplerCI.addressModeV = static_cast<VkSamplerAddressMode>(m_CI.addressModeV);
+	m_SamplerCI.addressModeW = static_cast<VkSamplerAddressMode>(m_CI.addressModeW);
+	m_SamplerCI.mipLodBias = m_CI.mipLodBias;
+	m_SamplerCI.anisotropyEnable = m_CI.anisotropyEnable;
+	m_SamplerCI.maxAnisotropy = m_CI.maxAnisotropy;
+	m_SamplerCI.compareEnable = m_CI.compareEnable;
+	m_SamplerCI.compareOp = static_cast<VkCompareOp>(m_CI.compareOp);
+	m_SamplerCI.minLod = m_CI.minLod;
+	m_SamplerCI.maxLod = m_CI.maxLod;
+	m_SamplerCI.borderColor = static_cast<VkBorderColor>(m_CI.borderColour);
+	m_SamplerCI.unnormalizedCoordinates = m_CI.unnormalisedCoordinates;
+
+	MIRU_ASSERT(vkCreateSampler(m_Device, &m_SamplerCI, nullptr, &m_Sampler), "ERROR: VULKAN: Failed to create Sampler.");
+	VKSetName<VkSampler>(m_Device, (uint64_t)m_Sampler, m_CI.debugName);
+}
+
+Sampler::~Sampler()
+{
+	vkDestroySampler(m_Device, m_Sampler, nullptr);
 }

@@ -21,7 +21,7 @@ namespace miru
 		static const bool& GetUseSetName() { return s_UseSetName; }
 		
 		static void LoadRenderDoc();
-		static const RenderDoc& GetRenderDoc() { return s_RenderDoc; }
+		static const debug::RenderDoc& GetRenderDoc() { return s_RenderDoc; }
 
 	private:
 		static API s_API;
@@ -30,6 +30,6 @@ namespace miru
 		static bool s_ApiInitialised;
 		static bool s_UseSetNameInitialised;
 
-		static RenderDoc s_RenderDoc;
+		static debug::RenderDoc s_RenderDoc;
 	};
 }

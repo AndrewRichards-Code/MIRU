@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include "Allocator.h"
+#include "PipelineHelper.h"
 
 namespace miru
 {
@@ -275,6 +276,69 @@ namespace crossplatform
 	public:
 		static Ref<ImageView> Create(CreateInfo* pCreateInfo);
 		virtual ~ImageView() = default;
+		const CreateInfo& GetCreateInfo() { return m_CI; }
+
+		//Members
+	protected:
+		CreateInfo m_CI = {};
+	};
+
+	class Sampler
+	{
+		//enums/structs
+	public:
+		enum class Filter : uint32_t
+		{
+			NEAREST,
+			LINEAR
+		};
+		enum class MipmapMode : uint32_t
+		{
+			NEAREST,
+			LINEAR
+		};
+		enum class AddressMode : uint32_t
+		{
+			REPEAT = 0,
+			MIRRORED_REPEAT = 1,
+			CLAMP_TO_EDGE = 2,
+			CLAMP_TO_BORDER = 3,
+			MIRROR_CLAMP_TO_EDGE = 4
+		};
+		enum class BorderColour : uint32_t
+		{
+			FLOAT_TRANSPARENT_BLACK = 0,
+			INT_TRANSPARENT_BLACK = 1,
+			FLOAT_OPAQUE_BLACK = 2,
+			INT_OPAQUE_BLACK = 3,
+			FLOAT_OPAQUE_WHITE = 4,
+			INT_OPAQUE_WHITE = 5,
+		};
+		struct CreateInfo
+		{
+			const char*		debugName;
+			void*			device;
+			Filter			magFilter;
+			Filter			minFilter;
+			MipmapMode		mipmapMode;
+			AddressMode		addressModeU;
+			AddressMode		addressModeV;
+			AddressMode		addressModeW;
+			float			mipLodBias;
+			bool			anisotropyEnable;
+			float			maxAnisotropy;
+			bool			compareEnable;
+			CompareOp		compareOp;
+			float			minLod;
+			float			maxLod;
+			BorderColour	borderColour;
+			bool			unnormalisedCoordinates;
+		};
+
+		//Methods
+	public:
+		static Ref<Sampler> Create(CreateInfo* pCreateInfo);
+		virtual ~Sampler() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		//Members

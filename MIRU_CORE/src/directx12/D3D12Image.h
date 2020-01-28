@@ -45,8 +45,23 @@ namespace d3d12
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc = {};
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc = {};
 		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc = {};
+	};
 
+	class Sampler final : public crossplatform::Sampler
+	{
+		//Methods
+	public:
+		Sampler(Sampler::CreateInfo* pCreateInfo);
+		~Sampler();
 
+	private:
+		D3D12_FILTER ToD3D12Filter(Filter magFilter, Filter minFilter, SamplerMipmapMode mipmapMode, bool anisotropic);
+
+		//Members
+	public:
+		ID3D12Device* m_Device;
+		
+		D3D12_SAMPLER_DESC m_SamplerDesc;
 	};
 }
 }
