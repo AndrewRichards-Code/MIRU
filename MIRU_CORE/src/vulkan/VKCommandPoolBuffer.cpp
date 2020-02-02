@@ -5,6 +5,10 @@
 #include "VKSwapchain.h"
 #include "VKSync.h"
 #include "VKImage.h"
+#include "VKBuffer.h"
+#include "VKPipeline.h"
+#include "VKFramebuffer.h"
+#include "VKDescriptorPoolSet.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -300,4 +304,96 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	VkClearDepthStencilValue* vkClearDepthStencil = (VkClearDepthStencilValue*)&clear;
 
 	vkCmdClearDepthStencilImage(m_CmdBuffers[index], std::dynamic_pointer_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
+}
+
+void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+
+	std::vector<VkClearValue> vkClearValue;
+	vkClearValue.reserve(clearValues.size());
+	for (auto& clearValue : clearValues)
+		vkClearValue.push_back(*reinterpret_cast<const VkClearValue*>(&clearValue));
+
+	VkRenderPassBeginInfo bi;
+	bi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	bi.pNext = nullptr;
+	bi.renderPass = std::dynamic_pointer_cast<RenderPass>(framebuffer->GetCreateInfo().renderPass)->m_RenderPass;
+	bi.framebuffer = std::dynamic_pointer_cast<Framebuffer>(framebuffer)->m_Framebuffer;
+	bi.renderArea.offset = { 0,0 };
+	bi.renderArea.extent.width = framebuffer->GetCreateInfo().width;
+	bi.renderArea.extent.height= framebuffer->GetCreateInfo().height;
+	bi.clearValueCount = static_cast<uint32_t>(vkClearValue.size());
+	bi.pClearValues = vkClearValue.data();
+
+	vkCmdBeginRenderPass(m_CmdBuffers[index], &bi, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void CommandBuffer::EndRenderPass(uint32_t index)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdEndRenderPass(m_CmdBuffers[index]);
+}
+
+void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), std::dynamic_pointer_cast<Pipeline>(pipeline)->m_Pipeline);
+}
+
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkBuffer> vkBuffers;
+	std::vector<VkDeviceSize> offsets;
+	for (auto& vetexBufferView : vertexBufferViews)
+	{
+		vkBuffers.push_back(std::dynamic_pointer_cast<Buffer>(std::dynamic_pointer_cast<BufferView>(vetexBufferView)->GetCreateInfo().pBuffer)->m_Buffer);
+		offsets.push_back(std::dynamic_pointer_cast<BufferView>(vetexBufferView)->GetCreateInfo().offset);
+	}
+
+	vkCmdBindVertexBuffers(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkBuffers.size()), vkBuffers.data(), offsets.data());
+}
+
+void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferView> indexBufferView)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+
+	VkBuffer& buffer = std::dynamic_pointer_cast<Buffer>(std::dynamic_pointer_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
+	const BufferView::CreateInfo& ci = indexBufferView->GetCreateInfo();
+
+	VkIndexType type;
+	if (ci.stride == 2)
+		type = VK_INDEX_TYPE_UINT16;
+	else if (ci.stride == 4)
+		type = VK_INDEX_TYPE_UINT32;
+	else
+		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown index type.");
+
+	vkCmdBindIndexBuffer(m_CmdBuffers[index], buffer, static_cast<VkDeviceSize>(ci.offset), type);
+}
+
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+
+	std::vector<VkDescriptorSet> vkDescriptorSets;
+	uint32_t descriptorSetCount = 0;
+	for (auto& descriptorSet : descriptorSets)
+	{
+		for (auto& vkDescriptorSet : std::dynamic_pointer_cast<const DescriptorSet>(descriptorSet)->m_DescriptorSets)
+		{		
+			vkDescriptorSets.push_back(vkDescriptorSet);
+			descriptorSetCount++;
+		}
+	}
+
+	vkCmdBindDescriptorSets(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type),
+		std::dynamic_pointer_cast<Pipeline>(pipeline)->m_PipelineLayout, 0, descriptorSetCount, vkDescriptorSets.data(), 0, nullptr);
+}
+
+void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDrawIndexed(m_CmdBuffers[index], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }

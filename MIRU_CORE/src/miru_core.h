@@ -4,6 +4,7 @@
 #include "crossplatform/CommandPoolBuffer.h"
 #include "crossplatform/Context.h"
 #include "crossplatform/DescriptorPoolSet.h"
+#include "crossplatform/Framebuffer.h"
 #include "crossplatform/GraphicsAPI.h"
 #include "crossplatform/Image.h"
 #include "crossplatform/Pipeline.h"

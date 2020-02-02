@@ -80,7 +80,6 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
-	class Sampler;
 	class DescriptorSet
 	{
 		//enums/structs

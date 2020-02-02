@@ -22,17 +22,18 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 #include "directx12/D3D12Image.h"
 #include "vulkan/VKImage.h"
 
-void Swapchain::FillSwapchainImages(void** pImages)
+void Swapchain::FillSwapchainImageAndViews(void** pImages, void** pImageViews, uint32_t width, uint32_t height)
 {
 	m_SwapchainImages.resize(m_CI.swapchainCount);
+	m_SwapchainImageViews.resize(m_CI.swapchainCount);
 
 	Image::CreateInfo swapchainImageCI;
 	swapchainImageCI.debugName = "";
 	swapchainImageCI.device = m_CI.pContext->GetDevice();
 	swapchainImageCI.type = Image::Type::TYPE_2D;
 	swapchainImageCI.format = Image::Format::B8G8R8A8_UNORM;
-	swapchainImageCI.width = m_CI.width;
-	swapchainImageCI.height = m_CI.height;
+	swapchainImageCI.width = width;
+	swapchainImageCI.height = height;
 	swapchainImageCI.depth = 1;
 	swapchainImageCI.mipLevels = 1;
 	swapchainImageCI.arrayLayers = 1;
@@ -42,7 +43,13 @@ void Swapchain::FillSwapchainImages(void** pImages)
 	swapchainImageCI.size = 0;
 	swapchainImageCI.data = nullptr;
 	swapchainImageCI.pMemoryBlock = nullptr;
-	
+
+	ImageView::CreateInfo swapchainImageViewCI;
+	swapchainImageViewCI.debugName = "";
+	swapchainImageViewCI.device = m_CI.pContext->GetDevice();
+	swapchainImageViewCI.pImage = nullptr;
+	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+
 	size_t i = 0;
 	for (auto& swapchainImage : m_SwapchainImages)
 	{
@@ -53,6 +60,12 @@ void Swapchain::FillSwapchainImages(void** pImages)
 			swapchainImage->m_SwapchainImage = true;
 			std::dynamic_pointer_cast<d3d12::Image>(swapchainImage)->m_Image = reinterpret_cast<ID3D12Resource*>(pImages[i]);
 			std::dynamic_pointer_cast<d3d12::Image>(swapchainImage)->m_CurrentResourceState = D3D12_RESOURCE_STATE_COMMON;
+			
+			swapchainImageViewCI.pImage = swapchainImage;
+			m_SwapchainImageViews[i] = std::make_shared<d3d12::ImageView>();
+			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
+			m_SwapchainImageViews[i]->m_SwapchainImage = true;
+			std::dynamic_pointer_cast<d3d12::ImageView>(m_SwapchainImageViews[i])->m_ImageView = reinterpret_cast<ID3D12Resource*>(pImageViews[i]);
 		}
 		else
 		{
@@ -61,6 +74,12 @@ void Swapchain::FillSwapchainImages(void** pImages)
 			swapchainImage->m_SwapchainImage = true;
 			std::dynamic_pointer_cast<vulkan::Image>(swapchainImage)->m_Image = *reinterpret_cast<VkImage*>(pImages[i]);
 			std::dynamic_pointer_cast<vulkan::Image>(swapchainImage)->m_CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			
+			swapchainImageViewCI.pImage = swapchainImage;
+			m_SwapchainImageViews[i] = std::make_shared<vulkan::ImageView>();
+			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
+			m_SwapchainImageViews[i]->m_SwapchainImage = true;
+			std::dynamic_pointer_cast<vulkan::ImageView>(m_SwapchainImageViews[i])->m_ImageView = *reinterpret_cast<VkImageView*>(pImageViews[i]);
 		}
 		i++;
 	}

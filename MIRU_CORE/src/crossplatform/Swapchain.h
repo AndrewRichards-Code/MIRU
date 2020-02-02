@@ -31,11 +31,12 @@ namespace crossplatform
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
 	protected:
-		void FillSwapchainImages(void** pImages);
+		void FillSwapchainImageAndViews(void** pImages, void** pImageViews, uint32_t width, uint32_t height);
 		
 		//Members
 	public:
 		std::vector<Ref<Image>> m_SwapchainImages;
+		std::vector<Ref<ImageView>> m_SwapchainImageViews;
 
 	protected:
 		CreateInfo m_CI = {};

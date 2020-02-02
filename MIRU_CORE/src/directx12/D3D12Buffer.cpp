@@ -131,3 +131,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 	}
 
 }
+
+BufferView::~BufferView()
+{
+}

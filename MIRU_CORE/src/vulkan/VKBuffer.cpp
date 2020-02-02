@@ -83,10 +83,18 @@ BufferView::BufferView(CreateInfo* pCreateInfo)
 	m_BufferViewCI.offset = m_CI.offset;
 	m_BufferViewCI.range = m_CI.size;
 
-	MIRU_ASSERT(vkCreateBufferView(m_Device, &m_BufferViewCI, nullptr, &m_BufferView), "ERROR: VULKAN: Failed to create BufferView.");
+	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL
+		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL) // These are the only valid usage to create a VkBufferView proper.
+	{
+		MIRU_ASSERT(vkCreateBufferView(m_Device, &m_BufferViewCI, nullptr, &m_BufferView), "ERROR: VULKAN: Failed to create BufferView.");
+	}
 }
 
 BufferView::~BufferView()
 {
-	vkDestroyBufferView(m_Device, m_BufferView, nullptr);
+	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL
+		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL) // These are the only valid usage to create a VkBufferView proper.
+	{
+		vkDestroyBufferView(m_Device, m_BufferView, nullptr);
+	}
 }

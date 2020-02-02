@@ -30,9 +30,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
 	D3D12SetName(m_Swapchain, m_CI.debugName);
-
-	m_Width= m_CI.width;
-	m_Height = m_CI.height;
+	m_Swapchain->GetSourceSize(&m_Width, &m_Height);
 	m_Format = m_SwapchainDesc.Format;
 
 	//Create Swapchian RTV
@@ -58,7 +56,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
 
-	FillSwapchainImages((void**)m_SwapchainRTVs.data());
+	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTVs.data(), m_Width, m_Height);
 }
 
 Swapchain::~Swapchain()

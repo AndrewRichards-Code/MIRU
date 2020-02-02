@@ -32,12 +32,13 @@ namespace vulkan
 	{		
 		//Methods
 	public:
+		ImageView() {};
 		ImageView(ImageView::CreateInfo* pCreateInfo);
 		~ImageView();
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkImageView m_ImageView;
 		VkImageViewCreateInfo m_ImageViewCI = {};

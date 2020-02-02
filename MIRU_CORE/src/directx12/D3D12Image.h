@@ -34,6 +34,7 @@ namespace d3d12
 	{
 		//Methods
 	public:
+		ImageView() {};
 		ImageView(ImageView::CreateInfo* pCreateInfo);
 		~ImageView();
 
@@ -45,6 +46,8 @@ namespace d3d12
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc = {};
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc = {};
 		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc = {};
+
+		ID3D12Resource* m_ImageView = nullptr;
 	};
 
 	class Sampler final : public crossplatform::Sampler
@@ -55,7 +58,7 @@ namespace d3d12
 		~Sampler();
 
 	private:
-		D3D12_FILTER ToD3D12Filter(Filter magFilter, Filter minFilter, SamplerMipmapMode mipmapMode, bool anisotropic);
+		D3D12_FILTER ToD3D12Filter(Filter magFilter, Filter minFilter, MipmapMode mipmapMode, bool anisotropic);
 
 		//Members
 	public:

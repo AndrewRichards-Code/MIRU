@@ -277,10 +277,12 @@ namespace crossplatform
 		static Ref<ImageView> Create(CreateInfo* pCreateInfo);
 		virtual ~ImageView() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
+		friend Swapchain;
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
+		bool m_SwapchainImage = false;
 	};
 
 	class Sampler

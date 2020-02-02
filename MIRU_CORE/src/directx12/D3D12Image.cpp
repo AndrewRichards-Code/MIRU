@@ -652,13 +652,13 @@ Sampler::~Sampler()
 {
 }
 
-D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, SamplerMipmapMode mipmapMode, bool anisotropic)
+D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, MipmapMode mipmapMode, bool anisotropic)
 {
 	if (anisotropic)
 		return D3D12_FILTER_ANISOTROPIC;
 
 	uint32_t res = 0;
-	if (mipmapMode == SamplerMipmapMode::LINEAR)
+	if (mipmapMode == MipmapMode::LINEAR)
 		res += 1;
 	if (magFilter == Filter::LINEAR)
 		res += 4;

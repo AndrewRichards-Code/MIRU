@@ -119,18 +119,18 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			Type						type;					//For UsageBit::MEMORY, UsageBit::BUFFER and UsageBit::IMAGE
-			AccessBit					srcAccess;				//For UsageBit::MEMORY, UsageBit::BUFFER and UsageBit::IMAGE
-			AccessBit					dstAccess;				//For UsageBit::MEMORY, UsageBit::BUFFER and UsageBit::IMAGE
-			uint32_t					srcQueueFamilyIndex;	//For UsageBit::BUFFER and UsageBit::IMAGE
-			uint32_t					dstQueueFamilyIndex;	//For UsageBit::BUFFER and UsageBit::IMAGE
-			Ref<Buffer>					pBuffer;				//For UsageBit::BUFFER
-			uint64_t					offset;					//For UsageBit::BUFFER
-			uint64_t					size;					//For UsageBit::BUFFER
-			Ref<Image>					pImage;					//For UsageBit::IMAGE
-			Image::Layout				oldLayout;				//For UsageBit::IMAGE
-			Image::Layout				newLayout;				//For UsageBit::IMAGE
-			Image::SubresourceRange		subresoureRange;		//For UsageBit::IMAGE
+			Type						type;					//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			AccessBit					srcAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			AccessBit					dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
+			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
+			Ref<Buffer>					pBuffer;				//For Type::BUFFER
+			uint64_t					offset;					//For Type::BUFFER
+			uint64_t					size;					//For Type::BUFFER
+			Ref<Image>					pImage;					//For Type::IMAGE
+			Image::Layout				oldLayout;				//For Type::IMAGE
+			Image::Layout				newLayout;				//For Type::IMAGE
+			Image::SubresourceRange		subresoureRange;		//For Type::IMAGE
 		};
 		//Methods
 	public:

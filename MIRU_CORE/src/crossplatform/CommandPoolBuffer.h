@@ -4,6 +4,8 @@
 #include "Context.h"
 #include "Swapchain.h"
 #include "Pipeline.h"
+#include "Framebuffer.h"
+#include "Buffer.h"
 
 namespace miru
 {
@@ -83,8 +85,20 @@ namespace crossplatform
 		virtual void WaitEvents(uint32_t index, const std::vector<Ref<Event>>& events, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<Ref<Barrier>>& barriers) = 0;
 		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<Ref<Barrier>>& barriers) = 0;
 
-		virtual void ClearColourImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges) = 0;
-		virtual void ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges) = 0;
+		virtual void ClearColourImage(uint32_t index, Ref<Image> image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
+		virtual void ClearDepthStencilImage(uint32_t index, Ref<Image> image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
+
+		virtual void BeginRenderPass(uint32_t index, Ref<Framebuffer> framebuffer, const std::vector<Image::ClearValue>& clearValues) = 0;
+		virtual void EndRenderPass(uint32_t index) = 0;
+
+		virtual void BindPipeline(uint32_t index, Ref<Pipeline> pipeline) = 0;
+
+		virtual void BindVertexBuffers(uint32_t index, const std::vector<Ref<BufferView>>& vertexBufferViews) = 0;
+		virtual void BindIndexBuffer(uint32_t index, Ref<BufferView> indexBufferView) = 0;
+
+		virtual void BindDescriptorSets(uint32_t index, const std::vector<Ref<DescriptorSet>>& descriptorSets, Ref<Pipeline> pipeline) = 0;
+
+		virtual void DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) = 0;
 
 	protected:
 		inline bool CheckValidIndex(uint32_t index) { return (index < m_CI.commandBufferCount); }

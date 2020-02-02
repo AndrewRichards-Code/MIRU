@@ -1,9 +1,6 @@
 #pragma once
 #include "common.h"
 #include "Shader.h"
-#include "Image.h"
-#include "DescriptorPoolSet.h"
-#include "Sync.h"
 
 namespace miru
 {
