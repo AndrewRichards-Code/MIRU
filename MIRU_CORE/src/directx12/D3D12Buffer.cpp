@@ -87,8 +87,8 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 {
 	m_CI = *pCreateInfo;
 
-	auto resourceDesc = std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_ResourceDesc;
-	auto buffer = std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+	auto resourceDesc = ref_cast<Buffer>(m_CI.pBuffer)->m_ResourceDesc;
+	auto buffer = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = {0};
 
 	switch (m_CI.type)
@@ -97,7 +97,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::UNIFORM:
 		{
 			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_CBVDesc.SizeInBytes = m_CI.size;
+			m_CBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 		}
 		case Type::STORAGE_TEXEL:
 		case Type::STORAGE:
@@ -105,8 +105,8 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 			m_UAVDesc.Format = resourceDesc.Format;
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			m_UAVDesc.Buffer.FirstElement = m_CI.offset;
-			m_UAVDesc.Buffer.NumElements = m_CI.size;
-			m_UAVDesc.Buffer.StructureByteStride = m_CI.stride;
+			m_UAVDesc.Buffer.NumElements = static_cast<UINT>(m_CI.size);
+			m_UAVDesc.Buffer.StructureByteStride = static_cast<UINT>(m_CI.stride);
 			m_UAVDesc.Buffer.CounterOffsetInBytes = 0;
 			m_UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 		}
@@ -114,14 +114,14 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		{
 			
 			m_IBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_IBVDesc.SizeInBytes = m_CI.size;
+			m_IBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 			m_IBVDesc.Format = m_CI.stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 		}
 		case Type::VERTEX:
 		{
 			m_VBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_VBVDesc.SizeInBytes = m_CI.size;
-			m_VBVDesc.StrideInBytes = m_CI.stride;
+			m_VBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
+			m_VBVDesc.StrideInBytes = static_cast<UINT>(m_CI.stride);
 		}
 		/*case Type::TRANSFORM_FEEDBACK:
 		{

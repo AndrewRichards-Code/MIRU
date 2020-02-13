@@ -147,13 +147,13 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_BMB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
 		m_BMB.srcQueueFamilyIndex = m_CI.srcQueueFamilyIndex;
 		m_BMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
-		m_BMB.buffer = std::dynamic_pointer_cast<vulkan::Buffer>(m_CI.pBuffer)->m_Buffer;
+		m_BMB.buffer = ref_cast<vulkan::Buffer>(m_CI.pBuffer)->m_Buffer;
 		m_BMB.offset = m_CI.offset;
 		m_BMB.size = m_CI.size;
 
 	case Type::IMAGE:
 
-		if (std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentLayout != static_cast<VkImageLayout>(m_CI.oldLayout))
+		if (ref_cast<Image>(m_CI.pImage)->m_CurrentLayout != static_cast<VkImageLayout>(m_CI.oldLayout))
 			MIRU_WARN(true, "WARN: VULKAN: Provided oldLayout Layout does not match CurrentLayout. Using the CurrentLayout in Barrier.");
 
 		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -164,14 +164,14 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_IMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
 		m_IMB.oldLayout = static_cast<VkImageLayout>(m_CI.oldLayout);
 		m_IMB.newLayout = static_cast<VkImageLayout>(m_CI.newLayout);
-		m_IMB.image = std::dynamic_pointer_cast<vulkan::Image>(m_CI.pImage)->m_Image;
+		m_IMB.image = ref_cast<vulkan::Image>(m_CI.pImage)->m_Image;
 		m_IMB.subresourceRange.aspectMask = static_cast<VkImageAspectFlagBits>(m_CI.subresoureRange.aspect);
 		m_IMB.subresourceRange.baseMipLevel = m_CI.subresoureRange.baseMipLevel;
 		m_IMB.subresourceRange.levelCount = m_CI.subresoureRange.mipLevelCount;
 		m_IMB.subresourceRange.baseArrayLayer = m_CI.subresoureRange.baseArrayLayer;
 		m_IMB.subresourceRange.layerCount= m_CI.subresoureRange.arrayLayerCount;
 
-		std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentLayout = static_cast<VkImageLayout>(m_CI.newLayout);
+		ref_cast<Image>(m_CI.pImage)->m_CurrentLayout = static_cast<VkImageLayout>(m_CI.newLayout);
 
 	default:
 		return;

@@ -211,6 +211,21 @@ namespace crossplatform
 			uint32_t	baseArrayLayer;
 			uint32_t	arrayLayerCount;
 		};
+		struct SubresourceLayers
+		{
+			AspectBit	aspectMask;
+			uint32_t	mipLevel;
+			uint32_t	baseArrayLayer;
+			uint32_t	layerCount;
+		};
+		struct Copy
+		{
+			SubresourceLayers	srcSubresource;
+			Offset3D			srcOffset;
+			SubresourceLayers	dstSubresource;
+			Offset3D			dstOffset;
+			Extent3D			extent;
+		};
 		
 		union ClearColourValue 
 		{
@@ -282,7 +297,7 @@ namespace crossplatform
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-		bool m_SwapchainImage = false;
+		bool m_SwapchainImageView = false;
 	};
 
 	class Sampler

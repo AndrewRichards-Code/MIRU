@@ -6,12 +6,12 @@ using namespace miru;
 using namespace d3d12;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Factory(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Factory),
-	m_Device(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Device),
+	:m_Factory(ref_cast<Context>(pCreateInfo->pContext)->m_Factory),
+	m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
 	m_Swapchain(nullptr)
 {
 	m_CI = *pCreateInfo;
-	ID3D12CommandQueue* cmdQueue = std::dynamic_pointer_cast<Context>(m_CI.pContext)->m_Queues[0];
+	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.pContext)->m_Queues[0];
 
 	//Create Swapchain
 	m_SwapchainDesc.Width = m_CI.width;
@@ -103,4 +103,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		m_SwapchainRTVs.push_back(swapchainRTV);
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
+
+	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTVs.data(), m_Width, m_Height);
+	m_Resized = true;
 }

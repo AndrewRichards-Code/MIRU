@@ -139,34 +139,34 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(std::dynamic_pointer_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
+	:m_Device(reinterpret_cast<ID3D12Device*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
 {
 	m_CI = *pCreateInfo;
 
 	ID3D12DescriptorHeap* heap;
 
-	heap = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[0];
+	heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[0];
 	if (heap)
 		m_CBV_SRV_UAV_DescHeapCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	heap = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[1];
+	heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[1];
 	if (heap)
 		m_Sampler_DescHeapCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	heap = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[2];
+	heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[2];
 	if (heap)
 		m_RTV_DescHeapCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	heap = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[3];
+	heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[3];
 	if (heap)
 		m_DSV_DescHeapCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
 
 	/*for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
-		m_DescriptorSetLayouts.push_back(std::dynamic_pointer_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
+		m_DescriptorSetLayouts.push_back(ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
 
 	m_DescriptorSetAI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	m_DescriptorSetAI.pNext = nullptr;
-	m_DescriptorSetAI.descriptorPool = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
+	m_DescriptorSetAI.descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
 	m_DescriptorSetAI.descriptorSetCount = static_cast<uint32_t>(m_DescriptorSetLayouts.size());
 	m_DescriptorSetAI.pSetLayouts = m_DescriptorSetLayouts.data();
 
@@ -186,7 +186,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	auto& type = std::dynamic_pointer_cast<BufferView>(descriptorBufferInfos[0].bufferView)->GetCreateInfo().type;
+	auto& type = ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->GetCreateInfo().type;
 
 	//CBV
 	if (type == BufferView::Type::UNIFORM || type == BufferView::Type::UNIFORM_TEXEL)
@@ -194,7 +194,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 		descriptorWriteLocation = m_CBV_SRV_UAV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * index);
 
-		m_Device->CreateConstantBufferView(&std::dynamic_pointer_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_CBVDesc, descriptorWriteLocation);
+		m_Device->CreateConstantBufferView(&ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_CBVDesc, descriptorWriteLocation);
 	}
 	//UAV
 	if (type == BufferView::Type::STORAGE || type == BufferView::Type::STORAGE_TEXEL)
@@ -202,8 +202,8 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 		descriptorWriteLocation = m_CBV_SRV_UAV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * index);
 
-		m_Device->CreateUnorderedAccessView(std::dynamic_pointer_cast<Buffer>(descriptorBufferInfos[0].bufferView)->m_Buffer, nullptr,
-			&std::dynamic_pointer_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_UAVDesc, descriptorWriteLocation);
+		m_Device->CreateUnorderedAccessView(ref_cast<Buffer>(descriptorBufferInfos[0].bufferView)->m_Buffer, nullptr,
+			&ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_UAVDesc, descriptorWriteLocation);
 	}
 }
 
@@ -218,7 +218,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
-	auto& usage = std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
+	auto& usage = ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
 
 	//RTV
 	if (usage == Image::UsageBit::COLOR_ATTACHMENT_BIT)
@@ -226,8 +226,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_RTV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (rtvDescriptorSize * index);
 
-		m_Device->CreateRenderTargetView(std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
-			&std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->m_RTVDesc, descriptorWriteLocation);
+		m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
+			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_RTVDesc, descriptorWriteLocation);
 	}
 	//DSV
 	else if (usage == Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT)
@@ -235,8 +235,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_DSV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (dsvDescriptorSize * index);
 
-		m_Device->CreateDepthStencilView(std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
-			&std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->m_DSVDesc, descriptorWriteLocation);
+		m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
+			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_DSVDesc, descriptorWriteLocation);
 	}
 	//UAV
 	else if(usage == Image::UsageBit::STORAGE_BIT)
@@ -244,8 +244,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_CBV_SRV_UAV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * index);
 
-		m_Device->CreateUnorderedAccessView(std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
-			&std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->m_UAVDesc, descriptorWriteLocation);
+		m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
+			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_UAVDesc, descriptorWriteLocation);
 	}
 	//SRV
 	else
@@ -253,8 +253,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_CBV_SRV_UAV_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * index);
 
-		m_Device->CreateShaderResourceView(std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
-			/*&std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->m_SRVDesc*/0, descriptorWriteLocation);
+		m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
+			/*&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_SRVDesc*/0, descriptorWriteLocation);
 	}
 	
 	//Sampler
@@ -263,7 +263,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation = m_Sampler_DescHeapCPUHandle;
 		descriptorWriteLocation.ptr += (samplerDescriptorSize * index);
 
-		m_Device->CreateSampler(&std::dynamic_pointer_cast<Sampler>(descriptorImageInfos[0].sampler)->m_SamplerDesc, descriptorWriteLocation);
+		m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfos[0].sampler)->m_SamplerDesc, descriptorWriteLocation);
 	}
 }
 
@@ -275,7 +275,7 @@ void DescriptorSet::Update()
 	{
 		D3D12_ROOT_PARAMETER rootParameter = {};
 		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameter.DescriptorTable = std::dynamic_pointer_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable;;
+		rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable;;
 		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		m_RootParameters.push_back(rootParameter);
 	}

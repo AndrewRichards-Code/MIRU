@@ -87,8 +87,8 @@ namespace crossplatform
 
 		struct VertexInputState
 		{
-			std::vector<VertexInputBindingDescription> vertexInputBindingDescriptions;
-			std::vector<VertexInputAttributeDescription> vertexInputAttributeDescriptions;
+			std::vector<VertexInputBindingDescription>		vertexInputBindingDescriptions;
+			std::vector<VertexInputAttributeDescription>	vertexInputAttributeDescriptions;
 		};
 		struct InputAssemblyState 
 		{

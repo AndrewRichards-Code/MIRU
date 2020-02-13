@@ -149,6 +149,8 @@ namespace shader_compiler
 		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
 		std::string currentWorkingDir = std::filesystem::current_path().string();
+		if (currentWorkingDir.find("exe") != std::string::npos)
+			currentWorkingDir += "/../../..";
 		std::string absoluteSrcDir = currentWorkingDir + "/" + filepath;
 		std::string absoluteDstDir = currentWorkingDir + "/" + outputDirectory + filename + ".cso";
 

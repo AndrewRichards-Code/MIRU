@@ -5,6 +5,7 @@
 //CSTDLIB
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <array>
@@ -66,6 +67,9 @@ namespace miru
 
 	template<class T>
 	using Ref = std::shared_ptr<T>;
+
+	template<class _Ty1, class _Ty2>
+	inline constexpr Ref<_Ty1> ref_cast(const Ref<_Ty2>& x) noexcept { return std::dynamic_pointer_cast<_Ty1>(x); }
 }
 
 //MIRU Enum Class Bitwise Operators Templates

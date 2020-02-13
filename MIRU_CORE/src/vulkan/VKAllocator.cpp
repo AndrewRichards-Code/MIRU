@@ -14,7 +14,7 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 {
 	m_CI = *pCreateInfo;
 	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
-	Ref<vulkan::Context> context = std::dynamic_pointer_cast<vulkan::Context>(m_CI.pContext);
+	Ref<vulkan::Context> context = ref_cast<vulkan::Context>(m_CI.pContext);
 
 	s_PhysicalDeviceProperties = context->m_PhysicalDevices.m_PhysicalDeviceProperties[0];
 	s_PhysicalDeviceMemoryProperties = context->m_PhysicalDevices.m_PhysicalDeviceMemoryProperties[0];
@@ -165,7 +165,7 @@ uint32_t MemoryBlock::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
 //Unused but very useful!
 uint32_t MemoryBlock::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 {
-	const std::vector<VkQueueFamilyProperties>& queueFamilyProperties = std::dynamic_pointer_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties;
+	const std::vector<VkQueueFamilyProperties>& queueFamilyProperties = ref_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties;
 	
 	uint32_t nextPowerOfTwo = static_cast<uint32_t>(pow(2, ceil(log((uint32_t)queueType) / log(2))));
 	bool IsSingleType = (nextPowerOfTwo == (uint32_t)queueType ? true : false);

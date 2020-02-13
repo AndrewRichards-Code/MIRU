@@ -12,6 +12,8 @@ namespace vulkan
 		Shader(Shader::CreateInfo* pCreateInfo);
 		~Shader();
 
+		void Reconstruct() override;
+
 		//Members
 	public:
 		VkDevice& m_Device;

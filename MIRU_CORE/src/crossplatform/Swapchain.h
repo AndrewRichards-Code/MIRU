@@ -38,6 +38,8 @@ namespace crossplatform
 		std::vector<Ref<Image>> m_SwapchainImages;
 		std::vector<Ref<ImageView>> m_SwapchainImageViews;
 
+		bool m_Resized = false;
+
 	protected:
 		CreateInfo m_CI = {};
 	};

@@ -6,11 +6,11 @@ using namespace miru;
 using namespace vulkan;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Device(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Device),
-	m_Instance(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Instance)
+	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
+	m_Instance(ref_cast<Context>(pCreateInfo->pContext)->m_Instance)
 {
 	m_CI = *pCreateInfo;
-	VkPhysicalDevice physicalDevice = std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PhysicalDevices[0];
+	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PhysicalDevices[0];
 	uint32_t queueFamilyIndex = 0;
 
 	//Surface
@@ -161,7 +161,6 @@ Swapchain::~Swapchain()
 
 void Swapchain::Resize(uint32_t width, uint32_t height)
 {
-	
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
 		vkDestroyImageView(m_Device, imageView, 0);
@@ -199,4 +198,19 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 		m_SwapchainImageViews.push_back(imageView);
 	}
+
+	std::vector<VkImage*> images;
+	for (auto& swapchainImage : m_SwapchainImages)
+	{
+		images.push_back(&swapchainImage);
+	}
+
+	std::vector<VkImageView*> imageViews;
+	for (auto& swapchainImageView : m_SwapchainImageViews)
+	{
+		imageViews.push_back(&swapchainImageView);
+	}
+
+	FillSwapchainImageAndViews((void**)images.data(), (void**)imageViews.data(), m_Extent.width, m_Extent.height);
+	m_Resized = true;
 }

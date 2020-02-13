@@ -78,7 +78,7 @@ namespace crossplatform
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
 		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, Ref<CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
 		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector< Ref<Semaphore>>& waits, std::vector< Ref<Semaphore>>& signals, PipelineStageBit pipelineStage, Ref<Fence> fence) = 0;
-		virtual void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<Swapchain> swapchain, std::vector<Ref<Fence>>& draws, std::vector<Ref<Semaphore>>& acquires, std::vector<Ref<Semaphore>>& submits) = 0;
+		virtual void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<Swapchain> swapchain, std::vector<Ref<Fence>>& draws, std::vector<Ref<Semaphore>>& acquires, std::vector<Ref<Semaphore>>& submits, bool& windowResize) = 0;
 
 		virtual void SetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
@@ -99,6 +99,14 @@ namespace crossplatform
 		virtual void BindDescriptorSets(uint32_t index, const std::vector<Ref<DescriptorSet>>& descriptorSets, Ref<Pipeline> pipeline) = 0;
 
 		virtual void DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) = 0;
+
+		virtual void CopyBuffer(uint32_t index, Ref<Buffer> srcBuffer, Ref<Buffer> dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
+		virtual void CopyImage(uint32_t index, Ref<Image> srcImage, Ref<Image> dstImage, const std::vector<Image::Copy>& copyRegions) = 0;
+		/*virtual void CopyBufferToImage(uint32_t index) = 0;
+		virtual void CopyImageToBuffer(uint32_t index) = 0;
+
+		virtual void BlitImage(uint32_t index) = 0;
+		virtual void ResolveImage(uint32_t index) = 0;*/
 
 	protected:
 		inline bool CheckValidIndex(uint32_t index) { return (index < m_CI.commandBufferCount); }

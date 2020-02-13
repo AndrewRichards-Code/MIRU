@@ -94,29 +94,29 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 	m_Barriers.reserve(1);
 	if (m_CI.type == Barrier::Type::BUFFER)
 	{
-		if (std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState != ToD3D12ResourceState(m_CI.srcAccess))
+		if (ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState != ToD3D12ResourceState(m_CI.srcAccess))
 			MIRU_WARN(true, "WARN: D3D12: Provided StateBefore ResourceState does not match CurrentResourceState. Using the CurrentResourceState in Barrier.");
 
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+		barrier.Transition.pResource = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
 		barrier.Transition.StateBefore = ToD3D12ResourceState(m_CI.srcAccess);
 		barrier.Transition.StateAfter = ToD3D12ResourceState(m_CI.dstAccess);
 		barrier.Transition.Subresource = 0;
 		m_Barriers.push_back(barrier);
 
-		std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState = barrier.Transition.StateAfter;
+		ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState = barrier.Transition.StateAfter;
 	}
 	else if (m_CI.type == Barrier::Type::IMAGE)
 	{
-		if (std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentResourceState != Image::ToD3D12ImageLayout(m_CI.oldLayout))
+		if (ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState != Image::ToD3D12ImageLayout(m_CI.oldLayout))
 			MIRU_WARN(true, "WARN: D3D12: Provided StateBefore ResourceState does not match CurrentResourceState. Using the CurrentResourceState in Barrier.");
 		
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_Image;
+		barrier.Transition.pResource = ref_cast<Image>(m_CI.pImage)->m_Image;
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
 		
@@ -141,7 +141,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 				}
 			}
 		}
-		std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_CurrentResourceState = barrier.Transition.StateAfter;
+		ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState = barrier.Transition.StateAfter;
 	}
 	else if (m_CI.type == Barrier::Type::MEMORY)
 		m_Barriers[0] = D3D12_RESOURCE_BARRIER();

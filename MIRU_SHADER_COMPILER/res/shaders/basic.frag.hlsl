@@ -11,7 +11,6 @@ struct PS_OUT
 PS_OUT main(PS_IN IN)
 {
     PS_OUT OUT;
-    //OUT.position
     OUT.colour = float4(0.0, 0.0, 1.0, 1.0f);
     return OUT;
 }

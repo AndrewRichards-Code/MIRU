@@ -19,3 +19,10 @@ Shader::~Shader()
 	m_ShaderByteCode.pShaderBytecode = nullptr;
 	m_ShaderByteCode.BytecodeLength = 0;
 }
+
+void Shader::Reconstruct()
+{
+	GetShaderByteCode();
+	m_ShaderByteCode.pShaderBytecode = m_ShaderBinary.data();
+	m_ShaderByteCode.BytecodeLength = m_ShaderBinary.size();
+}

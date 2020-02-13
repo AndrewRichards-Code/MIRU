@@ -78,7 +78,7 @@ BufferView::BufferView(CreateInfo* pCreateInfo)
 	m_BufferViewCI.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
 	m_BufferViewCI.pNext = nullptr;
 	m_BufferViewCI.flags = 0;
-	m_BufferViewCI.buffer = std::dynamic_pointer_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+	m_BufferViewCI.buffer = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
 	m_BufferViewCI.format = VK_FORMAT_R8_UINT;
 	m_BufferViewCI.offset = m_CI.offset;
 	m_BufferViewCI.range = m_CI.size;

@@ -3,7 +3,11 @@
 using namespace miru;
 using namespace crossplatform;
 #if 1
+HWND window;
 bool g_WindowQuit = false;
+uint32_t width = 800;
+uint32_t height = 600;
+bool windowResize;
 LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	if (msg == WM_DESTROY || msg == WM_CLOSE)
@@ -12,8 +16,26 @@ LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 		g_WindowQuit = true;
 		return 0;
 	}
+	if (msg == WM_SIZE)
+	{
+		width = LOWORD(lparam);
+		height = HIWORD(lparam);
+	}
+	if (msg == WM_EXITSIZEMOVE)
+	{
+		windowResize = true;
+	}
 
 	return DefWindowProc(handle, msg, wparam, lparam);
+}
+void WindowUpdate()
+{
+	MSG msg = { 0 };
+	if (PeekMessage(&msg, window, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 }
 
 int main()
@@ -23,7 +45,7 @@ int main()
 	api.SetUseSetName();
 	//api.SetAPI(GraphicsAPI::API::D3D12);
 	api.SetAPI(GraphicsAPI::API::VULKAN);
-	
+
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
 	contextCI.api_version_minor = 1;
@@ -43,9 +65,7 @@ int main()
 	wc.lpszClassName = contextCI.applicationName;
 	RegisterClass(&wc);
 
-	uint32_t width = 800;
-	uint32_t height = 600;
-	HWND window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
+	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
 	ShowWindow(window, SW_SHOW);
 
 	Swapchain::CreateInfo swapchainCI;
@@ -57,6 +77,8 @@ int main()
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	Ref<Swapchain> swapchain = Swapchain::Create(&swapchainCI);
+	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
+	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
 
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic_Vertex";
@@ -108,7 +130,7 @@ int main()
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> vb = Buffer::Create(&verticesBufferCI);
-	
+
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices";
 	indicesBufferCI.device = context->GetDevice();
@@ -141,7 +163,7 @@ int main()
 	RenderPass::CreateInfo renderPassCI;
 	renderPassCI.debugName = "Basic";
 	renderPassCI.device = context->GetDevice();
-	renderPassCI.attachments = { 
+	renderPassCI.attachments = {
 		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
 		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
 		RenderPass::AttachmentLoadOp::CLEAR,
@@ -150,14 +172,14 @@ int main()
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		Image::Layout::UNKNOWN,
 		Image::Layout::PRESENT_SRC
-		} 
+		}
 	};
 	renderPassCI.subpassDescriptions = {
 		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOR_ATTACHMENT_OPTIMAL}}, {},{},{} }
 	};
 	renderPassCI.subpassDependencies = {
 		{MIRU_SUBPASS_EXTERNAL, 0,
-		PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, 
+		PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT,
 		(Barrier::AccessBit)0, Barrier::AccessBit::COLOR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOR_ATTACHMENT_WRITE_BIT}
 	};
 	Ref<RenderPass> renderPass = RenderPass::Create(&renderPassCI);
@@ -169,7 +191,7 @@ int main()
 	pCI.shaders = { vertexShader, fragmentShader };
 	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, 16, VertexInputRate::VERTEX} };
 	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0} };
-	pCI.inputAssemblyState = {PrimitiveTopology::TRIANGLE_LIST, false};
+	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
@@ -178,7 +200,7 @@ int main()
 	pCI.depthStencilState = { true, true, CompareOp::LESS, false, false, {}, {}, 0.0f, 1.0f };
 	pCI.colourBlendState.logicOpEnable = false;
 	pCI.colourBlendState.logicOp = LogicOp::COPY;
-	pCI.colourBlendState.attachments = { {true, BlendFactor::SRC_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA, BlendOp::ADD, 
+	pCI.colourBlendState.attachments = { {true, BlendFactor::SRC_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA, BlendOp::ADD,
 											BlendFactor::ONE, BlendFactor::ZERO, BlendOp::ADD, (ColourComponentBit)15 } };
 	pCI.colourBlendState.blendConstants[0] = 0.0f;
 	pCI.colourBlendState.blendConstants[1] = 0.0f;
@@ -190,30 +212,40 @@ int main()
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
 
-	Framebuffer::CreateInfo framebufferCI;
-	framebufferCI.debugName = "Framebuffer0";
-	framebufferCI.device = context->GetDevice();
-	framebufferCI.renderPass = renderPass;
-	framebufferCI.attachments = { swapchain->m_SwapchainImageViews[0] };
-	framebufferCI.width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
-	framebufferCI.height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
-	framebufferCI.layers = 1;
-	Ref<Framebuffer> framebuffer0 = Framebuffer::Create(&framebufferCI);
-	framebufferCI.debugName = "Framebuffer1";
-	framebufferCI.attachments = { swapchain->m_SwapchainImageViews[1] };
-	Ref<Framebuffer> framebuffer1 = Framebuffer::Create(&framebufferCI);
+	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
+	framebufferCI_0.debugName = "Framebuffer0";
+	framebufferCI_0.device = context->GetDevice();
+	framebufferCI_0.renderPass = renderPass;
+	framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0] };
+	framebufferCI_0.width = width;
+	framebufferCI_0.height = height;
+	framebufferCI_0.layers = 1;
+	Ref<Framebuffer> framebuffer0 = Framebuffer::Create(&framebufferCI_0);
+	framebufferCI_1.debugName = "Framebuffer1";
+	framebufferCI_1.device = context->GetDevice();
+	framebufferCI_1.renderPass = renderPass;
+	framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1] };
+	framebufferCI_1.width = width;
+	framebufferCI_1.height = height;
+	framebufferCI_1.layers = 1;
+	Ref<Framebuffer> framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 
-	for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
-	{
-		cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-		cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {1.0f, 0.0f, 0.0f, 1.0f} });
-		cmdBuffer->BindPipeline(i, pipeline);
-		cmdBuffer->BindVertexBuffers(i, { vbv });
-		cmdBuffer->BindIndexBuffer(i, ibv);
-		cmdBuffer->DrawIndexed(i, 6);
-		cmdBuffer->EndRenderPass(i);
-		cmdBuffer->End(i);
-	}
+	auto RecordPresentCmdBuffers = [&]()
+	{	
+		cmdPool->Reset(false);
+		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
+		{
+			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
+			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {1.0f, 0.0f, 0.0f, 1.0f} });
+			cmdBuffer->BindPipeline(i, pipeline);
+			cmdBuffer->BindVertexBuffers(i, { vbv });
+			cmdBuffer->BindIndexBuffer(i, ibv);
+			cmdBuffer->DrawIndexed(i, 6);
+			cmdBuffer->EndRenderPass(i);
+			cmdBuffer->End(i);
+		}
+	};
+	RecordPresentCmdBuffers();
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
@@ -230,13 +262,36 @@ int main()
 	//Main Render Loop
 	while (!g_WindowQuit)
 	{
-		//Check for WindowMessages
-		if (PeekMessage(&msg, window, 0, 0, PM_REMOVE))
+		WindowUpdate();
+
+		if (swapchain->m_Resized)
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			swapchain->Resize(width, height);
+			
+			pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
+			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
+			pipeline = Pipeline::Create(&pCI);
+
+			framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0] };
+			framebufferCI_0.width = width;
+			framebufferCI_0.height = height;
+			framebuffer0 = Framebuffer::Create(&framebufferCI_0);
+
+			framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1] };
+			framebufferCI_1.width = width;
+			framebufferCI_1.height = height;
+			framebuffer1 = Framebuffer::Create(&framebufferCI_1);
+
+			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
+			RecordPresentCmdBuffers();
+
+			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
+			acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+			submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+
+			swapchain->m_Resized = false;
 		}
-		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit);
+		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 	}
 	vkDeviceWaitIdle(*(VkDevice*)context->GetDevice());
 }

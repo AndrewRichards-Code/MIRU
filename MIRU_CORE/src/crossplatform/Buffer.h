@@ -10,6 +10,12 @@ namespace crossplatform
 	{
 		//enums/structs
 	public:
+		struct Copy
+		{
+			size_t srcOffset;
+			size_t dstOffset;
+			size_t size;
+		};
 		enum class UsageBit : uint32_t
 		{
 			TRANSFER_SRC		= 0x00000001,
@@ -65,9 +71,9 @@ namespace crossplatform
 			void*				device;
 			Type				type;
 			Ref<Buffer>			pBuffer;
-			uint32_t			offset;
-			uint32_t			size;
-			uint32_t			stride;
+			size_t				offset;
+			size_t				size;
+			size_t				stride;
 		};
 
 		//Methods

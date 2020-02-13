@@ -37,7 +37,7 @@ void Shader::GetShaderByteCode()
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return;
 	}
 	
-	m_CI.filepath = filepath.replace(filepath.find_last_of('.'), 4, shaderBinaryFileExtension).c_str();
+	filepath = filepath.replace(filepath.find_last_of('.'), 4, shaderBinaryFileExtension);
 
 	std::ifstream stream(filepath, std::ios::ate | std::ios::binary);
 	if (!stream.is_open())
@@ -48,4 +48,29 @@ void Shader::GetShaderByteCode()
 	stream.seekg(0);
 	stream.read(m_ShaderBinary.data(), static_cast<std::streamsize>(m_ShaderBinary.size()));
 	stream.close();
+}
+
+void Shader::Recompile()
+{
+	std::string binFilepath(m_CI.filepath);
+	std::string fileName = binFilepath.substr(binFilepath.find_last_of('/'), binFilepath.find_last_of('.') - binFilepath.find_last_of('/'));
+
+	std::string filepath = "res/shaders" + fileName + ".hlsl";
+	std::string outputDir("res/bin");
+	std::string command = "MIRU_SHADER_COMPILER -cso -spv -f:" + filepath + " -o:" + outputDir;
+
+	std::string currentWorkingDir = std::filesystem::current_path().string();
+	std::string mscLocation;
+	#ifdef _DEBUG
+	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Debug";
+	#else
+	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Release";
+	#endif
+
+	printf((std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
+	printf(("Executing: " + mscLocation + "> " + command + "\n").c_str());
+	system(("cd " + mscLocation + " && " + command).c_str());
+	printf("\n");
+
+	Reconstruct();
 }

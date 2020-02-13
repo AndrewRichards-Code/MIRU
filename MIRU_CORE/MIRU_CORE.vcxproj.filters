@@ -72,9 +72,6 @@
     <ClInclude Include="src\directx12\D3D12Sync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\debug\RenderDoc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\directx12\D3D12Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -121,6 +118,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vulkan\VKFramebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\RenderDoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -173,9 +173,6 @@
     <ClCompile Include="src\directx12\D3D12Sync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\debug\RenderDoc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\directx12\D3D12Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -225,6 +222,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkan\VKFramebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug\RenderDoc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

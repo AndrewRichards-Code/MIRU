@@ -288,9 +288,9 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	m_ImageViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	m_ImageViewCI.pNext = nullptr;
 	m_ImageViewCI.flags = 0;
-	m_ImageViewCI.image = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_Image;
-	m_ImageViewCI.viewType = static_cast<VkImageViewType>(std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type);
-	m_ImageViewCI.format = static_cast<VkFormat>(std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().format);
+	m_ImageViewCI.image = ref_cast<Image>(m_CI.pImage)->m_Image;
+	m_ImageViewCI.viewType = static_cast<VkImageViewType>(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type);
+	m_ImageViewCI.format = static_cast<VkFormat>(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format);
 	m_ImageViewCI.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	m_ImageViewCI.subresourceRange = {
 		static_cast<VkImageAspectFlags>(m_CI.subresourceRange.aspect),
@@ -306,7 +306,8 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 ImageView::~ImageView() 
 {
-	vkDestroyImageView(m_Device, m_ImageView, nullptr);
+	if(!m_SwapchainImageView)
+		vkDestroyImageView(m_Device, m_ImageView, nullptr);
 }
 
 Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)

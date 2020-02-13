@@ -12,6 +12,8 @@ namespace d3d12
 		Shader(Shader::CreateInfo* pCreateInfo);
 		~Shader();
 
+		void Reconstruct() override;
+
 		//Members
 	public:
 		ID3D12Device* m_Device;

@@ -352,15 +352,15 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 {
 	m_CI = *pCreateInfo;
 
-	D3D12_RESOURCE_DESC resourceDesc = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_ResourceDesc;
-	ID3D12Resource* image = std::dynamic_pointer_cast<Image>(m_CI.pImage)->m_Image;
+	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(m_CI.pImage)->m_ResourceDesc;
+	ID3D12Resource* image = ref_cast<Image>(m_CI.pImage)->m_Image;
 
 	//RTV
 	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 	{
 		m_RTVDesc.Format = resourceDesc.Format;
 
-		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{
@@ -424,14 +424,14 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	}
 
 	//DSV
-	if(std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
+	if(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
 	{
 		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 		{
 			m_DSVDesc.Format = resourceDesc.Format;
 			m_DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
-			switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+			switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 			{
 			case Image::Type::TYPE_1D:
 			{
@@ -490,7 +490,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	{
 		m_SRVDesc.Format = resourceDesc.Format;
 
-		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{
@@ -579,7 +579,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	{
 		m_UAVDesc.Format = resourceDesc.Format;
 
-		switch (std::dynamic_pointer_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{
 		case Image::Type::TYPE_1D:
 		{

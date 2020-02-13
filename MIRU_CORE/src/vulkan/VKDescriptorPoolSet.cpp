@@ -61,16 +61,16 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(std::dynamic_pointer_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
+	:m_Device(*reinterpret_cast<VkDevice*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
 {
 	m_CI = *pCreateInfo;
 
 	for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
-		m_DescriptorSetLayouts.push_back(std::dynamic_pointer_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
+		m_DescriptorSetLayouts.push_back(ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
 
 	m_DescriptorSetAI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	m_DescriptorSetAI.pNext = nullptr;
-	m_DescriptorSetAI.descriptorPool = std::dynamic_pointer_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
+	m_DescriptorSetAI.descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
 	m_DescriptorSetAI.descriptorSetCount = static_cast<uint32_t>(m_DescriptorSetLayouts.size());
 	m_DescriptorSetAI.pSetLayouts = m_DescriptorSetLayouts.data();
 
@@ -98,9 +98,9 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	for (auto& descriptorBufferInfo : descriptorBufferInfos)
 	{
 		m_DescriptorBufferInfo[index][bindingIndex].push_back({
-			std::dynamic_pointer_cast<Buffer>(std::dynamic_pointer_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().pBuffer)->m_Buffer,
-			std::dynamic_pointer_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.offset,
-			std::dynamic_pointer_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.range
+			ref_cast<Buffer>(ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().pBuffer)->m_Buffer,
+			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.offset,
+			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.range
 			});
 	}
 
@@ -111,7 +111,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	wds.dstBinding = bindingIndex;
 	wds.dstArrayElement = desriptorArrayIndex;
 	wds.descriptorCount = static_cast<uint32_t>(m_DescriptorBufferInfo[index][bindingIndex].size());
-	wds.descriptorType = BufferViewTypeToVkDescriptorType(std::dynamic_pointer_cast<BufferView>(descriptorBufferInfos[0].bufferView)->GetCreateInfo().type);
+	wds.descriptorType = BufferViewTypeToVkDescriptorType(ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->GetCreateInfo().type);
 	wds.pImageInfo = nullptr;
 	wds.pBufferInfo = m_DescriptorBufferInfo[index][bindingIndex].data();
 	wds.pTexelBufferView = nullptr;
@@ -126,13 +126,13 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	for (auto& descriptorImageInfos : descriptorImageInfos)
 	{
 		m_DescriptorImageInfo[index][bindingIndex].push_back({
-			std::dynamic_pointer_cast<Sampler>(descriptorImageInfos.sampler)->m_Sampler,
-			std::dynamic_pointer_cast<ImageView>(descriptorImageInfos.imageView)->m_ImageView,
+			ref_cast<Sampler>(descriptorImageInfos.sampler)->m_Sampler,
+			ref_cast<ImageView>(descriptorImageInfos.imageView)->m_ImageView,
 			static_cast<VkImageLayout>(descriptorImageInfos.imageLayout)
 			});
 	}
 
-	auto& usage = std::dynamic_pointer_cast<Image>(std::dynamic_pointer_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
+	auto& usage = ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
 
 	VkWriteDescriptorSet wds;
 	wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

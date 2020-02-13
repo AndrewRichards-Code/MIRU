@@ -45,8 +45,8 @@ void CommandPool::Reset(bool releaseResources)
 
 //CmdBuffer
 CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
-	:m_Device(std::dynamic_pointer_cast<CommandPool>(pCreateInfo->pCommandPool)->m_Device),
-	m_CmdPool(std::dynamic_pointer_cast<CommandPool>(pCreateInfo->pCommandPool)->m_CmdPool)
+	:m_Device(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_Device),
+	m_CmdPool(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_CmdPool)
 {
 	m_CI = *pCreateInfo;
 
@@ -109,7 +109,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 	for (auto& secondaryIndex : secondaryCommandBufferIndices)
 	{
 		if (secondaryIndex < commandBuffer->GetCreateInfo().commandBufferCount)
-			secondaryCmdBuffers.push_back(std::dynamic_pointer_cast<CommandBuffer>(commandBuffer)->m_CmdBuffers[secondaryIndex]);
+			secondaryCmdBuffers.push_back(ref_cast<CommandBuffer>(commandBuffer)->m_CmdBuffers[secondaryIndex]);
 	}
 	
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
@@ -125,13 +125,13 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 	}
 	std::vector<VkSemaphore> vkWaits;
 	for (auto& wait : waits)
-		vkWaits.push_back(std::dynamic_pointer_cast<Semaphore>(wait)->m_Semaphore);
+		vkWaits.push_back(ref_cast<Semaphore>(wait)->m_Semaphore);
 
 	std::vector<VkSemaphore> vkSignals;
 	for (auto& signal : signals)
-		vkSignals.push_back(std::dynamic_pointer_cast<Semaphore>(signal)->m_Semaphore);
+		vkSignals.push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
 
-	Ref<Context> context = std::dynamic_pointer_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
+	Ref<Context> context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
 	VkQueue queue = context->m_Queues[m_CI.pCommandPool->GetCreateInfo().queueFamilyIndex][0];
 
 	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -144,12 +144,12 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
 	m_CmdBufferSI.pSignalSemaphores = vkSignals.data();
 
-	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, std::dynamic_pointer_cast<Fence>(fence)->m_Fence), "ERROR: VULKAN: Failed to submit Queue.");
+	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, ref_cast<Fence>(fence)->m_Fence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
 {
-	size_t swapchainImageCount = std::dynamic_pointer_cast<Swapchain>(swapchain)->m_SwapchainImages.size();
+	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainImages.size();
 
 	if (swapchainImageCount != cmdBufferIndices.size()
 		|| swapchainImageCount != draws.size()
@@ -158,17 +158,26 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	{
 		MIRU_ASSERT(true, "ERROR: VULKAN: SwapchainImageCount and number of synchronisation objects does not match.");
 	}
-	Ref<Context> context = std::dynamic_pointer_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
+	Ref<Context> context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
 
 	VkDevice& vkDevice = context->m_Device;
 	VkQueue& vkQueue = context->m_Queues[m_CI.pCommandPool->GetCreateInfo().queueFamilyIndex][0];
-	VkSwapchainKHR& vkSwapchain = std::dynamic_pointer_cast<Swapchain>(swapchain)->m_Swapchain;
+	VkSwapchainKHR& vkSwapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
 
 	draws[m_CurrentFrame]->Wait();
 	draws[m_CurrentFrame]->Reset();
 
 	uint32_t imageIndex;
-	MIRU_ASSERT(vkAcquireNextImageKHR(vkDevice, vkSwapchain, UINT64_MAX, std::dynamic_pointer_cast<Semaphore>(acquires[m_CurrentFrame])->m_Semaphore, VK_NULL_HANDLE, &imageIndex), "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
+	VkResult result = vkAcquireNextImageKHR(vkDevice, vkSwapchain, UINT64_MAX, ref_cast<Semaphore>(acquires[m_CurrentFrame])->m_Semaphore, VK_NULL_HANDLE, &imageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResize)
+	{
+		windowResize = false;
+		swapchain->m_Resized = true;
+		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
+		return;
+	}
+	else
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
 
 	std::vector<Ref<crossplatform::Semaphore>> _acquires = { acquires[m_CurrentFrame] };
 	std::vector<Ref<crossplatform::Semaphore>> _submits = { submits[m_CurrentFrame] };
@@ -178,13 +187,22 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	pi.pNext = nullptr;
 	pi.waitSemaphoreCount = 1;
-	pi.pWaitSemaphores = &std::dynamic_pointer_cast<Semaphore>(submits[m_CurrentFrame])->m_Semaphore;
+	pi.pWaitSemaphores = &ref_cast<Semaphore>(submits[m_CurrentFrame])->m_Semaphore;
 	pi.swapchainCount = 1;
 	pi.pSwapchains = &vkSwapchain;
 	pi.pImageIndices = &imageIndex;
 	pi.pResults = nullptr;
 
-	MIRU_ASSERT(vkQueuePresentKHR(vkQueue, &pi), "ERROR: VULKAN: Failed to present the Image from Swapchain.");
+	result = vkQueuePresentKHR(vkQueue, &pi);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResize)
+	{
+		windowResize = false;
+		swapchain->m_Resized = true;
+		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
+		return;
+	}
+	else
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to present the Image from Swapchain.");
 
 	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
 }
@@ -192,13 +210,13 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 void CommandBuffer::SetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
 {
 	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdSetEvent(m_CmdBuffers[index], std::dynamic_pointer_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
+	vkCmdSetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
 void CommandBuffer::ResetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
 {
 	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdResetEvent(m_CmdBuffers[index], std::dynamic_pointer_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
+	vkCmdResetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
 void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatform::Event>>& events, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
@@ -208,14 +226,14 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatfo
 	std::vector<VkEvent>vkEvents;
 	vkEvents.reserve(events.size());
 	for (auto& event : events)
-		vkEvents.push_back(std::dynamic_pointer_cast<Event>(event)->m_Event);
+		vkEvents.push_back(ref_cast<Event>(event)->m_Event);
 
 	std::vector<VkMemoryBarrier>vkMemoryBarriers;
 	std::vector<VkBufferMemoryBarrier>vkBufferBarriers;
 	std::vector<VkImageMemoryBarrier>vkImageBarriers;
 	for (auto& barrier : barriers)
 	{
-		Ref<Barrier> _barrier = std::dynamic_pointer_cast<Barrier>(barrier);
+		Ref<Barrier> _barrier = ref_cast<Barrier>(barrier);
 		switch (_barrier->GetCreateInfo().type)
 		{
 		case Barrier::Type::MEMORY:
@@ -247,7 +265,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	std::vector<VkImageMemoryBarrier>vkImageBarriers;
 	for (auto& barrier : barriers)
 	{
-		Ref<Barrier> _barrier = std::dynamic_pointer_cast<Barrier>(barrier);
+		Ref<Barrier> _barrier = ref_cast<Barrier>(barrier);
 		switch (_barrier->GetCreateInfo().type)
 		{
 		case Barrier::Type::MEMORY:
@@ -284,7 +302,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 
 	VkClearColorValue* vkClearColour = (VkClearColorValue*)&clear;
 
-	vkCmdClearColorImage(m_CmdBuffers[index], std::dynamic_pointer_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearColour, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
+	vkCmdClearColorImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearColour, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
 void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
@@ -303,7 +321,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 
 	VkClearDepthStencilValue* vkClearDepthStencil = (VkClearDepthStencilValue*)&clear;
 
-	vkCmdClearDepthStencilImage(m_CmdBuffers[index], std::dynamic_pointer_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
+	vkCmdClearDepthStencilImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
 void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
@@ -318,8 +336,8 @@ void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuff
 	VkRenderPassBeginInfo bi;
 	bi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	bi.pNext = nullptr;
-	bi.renderPass = std::dynamic_pointer_cast<RenderPass>(framebuffer->GetCreateInfo().renderPass)->m_RenderPass;
-	bi.framebuffer = std::dynamic_pointer_cast<Framebuffer>(framebuffer)->m_Framebuffer;
+	bi.renderPass = ref_cast<RenderPass>(framebuffer->GetCreateInfo().renderPass)->m_RenderPass;
+	bi.framebuffer = ref_cast<Framebuffer>(framebuffer)->m_Framebuffer;
 	bi.renderArea.offset = { 0,0 };
 	bi.renderArea.extent.width = framebuffer->GetCreateInfo().width;
 	bi.renderArea.extent.height= framebuffer->GetCreateInfo().height;
@@ -338,7 +356,7 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline)
 {
 	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), std::dynamic_pointer_cast<Pipeline>(pipeline)->m_Pipeline);
+	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), ref_cast<Pipeline>(pipeline)->m_Pipeline);
 }
 
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
@@ -348,8 +366,8 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<cros
 	std::vector<VkDeviceSize> offsets;
 	for (auto& vetexBufferView : vertexBufferViews)
 	{
-		vkBuffers.push_back(std::dynamic_pointer_cast<Buffer>(std::dynamic_pointer_cast<BufferView>(vetexBufferView)->GetCreateInfo().pBuffer)->m_Buffer);
-		offsets.push_back(std::dynamic_pointer_cast<BufferView>(vetexBufferView)->GetCreateInfo().offset);
+		vkBuffers.push_back(ref_cast<Buffer>(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().pBuffer)->m_Buffer);
+		offsets.push_back(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().offset);
 	}
 
 	vkCmdBindVertexBuffers(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkBuffers.size()), vkBuffers.data(), offsets.data());
@@ -359,7 +377,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 {
 	CHECK_VALID_INDEX_RETURN(index);
 
-	VkBuffer& buffer = std::dynamic_pointer_cast<Buffer>(std::dynamic_pointer_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
+	VkBuffer& buffer = ref_cast<Buffer>(ref_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
 	const BufferView::CreateInfo& ci = indexBufferView->GetCreateInfo();
 
 	VkIndexType type;
@@ -381,7 +399,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	uint32_t descriptorSetCount = 0;
 	for (auto& descriptorSet : descriptorSets)
 	{
-		for (auto& vkDescriptorSet : std::dynamic_pointer_cast<const DescriptorSet>(descriptorSet)->m_DescriptorSets)
+		for (auto& vkDescriptorSet : ref_cast<const DescriptorSet>(descriptorSet)->m_DescriptorSets)
 		{		
 			vkDescriptorSets.push_back(vkDescriptorSet);
 			descriptorSetCount++;
@@ -389,11 +407,43 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	}
 
 	vkCmdBindDescriptorSets(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type),
-		std::dynamic_pointer_cast<Pipeline>(pipeline)->m_PipelineLayout, 0, descriptorSetCount, vkDescriptorSets.data(), 0, nullptr);
+		ref_cast<Pipeline>(pipeline)->m_PipelineLayout, 0, descriptorSetCount, vkDescriptorSets.data(), 0, nullptr);
 }
 
 void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
 {
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdDrawIndexed(m_CmdBuffers[index], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+}
+
+void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+
+	std::vector<VkBufferCopy> vkBufferCopy;
+	vkBufferCopy.reserve(copyRegions.size());
+	for (auto& copyRegion : copyRegions)
+		vkBufferCopy.push_back({ copyRegion .srcOffset, copyRegion.dstOffset, copyRegion.size});
+
+	vkCmdCopyBuffer(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferCopy.size()), vkBufferCopy.data());
+}
+
+void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<Image::Copy>& copyRegions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkImageCopy> vkImageCopy;
+	vkImageCopy.reserve(copyRegions.size());
+	for (auto& copyRegion : copyRegions)
+	{
+		VkImageCopy ic;
+		ic.srcSubresource = { static_cast<VkImageAspectFlags>(copyRegion.srcSubresource.aspectMask), copyRegion.srcSubresource.mipLevel, copyRegion.srcSubresource.baseArrayLayer, copyRegion.srcSubresource.layerCount };
+		ic.srcOffset = { copyRegion.srcOffset.x, copyRegion.srcOffset.y, copyRegion.srcOffset.z };
+		ic.dstSubresource = { static_cast<VkImageAspectFlags>(copyRegion.dstSubresource.aspectMask), copyRegion.dstSubresource.mipLevel, copyRegion.dstSubresource.baseArrayLayer, copyRegion.dstSubresource.layerCount };
+		ic.dstOffset = { copyRegion.dstOffset.x, copyRegion.dstOffset.y, copyRegion.dstOffset.z };
+		ic.extent = { copyRegion.extent.width, copyRegion.extent.height, copyRegion.extent.depth};
+		vkImageCopy.push_back(ic);
+	}
+	
+	vkCmdCopyImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, ref_cast<Image>(srcImage)->m_CurrentLayout,
+		ref_cast<Image>(dstImage)->m_Image, ref_cast<Image>(dstImage)->m_CurrentLayout, static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }

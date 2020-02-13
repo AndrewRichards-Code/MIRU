@@ -10,8 +10,8 @@ using namespace d3d12;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Device),
-	m_Queue(std::dynamic_pointer_cast<Context>(pCreateInfo->pContext)->m_Queues[pCreateInfo->queueFamilyIndex])
+	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
+	m_Queue(ref_cast<Context>(pCreateInfo->pContext)->m_Queues[pCreateInfo->queueFamilyIndex])
 {
 	m_CI = *pCreateInfo;
 
@@ -38,9 +38,9 @@ void CommandPool::Reset(bool releaseResources)
 CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 {
 	m_CI = *pCreateInfo;
-	m_Device = std::dynamic_pointer_cast<CommandPool>(m_CI.pCommandPool)->m_Device;
-	m_CmdPool = std::dynamic_pointer_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPool;
-	D3D12_COMMAND_QUEUE_DESC queueDesc = std::dynamic_pointer_cast<CommandPool>(m_CI.pCommandPool)->m_Queue->GetDesc();
+	m_Device = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Device;
+	m_CmdPool = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPool;
+	D3D12_COMMAND_QUEUE_DESC queueDesc = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue->GetDesc();
 
 	m_CmdBuffers.resize(m_CI.commandBufferCount);
 	for (size_t i = 0; i < m_CmdBuffers.size(); i++)
@@ -87,14 +87,14 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 	for (auto& secondaryIndex : secondaryCommandBufferIndices)
 	{
 		if (secondaryIndex < commandBuffer->GetCreateInfo().commandBufferCount)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ExecuteBundle(reinterpret_cast<ID3D12GraphicsCommandList*>(std::dynamic_pointer_cast<CommandBuffer>(commandBuffer)->m_CmdBuffers[secondaryIndex]));
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ExecuteBundle(reinterpret_cast<ID3D12GraphicsCommandList*>(ref_cast<CommandBuffer>(commandBuffer)->m_CmdBuffers[secondaryIndex]));
 	}
 
 }
 
 void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector<Ref<crossplatform::Semaphore>>& waits, std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
 {
-	ID3D12CommandQueue* queue = std::dynamic_pointer_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
 	for (auto& index : cmdBufferIndices)
 	{
@@ -102,20 +102,20 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 			submitCmdBuffers.push_back(m_CmdBuffers[index]);
 	}
 	for (auto& wait : waits)
-		queue->Wait(std::dynamic_pointer_cast<Semaphore>(wait)->m_Semaphore, std::dynamic_pointer_cast<Semaphore>(wait)->GetValue());
+		queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, ref_cast<Semaphore>(wait)->GetValue());
 	
 	queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
 	
 	for (auto& signal : signals)
 	{
-		std::dynamic_pointer_cast<Semaphore>(signal)->GetValue()++;
-		queue->Signal(std::dynamic_pointer_cast<Semaphore>(signal)->m_Semaphore, std::dynamic_pointer_cast<Semaphore>(signal)->GetValue());
+		ref_cast<Semaphore>(signal)->GetValue()++;
+		queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, ref_cast<Semaphore>(signal)->GetValue());
 	}
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
 {
-	size_t swapchainImageCount = std::dynamic_pointer_cast<Swapchain>(swapchain)->m_SwapchainRTVs.size();
+	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainRTVs.size();
 
 	if (swapchainImageCount != cmdBufferIndices.size()
 		|| swapchainImageCount != draws.size()
@@ -125,8 +125,8 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 		MIRU_ASSERT(true, "ERROR: D3D12: SwapchainImageCount and number of synchronisation objects does not match.");
 	}
 	
-	IDXGISwapChain4* d3d12Swapchain = std::dynamic_pointer_cast<Swapchain>(swapchain)->m_Swapchain;
-	ID3D12CommandQueue* d3d12Queue = std::dynamic_pointer_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	IDXGISwapChain4* d3d12Swapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
+	ID3D12CommandQueue* d3d12Queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
 
 	draws[m_CurrentFrame]->Wait();
 	draws[m_CurrentFrame]->Reset();
@@ -136,8 +136,8 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	Submit({cmdBufferIndices[imageIndex]}, blank, blank, crossplatform::PipelineStageBit::NONE, {});
 	
 	MIRU_ASSERT(d3d12Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
-	std::dynamic_pointer_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
-	d3d12Queue->Signal(std::dynamic_pointer_cast<Fence>(draws[m_CurrentFrame])->m_Fence, std::dynamic_pointer_cast<Fence>(draws[m_CurrentFrame])->GetValue());
+	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
+	d3d12Queue->Signal(ref_cast<Fence>(draws[m_CurrentFrame])->m_Fence, ref_cast<Fence>(draws[m_CurrentFrame])->GetValue());
 
 	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
 }
@@ -161,7 +161,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	std::vector<D3D12_RESOURCE_BARRIER> _barriers;
 	for (auto& barrier : barriers)
 	{
-		for (auto& _barrier : std::dynamic_pointer_cast<Barrier>(barrier)->m_Barriers)
+		for (auto& _barrier : ref_cast<Barrier>(barrier)->m_Barriers)
 			_barriers.push_back(_barrier);
 
 	}
@@ -184,7 +184,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for RenderTargetViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	D3D12_RESOURCE_DESC resourceDesc = std::dynamic_pointer_cast<Image>(image)->m_ResourceDesc;
+	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
 	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
@@ -270,7 +270,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 				break;
 			}
 			}
-			m_Device->CreateRenderTargetView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&m_RTVDesc*/, handle);
+			m_Device->CreateRenderTargetView(ref_cast<Image>(image)->m_Image, 0/*&m_RTVDesc*/, handle);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(handle, clear.float32, 0, nullptr);
 			handle.ptr += rtvDescriptorSize;
 		}
@@ -295,7 +295,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for DepthStencilViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	D3D12_RESOURCE_DESC resourceDesc = std::dynamic_pointer_cast<Image>(image)->m_ResourceDesc;
+	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
 	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
@@ -366,7 +366,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 				}
 			}
 			}
-			m_Device->CreateDepthStencilView(std::dynamic_pointer_cast<Image>(image)->m_Image, 0/*&m_DSVDesc*/, handle);
+			m_Device->CreateDepthStencilView(ref_cast<Image>(image)->m_Image, 0/*&m_DSVDesc*/, handle);
 			handle.ptr += rtvDescriptorSize;
 			descriptorCount++;
 		}
@@ -377,7 +377,17 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) {};
+void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 
+{
+	/*framebuffer->GetCreateInfo().renderPass;
+
+	UINT renderTargets = 0;
+	const D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderTargets;
+	const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pDepthStencil;
+	D3D12_RENDER_PASS_FLAGS Flags;
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->*/
+};
 void CommandBuffer::EndRenderPass(uint32_t index) {};
 
 void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) {};
@@ -388,3 +398,6 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) {};
 
 void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) {};
+
+void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) {};
+void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) {};

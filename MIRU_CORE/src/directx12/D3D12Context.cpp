@@ -19,7 +19,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	#if defined(_DEBUG)
 	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 	#endif
-	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create DXGIFactory2.");
+	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
 	
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);

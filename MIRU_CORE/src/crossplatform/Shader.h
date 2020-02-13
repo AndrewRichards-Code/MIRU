@@ -39,8 +39,11 @@ namespace crossplatform
 		virtual ~Shader() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
+		void Recompile();
+	
 	protected:
 		void GetShaderByteCode();
+		virtual void Reconstruct() = 0;
 
 		//Members
 	protected:
