@@ -217,7 +217,7 @@ namespace miru
 #if defined(_MSC_VER)
 #define DEBUG_BREAK __debugbreak()
 #else
-#define DEBUG_BREAK raise(SIGTRAP);
+#define DEBUG_BREAK raise(SIGTRAP)
 #endif
 
 //Triggered if x != 0

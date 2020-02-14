@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <filesystem>
+#include "ErrorCodes.h"
 
 /*OVERVIEW: HLSL Compiler
 
@@ -129,7 +130,7 @@ namespace shader_compiler
 	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
 	//Example miru::shader_compiler::BuildCSO("res/shaders/basic.vert.hlsl", "res/bin");
-	static void BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
+	ErrorCode BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Get DXC Directory
 	#if _WIN64
@@ -151,8 +152,8 @@ namespace shader_compiler
 		std::string currentWorkingDir = std::filesystem::current_path().string();
 		if (currentWorkingDir.find("exe") != std::string::npos)
 			currentWorkingDir += "/../../..";
-		std::string absoluteSrcDir = currentWorkingDir + "/" + filepath;
-		std::string absoluteDstDir = currentWorkingDir + "/" + outputDirectory + filename + ".cso";
+		std::string absoluteSrcDir = /*currentWorkingDir + "/" +*/ filepath;
+		std::string absoluteDstDir = /*currentWorkingDir + "/" +*/ outputDirectory + filename + ".cso";
 
 		std::string shaderType;
 		{
@@ -170,8 +171,13 @@ namespace shader_compiler
 		//Run dxc
 		printf("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
 		printf(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
-		system(("cd " + dxcLocation + " && " + command).c_str());
+		int errorCode = system(("cd " + dxcLocation + " && " + command).c_str());
 		printf("\n");
+
+		if (errorCode)
+			return ErrorCode::MIRU_SC_CSO_ERROR;
+		else
+			return ErrorCode::MIRU_SC_OK;
 	}
 
 	static void ClearConsoleScreenCSO()

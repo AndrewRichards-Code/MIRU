@@ -54,12 +54,13 @@ void Shader::Recompile()
 {
 	std::string binFilepath(m_CI.filepath);
 	std::string fileName = binFilepath.substr(binFilepath.find_last_of('/'), binFilepath.find_last_of('.') - binFilepath.find_last_of('/'));
+	
+	std::string currentWorkingDir = std::filesystem::current_path().string();
 
-	std::string filepath = "res/shaders" + fileName + ".hlsl";
-	std::string outputDir("res/bin");
+	std::string filepath = currentWorkingDir + "/res/shaders" + fileName + ".hlsl";
+	std::string outputDir = currentWorkingDir + "/res/bin";
 	std::string command = "MIRU_SHADER_COMPILER -cso -spv -f:" + filepath + " -o:" + outputDir;
 
-	std::string currentWorkingDir = std::filesystem::current_path().string();
 	std::string mscLocation;
 	#ifdef _DEBUG
 	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Debug";
@@ -73,6 +74,7 @@ void Shader::Recompile()
 	printf("\n");
 
 	MIRU_ASSERT(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
+	system("CLS");
 
 	Reconstruct();
 }

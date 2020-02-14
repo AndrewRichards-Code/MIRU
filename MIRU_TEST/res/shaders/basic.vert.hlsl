@@ -28,6 +28,6 @@ VS_OUT main(VS_IN IN)
     VS_OUT OUT;
     //OUT.position = mul(camera.proj * camera.view * model.modl, IN.position);
     OUT.position = IN.position;
-    OUT.texCoords = IN.position + float2(0.5, 0.5);
+    OUT.texCoords = IN.position.xy + float2(0.5, 0.5);
 	return OUT;
 }

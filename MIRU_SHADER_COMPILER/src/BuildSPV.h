@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <filesystem>
+#include "ErrorCodes.h"
 
 /*
 Usage: glslangValidator [option]... [file]...
@@ -169,7 +170,7 @@ namespace shader_compiler
 	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
 	//Example miru::shader_compiler::BuildSPV("res/shaders/basic.vert.hlsl", "res/bin");
-	void BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
+	ErrorCode BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Vulkan SDK Directory
 	#if _WIN64
@@ -203,16 +204,21 @@ namespace shader_compiler
 		std::string currentWorkingDir = std::filesystem::current_path().string();
 		if (currentWorkingDir.find("exe") != std::string::npos)
 			currentWorkingDir += "/../../..";
-		std::string absoluteSrcDir = currentWorkingDir + "/" + filepath;
-		std::string absoluteDstDir = currentWorkingDir + "/" + outputDirectory + filename + ".spv";
+		std::string absoluteSrcDir = /*currentWorkingDir + "/" +*/ filepath;
+		std::string absoluteDstDir = /*currentWorkingDir + "/" +*/ outputDirectory + filename + ".spv";
 
 		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir + additionCommandlineArgs;
 
 		//Run glslangValidator
 		printf("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
 		printf(("Executing: " + glslValiditorLocation + "> " + command + "\n").c_str());
-		system(("cd " + glslValiditorLocation + " && " + command).c_str());
+		int errorCode = system(("cd " + glslValiditorLocation + " && " + command).c_str());
 		printf("\n");
+
+		if (errorCode)
+			return ErrorCode::MIRU_SC_SPV_ERROR;
+		else
+			return ErrorCode::MIRU_SC_OK;
 	}
 
 	void ClearConsoleScreenSPV()

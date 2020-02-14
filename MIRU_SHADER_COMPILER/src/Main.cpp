@@ -126,15 +126,17 @@ int main(int argc, const char** argv)
 	//Build binary
 	if (cso)
 	{
-		BuildCSO(filepath, outputDir, entryPoint);
+		error = BuildCSO(filepath, outputDir, entryPoint);
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	if (spv)
 	{
-		BuildSPV(filepath, outputDir, entryPoint);
+		error = BuildSPV(filepath, outputDir, entryPoint);
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SRV Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	if (debug)
 	{
 		system("PAUSE");
 	}
-	MIRU_SHADER_COMPILER_RETURN(error, "Success! MIRU_SHADER_COMPILER.");
+	MIRU_SHADER_COMPILER_RETURN(error, "Success. MIRU_SHADER_COMPILER.");
 }
