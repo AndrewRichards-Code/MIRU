@@ -8,6 +8,7 @@ bool g_WindowQuit = false;
 uint32_t width = 800;
 uint32_t height = 600;
 bool windowResize;
+bool shaderRecompile;
 LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	if (msg == WM_DESTROY || msg == WM_CLOSE)
@@ -25,6 +26,11 @@ LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		windowResize = true;
 	}
+	if (msg == WM_KEYDOWN && wparam == 0x52) //R
+	{
+		shaderRecompile = true;
+	}
+
 
 	return DefWindowProc(handle, msg, wparam, lparam);
 }
@@ -263,6 +269,22 @@ int main()
 	while (!g_WindowQuit)
 	{
 		WindowUpdate();
+
+		if (shaderRecompile)
+		{
+			vkDeviceWaitIdle(*(VkDevice*)context->GetDevice());
+
+			vertexShader->Recompile();
+			fragmentShader->Recompile();
+
+			pCI.shaders = { vertexShader, fragmentShader };
+			pipeline = Pipeline::Create(&pCI);
+
+			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
+			RecordPresentCmdBuffers();
+
+			shaderRecompile = false;
+		}
 
 		if (swapchain->m_Resized)
 		{

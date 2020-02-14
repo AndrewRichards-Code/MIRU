@@ -5,7 +5,8 @@ struct VS_IN
 
 struct VS_OUT
 {
-    [[vk::location(0)]] float4 position : SV_POSITION;
+    [[vk::location(0)]] float4 position     : SV_POSITION;
+    [[vk::location(1)]] float2 texCoords    : TEXCOORD0;
 };
 
 /*struct Camera
@@ -27,5 +28,6 @@ VS_OUT main(VS_IN IN)
     VS_OUT OUT;
     //OUT.position = mul(camera.proj * camera.view * model.modl, IN.position);
     OUT.position = IN.position;
+    OUT.texCoords = IN.position + float2(0.5, 0.5);
 	return OUT;
 }

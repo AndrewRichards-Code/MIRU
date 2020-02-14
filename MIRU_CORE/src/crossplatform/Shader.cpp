@@ -69,8 +69,10 @@ void Shader::Recompile()
 
 	printf((std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
 	printf(("Executing: " + mscLocation + "> " + command + "\n").c_str());
-	system(("cd " + mscLocation + " && " + command).c_str());
+	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
 	printf("\n");
+
+	MIRU_ASSERT(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
 
 	Reconstruct();
 }
