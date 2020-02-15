@@ -269,7 +269,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 void DescriptorSet::Update()
 {
-	m_RootParameters.clear();
+	/*m_RootParameters.clear();
 
 	for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
 	{
@@ -278,6 +278,6 @@ void DescriptorSet::Update()
 		rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable;;
 		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		m_RootParameters.push_back(rootParameter);
-	}
+	}*/
 }
 

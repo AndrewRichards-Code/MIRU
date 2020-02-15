@@ -51,8 +51,7 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
-		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
-
+		
 		D3D12_CPU_DESCRIPTOR_HANDLE m_CBV_SRV_UAV_DescHeapCPUHandle = {};
 		D3D12_CPU_DESCRIPTOR_HANDLE m_Sampler_DescHeapCPUHandle = {};
 		D3D12_CPU_DESCRIPTOR_HANDLE m_RTV_DescHeapCPUHandle = {};

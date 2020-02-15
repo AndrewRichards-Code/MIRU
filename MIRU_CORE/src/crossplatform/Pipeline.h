@@ -54,8 +54,8 @@ namespace crossplatform
 		{
 			uint32_t srcSubpass;			//Index of the Subpass that this subpass is dependent on.
 			uint32_t dstSubpass;			//Index of this subpass.
-			PipelineStageBit srcStage;	//Which stage of the previous subpass needs to by completed?
-			PipelineStageBit dstStage;	//Which stage of this subpass needs to by completed?
+			PipelineStageBit srcStage;		//Which stage of the previous subpass needs to by completed?
+			PipelineStageBit dstStage;		//Which stage of this subpass needs to by completed?
 			Barrier::AccessBit srcAccess;	//What access is needed into the previous subpass stage?
 			Barrier::AccessBit dstAccess;	//What access is needed into this subpass stage?
 		};
@@ -87,8 +87,8 @@ namespace crossplatform
 
 		struct VertexInputState
 		{
-			std::vector<VertexInputBindingDescription>		vertexInputBindingDescriptions;
-			std::vector<VertexInputAttributeDescription>	vertexInputAttributeDescriptions;
+			std::vector<VertexInputBindingDescription>		vertexInputBindingDescriptions; //One per VertexBuffer
+			std::vector<VertexInputAttributeDescription>	vertexInputAttributeDescriptions; //One per attribute per VertexBuffer
 		};
 		struct InputAssemblyState 
 		{

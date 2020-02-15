@@ -16,9 +16,9 @@ namespace d3d12
 	private:
 		void GenerateMipmaps();
 		D3D12_RESOURCE_DIMENSION ToD3D12ImageType(Image::Type type) const;
-		DXGI_FORMAT ToD3D12ImageFormat(Image::Format format) const;
 
 	public:
+		static DXGI_FORMAT ToD3D12ImageFormat(Image::Format format);
 		static D3D12_RESOURCE_STATES ToD3D12ImageLayout(Image::Layout layout);
 
 		//Members

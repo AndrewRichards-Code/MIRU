@@ -85,7 +85,7 @@ D3D12_RESOURCE_DIMENSION Image::ToD3D12ImageType(Image::Type type) const
 	}
 }
 
-DXGI_FORMAT Image::ToD3D12ImageFormat(Image::Format format) const
+DXGI_FORMAT Image::ToD3D12ImageFormat(Image::Format format)
 {
 	switch (format)
 	{

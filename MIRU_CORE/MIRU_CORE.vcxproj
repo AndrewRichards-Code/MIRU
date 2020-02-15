@@ -110,6 +110,7 @@
     <ClInclude Include="src\crossplatform\Sync.h" />
     <ClInclude Include="src\debug\RenderDoc.h" />
     <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
+    <ClInclude Include="src\directx12\D3D12Pipeline.h" />
     <ClInclude Include="src\directx12\D3D12Shader.h" />
     <ClInclude Include="src\directx12\D3D12Sync.h" />
     <ClInclude Include="src\directx12\D3D12Allocator.h" />
@@ -159,6 +160,7 @@
     <ClCompile Include="src\debug\RenderDoc.cpp" />
     <ClCompile Include="src\directx12\D3D12Buffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Context.cpp" />
+    <ClCompile Include="src\directx12\D3D12Pipeline.cpp" />
     <ClCompile Include="src\directx12\D3D12Shader.cpp" />
     <ClCompile Include="src\directx12\D3D12Swapchain.cpp" />
     <ClCompile Include="src\directx12\D3D12Sync.cpp" />

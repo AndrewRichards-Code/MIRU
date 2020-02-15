@@ -70,6 +70,14 @@ namespace miru
 
 	template<class _Ty1, class _Ty2>
 	inline constexpr Ref<_Ty1> ref_cast(const Ref<_Ty2>& x) noexcept { return std::dynamic_pointer_cast<_Ty1>(x); }
+
+	auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t
+	{
+		uint8_t b = 0;
+		for (int i = 0; i < 8; i++)
+			b += ((0x0F & (a >> i * 4)) / 0xF) << i;
+		return b;
+	};
 }
 
 //MIRU Enum Class Bitwise Operators Templates

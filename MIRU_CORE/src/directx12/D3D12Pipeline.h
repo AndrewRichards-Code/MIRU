@@ -30,18 +30,26 @@ namespace d3d12
 		~Pipeline();
 
 	private:
-		VkFormat ToVkFormat(crossplatform::VertexType type);
-
+		DXGI_FORMAT ToDXGI_FORMAT(crossplatform::VertexType type);
+		D3D12_BLEND ToD3D12_BLEND(crossplatform::BlendFactor blend);
+		D3D12_LOGIC_OP ToD3D12_LOGIC_OP(crossplatform::LogicOp logic);
+		
 		//Members
 	public:
-		VkDevice& m_Device;
+		ID3D12Device* m_Device;
 
-		VkPipeline m_Pipeline;
-		VkGraphicsPipelineCreateInfo m_GPCI = {};
-		VkComputePipelineCreateInfo m_CPCI = {};
+		ID3D12RootSignature* m_RootSignature;
+		ID3DBlob* m_SerializedRootSignature;
+		ID3DBlob* m_SerializedRootSignatureError;
+		D3D12_ROOT_SIGNATURE_DESC m_RootSignatureDesc;
+		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 
-		VkPipelineLayout m_PipelineLayout;
-		VkPipelineLayoutCreateInfo m_PLCI;
+		ID3D12PipelineState* m_Pipeline;
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_GPSD = {};
+		D3D12_COMPUTE_PIPELINE_STATE_DESC m_CPSD = {};
+
+		std::vector<D3D12_VIEWPORT> m_Viewports;
+		std::vector<D3D12_RECT> m_Scissors;
 	};
 }
 }
