@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <filesystem>
 #include "ErrorCodes.h"
 
 /*
@@ -167,20 +166,20 @@ namespace miru
 {
 namespace shader_compiler
 {
-	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
+	//Use Absolute paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
-	//Example miru::shader_compiler::BuildSPV("res/shaders/basic.vert.hlsl", "res/bin");
+	//Example miru::shader_compiler::BuildSPV("$(ProjectDir)res/shaders/basic.vert.hlsl", "$(ProjectDir)res/bin");
 	ErrorCode BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Vulkan SDK Directory
 	#if _WIN64
-		std::string binDir = "\\Bin";
+		std::string binDir = "/Bin";
 	#elif _WIN32
-		std::string binDir = "\\Bin32";
+		std::string binDir = "/Bin32";
 	#elif __linux__ && (__x86_64__ || _M_X64)
-		std::string binDir = "\\x86_64\\bin";
+		std::string binDir = "/x86_64/bin";
 	#elif __linux__ && (__i386 || _M_IX86)
-		std::string binDir = "\\x86\\bin";
+		std::string binDir = "/x86/bin";
 	#endif
 
 	#if !(_CRT_SECURE_NO_WARNINGS) && (_WIN32)
@@ -201,19 +200,17 @@ namespace shader_compiler
 		size_t hlslExtPos = filepath.find(".hlsl");
 		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
-		std::string currentWorkingDir = std::filesystem::current_path().string();
-		if (currentWorkingDir.find("exe") != std::string::npos)
-			currentWorkingDir += "/../../..";
-		std::string absoluteSrcDir = /*currentWorkingDir + "/" +*/ filepath;
-		std::string absoluteDstDir = /*currentWorkingDir + "/" +*/ outputDirectory + filename + ".spv";
+		std::string absoluteSrcDir = filepath;
+		std::string absoluteDstDir = outputDirectory + filename + ".spv";
 
-		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir + additionCommandlineArgs;
+		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir + " -DMIRU_VULKAN "+ additionCommandlineArgs;
 
 		//Run glslangValidator
 		printf("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
 		printf(("Executing: " + glslValiditorLocation + "> " + command + "\n").c_str());
 		int errorCode = system(("cd " + glslValiditorLocation + " && " + command).c_str());
-		printf("\n");
+		printf("'glslangValidator.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
+		printf("MIRU_SHADER_COMPILER: HLSL -> SPV finished.\n\n");
 
 		if (errorCode)
 			return ErrorCode::MIRU_SC_SPV_ERROR;

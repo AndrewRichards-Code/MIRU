@@ -9,6 +9,9 @@ Shader::Shader(CreateInfo* pCreateInfo)
 {
 	m_CI = *pCreateInfo;
 
+	m_ShaderModelData.HighestShaderModel = D3D_SHADER_MODEL_6_5;
+	MIRU_WARN(m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &m_ShaderModelData, sizeof(m_ShaderModelData)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_SHADER_MODEL");
+
 	GetShaderByteCode();
 	m_ShaderByteCode.pShaderBytecode = m_ShaderBinary.data();
 	m_ShaderByteCode.BytecodeLength = m_ShaderBinary.size();

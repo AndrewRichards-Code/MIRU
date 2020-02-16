@@ -60,15 +60,9 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, void* data
 		MIRU_WARN(d3d12Resource->Map(0, &range, &mappedData), "ERROR: D3D12: Can not map resource.");
 		
 		if (mappedData)
-		{
 			memcpy(mappedData, data, range.End);
-			d3d12Resource->Unmap(0, nullptr);
-		}
-		else
-		{
-			d3d12Resource->Unmap(0, nullptr);
-			return;
-		}
+		
+		d3d12Resource->Unmap(0, &range);
 	}
 	else
 	{
@@ -84,7 +78,7 @@ D3D12_HEAP_PROPERTIES MemoryBlock::GetHeapProperties(crossplatform::MemoryBlock:
 
 	D3D12_HEAP_PROPERTIES result;
 	result.Type = D3D12_HEAP_TYPE_CUSTOM;
-	result.CPUPageProperty = hostVisible ? (/*hostCoherent ? D3D12_CPU_PAGE_PROPERTY_WRITE_BACK :*/ D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE) : D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
+	result.CPUPageProperty = hostVisible ? (hostCoherent ? D3D12_CPU_PAGE_PROPERTY_WRITE_BACK : D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE) : D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
 	result.MemoryPoolPreference = deviceLocal ? D3D12_MEMORY_POOL_L1 : D3D12_MEMORY_POOL_L0;
 	result.CreationNodeMask = 0;
 	result.VisibleNodeMask = 0;

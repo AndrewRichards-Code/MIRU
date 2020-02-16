@@ -1,12 +1,21 @@
 struct VS_IN
 {
+#ifdef MIRU_VULKAN
     [[vk::location(0)]] float4 position : POSITION;
+#else
+    float4 position : POSITION;
+#endif
 };
 
 struct VS_OUT
 {
+#ifdef MIRU_VULKAN
     [[vk::location(0)]] float4 position     : SV_POSITION;
     [[vk::location(1)]] float2 texCoords    : TEXCOORD0;
+#else
+    float4 position     : SV_POSITION;
+    float2 texCoords    : TEXCOORD0;
+#endif
 };
 
 /*struct Camera

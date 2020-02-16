@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <filesystem>
 #include "ErrorCodes.h"
 
 /*OVERVIEW: HLSL Compiler
@@ -127,19 +126,19 @@ namespace miru
 {
 namespace shader_compiler
 {
-	//Use Relative paths and do not use preceeding or trailing '/'. see Example.
-	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
-	//Example miru::shader_compiler::BuildCSO("res/shaders/basic.vert.hlsl", "res/bin");
-	ErrorCode BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
+	//Use Absolute paths and do not use preceeding or trailing '/'. see Example.
+	//Output file will have ".cso" append to the end automatically to denoted that it's a CSO file.
+	//Example miru::shader_compiler::BuildCSO("$(ProjectDir)res/shaders/basic.vert.hlsl", "$(ProjectDir)res/bin");
+	ErrorCode BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& shaderModel, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Get DXC Directory
 	#if _WIN64
-		std::string binDir = "\\x64";
+		std::string binDir = "/x64";
 	#elif _WIN32
-		std::string binDir = "\\x86";
+		std::string binDir = "/x86";
 	#endif
 
-		std::string winKitSDKDir = "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0";
+		std::string winKitSDKDir = "C:/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0";
 		std::string dxcLocation = winKitSDKDir + binDir;
 
 		if (!compiler_dir.empty())
@@ -149,11 +148,8 @@ namespace shader_compiler
 		size_t hlslExtPos = filepath.find(".hlsl");
 		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
-		std::string currentWorkingDir = std::filesystem::current_path().string();
-		if (currentWorkingDir.find("exe") != std::string::npos)
-			currentWorkingDir += "/../../..";
-		std::string absoluteSrcDir = /*currentWorkingDir + "/" +*/ filepath;
-		std::string absoluteDstDir = /*currentWorkingDir + "/" +*/ outputDirectory + filename + ".cso";
+		std::string absoluteSrcDir = filepath;
+		std::string absoluteDstDir = outputDirectory + filename + ".cso";
 
 		std::string shaderType;
 		{
@@ -164,15 +160,15 @@ namespace shader_compiler
 			if (filepath.find(".frag") != std::string::npos) { shaderType = "ps_"; }
 			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_"; }
 		}
-		const std::string shaderModel = "6_0";
-
-		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir + additionCommandlineArgs;
+		
+		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir + " -DMIRU_D3D12 " + additionCommandlineArgs;
 
 		//Run dxc
 		printf("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
 		printf(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
 		int errorCode = system(("cd " + dxcLocation + " && " + command).c_str());
-		printf("\n");
+		printf("'dxc.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
+		printf("MIRU_SHADER_COMPILER: HLSL -> CSO finished.\n\n");
 
 		if (errorCode)
 			return ErrorCode::MIRU_SC_CSO_ERROR;

@@ -15,7 +15,7 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 
 	//m_CI.attachments[0].loadOp
 
-	renderTargetDescriptions.push_back({ {0}, });
+	//renderTargetDescriptions.push_back({ {0}, });
 
 }
 
@@ -28,7 +28,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
 	m_CI = *pCreateInfo;
-
 
 	m_RootParameters.clear();
 	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
@@ -52,8 +51,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	}
 	
 	m_RootSignatureDesc = { static_cast<UINT>(m_RootParameters.size()), m_RootParameters.data(), 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT };
-	D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError);
-	MIRU_ASSERT(m_Device->CreateRootSignature(0, m_SerializedRootSignature->GetBufferPointer(), m_SerializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "ERROR: D3D12: Failed tp create RootSignature.");
+	MIRU_ASSERT(D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError), "ERROR: D3D12: Failed to serialise RootSignature.");
+	MIRU_ASSERT(m_Device->CreateRootSignature(0, m_SerializedRootSignature->GetBufferPointer(), m_SerializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 
 	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
 	{
@@ -82,9 +81,9 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		for (auto& attrib : m_CI.vertexInputState.vertexInputAttributeDescriptions)
 		{
 			D3D12_INPUT_ELEMENT_DESC il;
-			il.SemanticName = "";
+			il.SemanticName = "POSITION";
 			il.SemanticIndex = attrib.location;
-			il.Format = ToDXGI_FORMAT(attrib.vertexType);;
+			il.Format = ToDXGI_FORMAT(attrib.vertexType);
 			il.InputSlot = attrib.binding;
 			il.AlignedByteOffset = attrib.offset;
 			il.InputSlotClass = static_cast<D3D12_INPUT_CLASSIFICATION>(m_CI.vertexInputState.vertexInputBindingDescriptions[attrib.binding].inputRate);
@@ -96,24 +95,23 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//InputAssembly
 		switch (m_CI.inputAssemblyState.topology)
 		{
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		case crossplatform::PrimitiveTopology::POINT_LIST:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
 		case crossplatform::PrimitiveTopology::LINE_LIST:
 		case crossplatform::PrimitiveTopology::LINE_STRIP:
 		case crossplatform::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
 		case crossplatform::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
 		case crossplatform::PrimitiveTopology::TRIANGLE_LIST:
 		case crossplatform::PrimitiveTopology::TRIANGLE_STRIP:
 		case crossplatform::PrimitiveTopology::TRIANGLE_FAN:
 		case crossplatform::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
 		case crossplatform::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
 		case crossplatform::PrimitiveTopology::PATCH_LIST:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
 		default:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
 		}
 
 		//Tessellation
@@ -187,7 +185,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		size_t j = 0;
 		for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].colourAttachments)
 		{
-			if (attachment.layout != Image::Layout::COLOR_ATTACHMENT_OPTIMAL)
+			if (attachment.layout == Image::Layout::COLOR_ATTACHMENT_OPTIMAL)
 				m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
 			
 			j++;
@@ -195,9 +193,20 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				break;
 		}
 		m_GPSD.NumRenderTargets = static_cast<UINT>(j);		
-		const RenderPass::AttachmentReference& DSVAttachmentReference = m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment[0];
-		if (DSVAttachmentReference.layout != Image::Layout::COLOR_ATTACHMENT_OPTIMAL)
-			m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[DSVAttachmentReference.attachmentIndex].format);
+		for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment)
+		{
+			if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+				|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
+				|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+				|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+			{
+				m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+			}
+			
+			break; //There can be only one DSV.
+		}
+		if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+			m_GPSD.DepthStencilState = {};
 
 		//Fill D3D12 structure
 		m_GPSD.pRootSignature = m_RootSignature;
@@ -314,37 +323,37 @@ D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(crossplatform::LogicOp logic)
 	switch (logic)
 	{
 	default:
-	case miru::crossplatform::LogicOp::CLEAR:
+	case crossplatform::LogicOp::CLEAR:
 		return D3D12_LOGIC_OP_CLEAR;
-	case miru::crossplatform::LogicOp::AND:
+	case crossplatform::LogicOp::AND:
 		return D3D12_LOGIC_OP_AND;
-	case miru::crossplatform::LogicOp::AND_REVERSE:
+	case crossplatform::LogicOp::AND_REVERSE:
 		return D3D12_LOGIC_OP_AND_REVERSE;
-	case miru::crossplatform::LogicOp::COPY:
+	case crossplatform::LogicOp::COPY:
 		return D3D12_LOGIC_OP_COPY;
-	case miru::crossplatform::LogicOp::AND_INVERTED:
+	case crossplatform::LogicOp::AND_INVERTED:
 		return D3D12_LOGIC_OP_AND_INVERTED;
-	case miru::crossplatform::LogicOp::NO_OP:
+	case crossplatform::LogicOp::NO_OP:
 		return D3D12_LOGIC_OP_NOOP;
-	case miru::crossplatform::LogicOp::XOR:
+	case crossplatform::LogicOp::XOR:
 		return D3D12_LOGIC_OP_XOR;
-	case miru::crossplatform::LogicOp::OR:
+	case crossplatform::LogicOp::OR:
 		return D3D12_LOGIC_OP_OR;
-	case miru::crossplatform::LogicOp::NOR:
+	case crossplatform::LogicOp::NOR:
 		return D3D12_LOGIC_OP_NOR;
-	case miru::crossplatform::LogicOp::EQUIVALENT:
+	case crossplatform::LogicOp::EQUIVALENT:
 		return D3D12_LOGIC_OP_EQUIV;
-	case miru::crossplatform::LogicOp::INVERT:
+	case crossplatform::LogicOp::INVERT:
 		return D3D12_LOGIC_OP_INVERT;
-	case miru::crossplatform::LogicOp::OR_REVERSE:
+	case crossplatform::LogicOp::OR_REVERSE:
 		return D3D12_LOGIC_OP_OR_REVERSE;
-	case miru::crossplatform::LogicOp::COPY_INVERTED:
+	case crossplatform::LogicOp::COPY_INVERTED:
 		return D3D12_LOGIC_OP_COPY_INVERTED;
-	case miru::crossplatform::LogicOp::OR_INVERTED:
+	case crossplatform::LogicOp::OR_INVERTED:
 		return D3D12_LOGIC_OP_OR_INVERTED;
-	case miru::crossplatform::LogicOp::NAND:
+	case crossplatform::LogicOp::NAND:
 		return D3D12_LOGIC_OP_NAND;
-	case miru::crossplatform::LogicOp::SET:
+	case crossplatform::LogicOp::SET:
 		return D3D12_LOGIC_OP_SET;
 	}
 }

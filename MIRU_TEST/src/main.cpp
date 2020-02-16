@@ -48,9 +48,9 @@ int main()
 {
 	GraphicsAPI api;
 	//api.LoadRenderDoc();
-	api.SetUseSetName();
-	//api.SetAPI(GraphicsAPI::API::D3D12);
-	api.SetAPI(GraphicsAPI::API::VULKAN);
+	//api.SetUseSetName();
+	api.SetAPI(GraphicsAPI::API::D3D12);
+	//api.SetAPI(GraphicsAPI::API::VULKAN);
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
@@ -98,6 +98,9 @@ int main()
 	shaderCI.filepath = "res/bin/basic.frag.spv";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
+	vertexShader->Recompile();
+	fragmentShader->Recompile();
+
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
 	cmdPoolCI.pContext = context;
@@ -116,7 +119,7 @@ int main()
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
 	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_1MB;
-	mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT | MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
+	mbCI.properties = /*MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT |*/ MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
 
 	float vertices[16] =

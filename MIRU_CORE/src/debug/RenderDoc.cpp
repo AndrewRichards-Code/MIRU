@@ -22,7 +22,7 @@ RenderDoc::RenderDoc()
 
 #else
 
-RenderDoc: RenderDoc()
+RenderDoc::RenderDoc()
 	:m_RenderDocApi(nullptr), m_HInstance(nullptr), m_HModule(nullptr)
 {
 }

@@ -6,12 +6,20 @@
 #include "BuildSPV.h"
 #include "BuildCSO.h"
 
+#if defined(_WIN64)
+#include <Windows.h>
+#endif
+
 using namespace miru;
 using namespace shader_compiler;
 
 int main(int argc, const char** argv)
 {
 	ErrorCode error = ErrorCode::MIRU_SC_OK;
+
+#if defined(_WIN64)
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
 
 	//Null arguments
 	if (!argc)
@@ -29,7 +37,7 @@ int main(int argc, const char** argv)
 		{
 			std::cout << help_doucumentation << std::endl;
 		}
-		if (!_stricmp(argv[i], "-d") || !_stricmp(argv[i], "-debug"))
+		if (!_stricmp(argv[i], "-debug"))
 		{
 			debug = true;
 		}
@@ -75,8 +83,8 @@ int main(int argc, const char** argv)
 		MIRU_SHADER_COMPILER_RETURN(error, "No output file formats passed to MIRU_SHADER_COMPILER.");
 	}
 
-	//Get Filepath and Directories
-	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path;
+	//Get Filepath, Directories and others
+	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderModel, args;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
 	{
@@ -96,6 +104,11 @@ int main(int argc, const char** argv)
 			tempFilepath.erase(0, tagSize);
 			entryPoint = tempFilepath;
 		}
+		if (tempFilepath.find("-t:") != std::string::npos || tempFilepath.find("-T:") != std::string::npos)
+		{
+			tempFilepath.erase(0, tagSize);
+			shaderModel = tempFilepath;
+		}
 		if (tempFilepath.find("-dxc:") != std::string::npos || tempFilepath.find("-DXC:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-DXC:").size());
@@ -105,6 +118,15 @@ int main(int argc, const char** argv)
 		{
 			tempFilepath.erase(0, std::string("-GLSLANG:").size());
 			glslang_path = tempFilepath;
+		}
+		if (tempFilepath.find("-args:") != std::string::npos || tempFilepath.find("-ARGS:") != std::string::npos)
+		{
+			tempFilepath.erase(0, std::string("-ARGS:").size());
+			args = tempFilepath;
+		}
+		if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
+		{
+			args += tempFilepath + " ";
 		}
 
 	}
@@ -122,18 +144,32 @@ int main(int argc, const char** argv)
 	{
 		entryPoint = "main";
 	}
+	if (shaderModel.empty())
+	{
+		shaderModel = "6_0";
+	}
 
 	//Build binary
 	if (cso)
 	{
-		error = BuildCSO(filepath, outputDir, entryPoint);
+#if defined(_WIN64)
+		SetConsoleTextAttribute(hConsole, 2);
+#endif
+		error = BuildCSO(filepath, outputDir, entryPoint, shaderModel, args, dxc_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	if (spv)
 	{
-		error = BuildSPV(filepath, outputDir, entryPoint);
+#if defined(_WIN64)
+		SetConsoleTextAttribute(hConsole, 4);
+#endif
+		error = BuildSPV(filepath, outputDir, entryPoint, args, glslang_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SRV Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
+#if defined(_WIN64)
+	SetConsoleTextAttribute(hConsole, 7);
+#endif
+
 	if (debug)
 	{
 		system("PAUSE");

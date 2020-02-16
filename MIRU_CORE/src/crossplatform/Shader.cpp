@@ -55,11 +55,35 @@ void Shader::Recompile()
 	std::string binFilepath(m_CI.filepath);
 	std::string fileName = binFilepath.substr(binFilepath.find_last_of('/'), binFilepath.find_last_of('.') - binFilepath.find_last_of('/'));
 	
+	std::string shaderModel = "6_0";
+	if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
+	{
+		switch (((d3d12::Shader*)this)->m_ShaderModelData.HighestShaderModel)
+		{
+		case D3D_SHADER_MODEL_5_1:
+			shaderModel = "5_1"; break;
+		case D3D_SHADER_MODEL_6_0:
+			shaderModel = "6_0"; break;
+		case D3D_SHADER_MODEL_6_1:
+			shaderModel = "6_1"; break;
+		case D3D_SHADER_MODEL_6_2:
+			shaderModel = "6_2"; break;
+		case D3D_SHADER_MODEL_6_3:
+			shaderModel = "6_3"; break;
+		case D3D_SHADER_MODEL_6_4:
+			shaderModel = "6_4"; break;
+		case D3D_SHADER_MODEL_6_5:
+			shaderModel = "6_5"; break;
+		default:
+			shaderModel = "6_0"; break;
+		}
+	}
+
 	std::string currentWorkingDir = std::filesystem::current_path().string();
 
 	std::string filepath = currentWorkingDir + "/res/shaders" + fileName + ".hlsl";
 	std::string outputDir = currentWorkingDir + "/res/bin";
-	std::string command = "MIRU_SHADER_COMPILER -cso -spv -f:" + filepath + " -o:" + outputDir;
+	std::string command = "MIRU_SHADER_COMPILER -cso -spv -f:" + filepath + " -o:" + outputDir + " -t:" + shaderModel;
 
 	std::string mscLocation;
 	#ifdef _DEBUG
@@ -69,12 +93,13 @@ void Shader::Recompile()
 	#endif
 
 	printf((std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
-	printf(("Executing: " + mscLocation + "> " + command + "\n").c_str());
+	printf(("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
 	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
-	printf("\n");
+	printf("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);
+	printf("MIRU_CORE: Recompiling shader finished.\n\n");
 
 	MIRU_ASSERT(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
-	system("CLS");
+	//system("CLS");
 
 	Reconstruct();
 }

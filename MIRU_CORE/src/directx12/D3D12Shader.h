@@ -19,6 +19,7 @@ namespace d3d12
 		ID3D12Device* m_Device;
 
 		D3D12_SHADER_BYTECODE m_ShaderByteCode;
+		D3D12_FEATURE_DATA_SHADER_MODEL m_ShaderModelData = {};
 	};
 }
 }

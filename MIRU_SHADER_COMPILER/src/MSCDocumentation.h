@@ -10,10 +10,12 @@ The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and
 builds .cso or .spv shader binaries for Direct3D 12 and Vulkan.
 
 -h, -H, -help, -HELP        : For this help documentation. Optional.
--d - D - debug -DEBUG       : For debugging shader compilation, sets the -h flag. Optional.
+-pause -PAUSE               : Pauses the program at the end of shader compilation, sets the -h flag. Optional.
 -f:, -F:[filepath]          : Filepath to a .hlsl file to be compiled. This argument must be set.
 -o:, -O:[directory]         : Directory for the output binaries. Default is the supplied filepath.
--e: -E:                     : Define an entry point. Default is "main".
+-e:, -E:                    : Define an entry point. Default is "main".
+-t:, -T:                    : Define the shader model for Direct3D 12. Default is "6_0".
+-d, -D                      : Define a marco. MIRU_D3D12 for -cso and MIRU_VULKAN for -spv are already pre-defined. 
 -dxc -DXC                   : Specify location of the dxc.exe. Optional.
 -glslang -GLSLANG           : Specify location of the glslangValidator.exe. Optional.
 -cso, -CSO                  : Generates binaries(.cso) for Direct3D 12. This argument or -spv must be set.
@@ -21,6 +23,7 @@ builds .cso or .spv shader binaries for Direct3D 12 and Vulkan.
 -vi, -VI                    : Generates Vertex Input Info. Optional.
 -sr, -SR                    : Generates Shader Resources Info. Optional.
 -fo, -FO, -po, -PO          : Generates Fragment/Pixel Output Info. Optional.
+-args:, -ARGS:[__VA_ARGS__] : Provide addition argument.
 
 Supported Shader Types <shader_type>:
 vert   for a vertex shader
@@ -37,7 +40,7 @@ rahit  for a ray any hit shader
 rchit  for a ray closest hit shader
 rmiss  for a ray miss shader
 rcall  for a ray callable shader
-.conf  to provide a config file that replaces the default configuration
+conf  to provide a config file that replaces the default configuration
 )";
 }
 }

@@ -28,7 +28,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_Resource.device = m_Device;
 	m_Resource.type = crossplatform::Resource::Type::BUFFER;
 	m_Resource.resource = (uint64_t)m_Buffer; // This buffer handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);;
+	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
 	m_Resource.size = ai.SizeInBytes;
 	m_Resource.alignment = ai.Alignment;
 
@@ -41,7 +41,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 		m_Resource.resource = (uint64_t)m_Buffer;
 		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock.get()).at(m_Resource.id).resource = (uint64_t)m_Buffer;
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.data);
+		//m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.data);
 	}
 }
 

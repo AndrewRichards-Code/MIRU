@@ -338,3 +338,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/MIRU_SHADER_COMPILER/lib/dxil.dll
