@@ -92,14 +92,14 @@ void Shader::Recompile()
 	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Release";
 	#endif
 
-	printf((std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
-	printf(("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
+	MIRU_PRINTF((std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
+	MIRU_PRINTF(("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
 	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
-	printf("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);
-	printf("MIRU_CORE: Recompiling shader finished.\n\n");
+	MIRU_PRINTF("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);
+	MIRU_PRINTF("MIRU_CORE: Recompiling shader finished.\n\n");
 
 	MIRU_ASSERT(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
-	//system("CLS");
+	system("CLS");
 
 	Reconstruct();
 }

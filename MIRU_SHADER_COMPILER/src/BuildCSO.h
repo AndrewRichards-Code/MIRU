@@ -164,11 +164,11 @@ namespace shader_compiler
 		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir + " -DMIRU_D3D12 " + additionCommandlineArgs;
 
 		//Run dxc
-		printf("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
-		printf(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
+		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
+		MIRU_SC_PRINTF(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
 		int errorCode = system(("cd " + dxcLocation + " && " + command).c_str());
-		printf("'dxc.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
-		printf("MIRU_SHADER_COMPILER: HLSL -> CSO finished.\n\n");
+		MIRU_SC_PRINTF("'dxc.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
+		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO finished.\n\n");
 
 		if (errorCode)
 			return ErrorCode::MIRU_SC_CSO_ERROR;

@@ -25,10 +25,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
 
 	//Load dxil.dll
-	HMODULE dxil = LoadLibrary("../MIRU_SHADER_COMPILER/lib/dxil.dll");
+	HMODULE dxil = LoadLibrary("C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxil.dll");
 	if (!dxil)
-		MIRU_WARN(GetLastError(), "WARN: D3D12: Unable to load \"../MIRU_SHADER_COMPILER/lib/dxil.dll\".");;
-
+		MIRU_WARN(GetLastError(), "WARN: D3D12: Unable to load 'C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxil.dll'.");
+	
 	//Create Device
 	uint32_t featureLevel = D3D_FEATURE_LEVEL_11_0;
 	if (m_CI.api_version_major == 12)

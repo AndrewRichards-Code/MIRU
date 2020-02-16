@@ -11,6 +11,8 @@ builds .cso or .spv shader binaries for Direct3D 12 and Vulkan.
 
 -h, -H, -help, -HELP        : For this help documentation. Optional.
 -pause -PAUSE               : Pauses the program at the end of shader compilation, sets the -h flag. Optional.
+-nologo, -NOLOGO            : Disables copyright message. Optional.
+-nooutput, -NOOUTPUT        : Disables output messages. Optional.
 -f:, -F:[filepath]          : Filepath to a .hlsl file to be compiled. This argument must be set.
 -o:, -O:[directory]         : Directory for the output binaries. Default is the supplied filepath.
 -e:, -E:                    : Define an entry point. Default is "main".

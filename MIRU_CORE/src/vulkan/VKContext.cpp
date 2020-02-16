@@ -35,7 +35,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	if (GraphicsAPI::GetUseSetName())
+	if (GraphicsAPI::IsSetNameAllowed())
 		m_CI.instanceExtensions.push_back("VK_EXT_debug_utils");
 
 	uint32_t extensionCount = 0;

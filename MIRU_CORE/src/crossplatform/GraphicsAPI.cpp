@@ -6,8 +6,8 @@ using namespace miru;
 GraphicsAPI::API GraphicsAPI::s_API = GraphicsAPI::API::UNKNOWN;
 bool GraphicsAPI::s_ApiInitialised = false;
 
-bool GraphicsAPI::s_UseSetName = false;
-bool GraphicsAPI::s_UseSetNameInitialised = false;
+bool GraphicsAPI::s_AllowSetName = false;
+bool GraphicsAPI::s_AllowSetNameInitialised = false;
 
 debug::RenderDoc GraphicsAPI::s_RenderDoc = {};
 
@@ -20,12 +20,12 @@ void GraphicsAPI::SetAPI(GraphicsAPI::API api)
 	}
 }
 
-void GraphicsAPI::SetUseSetName(bool useSetName)
+void GraphicsAPI::AllowSetName(bool allowSetName)
 {
-	if (!s_UseSetNameInitialised)
+	if (!s_AllowSetNameInitialised)
 	{
-		s_UseSetName = useSetName;
-		s_UseSetNameInitialised = true;
+		s_AllowSetName = allowSetName;
+		s_AllowSetNameInitialised = true;
 	}
 }
 

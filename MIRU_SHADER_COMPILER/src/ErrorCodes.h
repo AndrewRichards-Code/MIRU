@@ -27,6 +27,15 @@ namespace shader_compiler
 	#define DEBUG_BREAK
 	#endif
 
+	static bool output = true;
+
+	//MIRU printf
+	#if _DEBUG
+	#define MIRU_SC_PRINTF(s, ...) if(output) {printf((s), __VA_ARGS__);}
+	#else
+	#define MIRU_SC_PRINTF(s, ...) if(output) {printf("");}
+	#endif
+
 	//Log error code
 	#define MIRU_SHADER_COMPILER_RETURN(x, y) {if(x != miru::shader_compiler::ErrorCode::MIRU_SC_OK) { printf("MIRU_SHADER_COMPILER_ASSERT: %s(%d): %s", __FILE__, __LINE__, y); DEBUG_BREAK; } return static_cast<int>(x); } 
 	#define MIRU_SHADER_COMPILER_ERROR_CODE(x, y) {if(x != miru::shader_compiler::ErrorCode::MIRU_SC_OK) { printf("MIRU_SHADER_COMPILER_WARN: %s(%d): %s", __FILE__, __LINE__, y); DEBUG_BREAK; } } 

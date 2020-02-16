@@ -40,6 +40,8 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+#define MIRU_DXIL
+
 #define SAFE_RELEASE(x) if(x) { x->Release(); x = nullptr; }
 
 #endif
@@ -51,10 +53,6 @@
 #endif
 #include "vulkan/vulkan.h"
 #pragma comment(lib, "vulkan-1.lib")
-/*char* buffer = nullptr;
-size_t size = 0;
-_dupenv_s(&buffer, &size, "VULKAN_SDK");
-std::string vulkanSDKDir = (buffer != nullptr) ? std::string(buffer) : std::string("");*/
 #endif
 
 #include "crossplatform/GraphicsAPI.h"
@@ -129,7 +127,7 @@ namespace miru
 {
 	static inline void D3D12SetName(void* object, const char* name)
 	{
-		if (!GraphicsAPI::GetUseSetName())
+		if (!GraphicsAPI::IsSetNameAllowed())
 			return;
 
 		reinterpret_cast<ID3D12Object*>(object)->SetName(reinterpret_cast<LPCWSTR>(name));
@@ -139,7 +137,7 @@ namespace miru
 	template<class T>
 	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name)
 	{
-		if (!GraphicsAPI::GetUseSetName())
+		if (!GraphicsAPI::IsSetNameAllowed())
 			return;
 
 		VkObjectType objectType = VK_OBJECT_TYPE_UNKNOWN;
@@ -221,6 +219,13 @@ namespace miru
 }
 #endif
 
+//MIRU printf
+#if _DEBUG
+#define MIRU_PRINTF(s, ...) printf((s), __VA_ARGS__)
+#else
+#define MIRU_PRINTF(s, ...) printf("")
+#endif
+
 //MIRU Debugbreak, Assert and Warn
 #if defined(_MSC_VER)
 #define DEBUG_BREAK __debugbreak()
@@ -229,5 +234,5 @@ namespace miru
 #endif
 
 //Triggered if x != 0
-#define MIRU_ASSERT(x, y) if(x != 0) { printf("MIRU_ASSERT: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); DEBUG_BREAK; }
-#define MIRU_WARN(x, y) if(x != 0) { printf("MIRU_WARN: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); }
+#define MIRU_ASSERT(x, y) if(x != 0) { MIRU_PRINTF("MIRU_ASSERT: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); DEBUG_BREAK; }
+#define MIRU_WARN(x, y) if(x != 0) { MIRU_PRINTF("MIRU_WARN: %s(%d): ERROR_CODE: %d(0x%x) - %s\n", __FILE__, __LINE__, static_cast<int>(x), static_cast<int>(x), y); }

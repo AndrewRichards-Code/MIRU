@@ -48,7 +48,7 @@ int main()
 {
 	GraphicsAPI api;
 	//api.LoadRenderDoc();
-	//api.SetUseSetName();
+	//api.AllowSetName();
 	api.SetAPI(GraphicsAPI::API::D3D12);
 	//api.SetAPI(GraphicsAPI::API::VULKAN);
 
@@ -97,9 +97,6 @@ int main()
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;
 	shaderCI.filepath = "res/bin/basic.frag.spv";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
-
-	vertexShader->Recompile();
-	fragmentShader->Recompile();
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";

@@ -29,18 +29,26 @@ int main(int argc, const char** argv)
 	}
 
 	//Application Header, Help documentation and Debug
-	std::cout << "MIRU_SHADER_COMPILER: Copyright © 2020 Andrew Richards.\n\n";
-	bool debug = false;
+	bool logo = true;
+	bool pause = false;
+	bool help = false;
 	for (int i = 0; i < argc; i++)
 	{
 		if (!_stricmp(argv[i], "-h") || !_stricmp(argv[i], "-help"))
-		{
-			std::cout << help_doucumentation << std::endl;
-		}
-		if (!_stricmp(argv[i], "-debug"))
-		{
-			debug = true;
-		}
+			help = true;
+		if (!_stricmp(argv[i], "-pause"))
+			pause = true;
+		if (!_stricmp(argv[i], "-nologo"))
+			logo = false;
+		if (!_stricmp(argv[i], "-nooutput"))
+			output = false;
+	}
+	if (logo)
+		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2020 Andrew Richards.\n\n");
+	if (help)
+	{
+		MIRU_SC_PRINTF(help_doucumentation);
+		MIRU_SC_PRINTF("\n");
 	}
 
 	//Parse other command line arguements
@@ -170,7 +178,7 @@ int main(int argc, const char** argv)
 	SetConsoleTextAttribute(hConsole, 7);
 #endif
 
-	if (debug)
+	if (pause)
 	{
 		system("PAUSE");
 	}
