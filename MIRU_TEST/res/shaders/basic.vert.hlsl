@@ -1,21 +1,14 @@
+#include "basic.h"
+
 struct VS_IN
 {
-#ifdef MIRU_VULKAN
-    [[vk::location(0)]] float4 position : POSITION;
-#else
-    float4 position : POSITION;
-#endif
+    MIRU_LOCATION(0, float4, position, POSITION);
 };
 
 struct VS_OUT
 {
-#ifdef MIRU_VULKAN
-    [[vk::location(0)]] float4 position     : SV_POSITION;
-    [[vk::location(1)]] float2 texCoords    : TEXCOORD0;
-#else
-    float4 position     : SV_POSITION;
-    float2 texCoords    : TEXCOORD0;
-#endif
+    MIRU_LOCATION(0, float4, position, SV_POSITION);
+    MIRU_LOCATION(1, float2, texCoords, TEXCOORD);
 };
 
 /*struct Camera
@@ -23,13 +16,14 @@ struct VS_OUT
     float4x4 proj;
     float4x4 view;
 };
-[[vk::binding(0, 0)]] ConstantBuffer<Camera> camera;
+MIRU_UNIFORM_BUFFER(0, 0, Camera, camera);
+ConstantBuffer<Camera> camera : register(b0, space0);*/
 
-struct Model
+/*struct Model
 {
     float4x4 modl;
 };
-[[vk::binding(1, 0)]] ConstantBuffer<Model> model;*/
+ConstantBuffer<Model> model : register(b1, space0);*/
 
 
 VS_OUT main(VS_IN IN)

@@ -98,6 +98,9 @@ int main()
 	shaderCI.filepath = "res/bin/basic.frag.spv";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
+	vertexShader->Recompile();
+	fragmentShader->Recompile();
+
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
 	cmdPoolCI.pContext = context;

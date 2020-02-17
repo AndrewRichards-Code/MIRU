@@ -1,21 +1,14 @@
+#include "basic.h"
+
 struct PS_IN
 {
-#ifdef MIRU_VULKAN
-    [[vk::location(0)]] float4 position     : SV_POSITION;
-    [[vk::location(1)]] float2 texCoords    : TEXCOORD0;
-#else
-    float4 position     : SV_POSITION;
-    float2 texCoords    : TEXCOORD0;
-#endif
+    MIRU_LOCATION(0, float4, position, SV_POSITION);
+    MIRU_LOCATION(1, float2, texCoords, TEXCOORD);
 };
     
 struct PS_OUT
 {
-#ifdef MIRU_VULKAN
-    [[vk::location(0)]] float4 colour       : SV_TARGET;
-#else
-    float4 colour       : SV_TARGET;
-#endif
+    MIRU_LOCATION(0, float4, colour, SV_TARGET);
 };
 
 PS_OUT main(PS_IN IN)
