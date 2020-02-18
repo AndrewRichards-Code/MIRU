@@ -20,8 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="res\shaders\basic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <None Include="res\shaders\shadertoolsconfig.json" />
   </ItemGroup>
 </Project>

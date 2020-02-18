@@ -8,6 +8,14 @@
 
 #if defined(_WIN64)
 #include <Windows.h>
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+#define CONSOLE_OUTPUT_RED SetConsoleTextAttribute(hConsole, 4)
+#define CONSOLE_OUTPUT_GREEN SetConsoleTextAttribute(hConsole, 2)
+#define CONSOLE_OUTPUT_WHITE SetConsoleTextAttribute(hConsole, 7)
+#else
+#define CONSOLE_OUTPUT_RED
+#define CONSOLE_OUTPUT_GREEN
+#define CONSOLE_OUTPUT_WHITE
 #endif
 
 using namespace miru;
@@ -17,9 +25,7 @@ int main(int argc, const char** argv)
 {
 	ErrorCode error = ErrorCode::MIRU_SC_OK;
 
-#if defined(_WIN64)
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
+	CONSOLE_OUTPUT_WHITE;
 
 	//Null arguments
 	if (!argc)
@@ -37,7 +43,7 @@ int main(int argc, const char** argv)
 		if (!_stricmp(argv[i], "-h") || !_stricmp(argv[i], "-help"))
 			help = true;
 		if (!_stricmp(argv[i], "-pause"))
-			pause = true;
+			pause = true; help = true;
 		if (!_stricmp(argv[i], "-nologo"))
 			logo = false;
 		if (!_stricmp(argv[i], "-nooutput"))
@@ -51,7 +57,7 @@ int main(int argc, const char** argv)
 		MIRU_SC_PRINTF("\n");
 	}
 
-	//Parse other command line arguements
+	//Parse compile flags
 	bool cso = false;
 	bool spv = false;
 	bool vi = false;
@@ -93,6 +99,7 @@ int main(int argc, const char** argv)
 
 	//Get Filepath, Directories and others
 	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderModel, args;
+	std::vector<std::string> includeDirs;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
 	{
@@ -106,6 +113,11 @@ int main(int argc, const char** argv)
 		{
 			tempFilepath.erase(0, tagSize);
 			outputDir = tempFilepath;
+		}
+		if (tempFilepath.find("-i:") != std::string::npos || tempFilepath.find("-I:") != std::string::npos)
+		{
+			tempFilepath.erase(0, tagSize);
+			includeDirs.push_back(tempFilepath);
 		}
 		if (tempFilepath.find("-e:") != std::string::npos || tempFilepath.find("-E:") != std::string::npos)
 		{
@@ -160,23 +172,17 @@ int main(int argc, const char** argv)
 	//Build binary
 	if (cso)
 	{
-#if defined(_WIN64)
-		SetConsoleTextAttribute(hConsole, 2);
-#endif
-		error = BuildCSO(filepath, outputDir, entryPoint, shaderModel, args, dxc_path);
+		CONSOLE_OUTPUT_GREEN;
+		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, args, dxc_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	if (spv)
 	{
-#if defined(_WIN64)
-		SetConsoleTextAttribute(hConsole, 4);
-#endif
-		error = BuildSPV(filepath, outputDir, entryPoint, args, glslang_path);
+		CONSOLE_OUTPUT_RED;
+		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, args, glslang_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SRV Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
-#if defined(_WIN64)
-	SetConsoleTextAttribute(hConsole, 7);
-#endif
+	CONSOLE_OUTPUT_WHITE;
 
 	if (pause)
 	{

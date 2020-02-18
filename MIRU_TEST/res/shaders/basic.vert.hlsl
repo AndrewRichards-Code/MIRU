@@ -1,4 +1,4 @@
-#include "basic.h"
+#include "msc_common.h"
 
 struct VS_IN
 {

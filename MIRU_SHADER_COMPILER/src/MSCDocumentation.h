@@ -5,27 +5,26 @@ namespace shader_compiler
 {
 	const char* help_doucumentation = 
 R"(MIRU_SHADER_COMPILER: Help Documentation:
+The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and builds .cso or .spv shader binaries for Direct3D 12 and Vulkan.
 
-The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and 
-builds .cso or .spv shader binaries for Direct3D 12 and Vulkan.
-
--h, -H, -help, -HELP        : For this help documentation. Optional.
--pause -PAUSE               : Pauses the program at the end of shader compilation, sets the -h flag. Optional.
--nologo, -NOLOGO            : Disables copyright message. Optional.
--nooutput, -NOOUTPUT        : Disables output messages. Optional.
--f:, -F:[filepath]          : Filepath to a .hlsl file to be compiled. This argument must be set.
--o:, -O:[directory]         : Directory for the output binaries. Default is the supplied filepath.
--e:, -E:                    : Define an entry point. Default is "main".
--t:, -T:                    : Define the shader model for Direct3D 12. Default is "6_0".
--d, -D                      : Define a marco. MIRU_D3D12 for -cso and MIRU_VULKAN for -spv are already pre-defined. 
--dxc -DXC                   : Specify location of the dxc.exe. Optional.
--glslang -GLSLANG           : Specify location of the glslangValidator.exe. Optional.
--cso, -CSO                  : Generates binaries(.cso) for Direct3D 12. This argument or -spv must be set.
--spv, -SPV                  : Generates binaries(.spv) for Vulkan. This argument or -cso must be set.
--vi, -VI                    : Generates Vertex Input Info. Optional.
--sr, -SR                    : Generates Shader Resources Info. Optional.
--fo, -FO, -po, -PO          : Generates Fragment/Pixel Output Info. Optional.
--args:, -ARGS:[__VA_ARGS__] : Provide addition argument.
+-h, -H, -help, -HELP                : For this help documentation. Optional.
+-pause -PAUSE                       : Pauses the program at the end of shader compilation, sets the -h flag. Optional.
+-nologo, -NOLOGO                    : Disables copyright message. Optional.
+-nooutput, -NOOUTPUT                : Disables output messages. Optional.
+-f:, -F:[filepath]                  : Filepath to a .hlsl file to be compiled. This argument must be set.
+-o:, -O:[directory]                 : Directory for the output binaries. This argument must be set.
+-i:, -I:[directory]                 : Include directories for compilation.
+-e:, -E:                            : Define an entry point. Default is "main".
+-t:, -T:                            : Define the shader model for Direct3D 12. Default is "6_0".
+-d, -D                              : Define a marco. MIRU_D3D12 for -cso and MIRU_VULKAN for -spv are already pre-defined.
+-dxc:, -DXC:[directory]             : Specify location of the dxc.exe. Optional.
+-glslang:, -GLSLANG:[directory]     : Specify location of the glslangValidator.exe. Optional.
+-cso, -CSO                          : Generates binaries(.cso) for Direct3D 12. This argument or -spv must be set.
+-spv, -SPV                          : Generates binaries(.spv) for Vulkan. This argument or -cso must be set.
+-vi, -VI                            : Generates Vertex Input Info. Optional.
+-sr, -SR                            : Generates Shader Resources Info. Optional.
+-fo, -FO, -po, -PO                  : Generates Fragment/Pixel Output Info. Optional.
+-args:, -ARGS:[__VA_ARGS__]         : Provide additional argument.
 
 Supported Shader Types <shader_type>:
 vert   for a vertex shader

@@ -129,7 +129,7 @@ namespace shader_compiler
 	//Use Absolute paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".cso" append to the end automatically to denoted that it's a CSO file.
 	//Example miru::shader_compiler::BuildCSO("$(ProjectDir)res/shaders/basic.vert.hlsl", "$(ProjectDir)res/bin");
-	ErrorCode BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& shaderModel, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
+	ErrorCode BuildCSO(const std::string& filepath, const std::string& outputDirectory, const std::vector<std::string>& includeDirectories, const std::string& entryPoint = "main", const std::string& shaderModel = "6_O", const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Get DXC Directory
 	#if _WIN64
@@ -161,7 +161,10 @@ namespace shader_compiler
 			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_"; }
 		}
 		
-		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir + " -DMIRU_D3D12 " + additionCommandlineArgs;
+		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir;
+		for (auto& includeDirectory : includeDirectories)
+			command += " -I " + includeDirectory;
+		command += " -DMIRU_D3D12 " + additionCommandlineArgs;
 
 		//Run dxc
 		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");

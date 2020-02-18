@@ -168,8 +168,8 @@ namespace shader_compiler
 {
 	//Use Absolute paths and do not use preceeding or trailing '/'. see Example.
 	//Output file will have ".spv" append to the end automatically to denoted that it's a SPIR-V file.
-	//Example miru::shader_compiler::BuildSPV("$(ProjectDir)res/shaders/basic.vert.hlsl", "$(ProjectDir)res/bin");
-	ErrorCode BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::string& entryPoint, const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
+	//Example miru::shader_compiler::BuildSPV("$(ProjectDir)res/shaders/basic.vert.hlsl", "$(ProjectDir)res/bin", "main");
+	ErrorCode BuildSPV(const std::string& filepath, const std::string& outputDirectory, const std::vector<std::string>& includeDirectories, const std::string& entryPoint = "main", const std::string& additionCommandlineArgs = "", const std::string& compiler_dir = "")
 	{
 		//Find Vulkan SDK Directory
 	#if _WIN64
@@ -203,7 +203,10 @@ namespace shader_compiler
 		std::string absoluteSrcDir = filepath;
 		std::string absoluteDstDir = outputDirectory + filename + ".spv";
 
-		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir + " -DMIRU_VULKAN "+ additionCommandlineArgs;
+		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir;
+		for (auto& includeDirectory : includeDirectories)
+			command += " -I" + includeDirectory; 
+		command += " -DMIRU_VULKAN "+ additionCommandlineArgs;
 
 		//Run glslangValidator
 		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
