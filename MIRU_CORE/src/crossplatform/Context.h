@@ -28,6 +28,7 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void* GetDevice() = 0;
+		virtual void DeviceWaitIdle() = 0;
 
 		//Members
 	protected:

@@ -34,6 +34,8 @@ namespace vulkan
 		~Context();
 
 		void* GetDevice() override { return &m_Device; }
+		void DeviceWaitIdle() override { vkDeviceWaitIdle(m_Device); };
+
 
 		//Members
 	public:

@@ -30,6 +30,7 @@ namespace d3d12
 		~Context();
 
 		void* GetDevice() override { return m_Device; }
+		void DeviceWaitIdle() override;
 
 		//Member
 	public:

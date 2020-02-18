@@ -63,6 +63,8 @@ int main()
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
 
+	context->DeviceWaitIdle();
+
 	//Creates the windows
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -318,7 +320,7 @@ int main()
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 	}
-	vkDeviceWaitIdle(*(VkDevice*)context->GetDevice());
+	context->DeviceWaitIdle();
 }
 #endif 
 #if 0

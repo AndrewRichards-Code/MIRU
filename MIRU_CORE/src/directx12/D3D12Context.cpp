@@ -1,5 +1,6 @@
 #include "common.h"
 #include "D3D12Context.h"
+#include "D3D12Sync.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -83,3 +84,26 @@ Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)
 	}
 }
 
+void Context::DeviceWaitIdle()
+{
+	Ref<crossplatform::Fence> fence;
+	Fence::CreateInfo ci;
+	ci.debugName = "";
+	ci.device = m_Device;
+	ci.signaled = false;
+	ci.timeout = UINT64_MAX; //In nanoseconds
+	
+	for (auto& queue : m_Queues)
+	{
+		fence = Fence::Create(&ci);
+		ref_cast<Fence>(fence)->GetValue()++;
+
+		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
+		if (!fence->Wait())
+		{
+			fence->~Fence();
+			fence = nullptr;
+		}
+	}
+
+}
