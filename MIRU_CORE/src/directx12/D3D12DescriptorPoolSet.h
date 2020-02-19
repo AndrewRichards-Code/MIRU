@@ -56,6 +56,10 @@ namespace d3d12
 		D3D12_CPU_DESCRIPTOR_HANDLE m_Sampler_DescHeapCPUHandle = {};
 		D3D12_CPU_DESCRIPTOR_HANDLE m_RTV_DescHeapCPUHandle = {};
 		D3D12_CPU_DESCRIPTOR_HANDLE m_DSV_DescHeapCPUHandle = {};
+
+		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 	};
+
+	bool operator== (const D3D12_ROOT_DESCRIPTOR_TABLE& a, const D3D12_ROOT_DESCRIPTOR_TABLE& b) { return (a.NumDescriptorRanges == b.NumDescriptorRanges) && (a.pDescriptorRanges == b.pDescriptorRanges); }
 }
 }

@@ -3,7 +3,10 @@
 #include "D3D12Context.h"
 #include "D3D12Swapchain.h"
 #include "D3D12Sync.h"
+#include "D3D12Buffer.h"
 #include "D3D12Image.h"
+#include "D3D12Pipeline.h"
+#include "D3D12DescriptorPoolSet.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -390,12 +393,75 @@ void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuff
 };
 void CommandBuffer::EndRenderPass(uint32_t index) {};
 
-void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) {};
+void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
+};
 
-void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) {};
-void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferView> indexBufferView) {};
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) {};
+	std::vector<const D3D12_VERTEX_BUFFER_VIEW&>vbvs;
+	vbvs.resize(vertexBufferViews.size());
+	for (auto& vbv : vertexBufferViews)
+		vbvs.push_back(ref_cast<BufferView>(vbv)->m_VBVDesc);
+
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetVertexBuffers(0, static_cast<UINT>(vbvs.size()), vbvs.data());
+
+};
+void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferView> indexBufferView) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
+};
+
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<ID3D12DescriptorHeap*> descHeaps;
+	for (auto& descriptorSet : descriptorSets)
+	{
+		for (size_t i = 0; i < 4; i++)
+		{
+			ID3D12DescriptorHeap* descHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[i];
+			if (descHeap);
+				descHeaps.push_back(descHeap);
+		}
+	}
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(static_cast<UINT>(descHeaps.size()), descHeaps.data());
+
+	for (size_t i = 0; i < ref_cast<Pipeline>(pipeline)->m_RootParameters.size(); i++)
+	{
+		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
+		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
+
+		for (auto& descriptorSet : descriptorSets)
+		{
+			for (auto& rootParam : ref_cast<DescriptorSet>(descriptorSet)->m_RootParameters)
+			{
+				D3D12_ROOT_DESCRIPTOR_TABLE descSet_table = rootParam.DescriptorTable;
+				if (pipeline_table == descSet_table)
+				{
+					ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool;
+					if(descSet_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+						gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[0]->GetGPUDescriptorHandleForHeapStart();
+					else
+						gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[1]->GetGPUDescriptorHandleForHeapStart();
+				}
+			}
+		}
+
+		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+
+	}
+};
 
 void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) {};
 
