@@ -33,8 +33,8 @@ namespace d3d12
 		void End(uint32_t index) override;
 		void Reset(uint32_t index, bool releaseResources) override;
 		void ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplatform::CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) override;
-		void Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector< Ref<crossplatform::Semaphore>>& waits, std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence) override;
-		void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize) override;
+		void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector< Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence) override;
+		void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize) override;
 
 		void SetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage) override;
 		void ResetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage) override;
@@ -46,6 +46,7 @@ namespace d3d12
 
 		void BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) override;
 		void EndRenderPass(uint32_t index) override;
+		void NextSubpass(uint32_t index) override;
 
 		void BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) override;
 
@@ -65,6 +66,10 @@ namespace d3d12
 		ID3D12CommandAllocator* m_CmdPool;
 
 		std::vector<ID3D12CommandList*> m_CmdBuffers;
+
+		Ref<crossplatform::Framebuffer> m_RenderPassFramebuffer;
+		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;
+		uint32_t m_SubpassIndex = (uint32_t)-1;
 	};
 }
 }

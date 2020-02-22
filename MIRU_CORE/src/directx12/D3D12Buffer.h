@@ -22,6 +22,7 @@ namespace d3d12
 		ID3D12Resource* m_Buffer;
 		D3D12_RESOURCE_DESC m_ResourceDesc;
 		D3D12_RESOURCE_STATES m_CurrentResourceState;
+		D3D12_RESOURCE_ALLOCATION_INFO m_AllocationInfo;
 	};
 
 	class BufferView final : public crossplatform::BufferView
@@ -39,6 +40,9 @@ namespace d3d12
 		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc;
 		D3D12_INDEX_BUFFER_VIEW m_IBVDesc;
 		D3D12_VERTEX_BUFFER_VIEW m_VBVDesc;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE m_CBVDescHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_UAVDescHandle = {};
 	};
 }
 }

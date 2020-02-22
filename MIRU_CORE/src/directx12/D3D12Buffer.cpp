@@ -21,16 +21,21 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;			//Required layout for buffers
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;				//How the resource is to be used
 	D3D12_CLEAR_VALUE* clear = nullptr;
-	m_CurrentResourceState = ToD3D12BufferType(m_CI.usage);
 
-	D3D12_RESOURCE_ALLOCATION_INFO ai = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
+	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
+	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
+		m_CurrentResourceState = ToD3D12BufferType(m_CI.usage);
+	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+		m_CurrentResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+
+	m_AllocationInfo = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
 
 	m_Resource.device = m_Device;
 	m_Resource.type = crossplatform::Resource::Type::BUFFER;
 	m_Resource.resource = (uint64_t)m_Buffer; // This buffer handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
 	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
-	m_Resource.size = ai.SizeInBytes;
-	m_Resource.alignment = ai.Alignment;
+	m_Resource.size = m_AllocationInfo.SizeInBytes;
+	m_Resource.alignment = m_AllocationInfo.Alignment;
 
 	if (m_CI.pMemoryBlock)
 	{
@@ -41,7 +46,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 		m_Resource.resource = (uint64_t)m_Buffer;
 		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock.get()).at(m_Resource.id).resource = (uint64_t)m_Buffer;
-		//m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.data);
+		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
 }
 
@@ -89,7 +94,6 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 
 	auto resourceDesc = ref_cast<Buffer>(m_CI.pBuffer)->m_ResourceDesc;
 	auto buffer = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
-	D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = {0};
 
 	switch (m_CI.type)
 	{

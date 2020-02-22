@@ -20,6 +20,8 @@ namespace d3d12
 	public:
 		static DXGI_FORMAT ToD3D12ImageFormat(Image::Format format);
 		static D3D12_RESOURCE_STATES ToD3D12ImageLayout(Image::Layout layout);
+		inline static UINT D3D12CalculateSubresource(UINT MipSlice, UINT ArraySlice, UINT PlaneSlice, UINT MipLevels, UINT ArraySize)
+			{ return MipSlice + (ArraySlice * MipLevels) + (PlaneSlice * MipLevels * ArraySize); }
 
 		//Members
 	public:
@@ -27,7 +29,8 @@ namespace d3d12
 
 		ID3D12Resource* m_Image;
 		D3D12_RESOURCE_DESC m_ResourceDesc;
-		D3D12_RESOURCE_STATES m_CurrentResourceState;
+		D3D12_RESOURCE_STATES m_CurrentResourceState; 
+		D3D12_RESOURCE_ALLOCATION_INFO m_AllocationInfo;
 	};
 
 	class ImageView final : public crossplatform::ImageView
@@ -47,7 +50,10 @@ namespace d3d12
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc = {};
 		D3D12_UNORDERED_ACCESS_VIEW_DESC m_UAVDesc = {};
 
-		ID3D12Resource* m_ImageView = nullptr;
+		D3D12_CPU_DESCRIPTOR_HANDLE m_RTVDescHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_DSVDescHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_SRVDescHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_UAVDescHandle = {};
 	};
 
 	class Sampler final : public crossplatform::Sampler
@@ -65,6 +71,8 @@ namespace d3d12
 		ID3D12Device* m_Device;
 		
 		D3D12_SAMPLER_DESC m_SamplerDesc;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE m_RTVDescHandle = {};
 	};
 }
 }

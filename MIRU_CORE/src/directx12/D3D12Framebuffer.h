@@ -1,9 +1,10 @@
 #pragma once
 #include "crossplatform/Framebuffer.h"
+#include "crossplatform/DescriptorPoolSet.h"
 
 namespace miru
 {
-namespace vulkan
+namespace d3d12
 {
 	class Framebuffer final : public crossplatform::Framebuffer
 	{
@@ -14,10 +15,22 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		ID3D12Device* m_Device;
 
-		VkFramebuffer m_Framebuffer;
-		VkFramebufferCreateInfo m_FramebufferCI;
+		Ref<crossplatform::DescriptorPool> m_FramebufferDescriptorPool;
+		crossplatform::DescriptorPool::CreateInfo m_FramebufferDescriptorPoolCI;
+
+		Ref<crossplatform::DescriptorSet> m_FramebufferDescriptorSet;
+		crossplatform::DescriptorSet::CreateInfo m_FramebufferDescriptorSetCI;
+
+		struct ImageView_RTV_DSV_SRV 
+		{ 
+			Ref<crossplatform::ImageView> imageView; 
+			bool HasRTV; bool HasDSV; bool HasSRV;
+			bool NeedRTV; bool NeedDSV; bool NeedSRV;
+		};
+		std::vector<ImageView_RTV_DSV_SRV> m_ImageView_RTV_DSV_SRVs;
+	
 	};
 }
 }

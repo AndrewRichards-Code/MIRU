@@ -83,7 +83,9 @@ void Shader::Recompile()
 
 	std::string filepath = currentWorkingDir + "/res/shaders" + fileName + ".hlsl";
 	std::string outputDir = currentWorkingDir + "/res/bin";
-	std::string command = "MIRU_SHADER_COMPILER -cso -spv -f:" + filepath + " -o:" + outputDir + " -t:" + shaderModel;
+	std::string includeDir = currentWorkingDir + "/../MIRU_SHADER_COMPILER/shaders/includes/";
+	std::string command = "MIRU_SHADER_COMPILER -cso -spv -t:" + shaderModel + " -f:" + filepath + " -o:" + outputDir + " -i:" + includeDir;
+
 
 	std::string mscLocation;
 	#ifdef _DEBUG

@@ -31,7 +31,7 @@ namespace crossplatform
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 
 	protected:
-		void FillSwapchainImageAndViews(void** pImages, void** pImageViews, uint32_t width, uint32_t height);
+		void FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height);
 		
 		//Members
 	public:

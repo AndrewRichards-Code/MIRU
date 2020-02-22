@@ -16,8 +16,8 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		//[0] == HEAP_TYPE_SAMPLER and [1] == HEAP_TYPE_CBV_SRV_UAV
-		//[2] == HEAP_TYPE_RTV and [3] == HEAP_TYPE_DSV
+		//[0] == HEAP_TYPE_SAMPLER	and [1] == HEAP_TYPE_CBV_SRV_UAV
+		//[2] == HEAP_TYPE_RTV		and [3] == HEAP_TYPE_DSV
 		ID3D12DescriptorHeap* m_DescriptorPool[4] = {};
 		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDesc[4] = {};
 	};
@@ -60,6 +60,5 @@ namespace d3d12
 		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 	};
 
-	bool operator== (const D3D12_ROOT_DESCRIPTOR_TABLE& a, const D3D12_ROOT_DESCRIPTOR_TABLE& b) { return (a.NumDescriptorRanges == b.NumDescriptorRanges) && (a.pDescriptorRanges == b.pDescriptorRanges); }
 }
 }

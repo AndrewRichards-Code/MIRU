@@ -162,19 +162,6 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool[3];
 	if (heap)
 		m_DSV_DescHeapCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
-
-	/*for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
-		m_DescriptorSetLayouts.push_back(ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
-
-	m_DescriptorSetAI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	m_DescriptorSetAI.pNext = nullptr;
-	m_DescriptorSetAI.descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
-	m_DescriptorSetAI.descriptorSetCount = static_cast<uint32_t>(m_DescriptorSetLayouts.size());
-	m_DescriptorSetAI.pSetLayouts = m_DescriptorSetLayouts.data();
-
-	m_DescriptorSets.resize(m_DescriptorSetLayouts.size());
-
-	MIRU_ASSERT(vkAllocateDescriptorSets(m_Device, &m_DescriptorSetAI, m_DescriptorSets.data()), "ERROR: VULKAN: Failed to create m_DescriptorSetLayout.");*/
 }
 
 DescriptorSet::~DescriptorSet()
@@ -197,6 +184,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 		descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * index);
 
 		m_Device->CreateConstantBufferView(&ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_CBVDesc, descriptorWriteLocation);
+		ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_CBVDescHandle = descriptorWriteLocation;
 	}
 	//UAV
 	if (type == BufferView::Type::STORAGE || type == BufferView::Type::STORAGE_TEXEL)
@@ -206,6 +194,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 
 		m_Device->CreateUnorderedAccessView(ref_cast<Buffer>(descriptorBufferInfos[0].bufferView)->m_Buffer, nullptr,
 			&ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_UAVDesc, descriptorWriteLocation);
+		ref_cast<BufferView>(descriptorBufferInfos[0].bufferView)->m_UAVDescHandle = descriptorWriteLocation;
 	}
 }
 
@@ -230,6 +219,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 		m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
 			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_RTVDesc, descriptorWriteLocation);
+		ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_RTVDescHandle = descriptorWriteLocation;
 	}
 	//DSV
 	else if (usage == Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT)
@@ -239,6 +229,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 		m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
 			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_DSVDesc, descriptorWriteLocation);
+		ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_DSVDescHandle = descriptorWriteLocation;
 	}
 	//UAV
 	else if(usage == Image::UsageBit::STORAGE_BIT)
@@ -248,6 +239,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 		m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
 			&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_UAVDesc, descriptorWriteLocation);
+		ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_UAVDescHandle = descriptorWriteLocation;
 	}
 	//SRV
 	else
@@ -257,6 +249,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 		m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfos[0].imageView)->GetCreateInfo().pImage)->m_Image,
 			/*&ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_SRVDesc*/0, descriptorWriteLocation);
+		ref_cast<ImageView>(descriptorImageInfos[0].imageView)->m_SRVDescHandle = descriptorWriteLocation;
 	}
 	
 	//Sampler
@@ -266,6 +259,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		descriptorWriteLocation.ptr += (samplerDescriptorSize * index);
 
 		m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfos[0].sampler)->m_SamplerDesc, descriptorWriteLocation);
+		ref_cast<Sampler>(descriptorImageInfos[0].sampler)->m_RTVDescHandle = descriptorWriteLocation;
 	}
 }
 

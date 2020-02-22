@@ -115,7 +115,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector<Ref<crossplatform::Semaphore>>& waits, std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
 {
 	std::vector<VkCommandBuffer>submitCmdBuffers;
 	for (auto& index : cmdBufferIndices)
@@ -131,6 +131,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 	for (auto& signal : signals)
 		vkSignals.push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
 
+	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
+
 	Ref<Context> context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
 	VkQueue queue = context->m_Queues[m_CI.pCommandPool->GetCreateInfo().queueFamilyIndex][0];
 
@@ -144,10 +146,10 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
 	m_CmdBufferSI.pSignalSemaphores = vkSignals.data();
 
-	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, ref_cast<Fence>(fence)->m_Fence), "ERROR: VULKAN: Failed to submit Queue.");
+	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
 {
 	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainImages.size();
 
@@ -359,6 +361,12 @@ void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pi
 	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), ref_cast<Pipeline>(pipeline)->m_Pipeline);
 }
 
+void CommandBuffer::NextSubpass(uint32_t index)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdNextSubpass(m_CmdBuffers[index], VK_SUBPASS_CONTENTS_INLINE);
+}
+
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
 {
 	CHECK_VALID_INDEX_RETURN(index);
@@ -423,7 +431,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuf
 	std::vector<VkBufferCopy> vkBufferCopy;
 	vkBufferCopy.reserve(copyRegions.size());
 	for (auto& copyRegion : copyRegions)
-		vkBufferCopy.push_back({ copyRegion .srcOffset, copyRegion.dstOffset, copyRegion.size});
+		vkBufferCopy.push_back({ copyRegion.srcOffset, copyRegion.dstOffset, copyRegion.size});
 
 	vkCmdCopyBuffer(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferCopy.size()), vkBufferCopy.data());
 }
@@ -436,9 +444,9 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 	for (auto& copyRegion : copyRegions)
 	{
 		VkImageCopy ic;
-		ic.srcSubresource = { static_cast<VkImageAspectFlags>(copyRegion.srcSubresource.aspectMask), copyRegion.srcSubresource.mipLevel, copyRegion.srcSubresource.baseArrayLayer, copyRegion.srcSubresource.layerCount };
+		ic.srcSubresource = { static_cast<VkImageAspectFlags>(copyRegion.srcSubresource.aspectMask), copyRegion.srcSubresource.mipLevel, copyRegion.srcSubresource.baseArrayLayer, copyRegion.srcSubresource.arrayLayerCount };
 		ic.srcOffset = { copyRegion.srcOffset.x, copyRegion.srcOffset.y, copyRegion.srcOffset.z };
-		ic.dstSubresource = { static_cast<VkImageAspectFlags>(copyRegion.dstSubresource.aspectMask), copyRegion.dstSubresource.mipLevel, copyRegion.dstSubresource.baseArrayLayer, copyRegion.dstSubresource.layerCount };
+		ic.dstSubresource = { static_cast<VkImageAspectFlags>(copyRegion.dstSubresource.aspectMask), copyRegion.dstSubresource.mipLevel, copyRegion.dstSubresource.baseArrayLayer, copyRegion.dstSubresource.arrayLayerCount };
 		ic.dstOffset = { copyRegion.dstOffset.x, copyRegion.dstOffset.y, copyRegion.dstOffset.z };
 		ic.extent = { copyRegion.extent.width, copyRegion.extent.height, copyRegion.extent.depth};
 		vkImageCopy.push_back(ic);

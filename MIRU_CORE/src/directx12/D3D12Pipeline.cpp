@@ -12,11 +12,6 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
 	m_CI = *pCreateInfo;
-
-	//m_CI.attachments[0].loadOp
-
-	//renderTargetDescriptions.push_back({ {0}, });
-
 }
 
 RenderPass::~RenderPass()

@@ -1,6 +1,7 @@
 #pragma once
 #pragma warning(disable : 26812) //Disables 'Prefered scoped enum' warning C26812
 #pragma warning(disable : 26495) //Disables 'Unitialised variable' warning C26495
+#pragma warning(disable : 26451) //Disables  'Arithmetic overflow' warning C26451
 
 //CSTDLIB
 #include <iostream>

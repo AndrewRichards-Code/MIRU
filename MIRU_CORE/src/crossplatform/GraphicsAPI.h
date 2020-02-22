@@ -17,6 +17,9 @@ namespace miru
 		static void SetAPI(API api);
 		static const API& GetAPI() { return s_API; }
 
+		static bool IsD3D12() { return s_API == API::D3D12; }
+		static bool IsVulkan() { return s_API == API::VULKAN; }
+
 		static void AllowSetName(bool useSetName = true);
 		static const bool& IsSetNameAllowed() { return s_AllowSetName; }
 		

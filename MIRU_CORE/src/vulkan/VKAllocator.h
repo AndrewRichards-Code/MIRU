@@ -14,7 +14,7 @@ namespace vulkan
 		~MemoryBlock();
 		bool AddResource(crossplatform::Resource& resource) override;
 		void RemoveResource(uint64_t id) override;
-		void SubmitData(const crossplatform::Resource& resource, void* data) override;
+		void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) override;
 
 	private:
 		VkMemoryPropertyFlags GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage);

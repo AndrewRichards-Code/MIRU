@@ -94,9 +94,6 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 	m_Barriers.reserve(1);
 	if (m_CI.type == Barrier::Type::BUFFER)
 	{
-		if (ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState != ToD3D12ResourceState(m_CI.srcAccess))
-			MIRU_WARN(true, "WARN: D3D12: Provided StateBefore ResourceState does not match CurrentResourceState. Using the CurrentResourceState in Barrier.");
-
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -104,15 +101,18 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		barrier.Transition.StateBefore = ToD3D12ResourceState(m_CI.srcAccess);
 		barrier.Transition.StateAfter = ToD3D12ResourceState(m_CI.dstAccess);
 		barrier.Transition.Subresource = 0;
-		m_Barriers.push_back(barrier);
 
+		if (ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState != ToD3D12ResourceState(m_CI.srcAccess))
+			barrier.Transition.StateBefore = ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState;
+		
+		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
+			return;
+	
+		m_Barriers.push_back(barrier);
 		ref_cast<Buffer>(m_CI.pBuffer)->m_CurrentResourceState = barrier.Transition.StateAfter;
 	}
 	else if (m_CI.type == Barrier::Type::IMAGE)
 	{
-		if (ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState != Image::ToD3D12ImageLayout(m_CI.oldLayout))
-			MIRU_WARN(true, "WARN: D3D12: Provided StateBefore ResourceState does not match CurrentResourceState. Using the CurrentResourceState in Barrier.");
-		
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -120,6 +120,12 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
 		
+		if (ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState != Image::ToD3D12ImageLayout(m_CI.oldLayout))
+			barrier.Transition.StateBefore = ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState;
+
+		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
+			return;
+
 		D3D12_RESOURCE_DESC resDesc = barrier.Transition.pResource->GetDesc();
 		if (resDesc.DepthOrArraySize == m_CI.subresoureRange.arrayLayerCount
 			&& resDesc.MipLevels == m_CI.subresoureRange.mipLevelCount)
@@ -135,8 +141,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 			{
 				for (uint32_t j = m_CI.subresoureRange.baseMipLevel; j < m_CI.subresoureRange.mipLevelCount; j++)
 				{
-					barrier.Transition.Subresource =
-						i * (m_CI.subresoureRange.mipLevelCount - m_CI.subresoureRange.baseMipLevel) + j;
+					barrier.Transition.Subresource = Image::D3D12CalculateSubresource(j, i, 0, m_CI.subresoureRange.mipLevelCount, m_CI.subresoureRange.arrayLayerCount);
 					m_Barriers.push_back(barrier);
 				}
 			}

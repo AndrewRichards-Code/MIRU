@@ -1,4 +1,3 @@
-
 #if defined MIRU_VULKAN
 #define MIRU_LOCATION(x, y, z, w) [[vk::location(x)]] y z : w
 #define MIRU_CONSTANT_BUFFER(x, y, z, w) [[vk::binding(x, y)]] ConstantBuffer<z> w

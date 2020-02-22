@@ -216,7 +216,7 @@ namespace crossplatform
 			AspectBit	aspectMask;
 			uint32_t	mipLevel;
 			uint32_t	baseArrayLayer;
-			uint32_t	layerCount;
+			uint32_t	arrayLayerCount;
 		};
 		struct Copy
 		{

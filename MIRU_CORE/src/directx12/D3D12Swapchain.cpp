@@ -16,7 +16,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	//Create Swapchain
 	m_SwapchainDesc.Width = m_CI.width;
 	m_SwapchainDesc.Height = m_CI.height;
-	m_SwapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	m_SwapchainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	m_SwapchainDesc.Stereo = false;
 	m_SwapchainDesc.SampleDesc = { 1, 0 };
 	m_SwapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -45,6 +45,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	size_t rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	m_SwapchainRTVs.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
+	m_SwapchainRTV_CPU_Desc_Handles.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
 	for(UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
@@ -53,10 +54,11 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		D3D12SetName(swapchainRTV, (std::string(m_CI.debugName) + ": RTV " + std::to_string(i)).c_str());
 
 		m_SwapchainRTVs.push_back(swapchainRTV);
+		m_SwapchainRTV_CPU_Desc_Handles.push_back(swapchainRTV_CPUDescHandle);
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
 
-	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTVs.data(), m_Width, m_Height);
+	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void*)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height);
 }
 
 Swapchain::~Swapchain()
@@ -104,6 +106,6 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
 
-	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTVs.data(), m_Width, m_Height);
+	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height);
 	m_Resized = true;
 }

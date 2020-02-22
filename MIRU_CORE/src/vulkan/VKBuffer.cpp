@@ -32,7 +32,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_Resource.alignment = m_MemoryRequirements.alignment;
 	
 	m_CI.pMemoryBlock->AddResource(m_Resource);
-	m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.data);
+	m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 }
 
 Buffer::~Buffer()

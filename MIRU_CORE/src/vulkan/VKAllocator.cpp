@@ -75,19 +75,16 @@ void MemoryBlock::RemoveResource(uint64_t id)
 	s_AllocatedResources[this].erase(id);
 }
 
-void MemoryBlock::SubmitData(const crossplatform::Resource& resource, void* data)
+void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
 {
-	if (m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+	if ((m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
 		|| m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT|VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+		&& data)
 	{
-		void* vkData;
-		VkResult result = vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &vkData);
-		memcpy(vkData, data, static_cast<size_t>(resource.size));
+		void* mappedData;
+		MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
+		memcpy(mappedData, data, static_cast<size_t>(resource.size));
 		vkUnmapMemory(m_Device, m_DeviceMemory);
-	}
-	else
-	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Can not submit data. Memory block is not type: VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT.");
 	}
 }
 
@@ -100,25 +97,16 @@ VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource
 		VkBufferUsageFlags _usage = usage;
 		if(_usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
 			flags += VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-		if(_usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+		if (_usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT
+			|| _usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
+			|| _usage & VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT)
 			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		
 		return flags;
 	}
 	else if (type == crossplatform::Resource::Type::IMAGE)
@@ -126,19 +114,13 @@ VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource
 		VkImageUsageFlags _usage = usage;
 		if (_usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
 			flags += VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-		if(_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_SAMPLED_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_STORAGE_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT)
-			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		if(_usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
+		if(_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT
+		|| _usage & VK_IMAGE_USAGE_SAMPLED_BIT
+		|| _usage & VK_IMAGE_USAGE_STORAGE_BIT
+		|| _usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+		|| _usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+		|| _usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT
+		|| _usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
 			flags += VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		
 		return flags;

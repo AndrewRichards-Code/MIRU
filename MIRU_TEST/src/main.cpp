@@ -2,7 +2,7 @@
 
 using namespace miru;
 using namespace crossplatform;
-#if 1
+
 HWND window;
 bool g_WindowQuit = false;
 uint32_t width = 800;
@@ -47,13 +47,13 @@ void WindowUpdate()
 int main()
 {
 	GraphicsAPI api;
-	//api.LoadRenderDoc();
-	//api.AllowSetName();
+	api.LoadRenderDoc();
+	api.AllowSetName();
 	api.SetAPI(GraphicsAPI::API::D3D12);
 	//api.SetAPI(GraphicsAPI::API::VULKAN);
 
 	Context::CreateInfo contextCI;
-	contextCI.api_version_major = api.GetAPI() == GraphicsAPI::API::D3D12 ? 11 : 1;
+	contextCI.api_version_major = api.IsD3D12() ? 11 : 1;
 	contextCI.api_version_minor = 1;
 	contextCI.applicationName = "MIRU_TEST";
 	contextCI.instanceLayers = { "VK_LAYER_LUNARG_standard_validation" };
@@ -62,8 +62,6 @@ int main()
 	contextCI.deviceExtensions = { "VK_KHR_swapchain" };
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
-
-	context->DeviceWaitIdle();
 
 	//Creates the windows
 	WNDCLASS wc = { 0 };
@@ -100,29 +98,36 @@ int main()
 	shaderCI.filepath = "res/bin/basic.frag.spv";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
-	vertexShader->Recompile();
-	fragmentShader->Recompile();
-
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
 	cmdPoolCI.pContext = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueFamilyIndex = 0;
 	Ref<CommandPool> cmdPool = CommandPool::Create(&cmdPoolCI);
+	cmdPoolCI.queueFamilyIndex = 2;
+	Ref<CommandPool> cmdCopyPool = CommandPool::Create(&cmdPoolCI);
 
-	CommandBuffer::CreateInfo cmdBufferCI;
+	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
 	cmdBufferCI.debugName = "CmdBuffer";
 	cmdBufferCI.pCommandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 2;
 	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
+	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
+	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
+	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
+	cmdCopyBufferCI.commandBufferCount = 1;
+	Ref<CommandBuffer> cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	MemoryBlock::CreateInfo mbCI;
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
 	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_1MB;
-	mbCI.properties = /*MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT |*/ MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
+	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
+	mbCI.debugName = "GPU_MB_0";
+	mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT ;
+	Ref<MemoryBlock> gpu_mb_0 = MemoryBlock::Create(&mbCI);
 
 	float vertices[16] =
 	{
@@ -136,28 +141,44 @@ int main()
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices";
 	verticesBufferCI.device = context->GetDevice();
-	verticesBufferCI.usage = Buffer::UsageBit::VERTEX | Buffer::UsageBit::TRANSFER_SRC;
+	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.pMemoryBlock = cpu_mb_0;
-	Ref<Buffer> vb = Buffer::Create(&verticesBufferCI);
+	Ref<Buffer> c_vb = Buffer::Create(&verticesBufferCI);
+	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST | Buffer::UsageBit::VERTEX;
+	verticesBufferCI.data = nullptr;
+	verticesBufferCI.pMemoryBlock = gpu_mb_0;
+	Ref<Buffer> g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices";
 	indicesBufferCI.device = context->GetDevice();
-	indicesBufferCI.usage = Buffer::UsageBit::INDEX | Buffer::UsageBit::TRANSFER_SRC;
+	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
 	indicesBufferCI.pMemoryBlock = cpu_mb_0;
-	Ref<Buffer> ib = Buffer::Create(&indicesBufferCI);
+	Ref<Buffer> c_ib = Buffer::Create(&indicesBufferCI);
+	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST | Buffer::UsageBit::INDEX;
+	indicesBufferCI.data = nullptr;
+	indicesBufferCI.pMemoryBlock = gpu_mb_0;
+	Ref<Buffer> g_ib = Buffer::Create(&indicesBufferCI);
+
+	{
+		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
+		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
+		cmdCopyBuffer->End(0);
+	}
+	cmdCopyBuffer->Submit({ 0 }, {}, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
 
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";
 	vbViewCI.device = context->GetDevice();
 	vbViewCI.type = BufferView::Type::VERTEX;
-	vbViewCI.pBuffer = vb;
+	vbViewCI.pBuffer = g_vb;
 	vbViewCI.offset = 0;
-	vbViewCI.size = 16 * sizeof(float);
+	vbViewCI.size = sizeof(vertices);
 	vbViewCI.stride = 4 * sizeof(float);
 	Ref<BufferView> vbv = BufferView::Create(&vbViewCI);
 
@@ -165,9 +186,9 @@ int main()
 	ibViewCI.debugName = "VerticesBufferView";
 	ibViewCI.device = context->GetDevice();
 	ibViewCI.type = BufferView::Type::INDEX;
-	ibViewCI.pBuffer = ib;
+	ibViewCI.pBuffer = g_ib;
 	ibViewCI.offset = 0;
-	ibViewCI.size = 6 * sizeof(uint32_t);
+	ibViewCI.size = sizeof(indices);
 	ibViewCI.stride = sizeof(uint32_t);
 	Ref<BufferView> ibv = BufferView::Create(&ibViewCI);
 
@@ -181,7 +202,7 @@ int main()
 		RenderPass::AttachmentStoreOp::STORE,
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
-		Image::Layout::UNKNOWN,
+		api.IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
 		Image::Layout::PRESENT_SRC
 		}
 	};
@@ -243,11 +264,10 @@ int main()
 
 	auto RecordPresentCmdBuffers = [&]()
 	{	
-		cmdPool->Reset(false);
 		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
 		{
 			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {1.0f, 0.0f, 0.0f, 1.0f} });
+			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.0f, 0.0f, 1.0f, 1.0f} });
 			cmdBuffer->BindPipeline(i, pipeline);
 			cmdBuffer->BindVertexBuffers(i, { vbv });
 			cmdBuffer->BindIndexBuffer(i, ibv);
@@ -266,7 +286,7 @@ int main()
 	std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo semaphoreCI = { "Seamphore", context->GetDevice() };
 	std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
-	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI)};
+	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
 
 	uint32_t frameIndex = 0;
 	MSG msg = { 0 };
@@ -277,8 +297,7 @@ int main()
 
 		if (shaderRecompile)
 		{
-			vkDeviceWaitIdle(*(VkDevice*)context->GetDevice());
-
+			context->DeviceWaitIdle();
 			vertexShader->Recompile();
 			fragmentShader->Recompile();
 
@@ -290,7 +309,6 @@ int main()
 
 			shaderRecompile = false;
 		}
-
 		if (swapchain->m_Resized)
 		{
 			swapchain->Resize(width, height);
@@ -322,72 +340,3 @@ int main()
 	}
 	context->DeviceWaitIdle();
 }
-#endif 
-#if 0
-void CreateHeap(ID3D12Device* device, ID3D12Heap* heap)
-{
-	D3D12_HEAP_DESC heapDesc;
-	heapDesc.SizeInBytes = 1048576 * 256;										//Size of heap
-	heapDesc.Properties.Type = D3D12_HEAP_TYPE_CUSTOM;							//UPLOAD = CPU optimised, DEFAULT = GPU optimised
-	heapDesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;	//If UsageBit == CUSTOM, CPU write access, else set to 0;
-	heapDesc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;			//If UsageBit == CUSTOM, L0 = CPU, L1 = GPU, else set to 0;
-	heapDesc.Properties.CreationNodeMask = 0;									//Which device store the heap
-	heapDesc.Properties.VisibleNodeMask = 0;									//Which devices can see the heap
-	heapDesc.Alignment = 0;
-	heapDesc.Flags = D3D12_HEAP_FLAG_NONE;
-	HRESULT result = device->CreateHeap(&heapDesc, IID_PPV_ARGS(&heap));
-};
-
-int main()
-{
-	ID3D12Debug* m_Debug;
-	HRESULT result = D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug));
-	m_Debug->EnableDebugLayer();
-
-	IDXGIFactory4* m_Factory;
-	CreateDXGIFactory2(0, IID_PPV_ARGS(&m_Factory));
-
-	std::vector<IDXGIAdapter4*> m_Adapters;
-	UINT i = 0;
-	IDXGIAdapter1* adapter;
-	while (m_Factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND)
-	{
-		m_Adapters.push_back(reinterpret_cast<IDXGIAdapter4*>(adapter));
-		i++;
-	}
-
-	ID3D12Device* device = nullptr;
-	result = D3D12CreateDevice(m_Adapters[0], D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&device));
-
-	ID3D12Heap* heap = nullptr;
-	std::thread createHeap(CreateHeap, device, heap);
-
-	ID3D12Resource* res = nullptr;
-	UINT offset = 0;
-	D3D12_RESOURCE_DESC resDesc;
-	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
-	resDesc.Alignment = 0;
-	resDesc.Width = 4 * sizeof(float);							//Alias for bufferSize
-	resDesc.Height = 1;
-	resDesc.DepthOrArraySize = 1;
-	resDesc.MipLevels = 1;
-	resDesc.Format = DXGI_FORMAT_UNKNOWN;						//Required format for buffers
-	resDesc.SampleDesc = {1, 0};								//Required sampleDesc for buffers
-	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;			//Required layout for buffers
-	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;					//How the resource is to be used
-	D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON;	//Specific type of the resource
-	D3D12_CLEAR_VALUE* clear = 0;								//Clear values for textures
-	
-	createHeap.join();
-	if(heap)
-		result = device->CreatePlacedResource(heap, offset, &resDesc, state, clear, IID_PPV_ARGS(&res));
-
-
-	if(res)
-		res->Release();
-	if(heap)
-		heap->Release();
-	if(device)
-		device->Release();
-}
-#endif

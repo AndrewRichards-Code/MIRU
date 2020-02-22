@@ -25,12 +25,12 @@ ConstantBuffer<Camera> camera : register(b0, space0);*/
 };
 ConstantBuffer<Model> model : register(b1, space0);*/
 
-
 VS_OUT main(VS_IN IN)
 {
     VS_OUT OUT;
+
     //OUT.position = mul(camera.proj * camera.view * model.modl, IN.position);
-    OUT.position = IN.position;
-    OUT.texCoords = IN.position.xy + float2(0.5, 0.5);
+	OUT.position = IN.position;
+	OUT.texCoords = IN.position.xy + float2(0.5, 0.5);
 	return OUT;
 }

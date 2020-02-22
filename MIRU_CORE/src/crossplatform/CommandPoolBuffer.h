@@ -77,8 +77,8 @@ namespace crossplatform
 		virtual void End(uint32_t index) = 0;
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
 		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, Ref<CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector< Ref<Semaphore>>& waits, std::vector< Ref<Semaphore>>& signals, PipelineStageBit pipelineStage, Ref<Fence> fence) = 0;
-		virtual void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<Swapchain> swapchain, std::vector<Ref<Fence>>& draws, std::vector<Ref<Semaphore>>& acquires, std::vector<Ref<Semaphore>>& submits, bool& windowResize) = 0;
+		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, PipelineStageBit pipelineStage, Ref<Fence> fence) = 0;
+		virtual void Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize) = 0;
 
 		virtual void SetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
@@ -90,6 +90,7 @@ namespace crossplatform
 
 		virtual void BeginRenderPass(uint32_t index, Ref<Framebuffer> framebuffer, const std::vector<Image::ClearValue>& clearValues) = 0;
 		virtual void EndRenderPass(uint32_t index) = 0;
+		virtual void NextSubpass(uint32_t index) = 0;
 
 		virtual void BindPipeline(uint32_t index, Ref<Pipeline> pipeline) = 0;
 

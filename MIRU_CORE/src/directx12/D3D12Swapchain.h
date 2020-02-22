@@ -26,6 +26,7 @@ namespace d3d12
 		std::vector<ID3D12Resource*> m_SwapchainRTVs;
 		ID3D12DescriptorHeap* m_SwapchainRTVDescHeap;
 		D3D12_DESCRIPTOR_HEAP_DESC m_SwapchainRTVDescHeapDesc;
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_SwapchainRTV_CPU_Desc_Handles;
 
 		UINT m_Width, m_Height;
 		DXGI_FORMAT m_Format;

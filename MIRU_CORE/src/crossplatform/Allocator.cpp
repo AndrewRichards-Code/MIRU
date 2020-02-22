@@ -29,11 +29,10 @@ void MemoryBlock::CalculateOffsets()
 	{
 		auto& resource = *it;
 		auto& prev = it != s_AllocatedResources[this].begin() ? *std::prev(it) : *it;
-		bool continuous = resource.first == (prev.first + 1);
 
 		if (it == s_AllocatedResources[this].begin())
 			resource.second.offset = 0;
-		else if(continuous)
+		else
 		{
 			resource.second.offset = prev.second.size + prev.second.offset;
 			if (resource.second.offset % resource.second.alignment != 0)
@@ -51,5 +50,5 @@ bool MemoryBlock::ResourceBackable(crossplatform::Resource& resource)
 	size_t currentSize = 0;
 	if(!s_AllocatedResources[this].empty())
 		currentSize = s_AllocatedResources[this].rbegin()->second.offset + s_AllocatedResources[this].rbegin()->second.size;
-	return (maxSize > (((currentSize/resource.alignment)+1)*resource.alignment) + resource.size);
+	return (maxSize > (((currentSize / resource.alignment) + 1) * resource.alignment) + resource.size);
 }

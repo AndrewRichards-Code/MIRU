@@ -7,6 +7,7 @@
 #include "D3D12Image.h"
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
+#include "D3D12Framebuffer.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -95,7 +96,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::vector<Ref<crossplatform::Semaphore>>& waits, std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
 {
 	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
@@ -116,7 +117,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, std::v
 	}
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, std::vector<Ref<crossplatform::Fence>>& draws, std::vector<Ref<crossplatform::Semaphore>>& acquires, std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
 {
 	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainRTVs.size();
 
@@ -134,9 +135,8 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	draws[m_CurrentFrame]->Wait();
 	draws[m_CurrentFrame]->Reset();
 
-	std::vector<Ref<crossplatform::Semaphore>> blank = {};
-	UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
-	Submit({cmdBufferIndices[imageIndex]}, blank, blank, crossplatform::PipelineStageBit::NONE, {});
+	//UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE, {});
 	
 	MIRU_ASSERT(d3d12Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
 	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
@@ -168,6 +168,9 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 			_barriers.push_back(_barrier);
 
 	}
+	if (_barriers.empty())
+		return;
+
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
 }
 
@@ -376,37 +379,175 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	}
 
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, (clear.stencil * UINT8_MAX/UINT32_MAX), 0, nullptr);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, shrink_uint32_t_to_uint8_t(clear.stencil), 0, nullptr);
 	SAFE_RELEASE(heap);
 }
 
 void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 
 {
-	/*framebuffer->GetCreateInfo().renderPass;
+	CHECK_VALID_INDEX_RETURN(index);
+	m_RenderPassFramebuffer = framebuffer;
+	m_RenderPassClearValues = clearValues;
+	
+	//Transition resources to be begin render pass.
+	m_SubpassIndex = (uint32_t)-1;
+	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
 
-	UINT renderTargets = 0;
-	const D3D12_RENDER_PASS_RENDER_TARGET_DESC* pRenderTargets;
-	const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC* pDepthStencil;
-	D3D12_RENDER_PASS_FLAGS Flags;
+	std::vector<Ref<crossplatform::Barrier>> barriers;
+	crossplatform::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 
-	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->*/
+	size_t i = 0;
+	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
+	{
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		i++;
+	}
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+
+	//Begin first subpass
+	NextSubpass(index);
 };
-void CommandBuffer::EndRenderPass(uint32_t index) {};
+
+void CommandBuffer::EndRenderPass(uint32_t index) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+
+	//Transition resources to be end render pass.
+	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	m_SubpassIndex = (uint32_t)-1;
+
+	std::vector<Ref<crossplatform::Barrier>> barriers;
+	crossplatform::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+
+	size_t i = 0;
+	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
+	{
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		i++;
+	}
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+};
+
+void CommandBuffer::NextSubpass(uint32_t index)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	m_SubpassIndex++;
+	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	RenderPass::SubpassDescription subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
+	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = m_RenderPassFramebuffer->GetCreateInfo().attachments;
+	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
+
+	//Transition resources for the subpass.
+	std::vector<Ref<crossplatform::Barrier>> barriers;
+	crossplatform::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	for (auto& input : subpassDesc.inputAttachments)
+	{
+		Ref<crossplatform::ImageView> imageView = framebufferAttachments[input.attachmentIndex];
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = input.layout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+	}
+	for (auto& colour : subpassDesc.colourAttachments)
+	{
+		Ref<crossplatform::ImageView> imageView = framebufferAttachments[colour.attachmentIndex];
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = colour.layout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+	}
+	for (auto& resolve : subpassDesc.resolveAttachments)
+	{
+		Ref<crossplatform::ImageView> imageView = framebufferAttachments[resolve.attachmentIndex];
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = resolve.layout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+	}
+	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
+	{
+		Ref<crossplatform::ImageView> imageView = framebufferAttachments[depthStencil.attachmentIndex];
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = depthStencil.layout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+	}
+	for (auto& preseverse : subpassDesc.preseverseAttachments)
+	{
+		Ref<crossplatform::ImageView> imageView = framebufferAttachments[preseverse.attachmentIndex];
+		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.newLayout = preseverse.layout;
+		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
+		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+	}
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+
+	//Set RenderTargets
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
+	for (auto& attachment : subpassDesc.colourAttachments)
+		rtvs.push_back(ref_cast<ImageView>(framebufferAttachments[attachment.attachmentIndex])->m_RTVDescHandle);
+	if(!subpassDesc.depthStencilAttachment.empty())
+		dsv = ref_cast<ImageView>(framebufferAttachments[subpassDesc.depthStencilAttachment[0].attachmentIndex])->m_DSVDescHandle;
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, dsv.ptr?&dsv:nullptr);
+
+	//Clear imageviews
+	uint32_t attachId = 0;
+	for (auto& attachment : subpassDesc.colourAttachments)
+	{
+		attachId = attachment.attachmentIndex;
+		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp > RenderPass::AttachmentLoadOp::LOAD)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, m_RenderPassClearValues[attachId].colour.float32, 0, nullptr);
+	}
+	if (!subpassDesc.depthStencilAttachment.empty())
+	{
+		attachId = subpassDesc.depthStencilAttachment[0].attachmentIndex;
+		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasDSV)
+		{
+			D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
+			if (renderpassAttachments[attachId].loadOp > RenderPass::AttachmentLoadOp::LOAD)
+				flags |= D3D12_CLEAR_FLAG_DEPTH;
+			if (renderpassAttachments[attachId].stencilLoadOp > RenderPass::AttachmentLoadOp::LOAD)
+				flags |= D3D12_CLEAR_FLAG_STENCIL;
+
+			if(flags)
+				reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_DSVDescHandle, flags, m_RenderPassClearValues[attachId].depthStencil.depth, shrink_uint32_t_to_uint8_t(m_RenderPassClearValues[attachId].depthStencil.stencil), 0, nullptr);
+		}
+	}
+}
 
 void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) 
 {
 	CHECK_VALID_INDEX_RETURN(index);
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 };
 
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) 
 {
 	CHECK_VALID_INDEX_RETURN(index);
 
-	std::vector<const D3D12_VERTEX_BUFFER_VIEW&>vbvs;
-	vbvs.resize(vertexBufferViews.size());
+	std::vector<D3D12_VERTEX_BUFFER_VIEW>vbvs;
+	vbvs.reserve(vertexBufferViews.size());
 	for (auto& vbv : vertexBufferViews)
 		vbvs.push_back(ref_cast<BufferView>(vbv)->m_VBVDesc);
 
@@ -419,6 +560,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
+bool operator== (const D3D12_ROOT_DESCRIPTOR_TABLE& a, const D3D12_ROOT_DESCRIPTOR_TABLE& b) { return (a.NumDescriptorRanges == b.NumDescriptorRanges) && (a.pDescriptorRanges == b.pDescriptorRanges); }
 void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) 
 {
 	CHECK_VALID_INDEX_RETURN(index);
@@ -428,7 +570,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		for (size_t i = 0; i < 4; i++)
 		{
 			ID3D12DescriptorHeap* descHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[i];
-			if (descHeap);
+			if (descHeap)
 				descHeaps.push_back(descHeap);
 		}
 	}
@@ -463,7 +605,48 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	}
 };
 
-void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) {};
+void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+};
 
-void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) {};
-void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) {};
+void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	for (auto& copyRegion : copyRegions)
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyBufferRegion(
+			ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<UINT>(copyRegion.dstOffset), 
+			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
+};
+void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) 
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	for (auto& copyRegion : copyRegions)
+	{
+		D3D12_TEXTURE_COPY_LOCATION dst;
+		dst.pResource = ref_cast<Image>(dstImage)->m_Image;
+		dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+		D3D12_TEXTURE_COPY_LOCATION src;
+		src.pResource = ref_cast<Image>(srcImage)->m_Image;
+		src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+		D3D12_BOX srcbox;
+		srcbox.left = static_cast<UINT>(copyRegion.srcOffset.x);
+		srcbox.top = static_cast<UINT>(copyRegion.srcOffset.y);
+		srcbox.front = static_cast<UINT>(copyRegion.srcOffset.z);
+		srcbox.right = static_cast<UINT>(copyRegion.extent.width);
+		srcbox.bottom = static_cast<UINT>(copyRegion.extent.height);
+		srcbox.back = static_cast<UINT>(copyRegion.extent.depth);
+
+		for (uint32_t i = copyRegion.dstSubresource.baseArrayLayer; i < copyRegion.dstSubresource.arrayLayerCount; i++)
+		{
+			const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
+			const D3D12_RESOURCE_DESC& srcResDesc = src.pResource->GetDesc();
+			dst.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.dstSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
+			src.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.srcSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, copyRegion.dstOffset.x, copyRegion.dstOffset.y, copyRegion.dstOffset.z, &src, &srcbox);
+		}
+	}
+};

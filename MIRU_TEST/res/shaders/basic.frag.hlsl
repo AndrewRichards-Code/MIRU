@@ -14,6 +14,6 @@ struct PS_OUT
 PS_OUT main(PS_IN IN)
 {
     PS_OUT OUT;
-    OUT.colour = float4(IN.texCoords, 0.0, 1.0);
+	OUT.colour = float4(IN.texCoords, 0.0, 1.0);
     return OUT;
 }

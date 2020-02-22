@@ -16,10 +16,6 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
-
-		std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> renderTargetDescriptions;
-		D3D12_RENDER_PASS_DEPTH_STENCIL_DESC depthStenciDescription;
-
 	};
 
 	class Pipeline final : public crossplatform::Pipeline
