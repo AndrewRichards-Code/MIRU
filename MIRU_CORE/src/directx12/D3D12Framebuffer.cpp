@@ -89,7 +89,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_RTV_DescHeapCPUHandle;
+			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapCPUHandles[0][2];
 			descriptorWriteLocation.ptr += (rtvDescriptorSize * j);
 
 			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
@@ -100,7 +100,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DSV_DescHeapCPUHandle;
+			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapCPUHandles[0][3];
 			descriptorWriteLocation.ptr += (dsvDescriptorSize * j);
 
 			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
@@ -111,7 +111,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_CBV_SRV_UAV_DescHeapCPUHandle;
+			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapCPUHandles[0][1];
 			descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * j);
 
 			m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,

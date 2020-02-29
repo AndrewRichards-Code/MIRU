@@ -119,6 +119,9 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		barrier.Transition.pResource = ref_cast<Image>(m_CI.pImage)->m_Image;
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
+
+		if(m_CI.newLayout == Image::Layout::GENERAL && m_CI.dstAccess == Barrier::AccessBit::SHADER_WRITE_BIT) //Vulkan representation a UAV.
+			barrier.Transition.StateAfter = ToD3D12ResourceState(m_CI.dstAccess);
 		
 		if (ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState != Image::ToD3D12ImageLayout(m_CI.oldLayout))
 			barrier.Transition.StateBefore = ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState;
@@ -149,7 +152,23 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		ref_cast<Image>(m_CI.pImage)->m_CurrentResourceState = barrier.Transition.StateAfter;
 	}
 	else if (m_CI.type == Barrier::Type::MEMORY)
-		m_Barriers[0] = D3D12_RESOURCE_BARRIER();
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		if (m_CI.pBuffer)
+		{
+			barrier.UAV.pResource = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+			m_Barriers.push_back(barrier);
+		}	
+		else if (m_CI.pImage)
+		{
+			barrier.UAV.pResource = ref_cast<Image>(m_CI.pImage)->m_Image;
+			m_Barriers.push_back(barrier);
+		}
+		else
+			m_Barriers[0] = D3D12_RESOURCE_BARRIER();
+	}
 	else
 		m_Barriers[0] = D3D12_RESOURCE_BARRIER();
 

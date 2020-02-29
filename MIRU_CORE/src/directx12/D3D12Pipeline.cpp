@@ -27,16 +27,24 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_RootParameters.clear();
 	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
 	{
-		D3D12_ROOT_PARAMETER rootParameter = {};
+		D3D12_ROOT_PARAMETER rootParameter;
 		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable;
 		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		m_RootParameters.push_back(rootParameter);
+
+		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTableSampler.pDescriptorRanges)
+		{
+			rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTableSampler;
+			rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			m_RootParameters.push_back(rootParameter);
+		}
 	}
 	for (auto& pushConstantRange : m_CI.layout.pushConstantRanges)
 	{
 		//TODO: Review this.
-		D3D12_ROOT_PARAMETER rootParameter = {};
+		D3D12_ROOT_PARAMETER rootParameter;
 		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootParameter.Constants.ShaderRegister = 0;
 		rootParameter.Constants.RegisterSpace = 0;
@@ -44,9 +52,20 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		m_RootParameters.push_back(rootParameter);
 	}
+	m_RootSignatureDesc.NumParameters = static_cast<UINT>(m_RootParameters.size());
+	m_RootSignatureDesc.pParameters = m_RootParameters.data();
+	m_RootSignatureDesc.NumStaticSamplers = 0;
+	m_RootSignatureDesc.pStaticSamplers = nullptr;
+	m_RootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	
-	m_RootSignatureDesc = { static_cast<UINT>(m_RootParameters.size()), m_RootParameters.data(), 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT };
-	MIRU_ASSERT(D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError), "ERROR: D3D12: Failed to serialise RootSignature.");
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
+	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
+	
+	HRESULT res = D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError);
+	if (m_SerializedRootSignatureError)
+		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)m_SerializedRootSignatureError->GetBufferPointer());
+	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
 	MIRU_ASSERT(m_Device->CreateRootSignature(0, m_SerializedRootSignature->GetBufferPointer(), m_SerializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 
 	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)

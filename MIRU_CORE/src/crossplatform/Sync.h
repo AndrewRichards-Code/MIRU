@@ -96,6 +96,7 @@ namespace crossplatform
 		};
 		enum class AccessBit : uint32_t
 		{
+			NONE = 0x00000000,
 			INDIRECT_COMMAND_READ_BIT = 0x00000001,
 			INDEX_READ_BIT = 0x00000002,
 			VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,
@@ -124,10 +125,10 @@ namespace crossplatform
 			AccessBit					dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			Ref<Buffer>					pBuffer;				//For Type::BUFFER
+			Ref<Buffer>					pBuffer;				//For Type::BUFFER. For D3D12 UAV Barriers on buffers.
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
-			Ref<Image>					pImage;					//For Type::IMAGE
+			Ref<Image>					pImage;					//For Type::IMAGE For D3D12 UAV Barriers on images.
 			Image::Layout				oldLayout;				//For Type::IMAGE
 			Image::Layout				newLayout;				//For Type::IMAGE
 			Image::SubresourceRange		subresoureRange;		//For Type::IMAGE

@@ -282,7 +282,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	}
 
 	vkCmdPipelineBarrier(m_CmdBuffers[index],
-		static_cast<VkPipelineStageFlags>(srcStage), static_cast<VkPipelineStageFlags>(srcStage), static_cast<VkDependencyFlags>(0), 
+		static_cast<VkPipelineStageFlags>(srcStage), static_cast<VkPipelineStageFlags>(dstStage), static_cast<VkDependencyFlags>(0),
 		static_cast<uint32_t>(vkMemoryBarriers.size()), vkMemoryBarriers.data(),
 		static_cast<uint32_t>(vkBufferBarriers.size()), vkBufferBarriers.data(),
 		static_cast<uint32_t>(vkImageBarriers.size()), vkImageBarriers.data());
@@ -455,3 +455,42 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 	vkCmdCopyImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, ref_cast<Image>(srcImage)->m_CurrentLayout,
 		ref_cast<Image>(dstImage)->m_Image, ref_cast<Image>(dstImage)->m_CurrentLayout, static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
+
+void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkBufferImageCopy> vkBufferImageCopy;
+	for (auto& region : regions)
+	{
+		VkBufferImageCopy bic;
+		bic.bufferOffset = static_cast<VkDeviceSize>(region.bufferOffset);
+		bic.bufferRowLength = region.bufferRowLength;
+		bic.bufferImageHeight = region.bufferImageHeight;
+		bic.imageSubresource = { static_cast<VkImageAspectFlags>(region.imageSubresource.aspectMask), region.imageSubresource.mipLevel, region.imageSubresource.baseArrayLayer, region.imageSubresource.arrayLayerCount };
+		bic.imageOffset = { region.imageOffset.x, region.imageOffset.y, region.imageOffset.z };
+		bic.imageExtent = { region.imageExtent.width, region.imageExtent.height, region.imageExtent.depth };
+		vkBufferImageCopy.push_back(bic);
+	}
+
+	vkCmdCopyBufferToImage(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
+}
+
+void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkBufferImageCopy> vkBufferImageCopy;
+	for (auto& region : regions)
+	{
+		VkBufferImageCopy bic;
+		bic.bufferOffset = static_cast<VkDeviceSize>(region.bufferOffset);
+		bic.bufferRowLength = region.bufferRowLength;
+		bic.bufferImageHeight = region.bufferImageHeight;
+		bic.imageSubresource = { static_cast<VkImageAspectFlags>(region.imageSubresource.aspectMask), region.imageSubresource.mipLevel, region.imageSubresource.baseArrayLayer, region.imageSubresource.arrayLayerCount };
+		bic.imageOffset = { region.imageOffset.x, region.imageOffset.y, region.imageOffset.z };
+		bic.imageExtent = { region.imageExtent.width, region.imageExtent.height, region.imageExtent.depth };
+		vkBufferImageCopy.push_back(bic);
+	}
+
+	vkCmdCopyImageToBuffer(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
+}
+\

@@ -33,7 +33,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_Resource.device = &m_Device;
 	m_Resource.type = crossplatform::Resource::Type::IMAGE;
 	m_Resource.resource = (uint64_t)m_Image;	
-	m_Resource.usage = static_cast<uint32_t>(m_CI.type);
+	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
 	m_Resource.size = m_MemoryRequirements.size;
 	m_Resource.alignment = m_MemoryRequirements.alignment;
 

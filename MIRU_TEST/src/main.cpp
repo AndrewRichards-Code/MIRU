@@ -1,4 +1,6 @@
 #include "miru_core.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "../dep/STBI/stb_image.h"
 
 using namespace miru;
 using namespace crossplatform;
@@ -111,7 +113,7 @@ int main()
 	cmdBufferCI.debugName = "CmdBuffer";
 	cmdBufferCI.pCommandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
-	cmdBufferCI.commandBufferCount = 2;
+	cmdBufferCI.commandBufferCount = 3;
 	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
 	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
@@ -122,7 +124,7 @@ int main()
 	MemoryBlock::CreateInfo mbCI;
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
-	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_1MB;
+	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_8MB;
 	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
 	mbCI.debugName = "GPU_MB_0";
@@ -137,6 +139,11 @@ int main()
 		-0.5f, +0.5f, 0.0f, 1.0f
 	};
 	uint32_t indices[6] = { 0,1,2,2,3,0 };
+
+	int img_width;
+	int img_height; 
+	int bpp;
+	uint8_t* imageData = stbi_load("../logo.png", &img_width, &img_height, &bpp, 4);
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices";
@@ -164,13 +171,76 @@ int main()
 	indicesBufferCI.pMemoryBlock = gpu_mb_0;
 	Ref<Buffer> g_ib = Buffer::Create(&indicesBufferCI);
 
+	Buffer::CreateInfo imageBufferCI;
+	imageBufferCI.debugName = "Image";
+	imageBufferCI.device = context->GetDevice();
+	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
+	imageBufferCI.size = img_width * img_height * 4;
+	imageBufferCI.data = imageData;
+	imageBufferCI.pMemoryBlock = cpu_mb_0;
+	Ref<Buffer> c_imageBuffer = Buffer::Create(&imageBufferCI);
+	Image::CreateInfo imageCI;
+	imageCI.debugName = "Image";;
+	imageCI.device = context->GetDevice();
+	imageCI.type = Image::Type::TYPE_2D;
+	imageCI.format = Image::Format::R8G8B8A8_UNORM;
+	imageCI.width = img_width;
+	imageCI.height = img_height;
+	imageCI.depth = 1;
+	imageCI.mipLevels = 1;
+	imageCI.arrayLayers = 1;
+	imageCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	imageCI.usage = Image::UsageBit::TRANSFER_DST_BIT | Image::UsageBit::SAMPLED_BIT;
+	imageCI.layout = Image::Layout::UNKNOWN;
+	imageCI.size = img_width * img_height * 4;
+	imageCI.data = nullptr;
+	imageCI.pMemoryBlock = gpu_mb_0;
+	Ref<Image> image = Image::Create(&imageCI);
+
+	Semaphore::CreateInfo transSemaphoreCI = { "Transfer", context->GetDevice() };
+	Ref<Semaphore> transfer = Semaphore::Create(&transSemaphoreCI);
 	{
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+		
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
 		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
+
+		Barrier::CreateInfo bCI;
+		bCI.type = Barrier::Type::IMAGE;
+		bCI.srcAccess = Barrier::AccessBit::NONE;
+		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.pImage = image;
+		bCI.oldLayout = Image::Layout::UNKNOWN;
+		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+		bCI.subresoureRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+		Ref<Barrier> b = Barrier::Create(&bCI);
+		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, { b });
+		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { {0, 0, 0, {Image::AspectBit::COLOR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} });
+		
 		cmdCopyBuffer->End(0);
 	}
-	cmdCopyBuffer->Submit({ 0 }, {}, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
+	cmdCopyBuffer->Submit({ 0 }, {}, { transfer }, PipelineStageBit::TRANSFER_BIT, nullptr);
+	{
+		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+		
+		Barrier::CreateInfo bCI;
+		bCI.type = Barrier::Type::IMAGE;
+		bCI.srcAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+		bCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
+		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.pImage = image;
+		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
+		bCI.subresoureRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+		Ref<Barrier> b = Barrier::Create(&bCI);
+		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, { b });
+
+		cmdBuffer->End(2);
+	}
+	cmdBuffer->Submit({ 2 }, { transfer }, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
 
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";
@@ -191,6 +261,52 @@ int main()
 	ibViewCI.size = sizeof(indices);
 	ibViewCI.stride = sizeof(uint32_t);
 	Ref<BufferView> ibv = BufferView::Create(&ibViewCI);
+
+	ImageView::CreateInfo imageViewCI;
+	imageViewCI.debugName = "ImageView";
+	imageViewCI.device = context->GetDevice();
+	imageViewCI.pImage = image;
+	imageViewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
+
+	Sampler::CreateInfo samplerCI;
+	samplerCI.debugName = "Default Sampler";
+	samplerCI.device = context->GetDevice();
+	samplerCI.magFilter = Sampler::Filter::NEAREST;
+	samplerCI.minFilter = Sampler::Filter::NEAREST;
+	samplerCI.mipmapMode = Sampler::MipmapMode::NEAREST;
+	samplerCI.addressModeU = Sampler::AddressMode::REPEAT;
+	samplerCI.addressModeV = Sampler::AddressMode::REPEAT;
+	samplerCI.addressModeW = Sampler::AddressMode::REPEAT;
+	samplerCI.mipLodBias = 1;
+	samplerCI.anisotropyEnable = false;
+	samplerCI.maxAnisotropy = 1.0f;
+	samplerCI.compareEnable = false;
+	samplerCI.compareOp = CompareOp::NEVER;
+	samplerCI.minLod = 0;
+	samplerCI.maxLod = 1;
+	samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
+	samplerCI.unnormalisedCoordinates = false;
+	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
+
+	DescriptorPool::CreateInfo descriptorPoolCI;
+	descriptorPoolCI.debugName = "Image Descriptor Pool";
+	descriptorPoolCI.device = context->GetDevice();
+	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1} };
+	descriptorPoolCI.maxSets = 1;
+	Ref<DescriptorPool> descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
+	DescriptorSetLayout::CreateInfo setLayoutCI;
+	setLayoutCI.debugName = "Basic Shader DescSetLayout";
+	setLayoutCI.device = context->GetDevice();
+	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::COMBINED_IMAGE_SAMPLER,  1, Shader::StageBit::FRAGMENT_BIT } };
+	Ref<DescriptorSetLayout> setLayout = DescriptorSetLayout::Create(&setLayoutCI);
+	DescriptorSet::CreateInfo descriptorSetCI;
+	descriptorSetCI.debugName = "Image Descriptor Set";
+	descriptorSetCI.pDescriptorPool = descriptorPool;
+	descriptorSetCI.pDescriptorSetLayouts = {setLayout};
+	Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
+	descriptorSet->AddImage(0, 0, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descriptorSet->Update();
 
 	RenderPass::CreateInfo renderPassCI;
 	renderPassCI.debugName = "Basic";
@@ -239,7 +355,7 @@ int main()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
-	pCI.layout = { {}, {} };
+	pCI.layout = { {setLayout}, {} };
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
@@ -264,11 +380,12 @@ int main()
 
 	auto RecordPresentCmdBuffers = [&]()
 	{	
-		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount; i++)
+		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount - 1; i++)
 		{
 			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
 			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.0f, 0.0f, 1.0f, 1.0f} });
 			cmdBuffer->BindPipeline(i, pipeline);
+			cmdBuffer->BindDescriptorSets(i, { descriptorSet }, pipeline);
 			cmdBuffer->BindVertexBuffers(i, { vbv });
 			cmdBuffer->BindIndexBuffer(i, ibv);
 			cmdBuffer->DrawIndexed(i, 6);

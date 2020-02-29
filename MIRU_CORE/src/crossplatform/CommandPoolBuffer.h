@@ -103,10 +103,10 @@ namespace crossplatform
 
 		virtual void CopyBuffer(uint32_t index, Ref<Buffer> srcBuffer, Ref<Buffer> dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
 		virtual void CopyImage(uint32_t index, Ref<Image> srcImage, Ref<Image> dstImage, const std::vector<Image::Copy>& copyRegions) = 0;
-		/*virtual void CopyBufferToImage(uint32_t index) = 0;
-		virtual void CopyImageToBuffer(uint32_t index) = 0;
+		virtual void CopyBufferToImage(uint32_t index, Ref<Buffer> srcBuffer, Ref<Image> dstImage, Image::Layout dstImageLayout, const std::vector<Image::BufferImageCopy> regions) = 0;
+		virtual void CopyImageToBuffer(uint32_t index, Ref<Image> srcImage, Ref<Buffer> dstBuffer, Image::Layout srcImageLayout, const std::vector<Image::BufferImageCopy> regions) = 0;
 
-		virtual void BlitImage(uint32_t index) = 0;
+		/*virtual void BlitImage(uint32_t index) = 0;
 		virtual void ResolveImage(uint32_t index) = 0;*/
 
 	protected:

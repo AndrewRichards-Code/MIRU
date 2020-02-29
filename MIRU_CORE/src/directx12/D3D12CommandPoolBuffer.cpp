@@ -567,11 +567,14 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	std::vector<ID3D12DescriptorHeap*> descHeaps;
 	for (auto& descriptorSet : descriptorSets)
 	{
-		for (size_t i = 0; i < 4; i++)
+		for (auto& descriptorPool : ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools)
 		{
-			ID3D12DescriptorHeap* descHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[i];
-			if (descHeap)
-				descHeaps.push_back(descHeap);
+			for (size_t i = 0; i < 4; i++)
+			{
+				ID3D12DescriptorHeap* descHeap = descriptorPool[i];
+				if (descHeap)
+					descHeaps.push_back(descHeap);
+			}
 		}
 	}
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(static_cast<UINT>(descHeaps.size()), descHeaps.data());
@@ -588,11 +591,13 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 				D3D12_ROOT_DESCRIPTOR_TABLE descSet_table = rootParam.DescriptorTable;
 				if (pipeline_table == descSet_table)
 				{
-					ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool;
-					if(descSet_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-						gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[0]->GetGPUDescriptorHandleForHeapStart();
-					else
-						gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPool[1]->GetGPUDescriptorHandleForHeapStart();
+					for (size_t i = 0; i < descSet_table.NumDescriptorRanges; i++)
+					{
+						if (descSet_table.pDescriptorRanges[i].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+							gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[i][1]->GetGPUDescriptorHandleForHeapStart();
+						else
+							gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[i][0]->GetGPUDescriptorHandleForHeapStart();
+					}
 				}
 			}
 		}
@@ -619,6 +624,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuf
 			ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<UINT>(copyRegion.dstOffset), 
 			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
 };
+
 void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) 
 {
 	CHECK_VALID_INDEX_RETURN(index);
@@ -650,3 +656,61 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 		}
 	}
 };
+
+void CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	for (auto& region : regions)
+	{
+		D3D12_TEXTURE_COPY_LOCATION dst;
+		dst.pResource = ref_cast<Image>(dstImage)->m_Image;
+		dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+		D3D12_TEXTURE_COPY_LOCATION src;
+		src.pResource = ref_cast<Buffer>(srcBuffer)->m_Buffer;
+		src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT Layout;
+		UINT NumRows;
+		UINT64 RowSizesInBytes;
+		UINT64 RequiredSize;
+		m_Device->GetCopyableFootprints(&dst.pResource->GetDesc(), 0, 1, 0, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		src.PlacedFootprint = Layout;
+
+		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
+		{
+			const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
+			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
+		}
+	}	
+}
+
+void CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+{
+	CHECK_VALID_INDEX_RETURN(index);
+	for (auto& region : regions)
+	{
+		D3D12_TEXTURE_COPY_LOCATION dst;
+		dst.pResource = ref_cast<Buffer>(dstBuffer)->m_Buffer;
+		dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+		D3D12_TEXTURE_COPY_LOCATION src;
+		src.pResource = ref_cast<Image>(srcImage)->m_Image;
+		src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT Layout;
+		UINT NumRows;
+		UINT64 RowSizesInBytes;
+		UINT64 RequiredSize;
+		m_Device->GetCopyableFootprints(&src.pResource->GetDesc(), 0, 1, 0, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		dst.PlacedFootprint = Layout;
+
+		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
+		{
+			const D3D12_RESOURCE_DESC& srcResDesc = src.pResource->GetDesc();
+			src.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
+		}
+	}
+}

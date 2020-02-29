@@ -191,7 +191,7 @@ namespace crossplatform
 			DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL = 1000117000,
 			DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL = 1000117001,
 			PRESENT_SRC = 1000001002,
-			SHARED_PRESENT = 1000111000
+			SHARED_PRESENT = 1000111000,
 		};
 		enum class AspectBit : uint32_t
 		{
@@ -226,6 +226,15 @@ namespace crossplatform
 			Offset3D			dstOffset;
 			Extent3D			extent;
 		};
+		struct BufferImageCopy 
+		{
+			uint64_t			bufferOffset;
+			uint32_t			bufferRowLength;
+			uint32_t			bufferImageHeight;
+			SubresourceLayers	imageSubresource;
+			Offset3D			imageOffset;
+			Extent3D			imageExtent;
+		};
 		
 		union ClearColourValue 
 		{
@@ -250,7 +259,9 @@ namespace crossplatform
 			void*				device;
 			Type				type;
 			Format				format;
-			uint32_t			width, height, depth;
+			uint32_t			width;
+			uint32_t			height;
+			uint32_t			depth;
 			uint32_t			mipLevels;
 			uint32_t			arrayLayers;
 			SampleCountBit		sampleCount;

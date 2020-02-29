@@ -72,7 +72,7 @@ namespace d3d12
 		
 		D3D12_SAMPLER_DESC m_SamplerDesc;
 
-		D3D12_CPU_DESCRIPTOR_HANDLE m_RTVDescHandle = {};
+		D3D12_CPU_DESCRIPTOR_HANDLE m_DescHandle = {};
 	};
 }
 }

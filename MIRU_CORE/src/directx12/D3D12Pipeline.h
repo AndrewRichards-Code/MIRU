@@ -35,8 +35,8 @@ namespace d3d12
 		ID3D12Device* m_Device;
 
 		ID3D12RootSignature* m_RootSignature;
-		ID3DBlob* m_SerializedRootSignature;
-		ID3DBlob* m_SerializedRootSignatureError;
+		ID3DBlob* m_SerializedRootSignature = nullptr;
+		ID3DBlob* m_SerializedRootSignatureError = nullptr;
 		D3D12_ROOT_SIGNATURE_DESC m_RootSignatureDesc;
 		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 

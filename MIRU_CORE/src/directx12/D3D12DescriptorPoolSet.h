@@ -16,10 +16,11 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		//[0] == HEAP_TYPE_SAMPLER	and [1] == HEAP_TYPE_CBV_SRV_UAV
-		//[2] == HEAP_TYPE_RTV		and [3] == HEAP_TYPE_DSV
-		ID3D12DescriptorHeap* m_DescriptorPool[4] = {};
-		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDesc[4] = {};
+		//Per Set per type
+		//[i][0] == HEAP_TYPE_CBV_SRV_UAV	and [i][1] == HEAP_TYPE_SAMPLER
+		//[i][2] == HEAP_TYPE_RTV			and [i][3] == HEAP_TYPE_DSV
+		std::vector<std::array<ID3D12DescriptorHeap*, 4>> m_DescriptorPools; 
+		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDescs[4];
 	};
 
 	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
@@ -33,8 +34,8 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRanges;
-		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTable;
+		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTable = { 0, nullptr };
+		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTableSampler = { 0, nullptr };
 	};
 
 	class DescriptorSet final : public crossplatform::DescriptorSet //DescriptorTables???
@@ -51,12 +52,21 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
-		
-		D3D12_CPU_DESCRIPTOR_HANDLE m_CBV_SRV_UAV_DescHeapCPUHandle = {};
-		D3D12_CPU_DESCRIPTOR_HANDLE m_Sampler_DescHeapCPUHandle = {};
-		D3D12_CPU_DESCRIPTOR_HANDLE m_RTV_DescHeapCPUHandle = {};
-		D3D12_CPU_DESCRIPTOR_HANDLE m_DSV_DescHeapCPUHandle = {};
 
+		//Per Set per type
+		//[i][0] == HEAP_TYPE_CBV_SRV_UAV	and [i][1] == HEAP_TYPE_SAMPLER
+		//[i][2] == HEAP_TYPE_RTV			and [i][3] == HEAP_TYPE_DSV
+		std::vector<std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>> m_DescHeapCPUHandles;
+
+		//Per Set per available type in the potential order:
+		//RANGE_TYPE_SRV, RANGE_TYPE_UAV and RANGE_TYPE_CBV
+		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRanges;
+		std::vector<D3D12_ROOT_DESCRIPTOR_TABLE> m_DescriptorTables;
+		
+		//Per Set per type RANGE_TYPE_SAMPLER:
+		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRangeSampler;
+		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTableSampler;
+		
 		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 	};
 
