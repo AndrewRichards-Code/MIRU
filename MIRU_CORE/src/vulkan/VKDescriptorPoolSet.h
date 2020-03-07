@@ -1,5 +1,6 @@
 #pragma once
 #include "crossplatform/DescriptorPoolSet.h"
+#include "crossplatform/Buffer.h"
 
 namespace miru
 {

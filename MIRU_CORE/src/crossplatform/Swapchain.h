@@ -1,12 +1,14 @@
 #pragma once
 #include "common.h"
-#include "Image.h"
 
 namespace miru
 {
 namespace crossplatform
 {
 	class Context;
+	class Image;
+	class ImageView;
+
 	class Swapchain
 	{
 		//enums/structs

@@ -1,11 +1,12 @@
 #pragma once
 #include "common.h"
-#include "Context.h"
 
 namespace miru
 {
 namespace crossplatform
 {
+	class Context;
+
 	struct Resource
 	{
 		enum class Type : uint32_t

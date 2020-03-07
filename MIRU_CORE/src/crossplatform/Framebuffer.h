@@ -1,11 +1,13 @@
 #pragma once
 #include "common.h"
-#include "Pipeline.h"
 
 namespace miru
 {
 namespace crossplatform
 {
+	class RenderPass;
+	class ImageView;
+
 	class Framebuffer
 	{
 		//enum/struct

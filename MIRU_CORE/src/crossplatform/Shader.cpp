@@ -105,3 +105,36 @@ void Shader::Recompile()
 
 	Reconstruct();
 }
+
+void Shader::LoadAssemblyFile()
+{
+	std::string filepath(m_CI.filepath);
+	if (filepath.empty())
+		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path provided.");
+
+	std::string shaderAssemblyFileExtension;
+	switch (GraphicsAPI::GetAPI())
+	{
+	case GraphicsAPI::API::D3D12:
+		shaderAssemblyFileExtension = ".cso.asm"; break;
+	case GraphicsAPI::API::VULKAN:
+		shaderAssemblyFileExtension = ".spv.asm"; break;
+	case GraphicsAPI::API::UNKNOWN:
+	default:
+		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return;
+	}
+
+	filepath = filepath.replace(filepath.find_last_of('.'), 8, shaderAssemblyFileExtension);
+
+	std::ifstream stream(filepath, std::ios::ate | std::ios::binary);
+	if (!stream.is_open())
+	{
+		MIRU_WARN(true, "ERROR: CROSSPLATFORM: Unable to read shader assembly file.");
+	}
+	m_ShaderAssembly.resize(static_cast<size_t>(stream.tellg()));
+	stream.seekg(0);
+	stream.read(m_ShaderAssembly.data(), static_cast<std::streamsize>(m_ShaderAssembly.size()));
+	stream.close();
+	m_ShaderAssembly.push_back('\0'); //Null terminate the char array for later conversion to const char* or std::string.
+	m_AssemblyFileFound = true;
+}

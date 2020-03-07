@@ -3,6 +3,8 @@
 #include "D3D12Image.h"
 #include "D3D12DescriptorPoolSet.h"
 
+#include "crossplatform/Pipeline.h"
+
 using namespace miru;
 using namespace d3d12;
 

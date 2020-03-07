@@ -13,6 +13,7 @@ namespace d3d12
 		~Shader();
 
 		void Reconstruct() override;
+		void GetShaderResources() override;
 
 		//Members
 	public:

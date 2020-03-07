@@ -1,16 +1,17 @@
 #pragma once
 #include "common.h"
 
-#include "Context.h"
-#include "Swapchain.h"
 #include "Pipeline.h"
-#include "Framebuffer.h"
 #include "Buffer.h"
 
 namespace miru
 {
 namespace crossplatform
 {
+	class Context;
+	class Swapchain;
+	class Framebuffer;
+
 	class CommandPool
 	{
 		//enums/structs

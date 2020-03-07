@@ -21,6 +21,7 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 
 #include "directx12/D3D12Image.h"
 #include "vulkan/VKImage.h"
+#include "crossplatform/Context.h"
 
 void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height)
 {

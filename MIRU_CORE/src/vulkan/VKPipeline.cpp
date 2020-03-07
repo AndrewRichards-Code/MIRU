@@ -340,26 +340,36 @@ VkFormat Pipeline::ToVkFormat(crossplatform::VertexType type)
 	{
 	case miru::crossplatform::VertexType::FLOAT:
 		return VK_FORMAT_R32_SFLOAT;
-	case miru::crossplatform::VertexType::DOUBLE:
-		return VK_FORMAT_R64_SFLOAT;
 	case miru::crossplatform::VertexType::VEC2:
 		return VK_FORMAT_R32G32_SFLOAT;
 	case miru::crossplatform::VertexType::VEC3:
 		return VK_FORMAT_R32G32B32_SFLOAT;
 	case miru::crossplatform::VertexType::VEC4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	case miru::crossplatform::VertexType::INT:
+		return VK_FORMAT_R32_SINT;
 	case miru::crossplatform::VertexType::IVEC2:
 		return VK_FORMAT_R32G32_SINT;
 	case miru::crossplatform::VertexType::IVEC3:
 		return VK_FORMAT_R32G32B32_SINT;
 	case miru::crossplatform::VertexType::IVEC4:
 		return VK_FORMAT_R32G32B32A32_SINT;
+	case miru::crossplatform::VertexType::UINT:
+		return VK_FORMAT_R32_UINT;
 	case miru::crossplatform::VertexType::UVEC2:
 		return VK_FORMAT_R32G32_UINT;
 	case miru::crossplatform::VertexType::UVEC3:
 		return VK_FORMAT_R32G32B32_UINT;
 	case miru::crossplatform::VertexType::UVEC4:
 		return VK_FORMAT_R32G32B32A32_UINT;
+	case miru::crossplatform::VertexType::DOUBLE:
+		return VK_FORMAT_R64_SFLOAT;
+	case miru::crossplatform::VertexType::DVEC2:
+		return VK_FORMAT_R64G64_SFLOAT;
+	case miru::crossplatform::VertexType::DVEC3:
+		return VK_FORMAT_R64G64B64_SFLOAT;
+	case miru::crossplatform::VertexType::DVEC4:
+		return VK_FORMAT_R64G64B64A64_SFLOAT;
 	default:
 		return VK_FORMAT_UNDEFINED;
 	}

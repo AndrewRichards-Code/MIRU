@@ -338,7 +338,7 @@ int main()
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { vertexShader, fragmentShader };
 	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, 16, VertexInputRate::VERTEX} };
-	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0} };
+	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
 	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };

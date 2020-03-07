@@ -95,7 +95,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		for (auto& attrib : m_CI.vertexInputState.vertexInputAttributeDescriptions)
 		{
 			D3D12_INPUT_ELEMENT_DESC il;
-			il.SemanticName = "POSITION";
+			il.SemanticName = attrib.semanticName;
 			il.SemanticIndex = attrib.location;
 			il.Format = ToDXGI_FORMAT(attrib.vertexType);
 			il.InputSlot = attrib.binding;
@@ -229,7 +229,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.CachedPSO = {};
 		m_GPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-		MIRU_ASSERT(m_Device->CreateGraphicsPipelineState(&m_GPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed tp create Graphics Pipeline.");
+		MIRU_ASSERT(m_Device->CreateGraphicsPipelineState(&m_GPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Graphics Pipeline")).c_str());
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
@@ -240,7 +240,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPSD.CachedPSO = {};
 		m_CPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-		MIRU_ASSERT(m_Device->CreateComputePipelineState(&m_CPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed tp create Compute Pipeline.");
+		MIRU_ASSERT(m_Device->CreateComputePipelineState(&m_CPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Compute Pipeline")).c_str());
 	}
 	else
@@ -261,26 +261,36 @@ DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)
 	{
 	case crossplatform::VertexType::FLOAT:
 		return DXGI_FORMAT_R32_FLOAT;
-	case crossplatform::VertexType::DOUBLE:
-		return DXGI_FORMAT_R32_FLOAT;
 	case crossplatform::VertexType::VEC2:
 		return DXGI_FORMAT_R32G32_FLOAT;
 	case crossplatform::VertexType::VEC3:
 		return DXGI_FORMAT_R32G32B32_FLOAT;
 	case crossplatform::VertexType::VEC4:
 		return DXGI_FORMAT_R32G32B32A32_FLOAT;
+	case crossplatform::VertexType::INT:
+		return DXGI_FORMAT_R32_SINT;
 	case crossplatform::VertexType::IVEC2:
 		return DXGI_FORMAT_R32G32_SINT;
 	case crossplatform::VertexType::IVEC3:
 		return DXGI_FORMAT_R32G32B32_SINT;
 	case crossplatform::VertexType::IVEC4:
 		return DXGI_FORMAT_R32G32B32A32_SINT;
+	case crossplatform::VertexType::UINT:
+		return DXGI_FORMAT_R32_UINT;
 	case crossplatform::VertexType::UVEC2:
 		return DXGI_FORMAT_R32G32_UINT;
 	case crossplatform::VertexType::UVEC3:
 		return DXGI_FORMAT_R32G32B32_UINT;
 	case crossplatform::VertexType::UVEC4:
 		return DXGI_FORMAT_R32G32B32A32_UINT;
+	case crossplatform::VertexType::DOUBLE:
+		return DXGI_FORMAT_R32_FLOAT;
+	case crossplatform::VertexType::DVEC2:
+		return DXGI_FORMAT_R32G32_FLOAT;
+	case crossplatform::VertexType::DVEC3:
+		return DXGI_FORMAT_R32G32B32_FLOAT;
+	case crossplatform::VertexType::DVEC4:
+		return DXGI_FORMAT_R32G32B32A32_FLOAT;
 	default:
 		return DXGI_FORMAT_UNKNOWN;
 	}

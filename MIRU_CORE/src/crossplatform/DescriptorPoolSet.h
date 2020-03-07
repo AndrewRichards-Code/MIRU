@@ -1,6 +1,5 @@
 #pragma once
 #include "common.h"
-#include "Buffer.h"
 #include "Image.h"
 #include "Shader.h"
 
@@ -8,6 +7,8 @@ namespace miru
 {
 namespace crossplatform
 {
+	class BufferView;
+
 	enum class DescriptorType : uint32_t
 	{
 		SAMPLER = 0,
@@ -56,7 +57,7 @@ namespace crossplatform
 	{
 		//enums/structs
 	public:
-		struct DescriptorSetLayoutBinding
+		struct Binding
 		{
 			uint32_t			binding;
 			DescriptorType		type;
@@ -65,9 +66,9 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*								debugName;
-			void*									device;
-			std::vector<DescriptorSetLayoutBinding>	descriptorSetLayoutBinding; //Collect by type and then by ascending binding number.
+			const char*				debugName;
+			void*					device;
+			std::vector<Binding>	descriptorSetLayoutBinding; //Collect by type and then by ascending binding number.
 		};
 		//Methods
 	public:

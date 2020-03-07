@@ -8,6 +8,7 @@ namespace miru
 namespace crossplatform
 {
 	class Swapchain;
+
 	class Image
 	{
 		//enums/structs

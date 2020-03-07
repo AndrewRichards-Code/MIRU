@@ -13,6 +13,7 @@ namespace vulkan
 		~Shader();
 
 		void Reconstruct() override;
+		void GetShaderResources() override {};
 
 		//Members
 	public:

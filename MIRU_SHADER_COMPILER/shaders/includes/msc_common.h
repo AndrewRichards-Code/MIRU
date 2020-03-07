@@ -28,8 +28,8 @@
 #define MIRU_RW_IMAGE_1D_ARRAY(x, y, z, w) RW[[vk::binding(x, y)]] Texture1DArray<z> w 
 #define MIRU_RW_IMAGE_2D_ARRAY(x, y, z, w) RW[[vk::binding(x, y)]] Texture2DArray<z> w 
 #define MIRU_SAMPLER(x, y, z) [[vk::binding(x, y)]] SamplerState z
-//The name component of the image is defined as 'name_image', and the name component of the sampler is defined as 'name_sampler'.
-#define MIRU_COMBINED_IMAGE_SAMPLER(type, x, y, z, w) type(x, y, z, w##_image); MIRU_SAMPLER(x, y, w##_sampler)
+//The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
+#define MIRU_COMBINED_IMAGE_SAMPLER(type, x, y, z, w) type(x, y, z, w##_image_cis); MIRU_SAMPLER(x, y, w##_sampler_cis)
 #else
 #define MIRU_IMAGE_1D(x, y, z, w) Texture1D<z> w : register(t##x, space##y)
 #define MIRU_IMAGE_2D(x, y, z, w) Texture2D<z> w : register(t##x, space##y)
@@ -44,6 +44,6 @@
 #define MIRU_RW_IMAGE_1D_ARRAY(x, y, z, w) RWTexture1DArray<z> w : register(t##x, space##y)
 #define MIRU_RW_IMAGE_2D_ARRAY(x, y, z, w) RWTexture2DArray<z> w : register(t##x, space##y)
 #define MIRU_SAMPLER(x, y, z) SamplerState z : register(s##x, space##y)
-//The name component of the image is defined as 'name_image', and the name component of the sampler is defined as 'name_sampler'.
-#define MIRU_COMBINED_IMAGE_SAMPLER(type, x, y, z, w) type(x, y, z, w##_image); MIRU_SAMPLER(x, y, w##_sampler)
+//The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
+#define MIRU_COMBINED_IMAGE_SAMPLER(type, x, y, z, w) type(x, y, z, w##_image_cis); MIRU_SAMPLER(x, y, w##_sampler_cis)
 #endif

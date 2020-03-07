@@ -22,16 +22,21 @@ namespace crossplatform
 	enum class VertexType : uint32_t
 	{
 		FLOAT,
-		DOUBLE,
 		VEC2,
 		VEC3,
 		VEC4,
+		INT,
 		IVEC2,
 		IVEC3,
 		IVEC4,
+		UINT,
 		UVEC2,
 		UVEC3,
-		UVEC4
+		UVEC4,
+		DOUBLE,
+		DVEC2,
+		DVEC3,
+		DVEC4
 	};
 	struct VertexInputAttributeDescription
 	{
@@ -39,6 +44,7 @@ namespace crossplatform
 		uint32_t	binding;
 		VertexType	vertexType;
 		uint32_t	offset;
+		const char* semanticName;
 	};
 	
 	//InputAssemblyState
@@ -238,7 +244,7 @@ namespace crossplatform
 	};
 
 	//PushConstantRange
-
+	
 	struct PushConstantRange
 	{
 		Shader::StageBit	stages;

@@ -1,12 +1,13 @@
 #pragma once
 #include "common.h"
-#include "Buffer.h"
 #include "Image.h"
 
 namespace miru
 {
 namespace crossplatform
 {
+	class Buffer;
+
 	//Host-Device Synchronisation
 	class Fence
 	{
