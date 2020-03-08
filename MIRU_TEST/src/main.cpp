@@ -51,8 +51,8 @@ int main()
 	GraphicsAPI api;
 	api.LoadRenderDoc();
 	api.AllowSetName();
-	api.SetAPI(GraphicsAPI::API::D3D12);
-	//api.SetAPI(GraphicsAPI::API::VULKAN);
+	//api.SetAPI(GraphicsAPI::API::D3D12);
+	api.SetAPI(GraphicsAPI::API::VULKAN);
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.IsD3D12() ? 11 : 1;

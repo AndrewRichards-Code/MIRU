@@ -25,6 +25,10 @@ namespace crossplatform
 		VEC2,
 		VEC3,
 		VEC4,
+		DOUBLE,
+		DVEC2,
+		DVEC3,
+		DVEC4,
 		INT,
 		IVEC2,
 		IVEC3,
@@ -32,11 +36,7 @@ namespace crossplatform
 		UINT,
 		UVEC2,
 		UVEC3,
-		UVEC4,
-		DOUBLE,
-		DVEC2,
-		DVEC3,
-		DVEC4
+		UVEC4
 	};
 	struct VertexInputAttributeDescription
 	{

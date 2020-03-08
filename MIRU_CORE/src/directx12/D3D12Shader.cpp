@@ -48,7 +48,7 @@ void Shader::GetShaderResources()
 	if (m_CI.stage == Shader::StageBit::VERTEX_BIT)
 	{
 		if (assemblyFileStr.find("Vertex Shader", 0) == std::string::npos)
-			MIRU_ASSERT(true, "ERROR: D3D12: The provide assembly file doesn't match the specified stage: StageBit::VERTEX_BIT.");
+			MIRU_ASSERT(true, "ERROR: D3D12: The provided assembly file doesn't match the specified stage: StageBit::VERTEX_BIT.");
 		
 		std::string line;
 		bool inputSigFound = false;
@@ -88,14 +88,15 @@ void Shader::GetShaderResources()
 				if(!items.empty())
 				{
 					m_VSIADs.push_back({});
-					m_VSIADs.back().location = 0;
-					m_VSIADs.back().binding = atoi(items[3].c_str());;
+					m_VSIADs.back().location = atoi(items[3].c_str());
+					m_VSIADs.back().binding = 0;
 					m_VSIADs.back().vertexType = (crossplatform::VertexType)((items[2].size() - 1) + (
 						(items[5].compare("float") == 0) ? 0 :
-						(items[5].compare("int") == 0) ? 4 :
-						(items[5].compare("uint") == 0) ? 8 :
-						(items[5].compare("double") ==0)  ? 12 : 0));
-					m_VSIADs.back().offset = m_VSIADs.size() == 1 ? 0 : ((uint32_t)m_VSIADs[m_VSIADs.size() - 2].vertexType % (uint32_t)4) * (m_VSIADs[m_VSIADs.size() - 2].vertexType >= crossplatform::VertexType::DOUBLE ? (uint32_t)8 : (uint32_t)4) + m_VSIADs[m_VSIADs.size() - 2].offset;
+						(items[5].compare("double") == 0) ? 4 :
+						(items[5].compare("int") == 0) ? 8 :
+						(items[5].compare("uint") ==0)  ? 12 : 0));
+					m_VSIADs.back().offset = m_VSIADs.size() == 1 ? 0 : (((uint32_t)m_VSIADs[m_VSIADs.size() - 2].vertexType % (uint32_t)4)+(uint32_t)1) 
+						* (m_VSIADs[m_VSIADs.size() - 2].vertexType >= crossplatform::VertexType::DOUBLE ? (uint32_t)8 : (uint32_t)4) + m_VSIADs[m_VSIADs.size() - 2].offset;
 					m_VSIADs.back().semanticName = items[0];
 					items.clear();
 				}
@@ -106,7 +107,7 @@ void Shader::GetShaderResources()
 	if (m_CI.stage == Shader::StageBit::PIXEL_BIT)
 	{
 		if (assemblyFileStr.find("Pixel Shader", 0) == std::string::npos)
-			MIRU_ASSERT(true, "ERROR: D3D12: The provide assembly file doesn't match the specified stage: StageBit::PIXEL_BIT.");
+			MIRU_ASSERT(true, "ERROR: D3D12: The provided assembly file doesn't match the specified stage: StageBit::PIXEL_BIT.");
 		
 		std::string line;
 		bool outputSigFound = false;
@@ -149,9 +150,9 @@ void Shader::GetShaderResources()
 					m_PSOADs.back().binding = atoi(items[3].c_str());;
 					m_PSOADs.back().outputType = (crossplatform::VertexType)((items[2].size() - 1) + (
 						(items[5].compare("float") == 0) ? 0 :
-						(items[5].compare("int") == 0) ? 4 :
-						(items[5].compare("uint") == 0) ? 8 :
-						(items[5].compare("double") == 0) ? 12 : 0));
+						(items[5].compare("double") == 0) ? 4 :
+						(items[5].compare("int") == 0) ? 8 :
+						(items[5].compare("uint") == 0) ? 12 : 0));
 					m_PSOADs.back().semanticName = items[0];
 					items.clear();
 				}

@@ -84,6 +84,8 @@ namespace crossplatform
 
 		std::vector<VertexShaderInputAttributeDescription> m_VSIADs;
 		std::vector<PixelShaderOutputAttributeDescription> m_PSOADs;
+
+		//Key the set number
 		std::map<uint32_t, std::vector<ResourceBindingDescription>> m_RBD;
 	};
 }
