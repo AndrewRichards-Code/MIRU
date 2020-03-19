@@ -44,6 +44,7 @@ namespace crossplatform
 		static Ref<Buffer> Create(CreateInfo* pCreateInfo);
 		virtual ~Buffer() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
+		const Resource& GetResource() { return m_Resource; }
 
 		//Members
 	protected:

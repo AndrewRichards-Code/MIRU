@@ -564,49 +564,42 @@ bool operator== (const D3D12_ROOT_DESCRIPTOR_TABLE& a, const D3D12_ROOT_DESCRIPT
 void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) 
 {
 	CHECK_VALID_INDEX_RETURN(index);
-	std::vector<ID3D12DescriptorHeap*> descHeaps;
+
+	size_t i = 0;
 	for (auto& descriptorSet : descriptorSets)
 	{
-		for (auto& descriptorPool : ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools)
+		for (auto& rootParam : ref_cast<DescriptorSet>(descriptorSet)->m_RootParameters)
 		{
-			for (size_t i = 0; i < 4; i++)
-			{
-				ID3D12DescriptorHeap* descHeap = descriptorPool[i];
-				if (descHeap)
-					descHeaps.push_back(descHeap);
-			}
-		}
-	}
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(static_cast<UINT>(descHeaps.size()), descHeaps.data());
+			D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
+			D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
 
-	for (size_t i = 0; i < ref_cast<Pipeline>(pipeline)->m_RootParameters.size(); i++)
-	{
-		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
-		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
-
-		for (auto& descriptorSet : descriptorSets)
-		{
-			for (auto& rootParam : ref_cast<DescriptorSet>(descriptorSet)->m_RootParameters)
+			D3D12_ROOT_DESCRIPTOR_TABLE descSet_table = rootParam.DescriptorTable;
+			if (pipeline_table == descSet_table)
 			{
-				D3D12_ROOT_DESCRIPTOR_TABLE descSet_table = rootParam.DescriptorTable;
-				if (pipeline_table == descSet_table)
+				size_t set = descSet_table.pDescriptorRanges[0].RegisterSpace;
+				if (descSet_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
 				{
-					for (size_t i = 0; i < descSet_table.NumDescriptorRanges; i++)
-					{
-						if (descSet_table.pDescriptorRanges[i].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-							gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[i][1]->GetGPUDescriptorHandleForHeapStart();
-						else
-							gpuDescHandle = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[i][0]->GetGPUDescriptorHandleForHeapStart();
-					}
+					auto samplerHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][1];
+					gpuDescHandle = samplerHeap->GetGPUDescriptorHandleForHeapStart();
+					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &samplerHeap);
 				}
+				else
+				{
+					auto cbvSrvUavHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][0];
+					gpuDescHandle = cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
+					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &cbvSrvUavHeap);
+				}
+
+				if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
+					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+				else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+
+				i++;
+				if (i >= ref_cast<Pipeline>(pipeline)->m_RootParameters.size())
+					break;
 			}
 		}
-
-		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
-		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
-
 	}
 };
 

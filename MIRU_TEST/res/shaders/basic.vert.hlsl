@@ -2,14 +2,14 @@
 
 struct VS_IN
 {
-    MIRU_LOCATION(0, float4, position, POSITION);
-    MIRU_LOCATION(1, float2, texCoords, TEXCOORD);
+    MIRU_LOCATION(0, float4, position, POSITION0);
+    MIRU_LOCATION(1, float2, texCoords, TEXCOORD1);
 };
 
 struct VS_OUT
 {
     MIRU_LOCATION(0, float4, position, SV_POSITION);
-    MIRU_LOCATION(1, float2, texCoords, TEXCOORD);
+    MIRU_LOCATION(1, float2, texCoords, TEXCOORD1);
 };
 
 struct Camera
@@ -29,9 +29,7 @@ VS_OUT main(VS_IN IN)
 {
     VS_OUT OUT;
 
-    OUT.position = mul(camera.proj * camera.view * model.modl, IN.position);
-	//OUT.position = IN.position;
-	//OUT.texCoords = IN.position.xy + float2(0.5, 0.5);
+	OUT.position = mul(IN.position, mul(model.modl, mul(camera.view, camera.proj)));
 	OUT.texCoords = IN.texCoords;
 	return OUT;
 }

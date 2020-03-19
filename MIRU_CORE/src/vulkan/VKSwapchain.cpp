@@ -199,12 +199,6 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		images.push_back(&swapchainImage);
 	}
 
-	std::vector<VkImageView*> imageViews;
-	for (auto& swapchainImageView : m_SwapchainImageViews)
-	{
-		imageViews.push_back(&swapchainImageView);
-	}
-
-	FillSwapchainImageAndViews((void**)images.data(), (void**)imageViews.data(), m_Extent.width, m_Extent.height);
+	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height);
 	m_Resized = true;
 }

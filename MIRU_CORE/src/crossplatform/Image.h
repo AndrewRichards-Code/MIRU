@@ -278,6 +278,7 @@ namespace crossplatform
 		static Ref<Image> Create(CreateInfo* pCreateInfo);
 		virtual ~Image() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
+		const Resource& GetResource() { return m_Resource; }
 		friend Swapchain;
 
 		//Members

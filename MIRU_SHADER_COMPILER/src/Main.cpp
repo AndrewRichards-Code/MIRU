@@ -43,7 +43,7 @@ int main(int argc, const char** argv)
 		if (!_stricmp(argv[i], "-h") || !_stricmp(argv[i], "-help"))
 			help = true;
 		if (!_stricmp(argv[i], "-pause"))
-			pause = true; help = true;
+			{ pause = true; help = true; }
 		if (!_stricmp(argv[i], "-nologo"))
 			logo = false;
 		if (!_stricmp(argv[i], "-nooutput"))

@@ -1,3 +1,4 @@
+#include "../../../ARM/ARM/src/ARMLib.h"
 #include "miru_core.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../dep/STBI/stb_image.h"
@@ -11,6 +12,7 @@ uint32_t width = 800;
 uint32_t height = 600;
 bool windowResize;
 bool shaderRecompile;
+int var_x, var_y, var_z = 0;
 LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	if (msg == WM_DESTROY || msg == WM_CLOSE)
@@ -32,7 +34,18 @@ LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		shaderRecompile = true;
 	}
-
+	if (msg == WM_KEYDOWN && wparam == 0x49) //I
+		var_y++;
+	if (msg == WM_KEYDOWN && wparam == 0x4B) //K
+		var_y--;
+	if (msg == WM_KEYDOWN && wparam == 0x4A) //J
+		var_x--;
+	if (msg == WM_KEYDOWN && wparam == 0x4C) //L
+		var_x++;
+	if (msg == WM_KEYDOWN && wparam == 0x48) //H
+		var_z--;
+	if (msg == WM_KEYDOWN && wparam == 0x4E) //N
+		var_z++;
 
 	return DefWindowProc(handle, msg, wparam, lparam);
 }
@@ -131,12 +144,12 @@ int main()
 	mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT ;
 	Ref<MemoryBlock> gpu_mb_0 = MemoryBlock::Create(&mbCI);
 
-	float vertices[16] =
+	float vertices[24] =
 	{
-		-0.5f, -0.5f, 0.0f, 1.0f,
-		+0.5f, -0.5f, 0.0f, 1.0f,
-		+0.5f, +0.5f, 0.0f, 1.0f,
-		-0.5f, +0.5f, 0.0f, 1.0f
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+		+0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
+		+0.5f, +0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
+		-0.5f, +0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
 	};
 	uint32_t indices[6] = { 0,1,2,2,3,0 };
 
@@ -249,7 +262,7 @@ int main()
 	vbViewCI.pBuffer = g_vb;
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
-	vbViewCI.stride = 4 * sizeof(float);
+	vbViewCI.stride = 6 * sizeof(float);
 	Ref<BufferView> vbv = BufferView::Create(&vbViewCI);
 
 	BufferView::CreateInfo ibViewCI;
@@ -289,23 +302,73 @@ int main()
 	samplerCI.unnormalisedCoordinates = false;
 	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
 
+	ARM::Mat4 proj = ARM::Mat4::Identity(); //ARM::Mat4::Perspective(90.0, float(width) / float(height), 0.1f, 10.0f);
+	ARM::Mat4 view = ARM::Mat4::Identity();
+	ARM::Mat4 modl = ARM::Mat4::Identity(); //ARM::Mat4::Translation({ 0.0f, 0.0f, 5.0f });
+
+	float ubData[2 * sizeof(ARM::Mat4)];
+	memcpy(ubData + 0 * 16,	&proj.a, sizeof(ARM::Mat4));
+	memcpy(ubData + 1 * 16,	&view.a, sizeof(ARM::Mat4));
+
+	Buffer::CreateInfo ubCI;
+	ubCI.debugName = "CameraUB";
+	ubCI.device = context->GetDevice();
+	ubCI.usage = Buffer::UsageBit::UNIFORM;
+	ubCI.size = 2 * sizeof(ARM::Mat4);
+	ubCI.data = ubData;
+	ubCI.pMemoryBlock = cpu_mb_0;
+	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
+	ubCI.debugName = "ModelUB";
+	ubCI.device = context->GetDevice();
+	ubCI.usage = Buffer::UsageBit::UNIFORM;
+	ubCI.size = sizeof(ARM::Mat4);
+	ubCI.data = &modl.a;
+	ubCI.pMemoryBlock = cpu_mb_0;
+	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
+
+	BufferView::CreateInfo ubViewCamCI;
+	ubViewCamCI.debugName = "CameraUBView";
+	ubViewCamCI.device = context->GetDevice();
+	ubViewCamCI.type = BufferView::Type::UNIFORM;
+	ubViewCamCI.pBuffer = ub1;
+	ubViewCamCI.offset = 0;
+	ubViewCamCI.size = 2 * 16 * sizeof(float);
+	ubViewCamCI.stride = 0;
+	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
+	BufferView::CreateInfo ubViewMdlCI;
+	ubViewMdlCI.debugName = "ModelUBView";
+	ubViewMdlCI.device = context->GetDevice();
+	ubViewMdlCI.type = BufferView::Type::UNIFORM;
+	ubViewMdlCI.pBuffer = ub2;
+	ubViewMdlCI.offset = 0;
+	ubViewMdlCI.size = sizeof(ARM::Mat4);
+	ubViewMdlCI.stride = 0;
+	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
+
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "Image Descriptor Pool";
 	descriptorPoolCI.device = context->GetDevice();
-	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1} };
-	descriptorPoolCI.maxSets = 1;
+	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2} };
+	descriptorPoolCI.maxSets = 2;
 	Ref<DescriptorPool> descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic Shader DescSetLayout";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::COMBINED_IMAGE_SAMPLER,  1, Shader::StageBit::FRAGMENT_BIT } };
-	Ref<DescriptorSetLayout> setLayout = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER,  1, Shader::StageBit::VERTEX_BIT } };
+	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.descriptorSetLayoutBinding = { 
+		{1, DescriptorType::COMBINED_IMAGE_SAMPLER,  1, Shader::StageBit::FRAGMENT_BIT }, 
+		{0, DescriptorType::UNIFORM_BUFFER,  1, Shader::StageBit::VERTEX_BIT }
+	};
+	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Image Descriptor Set";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = {setLayout};
+	descriptorSetCI.pDescriptorSetLayouts = {setLayout1, setLayout2 };
 	Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
-	descriptorSet->AddImage(0, 0, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descriptorSet->AddBuffer(0, 0, { { ubViewCam } });
+	descriptorSet->AddBuffer(1, 0, { { ubViewMdl } });
+	descriptorSet->AddImage(1, 1, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descriptorSet->Update();
 
 	RenderPass::CreateInfo renderPassCI;
@@ -337,8 +400,8 @@ int main()
 	pCI.device = context->GetDevice();
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { vertexShader, fragmentShader };
-	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, 16, VertexInputRate::VERTEX} };
-	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
+	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices)/4, VertexInputRate::VERTEX} };
+	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"}, {1, 0, VertexType::VEC2, 16, "TEXCOORD"} };
 	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
@@ -355,7 +418,7 @@ int main()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
-	pCI.layout = { {setLayout}, {} };
+	pCI.layout = { {setLayout1, setLayout2}, {} };
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
@@ -383,7 +446,7 @@ int main()
 		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount - 1; i++)
 		{
 			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.0f, 0.0f, 1.0f, 1.0f} });
+			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.5f, 0.5f, 0.5f, 1.0f} });
 			cmdBuffer->BindPipeline(i, pipeline);
 			cmdBuffer->BindDescriptorSets(i, { descriptorSet }, pipeline);
 			cmdBuffer->BindVertexBuffers(i, { vbv });
@@ -453,7 +516,19 @@ int main()
 
 			swapchain->m_Resized = false;
 		}
+		{
+			proj = ARM::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
+			if(api.IsVulkan())
+				proj.f *= -1;
+			modl = ARM::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
+			memcpy(ubData + 0 * 16, &proj.a, sizeof(ARM::Mat4));
+			memcpy(ubData + 1 * 16, &view.a, sizeof(ARM::Mat4));
+
+			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(ARM::Mat4), ubData);
+			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * sizeof(ARM::Mat4), &modl.a);
+		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
+		frameIndex++;
 	}
 	context->DeviceWaitIdle();
 }

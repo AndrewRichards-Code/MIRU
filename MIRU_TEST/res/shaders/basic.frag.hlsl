@@ -3,20 +3,19 @@
 struct PS_IN
 {
     MIRU_LOCATION(0, float4, position, SV_POSITION);
-    MIRU_LOCATION(1, float2, texCoords, TEXCOORD);
+    MIRU_LOCATION(1, float2, texCoords, TEXCOORD1);
 };
     
 struct PS_OUT
 {
-    MIRU_LOCATION(0, float4, colour, SV_TARGET);
+    MIRU_LOCATION(0, float4, colour, SV_TARGET0);
 };
 
-MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_2D, 0, 0, float4, colour);
-MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_2D, 1, 0, float4, colour2);
+MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_2D, 1, 1, float4, colour);
 
 PS_OUT main(PS_IN IN)
 {
     PS_OUT OUT;
-	OUT.colour = colour_image_cis.Sample(colour_sampler_cis, IN.texCoords) + colour2_image_cis.Sample(colour2_sampler_cis, IN.texCoords);
+	OUT.colour = colour_image_cis.Sample(colour_sampler_cis, IN.texCoords);
     return OUT;
 }

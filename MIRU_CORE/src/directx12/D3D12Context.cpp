@@ -13,6 +13,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	#if defined(_DEBUG)
 	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
 	m_Debug->EnableDebugLayer();
+	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
 	#endif
 
 	//Create Factory
@@ -99,11 +100,9 @@ void Context::DeviceWaitIdle()
 		ref_cast<Fence>(fence)->GetValue()++;
 
 		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
-		if (!fence->Wait())
-		{
-			fence->~Fence();
-			fence = nullptr;
-		}
+		while (!fence->Wait()) {}
+		fence->~Fence();
+		fence = nullptr;
 	}
 
 }

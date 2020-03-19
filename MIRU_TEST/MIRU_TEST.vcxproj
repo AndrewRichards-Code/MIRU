@@ -62,8 +62,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MIRU_CORE.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\ARM\ARM\lib\$(Platform)\$(Configuration);$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ARM.lib;MIRU_CORE.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -82,8 +82,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>MIRU_CORE.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\ARM\ARM\lib\$(Platform)\$(Configuration);$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ARM.lib;MIRU_CORE.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

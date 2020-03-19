@@ -16,8 +16,8 @@ Shader::Shader(CreateInfo* pCreateInfo)
 	m_ShaderByteCode.pShaderBytecode = m_ShaderBinary.data();
 	m_ShaderByteCode.BytecodeLength = m_ShaderBinary.size();
 
-	LoadAssemblyFile();
-	GetShaderResources();
+	//LoadAssemblyFile();
+	//GetShaderResources();
 }
 
 Shader::~Shader()

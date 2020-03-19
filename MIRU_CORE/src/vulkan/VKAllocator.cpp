@@ -53,8 +53,8 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 	if (!ResourceBackable(resource))
 		return false;
 
-	if (m_MemoryTypeIndex != GetMemoryTypeIndex(GetMemoryPropertyFlag(resource.type, resource.usage)))
-		return false;
+	/*if (m_MemoryTypeIndex != GetMemoryTypeIndex(GetMemoryPropertyFlag(resource.type, resource.usage)))
+		return false;*/
 
 	resource.memoryBlock = (uint64_t)m_DeviceMemory;
 	resource.id = GenerateURID();

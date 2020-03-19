@@ -1,8 +1,10 @@
-//Vertex Inputs
+//Vertex Inputs / Fragment or Pixel Outputs
 #if defined MIRU_VULKAN
 #define MIRU_LOCATION(loc_num, type, name, semantic) [[vk::location(loc_num)]] type name : semantic
+#define MIRU_LOCATION_INDEX(loc_num, idx_num, type, name, semantic) [[vk::location(loc_num), vk::index(idx_num)]] type name : semantic
 #else
 #define MIRU_LOCATION(loc_num, type, name, semantic) type name : semantic
+#define MIRU_LOCATION_INDEX(loc_num, idx_num, type, name, semantic) type name : semantic
 #endif
 
 //Constant Buffers / Uniform Buffers

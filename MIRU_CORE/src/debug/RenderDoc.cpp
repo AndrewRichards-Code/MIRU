@@ -4,8 +4,7 @@
 using namespace miru;
 using namespace debug;
 
-#if defined(_WIN64) && !defined(MIRU_DXIL)
-#include <Windows.h>
+#if defined(_WIN64) //&& !defined(MIRU_DXIL)
 
 RenderDoc::RenderDoc()
 	:m_RenderDocApi(nullptr), m_HInstance(nullptr), m_HModule(nullptr)

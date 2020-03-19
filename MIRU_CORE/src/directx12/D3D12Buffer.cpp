@@ -101,7 +101,8 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::UNIFORM:
 		{
 			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_CBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
+			m_CBVDesc.SizeInBytes = (static_cast<UINT>(m_CI.size) + 255) & ~255;
+			break;
 		}
 		case Type::STORAGE_TEXEL:
 		case Type::STORAGE:
@@ -113,6 +114,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 			m_UAVDesc.Buffer.StructureByteStride = static_cast<UINT>(m_CI.stride);
 			m_UAVDesc.Buffer.CounterOffsetInBytes = 0;
 			m_UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+			break;
 		}
 		case Type::INDEX:
 		{
@@ -120,12 +122,14 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 			m_IBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
 			m_IBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 			m_IBVDesc.Format = m_CI.stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+			break;
 		}
 		case Type::VERTEX:
 		{
 			m_VBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
 			m_VBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 			m_VBVDesc.StrideInBytes = static_cast<UINT>(m_CI.stride);
+			break;
 		}
 		/*case Type::TRANSFORM_FEEDBACK:
 		{

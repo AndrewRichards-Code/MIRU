@@ -56,7 +56,11 @@ namespace d3d12
 		//Per Set per type
 		//[i][0] == HEAP_TYPE_CBV_SRV_UAV	and [i][1] == HEAP_TYPE_SAMPLER
 		//[i][2] == HEAP_TYPE_RTV			and [i][3] == HEAP_TYPE_DSV
-		std::vector<std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>> m_DescHeapCPUHandles;
+		std::vector<std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>> m_DescHeapBaseCPUHandles;
+		//Per Set per binding per type
+		//[set][binding][0] == HEAP_TYPE_CBV_SRV_UAV	and [set][binding][1] == HEAP_TYPE_SAMPLER
+		//[set][binding][2] == HEAP_TYPE_RTV			and [set][binding][3] == HEAP_TYPE_DSV
+		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
 
 		//Per Set per available type in the potential order:
 		//RANGE_TYPE_SRV, RANGE_TYPE_UAV and RANGE_TYPE_CBV
