@@ -17,6 +17,8 @@ using namespace vulkan;
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->pContext->GetDevice()))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_CmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -30,16 +32,22 @@ CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 
 CommandPool::~CommandPool()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyCommandPool(m_Device, m_CmdPool, nullptr);
 }
 
 void CommandPool::Trim()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkTrimCommandPool(m_Device, m_CmdPool, 0);
 }
 
 void CommandPool::Reset(bool releaseResources)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	MIRU_ASSERT(vkResetCommandPool(m_Device, m_CmdPool, releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandPool.");
 }
 
@@ -48,6 +56,8 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	:m_Device(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_Device),
 	m_CmdPool(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_CmdPool)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_CmdBufferAI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -71,11 +81,15 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 
 CommandBuffer::~CommandBuffer()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkFreeCommandBuffers(m_Device, m_CmdPool, static_cast<uint32_t>(m_CmdBuffers.size()), m_CmdBuffers.data());
 }
 
 void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	
 	m_CmdBufferBIs[index].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -88,18 +102,24 @@ void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 
 void CommandBuffer::End(uint32_t index)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	MIRU_ASSERT(vkEndCommandBuffer(m_CmdBuffers[index]), "ERROR: VULKAN: Failed to end CommandBuffer.");
 }
 
 void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	MIRU_ASSERT(vkResetCommandBuffer(m_CmdBuffers[index], releaseResources ? VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandBuffer.");
 }
 
 void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplatform::CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (commandBuffer->GetCreateInfo().level == Level::PRIMARY)
 		return;
 
@@ -117,6 +137,8 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 
 void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	std::vector<VkCommandBuffer>submitCmdBuffers;
 	for (auto& index : cmdBufferIndices)
 	{
@@ -151,6 +173,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 
 void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainImages.size();
 
 	if (swapchainImageCount != cmdBufferIndices.size()
@@ -211,18 +235,24 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 
 void CommandBuffer::SetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdSetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
 void CommandBuffer::ResetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdResetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
 void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatform::Event>>& events, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkEvent>vkEvents;
@@ -260,6 +290,8 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatfo
 
 void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkMemoryBarrier>vkMemoryBarriers;
@@ -290,6 +322,8 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 
 void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkImageSubresourceRange> vkSubResources;
@@ -309,6 +343,8 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 
 void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkImageSubresourceRange> vkSubResources;
@@ -328,6 +364,8 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 
 void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkClearValue> vkClearValue;
@@ -351,24 +389,32 @@ void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuff
 
 void CommandBuffer::EndRenderPass(uint32_t index)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdEndRenderPass(m_CmdBuffers[index]);
 }
 
 void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), ref_cast<Pipeline>(pipeline)->m_Pipeline);
 }
 
 void CommandBuffer::NextSubpass(uint32_t index)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdNextSubpass(m_CmdBuffers[index], VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	std::vector<VkBuffer> vkBuffers;
 	std::vector<VkDeviceSize> offsets;
@@ -383,6 +429,8 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<cros
 
 void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferView> indexBufferView)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	VkBuffer& buffer = ref_cast<Buffer>(ref_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
@@ -401,6 +449,8 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 
 void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkDescriptorSet> vkDescriptorSets;
@@ -420,12 +470,16 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 
 void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdDrawIndexed(m_CmdBuffers[index], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
 void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkBufferCopy> vkBufferCopy;
@@ -438,6 +492,8 @@ void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuf
 
 void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<Image::Copy>& copyRegions)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	std::vector<VkImageCopy> vkImageCopy;
 	vkImageCopy.reserve(copyRegions.size());
@@ -458,6 +514,8 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 
 void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	std::vector<VkBufferImageCopy> vkBufferImageCopy;
 	for (auto& region : regions)
@@ -477,6 +535,8 @@ void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crosspla
 
 void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 	std::vector<VkBufferImageCopy> vkBufferImageCopy;
 	for (auto& region : regions)

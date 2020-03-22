@@ -21,6 +21,8 @@ Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 
 void Shader::GetShaderByteCode()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	std::string filepath(m_CI.filepath);
 	if (filepath.empty())
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path provided.");
@@ -52,6 +54,8 @@ void Shader::GetShaderByteCode()
 
 void Shader::Recompile()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	std::string binFilepath(m_CI.filepath);
 	std::string fileName = binFilepath.substr(binFilepath.find_last_of('/'), binFilepath.find_last_of('.') - binFilepath.find_last_of('/'));
 	
@@ -108,6 +112,8 @@ void Shader::Recompile()
 
 void Shader::LoadAssemblyFile()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	std::string filepath(m_CI.filepath);
 	if (filepath.empty())
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path provided.");

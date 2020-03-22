@@ -6,6 +6,8 @@ using namespace vulkan;
 
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	//Instance
@@ -165,12 +167,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 Context::~Context()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyDevice(m_Device, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 }
 
 Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	uint32_t physicalDeviceCount = 0;
 	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
 	m_PhysicalDevices.resize(physicalDeviceCount);

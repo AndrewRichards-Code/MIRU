@@ -123,6 +123,63 @@ return lhs;
 }
 #endif
 
+//MIRU CPU Heap Allocation tracker
+#define MIRU_CPU_HEAP_ALLOCATION_TRACKER
+#if defined(MIRU_CPU_HEAP_ALLOCATION_TRACKER)
+void* operator new(size_t size);
+void operator delete(void* ptr);
+#endif
+
+//MIRU CPU Profiler
+#define MIRU_CPU_PROFILER
+#if defined(MIRU_CPU_PROFILER)
+namespace miru
+{
+	class Timer
+	{
+		//enum/struct
+		struct ProfileDatum
+		{
+			uint64_t scopeNumber;
+			const char* name;
+			double duration;
+		};
+
+		//Methods
+	public:
+		Timer(const char* name);
+		~Timer();
+
+		void Stop();
+
+		static void BeginSession(const char* filepath);
+		static void EndSession();
+
+		//Members
+	private:
+		const char* m_Name;
+		bool m_Stopped = false;
+		std::chrono::time_point<std::chrono::steady_clock> m_StartTP, m_EndTP;
+
+		static uint64_t m_ScopeCount;
+		static std::vector<ProfileDatum> m_ProfileData;
+		static std::fstream m_File;
+	};
+
+}
+#if defined(_DEBUG)
+#define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath) miru::Timer::BeginSession(filepath);
+#define MIRU_CPU_PROFILE_END_SESSION() miru::Timer::EndSession();
+#define MIRU_CPU_PROFILE_SCOPE(name) miru::Timer timer##__LINE__(name)
+#define MIRU_CPU_PROFILE_FUNCTION() MIRU_CPU_PROFILE_SCOPE(__FUNCSIG__)
+#else
+#define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath);
+#define MIRU_CPU_PROFILE_END_SESSION();
+#define MIRU_CPU_PROFILE_SCOPE(name)
+#define MIRU_CPU_PROFILE_FUNCTION()
+#endif
+#endif
+
 //MIRU SetName
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE)
 namespace miru

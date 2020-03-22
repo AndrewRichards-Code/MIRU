@@ -7,6 +7,8 @@ using namespace d3d12;
 
 MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	m_Device = reinterpret_cast<ID3D12Device*>(m_CI.pContext->GetDevice());
 	Ref<d3d12::Context> context = ref_cast<d3d12::Context>(m_CI.pContext);
@@ -25,11 +27,15 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 MemoryBlock::~MemoryBlock()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	SAFE_RELEASE(m_MemoryHeap);
 }
 
 bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (m_Device != reinterpret_cast<ID3D12Device*>(resource.device))
 		return false;
 
@@ -47,11 +53,15 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 
 void MemoryBlock::RemoveResource(uint64_t id)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	s_AllocatedResources[this].erase(id);
 }
 
 void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	D3D12_RANGE readRange = { 0, 0}; //We never intend to read from the resource;
 	if (m_HeapDesc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD && data)
 	{
@@ -65,6 +75,8 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 
 D3D12_HEAP_PROPERTIES MemoryBlock::GetHeapProperties(crossplatform::MemoryBlock::PropertiesBit properties)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	bool deviceLocal = (m_CI.properties & PropertiesBit::DEVICE_LOCAL_BIT) == PropertiesBit::DEVICE_LOCAL_BIT;
 	bool hostVisible = (m_CI.properties & PropertiesBit::HOST_VISIBLE_BIT) == PropertiesBit::HOST_VISIBLE_BIT;
 	bool hostCoherent = (m_CI.properties & PropertiesBit::HOST_COHERENT_BIT) == PropertiesBit::HOST_COHERENT_BIT;

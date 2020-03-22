@@ -11,6 +11,8 @@ using namespace d3d12;
 Fence::Fence(Fence::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	m_Value = 0;
 	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence)), "ERROR: D3D12: Failed to a create Fence.");
@@ -19,21 +21,29 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 
 Fence::~Fence()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	SAFE_RELEASE(m_Fence);
 }
 
 void Fence::Reset()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	return;
 }
 
 bool Fence::GetStatus()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	return Wait();
 }
 
 bool Fence::Wait()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (m_Fence->GetCompletedValue() == m_Value)
 	{
 		MIRU_ASSERT(m_Fence->SetEventOnCompletion(m_Value, m_Event), "ERROR: D3D12: Failed to wait for Fence.");
@@ -46,6 +56,8 @@ bool Fence::Wait()
 
 void Fence::Signal()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_Value++;
 	MIRU_ASSERT(m_Fence->Signal(m_Value), "ERROR: D3D12: Failed to a signal Fence.");
 }
@@ -54,6 +66,8 @@ void Fence::Signal()
 Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	m_Value = 0;
 	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create Semaphore.");
@@ -61,34 +75,44 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 
 Semaphore::~Semaphore()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	SAFE_RELEASE(m_Semaphore);
 }
 
 //Event - Split Barrier
 Event::Event(Event::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 Event::~Event()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 void Event::Set()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 void Event::Reset()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 bool Event::GetStatus()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	return false;
 }
 
 //Barrier
 Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_Barriers.reserve(1);
@@ -176,10 +200,13 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 
 Barrier::~Barrier()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 D3D12_RESOURCE_STATES Barrier::ToD3D12ResourceState(Barrier::AccessBit access)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (access)
 	{
 		case Barrier::AccessBit::INDIRECT_COMMAND_READ_BIT:

@@ -9,6 +9,8 @@ using namespace vulkan;
 Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	std::vector<VkImageView> vkImageViewAttachements;
@@ -32,5 +34,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 
 Framebuffer::~Framebuffer()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyFramebuffer(m_Device, m_Framebuffer, nullptr);
 }

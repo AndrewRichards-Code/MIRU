@@ -10,6 +10,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
 	m_Swapchain(nullptr)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.pContext)->m_Queues[0];
 
@@ -63,6 +65,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 Swapchain::~Swapchain()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (auto& swapchainRTV : m_SwapchainRTVs)
 		SAFE_RELEASE(swapchainRTV);
 
@@ -72,6 +76,8 @@ Swapchain::~Swapchain()
 
 void Swapchain::Resize(uint32_t width, uint32_t height)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_Width = width;
 	m_Height = height;
 

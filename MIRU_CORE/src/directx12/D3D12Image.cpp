@@ -8,6 +8,8 @@ using namespace d3d12;
 Image::Image(Image::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_ResourceDesc.Dimension = ToD3D12ImageType(m_CI.type);
@@ -21,6 +23,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ResourceDesc.SampleDesc.Quality = 0;
 	m_ResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::COLOR_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET : D3D12_RESOURCE_FLAGS(0);
+	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAGS(0);
 	D3D12_CLEAR_VALUE* clear = nullptr;
 
 	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
@@ -53,6 +57,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 Image::~Image()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (!m_SwapchainImage)
 	{
 		SAFE_RELEASE(m_Image);
@@ -68,6 +74,8 @@ void Image::GenerateMipmaps()
 
 D3D12_RESOURCE_DIMENSION Image::ToD3D12ImageType(Image::Type type) const
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (type)
 	{
 	case Image::Type::TYPE_1D:
@@ -91,6 +99,8 @@ D3D12_RESOURCE_DIMENSION Image::ToD3D12ImageType(Image::Type type) const
 
 DXGI_FORMAT Image::ToD3D12ImageFormat(Image::Format format)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (format)
 	{
 	case Image::Format::UNKNOWN:
@@ -318,6 +328,8 @@ DXGI_FORMAT Image::ToD3D12ImageFormat(Image::Format format)
 
 D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (layout)
 	{
 		case Image::Layout::UNKNOWN:
@@ -327,7 +339,7 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 		case Image::Layout::COLOR_ATTACHMENT_OPTIMAL:
 			return D3D12_RESOURCE_STATE_RENDER_TARGET;
 		case Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-			return D3D12_RESOURCE_STATE_DEPTH_WRITE | D3D12_RESOURCE_STATE_DEPTH_READ;
+			return D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		case Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL:
 			return D3D12_RESOURCE_STATE_DEPTH_READ;
 		case Image::Layout::SHADER_READ_ONLY_OPTIMAL:
@@ -354,6 +366,8 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(m_CI.pImage)->m_ResourceDesc;
@@ -433,7 +447,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 		{
 			m_DSVDesc.Format = resourceDesc.Format;
-			m_DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+			//m_DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
 			switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 			{
@@ -630,11 +644,14 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 ImageView::~ImageView()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_SamplerDesc.Filter = ToD3D12Filter(m_CI.magFilter, m_CI.minFilter, m_CI.mipmapMode, m_CI.anisotropyEnable);
@@ -654,10 +671,14 @@ Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 
 Sampler::~Sampler()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 }
 
 D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, MipmapMode mipmapMode, bool anisotropic)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (anisotropic)
 		return D3D12_FILTER_ANISOTROPIC;
 

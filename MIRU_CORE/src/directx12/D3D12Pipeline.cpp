@@ -11,17 +11,22 @@ using namespace d3d12;
 RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 }
 
 RenderPass::~RenderPass()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 //Pipeline
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_RootParameters.clear();
@@ -249,6 +254,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 Pipeline::~Pipeline()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	SAFE_RELEASE(m_Pipeline);
 	SAFE_RELEASE(m_RootSignature);
 	SAFE_RELEASE(m_SerializedRootSignature);
@@ -257,6 +264,8 @@ Pipeline::~Pipeline()
 
 DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (type)
 	{
 	case crossplatform::VertexType::FLOAT:
@@ -298,6 +307,8 @@ DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)
 
 D3D12_BLEND Pipeline::ToD3D12_BLEND(crossplatform::BlendFactor blend)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (blend)
 	{
 	default:
@@ -344,6 +355,8 @@ D3D12_BLEND Pipeline::ToD3D12_BLEND(crossplatform::BlendFactor blend)
 
 D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(crossplatform::LogicOp logic)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (logic)
 	{
 	default:

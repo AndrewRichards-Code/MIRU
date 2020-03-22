@@ -10,6 +10,8 @@ using namespace vulkan;
 DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	for (auto& poolSize : m_CI.poolSizes)
@@ -25,8 +27,11 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkCreateDescriptorPool(m_Device, &m_DescriptorPoolCI, nullptr, &m_DescriptorPool), "ERROR: VULKAN: Failed to create DescriptorPool.");
 	VKSetName<VkDescriptorPool>(m_Device, (uint64_t)m_DescriptorPool, m_CI.debugName);
 }
+
 DescriptorPool::~DescriptorPool()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
 }
 
@@ -34,6 +39,8 @@ DescriptorPool::~DescriptorPool()
 DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayoutBinding)
@@ -56,6 +63,8 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 
 DescriptorSetLayout::~DescriptorSetLayout()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyDescriptorSetLayout(m_Device, m_DescriptorSetLayout, nullptr);
 }
 
@@ -63,6 +72,8 @@ DescriptorSetLayout::~DescriptorSetLayout()
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
@@ -88,11 +99,15 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 
 DescriptorSet::~DescriptorSet()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkFreeDescriptorSets(m_Device, m_DescriptorSetAI.descriptorPool, static_cast<uint32_t>(m_DescriptorSets.size()), m_DescriptorSets.data());
 }
 
 void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	for (auto& descriptorBufferInfo : descriptorBufferInfos)
@@ -121,6 +136,8 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 
 void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	for (auto& descriptorImageInfos : descriptorImageInfos)
@@ -151,11 +168,15 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 void DescriptorSet::Update()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(m_WriteDescriptorSets.size()), m_WriteDescriptorSets.data(), 0, nullptr);
 }
 
 VkDescriptorType DescriptorSet::BufferViewTypeToVkDescriptorType(crossplatform::BufferView::Type type)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (type)
 	{
 	case BufferView::Type::UNIFORM_TEXEL:
@@ -176,6 +197,8 @@ VkDescriptorType DescriptorSet::BufferViewTypeToVkDescriptorType(crossplatform::
 
 VkDescriptorType DescriptorSet::ImageUsageToVkDescriptorType(crossplatform::Image::UsageBit usage, bool sampler, bool imageView)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (usage)
 	{
 		case Image::UsageBit::TRANSFER_SRC_BIT:

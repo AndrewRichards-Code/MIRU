@@ -7,6 +7,8 @@ using namespace d3d12;
 Shader::Shader(CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_ShaderModelData.HighestShaderModel = D3D_SHADER_MODEL_6_5;
@@ -22,12 +24,16 @@ Shader::Shader(CreateInfo* pCreateInfo)
 
 Shader::~Shader()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_ShaderByteCode.pShaderBytecode = nullptr;
 	m_ShaderByteCode.BytecodeLength = 0;
 }
 
 void Shader::Reconstruct()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	GetShaderByteCode();
 	m_ShaderByteCode.pShaderBytecode = m_ShaderBinary.data();
 	m_ShaderByteCode.BytecodeLength = m_ShaderBinary.size();
@@ -38,6 +44,8 @@ void Shader::Reconstruct()
 
 void Shader::GetShaderResources()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (!m_AssemblyFileFound)
 		return;
 	

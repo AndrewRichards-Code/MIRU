@@ -8,6 +8,8 @@ using namespace d3d12;
 Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
@@ -52,6 +54,8 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 Buffer::~Buffer()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	SAFE_RELEASE(m_Buffer);
 	
 	if (m_CI.pMemoryBlock)
@@ -60,6 +64,8 @@ Buffer::~Buffer()
 
 D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (usage)
 	{
 	case Buffer::UsageBit::TRANSFER_SRC:
@@ -90,6 +96,8 @@ D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const
 BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	auto resourceDesc = ref_cast<Buffer>(m_CI.pBuffer)->m_ResourceDesc;
@@ -142,4 +150,5 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 
 BufferView::~BufferView()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }

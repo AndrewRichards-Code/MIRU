@@ -10,6 +10,8 @@ using namespace vulkan;
 RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_AttachmentDescriptions.reserve(m_CI.attachments.size());
@@ -93,6 +95,8 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 
 RenderPass::~RenderPass()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 }
 
@@ -100,6 +104,8 @@ RenderPass::~RenderPass()
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
@@ -330,12 +336,16 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 Pipeline::~Pipeline()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyPipeline(m_Device, m_Pipeline, nullptr);
 	vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
 }
 
 VkFormat Pipeline::ToVkFormat(crossplatform::VertexType type)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (type)
 	{
 	case miru::crossplatform::VertexType::FLOAT:

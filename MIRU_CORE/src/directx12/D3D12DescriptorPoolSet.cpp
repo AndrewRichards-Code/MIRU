@@ -10,6 +10,8 @@ using namespace d3d12;
 DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	uint32_t numDescriptors_Sampler = 0;
@@ -46,12 +48,12 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 						
 	m_DescriptorPoolDescs[2].Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	m_DescriptorPoolDescs[2].NumDescriptors = numDescriptors_RTV;
-	m_DescriptorPoolDescs[2].Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	m_DescriptorPoolDescs[2].Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_DescriptorPoolDescs[2].NodeMask = 0;
 						
 	m_DescriptorPoolDescs[3].Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	m_DescriptorPoolDescs[3].NumDescriptors = numDescriptors_DSV;
-	m_DescriptorPoolDescs[3].Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	m_DescriptorPoolDescs[3].Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_DescriptorPoolDescs[3].NodeMask = 0;
 
 	m_DescriptorPools.resize(m_CI.maxSets);
@@ -82,6 +84,8 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 
 DescriptorPool::~DescriptorPool()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (size_t i = 0; i < m_CI.maxSets; i++)
 	{
 		SAFE_RELEASE(m_DescriptorPools[i][0]);
@@ -95,17 +99,22 @@ DescriptorPool::~DescriptorPool()
 DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	ID3D12DescriptorHeap* heap;
@@ -246,10 +255,13 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 
 DescriptorSet::~DescriptorSet()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 
 void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
@@ -281,6 +293,8 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 
 void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CHECK_VALID_INDEX_RETURN(index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
@@ -339,6 +353,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 void DescriptorSet::Update()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_RootParameters.clear();
 
 	D3D12_ROOT_PARAMETER rootParameter = {};

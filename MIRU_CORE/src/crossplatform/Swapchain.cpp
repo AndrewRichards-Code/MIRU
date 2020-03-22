@@ -25,6 +25,8 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 
 void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_SwapchainImages.resize(m_CI.swapchainCount);
 	m_SwapchainImageViews.resize(m_CI.swapchainCount);
 

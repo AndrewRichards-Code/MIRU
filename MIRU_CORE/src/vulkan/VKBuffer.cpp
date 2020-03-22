@@ -8,6 +8,8 @@ using namespace vulkan;
 Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	
 	m_BufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -37,12 +39,16 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 Buffer::~Buffer()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyBuffer(m_Device, m_Buffer, nullptr);
 	m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
 }
 
 VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (type)
 	{
 	case Buffer::UsageBit::TRANSFER_SRC:
@@ -73,6 +79,8 @@ VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)
 BufferView::BufferView(CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_BufferViewCI.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
@@ -92,6 +100,8 @@ BufferView::BufferView(CreateInfo* pCreateInfo)
 
 BufferView::~BufferView()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL
 		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL) // These are the only valid usage to create a VkBufferView proper.
 	{

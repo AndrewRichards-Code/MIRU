@@ -9,6 +9,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
 	m_Instance(ref_cast<Context>(pCreateInfo->pContext)->m_Instance)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PhysicalDevices[0];
 	uint32_t queueFamilyIndex = 0;
@@ -144,6 +146,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 Swapchain::~Swapchain()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (auto& imageView : m_SwapchainImageViews)
 		vkDestroyImageView(m_Device, imageView, nullptr);
 	m_SwapchainImageViews.clear();
@@ -155,6 +159,8 @@ Swapchain::~Swapchain()
 
 void Swapchain::Resize(uint32_t width, uint32_t height)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
 		vkDestroyImageView(m_Device, imageView, 0);

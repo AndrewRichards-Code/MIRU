@@ -7,6 +7,8 @@ using namespace vulkan;
 Image::Image(Image::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_ImageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -48,6 +50,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 Image::~Image()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (!m_SwapchainImage)
 	{
 		vkDestroyImage(m_Device, m_Image, nullptr);
@@ -124,6 +128,8 @@ void Image::GenerateMipmaps()
 
 VkImageAspectFlags Image::GetVkImageAspect(Image::Format format)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	switch (format)
 	{
 	case Image::Format::UNKNOWN:
@@ -283,6 +289,8 @@ VkImageAspectFlags Image::GetVkImageAspect(Image::Format format)
 ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	
 	m_ImageViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -306,6 +314,8 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 ImageView::~ImageView() 
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if(!m_SwapchainImageView)
 		vkDestroyImageView(m_Device, m_ImageView, nullptr);
 }
@@ -313,6 +323,8 @@ ImageView::~ImageView()
 Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	
 	m_SamplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -340,5 +352,7 @@ Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 
 Sampler::~Sampler()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroySampler(m_Device, m_Sampler, nullptr);
 }

@@ -64,8 +64,10 @@ int main()
 	GraphicsAPI api;
 	api.LoadRenderDoc();
 	api.AllowSetName();
-	//api.SetAPI(GraphicsAPI::API::D3D12);
-	api.SetAPI(GraphicsAPI::API::VULKAN);
+	api.SetAPI(GraphicsAPI::API::D3D12);
+	//api.SetAPI(GraphicsAPI::API::VULKAN);
+	
+	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = api.IsD3D12() ? 11 : 1;
@@ -193,7 +195,7 @@ int main()
 	imageBufferCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> c_imageBuffer = Buffer::Create(&imageBufferCI);
 	Image::CreateInfo imageCI;
-	imageCI.debugName = "Image";;
+	imageCI.debugName = "Image";
 	imageCI.device = context->GetDevice();
 	imageCI.type = Image::Type::TYPE_2D;
 	imageCI.format = Image::Format::R8G8B8A8_UNORM;
@@ -345,6 +347,31 @@ int main()
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
+	Image::CreateInfo depthCI;
+	depthCI.debugName = "DepthImage";
+	depthCI.device = context->GetDevice();
+	depthCI.type = Image::Type::TYPE_2D;
+	depthCI.format = Image::Format::D32_SFLOAT;
+	depthCI.width = width;
+	depthCI.height = height;
+	depthCI.depth = 1;
+	depthCI.mipLevels = 1;
+	depthCI.arrayLayers = 1;
+	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
+	depthCI.layout = Image::Layout::UNKNOWN;
+	depthCI.size = 0;
+	depthCI.data = nullptr;
+	depthCI.pMemoryBlock = gpu_mb_0;
+	Ref<Image> depthImage = Image::Create(&depthCI);
+	
+	ImageView::CreateInfo depthImageViewCI;
+	depthImageViewCI.debugName = "DepthImageView";
+	depthImageViewCI.device = context->GetDevice();
+	depthImageViewCI.pImage = depthImage;
+	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
+	Ref<ImageView> depthImageView = ImageView::Create(&depthImageViewCI);
+
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "Image Descriptor Pool";
 	descriptorPoolCI.device = context->GetDevice();
@@ -383,10 +410,19 @@ int main()
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		api.IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
 		Image::Layout::PRESENT_SRC
+		},
+		{depthImage->GetCreateInfo().format,
+		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+		RenderPass::AttachmentLoadOp::CLEAR,
+		RenderPass::AttachmentStoreOp::DONT_CARE,
+		RenderPass::AttachmentLoadOp::DONT_CARE,
+		RenderPass::AttachmentStoreOp::DONT_CARE,
+		Image::Layout::UNKNOWN,
+		Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 		}
 	};
 	renderPassCI.subpassDescriptions = {
-		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOR_ATTACHMENT_OPTIMAL}}, {},{},{} }
+		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOR_ATTACHMENT_OPTIMAL}}, {}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
 	};
 	renderPassCI.subpassDependencies = {
 		{MIRU_SUBPASS_EXTERNAL, 0,
@@ -408,7 +444,7 @@ int main()
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
 	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
-	pCI.depthStencilState = { true, true, CompareOp::LESS, false, false, {}, {}, 0.0f, 1.0f };
+	pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
 	pCI.colourBlendState.logicOpEnable = false;
 	pCI.colourBlendState.logicOp = LogicOp::COPY;
 	pCI.colourBlendState.attachments = { {true, BlendFactor::SRC_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA, BlendOp::ADD,
@@ -427,7 +463,7 @@ int main()
 	framebufferCI_0.debugName = "Framebuffer0";
 	framebufferCI_0.device = context->GetDevice();
 	framebufferCI_0.renderPass = renderPass;
-	framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0] };
+	framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
 	framebufferCI_0.width = width;
 	framebufferCI_0.height = height;
 	framebufferCI_0.layers = 1;
@@ -435,7 +471,7 @@ int main()
 	framebufferCI_1.debugName = "Framebuffer1";
 	framebufferCI_1.device = context->GetDevice();
 	framebufferCI_1.renderPass = renderPass;
-	framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1] };
+	framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1], depthImageView };
 	framebufferCI_1.width = width;
 	framebufferCI_1.height = height;
 	framebufferCI_1.layers = 1;
@@ -446,7 +482,7 @@ int main()
 		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount - 1; i++)
 		{
 			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.5f, 0.5f, 0.5f, 1.0f} });
+			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.5f, 0.5f, 0.5f, 1.0f}, {0.0f, 0} });
 			cmdBuffer->BindPipeline(i, pipeline);
 			cmdBuffer->BindDescriptorSets(i, { descriptorSet }, pipeline);
 			cmdBuffer->BindVertexBuffers(i, { vbv });
@@ -467,6 +503,8 @@ int main()
 	Semaphore::CreateInfo semaphoreCI = { "Seamphore", context->GetDevice() };
 	std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
 	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+
+	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
 	MSG msg = { 0 };

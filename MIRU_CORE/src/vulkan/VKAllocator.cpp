@@ -12,6 +12,8 @@ uint32_t MemoryBlock::s_CurrentAllocations = 0;
 
 MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
 	Ref<vulkan::Context> context = ref_cast<vulkan::Context>(m_CI.pContext);
@@ -42,17 +44,22 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 MemoryBlock::~MemoryBlock()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkFreeMemory(m_Device, m_DeviceMemory, nullptr);
 }
 
 bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if (m_Device != *reinterpret_cast<VkDevice*>(resource.device))
 		return false;
 
 	if (!ResourceBackable(resource))
 		return false;
 
+	//TODO Re-enable this. Issue with GetMemoryPropertyFlag()
 	/*if (m_MemoryTypeIndex != GetMemoryTypeIndex(GetMemoryPropertyFlag(resource.type, resource.usage)))
 		return false;*/
 
@@ -72,11 +79,15 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 
 void MemoryBlock::RemoveResource(uint64_t id)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	s_AllocatedResources[this].erase(id);
 }
 
 void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	if ((m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
 		|| m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT|VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 		&& data)
@@ -90,6 +101,8 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 
 VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	VkMemoryPropertyFlags flags = 0;
 
 	if (type == crossplatform::Resource::Type::BUFFER)
@@ -131,6 +144,8 @@ VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource
 
 uint32_t MemoryBlock::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	uint32_t memoryTypeIndex = 0;
 	for (uint32_t i = 0; i < s_PhysicalDeviceMemoryProperties.memoryTypeCount; i++)
 	{
@@ -147,6 +162,8 @@ uint32_t MemoryBlock::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
 //Unused but very useful!
 uint32_t MemoryBlock::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	const std::vector<VkQueueFamilyProperties>& queueFamilyProperties = ref_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties;
 	
 	uint32_t nextPowerOfTwo = static_cast<uint32_t>(pow(2, ceil(log((uint32_t)queueType) / log(2))));

@@ -11,6 +11,8 @@ using namespace d3d12;
 Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	std::vector<crossplatform::DescriptorPool::PoolSize> poolSizes(3);
@@ -49,13 +51,25 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		for (auto& subpassDesc : m_CI.renderPass->GetCreateInfo().subpassDescriptions)
 		{
 			for (auto& input : subpassDesc.inputAttachments)
-				if (input.attachmentIndex == i) NeedSRV = true; break;
+			{
+				if (input.attachmentIndex == i) 
+				{ NeedSRV = true; break; }
+			}
 			for (auto& colour : subpassDesc.colourAttachments)
-				if (colour.attachmentIndex == i) NeedRTV = true; break;
+			{
+				if (colour.attachmentIndex == i) 
+				{ NeedRTV = true; break; }
+			}
 			for (auto& resolve : subpassDesc.resolveAttachments)
-				if (resolve.attachmentIndex == i) NeedRTV = true; break;
+			{
+				if (resolve.attachmentIndex == i) 
+				{ NeedRTV = true; break; }
+			}
 			for (auto& depthStencil : subpassDesc.depthStencilAttachment)
-				if (depthStencil.attachmentIndex == i) NeedDSV = true; break;
+			{
+				if (depthStencil.attachmentIndex == i) 
+				{ NeedDSV = true; break; }
+			}
 		}
 
 		if (NeedRTV && !HasRTV)
@@ -103,7 +117,6 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
 			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapBaseCPUHandles[0][3];
-			descriptorWriteLocation.ptr += (dsvDescriptorSize * j);
 
 			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
 				&ref_cast<ImageView>(imageView.imageView)->m_DSVDesc, descriptorWriteLocation);
@@ -128,4 +141,5 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 
 Framebuffer::~Framebuffer()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
 }

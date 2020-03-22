@@ -7,6 +7,8 @@ using namespace vulkan;
 Shader::Shader(CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 	GetShaderByteCode();
 
@@ -32,11 +34,15 @@ Shader::Shader(CreateInfo* pCreateInfo)
 
 Shader::~Shader()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyShaderModule(m_Device, m_ShaderModule, nullptr);
 }
 
 void Shader::Reconstruct()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyShaderModule(m_Device, m_ShaderModule, nullptr);
 
 	GetShaderByteCode();
@@ -77,6 +83,8 @@ struct MiruSpvId
 
 void Shader::GetShaderResources()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	const uint32_t* code = m_ShaderModuleCI.pCode;
 	if (code[0] != SpvMagicNumber)
 		MIRU_ASSERT(true, "ERROR: VULKAN: Provided SPIR-V source file is not valid.");

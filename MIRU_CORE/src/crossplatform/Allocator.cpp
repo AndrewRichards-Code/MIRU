@@ -25,6 +25,8 @@ Ref<MemoryBlock> MemoryBlock::Create(MemoryBlock::CreateInfo* pCreateInfo)
 
 void MemoryBlock::CalculateOffsets()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (auto it = s_AllocatedResources[this].begin(); it != s_AllocatedResources[this].end(); it++)
 	{
 		auto& resource = *it;
@@ -45,6 +47,8 @@ void MemoryBlock::CalculateOffsets()
 
 bool MemoryBlock::ResourceBackable(crossplatform::Resource& resource)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	CalculateOffsets();
 	size_t maxSize = static_cast<size_t>(m_CI.blockSize);
 	size_t currentSize = 0;

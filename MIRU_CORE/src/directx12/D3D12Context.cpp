@@ -7,6 +7,8 @@ using namespace d3d12;
 
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	//Setup Debug
@@ -60,6 +62,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 Context::~Context()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (auto& queue : m_Queues)
 		SAFE_RELEASE(queue);
 
@@ -73,6 +77,8 @@ Context::~Context()
 
 Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	UINT i = 0;
 	IDXGIAdapter1* adapter;
 	DXGI_ADAPTER_DESC adapterDesc = {};
@@ -87,6 +93,8 @@ Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)
 
 void Context::DeviceWaitIdle()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	Ref<crossplatform::Fence> fence;
 	Fence::CreateInfo ci;
 	ci.debugName = "";

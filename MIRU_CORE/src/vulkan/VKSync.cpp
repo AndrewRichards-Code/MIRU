@@ -11,6 +11,8 @@ using namespace vulkan;
 Fence::Fence(Fence::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_FenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -23,16 +25,22 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 
 Fence::~Fence()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyFence(m_Device, m_Fence, nullptr);
 }
 
 void Fence::Reset()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	MIRU_ASSERT(vkResetFences(m_Device, 1, &m_Fence), "ERROR: VULKAN: Failed to reset Fence.");
 }
 
 bool Fence::GetStatus()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	VkResult result = vkGetFenceStatus(m_Device, m_Fence);
 	if (result == VK_SUCCESS)
 		return false;
@@ -49,6 +57,8 @@ bool Fence::GetStatus()
 
 bool Fence::Wait()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	VkResult result = vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, m_CI.timeout);
 	if (result == VK_SUCCESS)
 		return false;
@@ -67,6 +77,8 @@ bool Fence::Wait()
 Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_SemaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -79,6 +91,8 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 
 Semaphore::~Semaphore()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroySemaphore(m_Device, m_Semaphore, nullptr);
 }
 
@@ -86,6 +100,8 @@ Semaphore::~Semaphore()
 Event::Event(Event::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	m_EventCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -98,21 +114,29 @@ Event::Event(Event::CreateInfo* pCreateInfo)
 
 Event::~Event()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	vkDestroyEvent(m_Device, m_Event, nullptr);
 }
 
 void Event::Set()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	MIRU_ASSERT(vkSetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to set Event.");
 }
 
 void Event::Reset()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	MIRU_ASSERT(vkResetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to reset Event.");
 }
 
 bool Event::GetStatus()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	VkResult result = vkGetEventStatus(m_Device, m_Event);
 	if (result == VK_EVENT_SET)
 		return false;
@@ -130,6 +154,8 @@ bool Event::GetStatus()
 //Barrier
 Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	m_CI = *pCreateInfo;
 
 	switch (m_CI.type)
@@ -180,4 +206,6 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 
 Barrier::~Barrier()
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 }
