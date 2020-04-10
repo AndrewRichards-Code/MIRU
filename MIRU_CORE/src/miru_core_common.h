@@ -128,6 +128,15 @@ return lhs;
 #if defined(MIRU_CPU_HEAP_ALLOCATION_TRACKER)
 void* operator new(size_t size);
 void operator delete(void* ptr);
+namespace miru
+{
+	class CPU_HEAP_ALLOC_TRACKER
+	{
+	public:
+		static size_t current_allocated_bytes;
+		//static std::map<void*, size_t> current_allocation_map;
+	};
+}
 #endif
 
 //MIRU CPU Profiler

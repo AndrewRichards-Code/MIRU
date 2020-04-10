@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Shader.h"

@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "VKShader.h"
 
 using namespace miru;
@@ -65,7 +65,7 @@ void Shader::Reconstruct()
 	m_ShaderStageCI.pSpecializationInfo = nullptr;
 }
 
-#include "vulkan/spirv.h"
+#include "spirv-headers/spirv.h"
 #include "crossplatform/DescriptorPoolSet.h"
 
 struct MiruSpvId

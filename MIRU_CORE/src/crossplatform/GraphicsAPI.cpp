@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "GraphicsAPI.h"
 
 using namespace miru;

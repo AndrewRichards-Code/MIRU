@@ -169,7 +169,7 @@ namespace shader_compiler
 			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_"; }
 		}
 		
-		std::string command = "fxc -T " + shaderType + "5_1" + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir;
+		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir;
 		if (!disableAsemblyFile)
 			command += " -Fc " + absoluteDstDir + ".asm";
 		for (auto& includeDirectory : includeDirectories)

@@ -1,10 +1,10 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "RenderDoc.h"
 
 using namespace miru;
 using namespace debug;
 
-#if defined(_WIN64) //&& !defined(MIRU_DXIL)
+#if defined(_WIN64) && !defined(MIRU_DXIL)
 
 RenderDoc::RenderDoc()
 	:m_RenderDocApi(nullptr), m_HInstance(nullptr), m_HModule(nullptr)

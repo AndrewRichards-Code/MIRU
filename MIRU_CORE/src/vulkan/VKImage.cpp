@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "VKImage.h"
 
 using namespace miru;

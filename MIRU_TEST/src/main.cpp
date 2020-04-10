@@ -1,4 +1,4 @@
-#include "../../../ARM/ARM/src/ARMLib.h"
+#include "../../../MARS/MARS/src/mars.h"
 #include "miru_core.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../dep/STBI/stb_image.h"
@@ -304,26 +304,26 @@ int main()
 	samplerCI.unnormalisedCoordinates = false;
 	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
 
-	ARM::Mat4 proj = ARM::Mat4::Identity(); //ARM::Mat4::Perspective(90.0, float(width) / float(height), 0.1f, 10.0f);
-	ARM::Mat4 view = ARM::Mat4::Identity();
-	ARM::Mat4 modl = ARM::Mat4::Identity(); //ARM::Mat4::Translation({ 0.0f, 0.0f, 5.0f });
+	mars::Mat4 proj = mars::Mat4::Identity();
+	mars::Mat4 view = mars::Mat4::Identity();
+	mars::Mat4 modl = mars::Mat4::Identity();
 
-	float ubData[2 * sizeof(ARM::Mat4)];
-	memcpy(ubData + 0 * 16,	&proj.a, sizeof(ARM::Mat4));
-	memcpy(ubData + 1 * 16,	&view.a, sizeof(ARM::Mat4));
+	float ubData[2 * sizeof(mars::Mat4)];
+	memcpy(ubData + 0 * 16,	&proj.a, sizeof(mars::Mat4));
+	memcpy(ubData + 1 * 16,	&view.a, sizeof(mars::Mat4));
 
 	Buffer::CreateInfo ubCI;
 	ubCI.debugName = "CameraUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = 2 * sizeof(ARM::Mat4);
+	ubCI.size = 2 * sizeof(mars::Mat4);
 	ubCI.data = ubData;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "ModelUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = sizeof(ARM::Mat4);
+	ubCI.size = sizeof(mars::Mat4);
 	ubCI.data = &modl.a;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
@@ -334,7 +334,7 @@ int main()
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
 	ubViewCamCI.pBuffer = ub1;
 	ubViewCamCI.offset = 0;
-	ubViewCamCI.size = 2 * 16 * sizeof(float);
+	ubViewCamCI.size = 2 * sizeof(mars::Mat4);
 	ubViewCamCI.stride = 0;
 	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
 	BufferView::CreateInfo ubViewMdlCI;
@@ -343,7 +343,7 @@ int main()
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.pBuffer = ub2;
 	ubViewMdlCI.offset = 0;
-	ubViewMdlCI.size = sizeof(ARM::Mat4);
+	ubViewMdlCI.size = sizeof(mars::Mat4);
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
@@ -359,7 +359,7 @@ int main()
 	depthCI.arrayLayers = 1;
 	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
-	depthCI.layout = Image::Layout::UNKNOWN;
+	depthCI.layout = api.IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.pMemoryBlock = gpu_mb_0;
@@ -535,12 +535,12 @@ int main()
 			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 			pipeline = Pipeline::Create(&pCI);
 
-			framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0] };
+			framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
 			framebufferCI_0.width = width;
 			framebufferCI_0.height = height;
 			framebuffer0 = Framebuffer::Create(&framebufferCI_0);
 
-			framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1] };
+			framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1], depthImageView };
 			framebufferCI_1.width = width;
 			framebufferCI_1.height = height;
 			framebuffer1 = Framebuffer::Create(&framebufferCI_1);
@@ -555,15 +555,15 @@ int main()
 			swapchain->m_Resized = false;
 		}
 		{
-			proj = ARM::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
+			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
 			if(api.IsVulkan())
 				proj.f *= -1;
-			modl = ARM::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
-			memcpy(ubData + 0 * 16, &proj.a, sizeof(ARM::Mat4));
-			memcpy(ubData + 1 * 16, &view.a, sizeof(ARM::Mat4));
+			modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
+			memcpy(ubData + 0 * 16, &proj.a, sizeof(mars::Mat4));
+			memcpy(ubData + 1 * 16, &view.a, sizeof(mars::Mat4));
 
-			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(ARM::Mat4), ubData);
-			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * sizeof(ARM::Mat4), &modl.a);
+			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(mars::Mat4), ubData);
+			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * sizeof(mars::Mat4), &modl.a);
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 		frameIndex++;

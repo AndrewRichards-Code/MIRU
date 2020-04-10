@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "D3D12Buffer.h"
 #include "D3D12Allocator.h"
 
@@ -14,7 +14,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	m_ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
 	m_ResourceDesc.Alignment = 0;
-	m_ResourceDesc.Width = m_CI.size;								//Alias for bufferSize
+	m_ResourceDesc.Width = ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL)) ? max(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT,  m_CI.size) : m_CI.size;								//Alias for bufferSize
 	m_ResourceDesc.Height = 1;
 	m_ResourceDesc.DepthOrArraySize = 1;
 	m_ResourceDesc.MipLevels = 1;

@@ -60,7 +60,7 @@
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)/MIRU_CORE/src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>common.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -84,7 +84,7 @@
       <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)/MIRU_CORE/src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>common.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -117,7 +117,6 @@
     <ClInclude Include="src\directx12\D3D12Allocator.h" />
     <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h" />
     <ClInclude Include="src\miru_core.h" />
-    <ClInclude Include="src\common.h" />
     <ClInclude Include="src\crossplatform\Buffer.h" />
     <ClInclude Include="src\crossplatform\Context.h" />
     <ClInclude Include="src\crossplatform\GraphicsAPI.h" />
@@ -127,6 +126,7 @@
     <ClInclude Include="src\directx12\D3D12Context.h" />
     <ClInclude Include="src\directx12\D3D12Image.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
+    <ClInclude Include="src\miru_core_common.h" />
     <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
     <ClInclude Include="src\vulkan\VKFramebuffer.h" />
     <ClInclude Include="src\vulkan\VKPipeline.h" />
@@ -140,12 +140,6 @@
     <ClInclude Include="src\vulkan\VKSwapchain.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\common.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">common.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">common.h</PrecompiledHeaderFile>
-    </ClCompile>
     <ClCompile Include="src\crossplatform\Allocator.cpp" />
     <ClCompile Include="src\crossplatform\Buffer.cpp" />
     <ClCompile Include="src\crossplatform\CommandPoolBuffer.cpp" />
@@ -170,6 +164,12 @@
     <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
     <ClCompile Include="src\directx12\D3D12DescriptorPoolSet.cpp" />
+    <ClCompile Include="src\miru_core_common.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">miru_core_common.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">miru_core_common.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\vulkan\VKBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />

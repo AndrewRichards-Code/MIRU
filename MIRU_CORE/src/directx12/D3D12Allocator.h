@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "miru_core_common.h"
 #include "crossplatform/Allocator.h"
 
 namespace miru

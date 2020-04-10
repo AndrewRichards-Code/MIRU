@@ -1,4 +1,4 @@
-#include "common.h"
+#include "miru_core_common.h"
 #include "D3D12Sync.h"
 
 #include "D3D12Buffer.h"
