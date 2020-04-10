@@ -21,6 +21,7 @@
 
 //WINDOWING SYSTEM
 #if defined(_WIN64)
+#define NOMINMAX
 #include <Windows.h>
 #else
 #endif

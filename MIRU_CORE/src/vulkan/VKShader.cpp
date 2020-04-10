@@ -316,7 +316,7 @@ void Shader::GetShaderResources()
 					type = crossplatform::DescriptorType::SAMPLED_IMAGE; break;
 				};
 			}
-			m_RBD[id.set].push_back({ id.binding, type, 1, m_CI.stage });
+			m_RBDs[id.set].push_back({ id.binding, type, 1, m_CI.stage });
 		}
 	}
 }

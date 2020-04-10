@@ -64,8 +64,8 @@ int main()
 	GraphicsAPI api;
 	api.LoadRenderDoc();
 	api.AllowSetName();
-	api.SetAPI(GraphicsAPI::API::D3D12);
-	//api.SetAPI(GraphicsAPI::API::VULKAN);
+	//api.SetAPI(GraphicsAPI::API::D3D12);
+	api.SetAPI(GraphicsAPI::API::VULKAN);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -229,10 +229,10 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, { b });
-		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { {0, 0, 0, {Image::AspectBit::COLOR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} });
+		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { {0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} });
 		
 		cmdCopyBuffer->End(0);
 	}
@@ -249,7 +249,7 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, { b });
 
@@ -281,7 +281,7 @@ int main()
 	imageViewCI.debugName = "ImageView";
 	imageViewCI.device = context->GetDevice();
 	imageViewCI.pImage = image;
-	imageViewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
 
 	Sampler::CreateInfo samplerCI;
@@ -422,7 +422,7 @@ int main()
 		}
 	};
 	renderPassCI.subpassDescriptions = {
-		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOR_ATTACHMENT_OPTIMAL}}, {}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
+		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
 	};
 	renderPassCI.subpassDependencies = {
 		{MIRU_SUBPASS_EXTERNAL, 0,

@@ -258,11 +258,11 @@ void Shader::GetShaderResources()
 							MIRU_ASSERT(true, "ERROR: D3D12: Unknown Resource Binding Type.");
 					}
 
-					m_RBD[set].push_back({});
-					m_RBD[set].back().binding = binding;
-					m_RBD[set].back().type = type;
-					m_RBD[set].back().descriptorCount = atoi(items[6].c_str());
-					m_RBD[set].back().stage = m_CI.stage;
+					m_RBDs[set].push_back({});
+					m_RBDs[set].back().binding = binding;
+					m_RBDs[set].back().type = type;
+					m_RBDs[set].back().descriptorCount = atoi(items[6].c_str());
+					m_RBDs[set].back().stage = m_CI.stage;
 					items.clear();
 				}
 				continue;

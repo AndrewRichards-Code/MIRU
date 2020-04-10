@@ -51,7 +51,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	swapchainImageViewCI.debugName = "";
 	swapchainImageViewCI.device = m_CI.pContext->GetDevice();
 	swapchainImageViewCI.pImage = nullptr;
-	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOR_BIT, 0, 1, 0, 1 };
+	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 
 	size_t i = 0;
 	for (auto& swapchainImage : m_SwapchainImages)
