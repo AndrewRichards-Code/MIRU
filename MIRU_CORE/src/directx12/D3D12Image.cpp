@@ -23,7 +23,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ResourceDesc.SampleDesc.Quality = 0;
 	m_ResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::COLOR_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET : D3D12_RESOURCE_FLAGS(0);
+	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::COLOUR_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET : D3D12_RESOURCE_FLAGS(0);
 	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAGS(0);
 	D3D12_CLEAR_VALUE* clear = nullptr;
 
@@ -336,7 +336,7 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 			return D3D12_RESOURCE_STATE_COMMON;
 		case Image::Layout::GENERAL:
 			return D3D12_RESOURCE_STATE_GENERIC_READ;
-		case Image::Layout::COLOR_ATTACHMENT_OPTIMAL:
+		case Image::Layout::COLOUR_ATTACHMENT_OPTIMAL:
 			return D3D12_RESOURCE_STATE_RENDER_TARGET;
 		case Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 			return D3D12_RESOURCE_STATE_DEPTH_WRITE;

@@ -67,6 +67,7 @@ namespace crossplatform
 		virtual bool AddResource(Resource& resource) = 0;
 		virtual void RemoveResource(uint64_t id) = 0;
 		virtual void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
+		virtual void AccessData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
 
 		static inline std::vector<MemoryBlock*>& GetMemoryBlocks() { return s_MemoryBlocks; }
 		static inline std::map<MemoryBlock*, std::map<uint64_t, Resource>>& GetAllocatedResources() { return s_AllocatedResources; }

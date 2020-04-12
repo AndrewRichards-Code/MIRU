@@ -204,7 +204,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		size_t j = 0;
 		for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].colourAttachments)
 		{
-			if (attachment.layout == Image::Layout::COLOR_ATTACHMENT_OPTIMAL)
+			if (attachment.layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL)
 				m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
 			
 			j++;

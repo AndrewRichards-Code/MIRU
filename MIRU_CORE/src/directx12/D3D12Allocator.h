@@ -15,6 +15,7 @@ namespace d3d12
 		bool AddResource(crossplatform::Resource& resource) override;
 		void RemoveResource(uint64_t id) override;
 		void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) override;
+		void AccessData(const crossplatform::Resource& resource, size_t size, void* data) override;
 
 	private:
 		D3D12_HEAP_PROPERTIES GetHeapProperties(crossplatform::MemoryBlock::PropertiesBit properties);

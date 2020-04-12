@@ -73,6 +73,21 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 	}
 }
 
+void MemoryBlock::AccessData(const crossplatform::Resource& resource, size_t size, void* data)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
+	if (m_HeapDesc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD && data)
+	{
+		ID3D12Resource* d3d12Resource = (ID3D12Resource*)(void*)(resource.resource);
+		void* mappedData;
+		MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
+		memcpy(data, mappedData, size);
+		d3d12Resource->Unmap(0, nullptr);
+	}
+}
+
 D3D12_HEAP_PROPERTIES MemoryBlock::GetHeapProperties(crossplatform::MemoryBlock::PropertiesBit properties)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

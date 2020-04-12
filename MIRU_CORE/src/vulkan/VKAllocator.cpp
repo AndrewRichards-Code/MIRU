@@ -99,6 +99,21 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 	}
 }
 
+void MemoryBlock::AccessData(const crossplatform::Resource& resource, size_t size, void* data)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if ((m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+		|| m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+		&& data)
+	{
+		void* mappedData;
+		MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
+		memcpy(data, mappedData, static_cast<size_t>(resource.size));
+		vkUnmapMemory(m_Device, m_DeviceMemory);
+	}
+}
+
 VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

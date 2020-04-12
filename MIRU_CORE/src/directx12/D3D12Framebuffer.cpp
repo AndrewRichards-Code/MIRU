@@ -37,7 +37,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		Image::Layout finalLayout = m_CI.renderPass->GetCreateInfo().attachments[i].finalLayout;
 		auto checkLayout = [&](Image::Layout layout) -> void
 		{
-			if (layout == Image::Layout::COLOR_ATTACHMENT_OPTIMAL || layout == Image::Layout::PRESENT_SRC || layout == Image::Layout::SHARED_PRESENT)
+			if (layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL || layout == Image::Layout::PRESENT_SRC || layout == Image::Layout::SHARED_PRESENT)
 				NeedRTV = true;
 			if (layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
 				|| layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)

@@ -309,7 +309,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		auto& usage = ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
 
 		//RTV
-		if (usage == Image::UsageBit::COLOR_ATTACHMENT_BIT)
+		if (usage == Image::UsageBit::COLOUR_ATTACHMENT_BIT)
 		{
 			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][2];
 			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,

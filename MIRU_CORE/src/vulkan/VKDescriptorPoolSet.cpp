@@ -203,7 +203,7 @@ VkDescriptorType DescriptorSet::ImageUsageToVkDescriptorType(crossplatform::Imag
 	{
 		case Image::UsageBit::TRANSFER_SRC_BIT:
 		case Image::UsageBit::TRANSFER_DST_BIT:
-		case Image::UsageBit::COLOR_ATTACHMENT_BIT:
+		case Image::UsageBit::COLOUR_ATTACHMENT_BIT:
 		case Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT:
 		case Image::UsageBit::TRANSIENT_ATTACHMENT_BIT:
 		default:
