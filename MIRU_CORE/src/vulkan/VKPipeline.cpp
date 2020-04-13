@@ -258,7 +258,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 					attachment.blendEnable,
 					static_cast<VkBlendFactor>(attachment.srcColourBlendFactor),
 					static_cast<VkBlendFactor>(attachment.dstColourBlendFactor),
-					static_cast<VkBlendOp>(attachment.colorBlendOp),
+					static_cast<VkBlendOp>(attachment.colourBlendOp),
 					static_cast<VkBlendFactor>(attachment.srcAlphaBlendFactor),
 					static_cast<VkBlendFactor>(attachment.dstAlphaBlendFactor),
 					static_cast<VkBlendOp>(attachment.alphaBlendOp),

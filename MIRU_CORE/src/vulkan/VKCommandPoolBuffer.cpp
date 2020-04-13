@@ -171,7 +171,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& windowResize)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -195,9 +195,9 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(vkDevice, vkSwapchain, UINT64_MAX, ref_cast<Semaphore>(acquires[m_CurrentFrame])->m_Semaphore, VK_NULL_HANDLE, &imageIndex);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResize)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || resized)
 	{
-		windowResize = false;
+		resized = false;
 		swapchain->m_Resized = true;
 		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
 		return;
@@ -207,7 +207,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 
 	std::vector<Ref<crossplatform::Semaphore>> _acquires = { acquires[m_CurrentFrame] };
 	std::vector<Ref<crossplatform::Semaphore>> _submits = { submits[m_CurrentFrame] };
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, _acquires, _submits, crossplatform::PipelineStageBit::COLOR_ATTACHMENT_OUTPUT_BIT, draws[m_CurrentFrame]);
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, _acquires, _submits, crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, draws[m_CurrentFrame]);
 
 	VkPresentInfoKHR pi = {};
 	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -220,9 +220,9 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	pi.pResults = nullptr;
 
 	result = vkQueuePresentKHR(vkQueue, &pi);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResize)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || resized)
 	{
-		windowResize = false;
+		resized = false;
 		swapchain->m_Resized = true;
 		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
 		return;

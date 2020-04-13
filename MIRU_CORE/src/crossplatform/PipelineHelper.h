@@ -165,7 +165,7 @@ namespace crossplatform
 		ONE = 1,
 		SRC_COLOUR = 2,
 		ONE_MINUS_SRC_COLOUR = 3,
-		DST_COLOR = 4,
+		DST_COLOUR = 4,
 		ONE_MINUS_DST_COLOUR = 5,
 		SRC_ALPHA = 6,
 		ONE_MINUS_SRC_ALPHA = 7,
@@ -201,7 +201,7 @@ namespace crossplatform
 		bool					blendEnable;
 		BlendFactor				srcColourBlendFactor;
 		BlendFactor				dstColourBlendFactor;
-		BlendOp					colorBlendOp;
+		BlendOp					colourBlendOp;
 		BlendFactor				srcAlphaBlendFactor;
 		BlendFactor				dstAlphaBlendFactor;
 		BlendOp					alphaBlendOp;
@@ -273,7 +273,7 @@ namespace crossplatform
 		FRAGMENT_SHADER_BIT = 0x00000080,
 		EARLY_FRAGMENT_TESTS_BIT = 0x00000100,
 		LATE_FRAGMENT_TESTS_BIT = 0x00000200,
-		COLOR_ATTACHMENT_OUTPUT_BIT = 0x00000400,
+		COLOUR_ATTACHMENT_OUTPUT_BIT = 0x00000400,
 		COMPUTE_SHADER_BIT = 0x00000800,
 		TRANSFER_BIT = 0x00001000,
 		BOTTOM_OF_PIPE_BIT = 0x00002000,

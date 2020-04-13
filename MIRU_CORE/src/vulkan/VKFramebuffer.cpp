@@ -29,7 +29,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferCI.layers = m_CI.layers;
 
 	MIRU_ASSERT(vkCreateFramebuffer(m_Device, &m_FramebufferCI, nullptr, &m_Framebuffer), "ERROR: VULKAN: Failed to create Framebuffer.");
-	VKSetName<VkBuffer>(m_Device, (uint64_t)m_Framebuffer, m_CI.debugName);
+	VKSetName<VkFramebuffer>(m_Device, (uint64_t)m_Framebuffer, m_CI.debugName);
 }
 
 Framebuffer::~Framebuffer()

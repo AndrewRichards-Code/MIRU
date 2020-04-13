@@ -186,7 +186,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_GPSD.BlendState.RenderTarget[i].LogicOpEnable = m_CI.colourBlendState.logicOpEnable;
 			m_GPSD.BlendState.RenderTarget[i].SrcBlend = ToD3D12_BLEND(blend.srcColourBlendFactor);
 			m_GPSD.BlendState.RenderTarget[i].DestBlend = ToD3D12_BLEND(blend.dstColourBlendFactor);
-			m_GPSD.BlendState.RenderTarget[i].BlendOp = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.colorBlendOp) + 1);
+			m_GPSD.BlendState.RenderTarget[i].BlendOp = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.colourBlendOp) + 1);
 			m_GPSD.BlendState.RenderTarget[i].SrcBlendAlpha = ToD3D12_BLEND(blend.srcAlphaBlendFactor);
 			m_GPSD.BlendState.RenderTarget[i].DestBlendAlpha = ToD3D12_BLEND(blend.dstAlphaBlendFactor);
 			m_GPSD.BlendState.RenderTarget[i].BlendOpAlpha = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.alphaBlendOp) + 1);
@@ -320,7 +320,7 @@ D3D12_BLEND Pipeline::ToD3D12_BLEND(crossplatform::BlendFactor blend)
 		return D3D12_BLEND_SRC_COLOR;
 	case crossplatform::BlendFactor::ONE_MINUS_SRC_COLOUR:
 		return D3D12_BLEND_INV_SRC_COLOR;
-	case crossplatform::BlendFactor::DST_COLOR:
+	case crossplatform::BlendFactor::DST_COLOUR:
 		return D3D12_BLEND_DEST_COLOR;
 	case crossplatform::BlendFactor::ONE_MINUS_DST_COLOUR:
 		return D3D12_BLEND_INV_DEST_COLOR;
