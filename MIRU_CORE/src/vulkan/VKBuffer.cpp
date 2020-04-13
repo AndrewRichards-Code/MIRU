@@ -33,8 +33,11 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_Resource.size = m_MemoryRequirements.size;
 	m_Resource.alignment = m_MemoryRequirements.alignment;
 	
-	m_CI.pMemoryBlock->AddResource(m_Resource);
-	m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+	if (m_CI.pMemoryBlock)
+	{
+		m_CI.pMemoryBlock->AddResource(m_Resource);
+		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+	}
 }
 
 Buffer::~Buffer()
@@ -42,7 +45,9 @@ Buffer::~Buffer()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	vkDestroyBuffer(m_Device, m_Buffer, nullptr);
-	m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+	
+	if (m_CI.pMemoryBlock)
+		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
 }
 
 VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)

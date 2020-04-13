@@ -271,6 +271,10 @@ void Shader::GetShaderResources()
 		if ((uint32_t)id.storageClass != (uint32_t)SpvStorageClassInput
 			&& (uint32_t)id.storageClass != (uint32_t)SpvStorageClassOutput)
 		{
+			//These are shader internal global variables, treated similarly uniform variables.
+			if (id.storageClass == SpvStorageClassPrivate)
+				continue;
+
 			uint32_t& refId = id.referenceId;
 			MiruSpvId& ref = ids[refId];
 

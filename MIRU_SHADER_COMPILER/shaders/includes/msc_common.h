@@ -47,3 +47,4 @@
 #endif
 //The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
 #define MIRU_COMBINED_IMAGE_SAMPLER(image_type, bind_num, set_num, type, name) image_type(bind_num, set_num, type, name##_image_cis); MIRU_SAMPLER(bind_num, set_num, name##_sampler_cis)
+#define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, bind_num, set_num, type, name, count) image_type(bind_num, set_num, type, name##_image_cis[count]); MIRU_SAMPLER(bind_num, set_num, name##_sampler_cis[count])
