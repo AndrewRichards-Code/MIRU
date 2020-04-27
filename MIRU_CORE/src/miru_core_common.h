@@ -21,6 +21,7 @@
 
 //WINDOWING SYSTEM
 #if defined(_WIN64)
+#define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
 #else
@@ -125,7 +126,7 @@ return lhs;
 #endif
 
 //MIRU CPU Heap Allocation tracker
-#define MIRU_CPU_HEAP_ALLOCATION_TRACKER
+//#define MIRU_CPU_HEAP_ALLOCATION_TRACKER
 #if defined(MIRU_CPU_HEAP_ALLOCATION_TRACKER)
 void* operator new(size_t size);
 void operator delete(void* ptr);
