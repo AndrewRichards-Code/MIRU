@@ -308,22 +308,22 @@ int main()
 	mars::Mat4 view = mars::Mat4::Identity();
 	mars::Mat4 modl = mars::Mat4::Identity();
 
-	float ubData[2 * sizeof(mars::Mat4)];
-	memcpy(ubData + 0 * 16,	&proj.a, sizeof(mars::Mat4));
-	memcpy(ubData + 1 * 16,	&view.a, sizeof(mars::Mat4));
+	float ubData[2 * mars::Mat4::GetSize()];
+	memcpy(ubData + 0 * 16,	proj.GetData(), mars::Mat4::GetSize());
+	memcpy(ubData + 1 * 16,	view.GetData(), mars::Mat4::GetSize());
 
 	Buffer::CreateInfo ubCI;
 	ubCI.debugName = "CameraUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = 2 * sizeof(mars::Mat4);
+	ubCI.size = 2 * mars::Mat4::GetSize();
 	ubCI.data = ubData;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "ModelUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = sizeof(mars::Mat4);
+	ubCI.size = mars::Mat4::GetSize();
 	ubCI.data = &modl.a;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
@@ -334,7 +334,7 @@ int main()
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
 	ubViewCamCI.pBuffer = ub1;
 	ubViewCamCI.offset = 0;
-	ubViewCamCI.size = 2 * sizeof(mars::Mat4);
+	ubViewCamCI.size = 2 * mars::Mat4::GetSize();
 	ubViewCamCI.stride = 0;
 	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
 	BufferView::CreateInfo ubViewMdlCI;
@@ -343,7 +343,7 @@ int main()
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.pBuffer = ub2;
 	ubViewMdlCI.offset = 0;
-	ubViewMdlCI.size = sizeof(mars::Mat4);
+	ubViewMdlCI.size = mars::Mat4::GetSize();
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
@@ -559,11 +559,11 @@ int main()
 			if(api.IsVulkan())
 				proj.f *= -1;
 			modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
-			memcpy(ubData + 0 * 16, &proj.a, sizeof(mars::Mat4));
-			memcpy(ubData + 1 * 16, &view.a, sizeof(mars::Mat4));
+			memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());
+			memcpy(ubData + 1 * 16, view.GetData(), mars::Mat4::GetSize());
 
-			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(mars::Mat4), ubData);
-			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * sizeof(mars::Mat4), &modl.a);
+			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * mars::Mat4::GetSize(), ubData);
+			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * mars::Mat4::GetSize(), (void*)modl.GetData());
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 		frameIndex++;

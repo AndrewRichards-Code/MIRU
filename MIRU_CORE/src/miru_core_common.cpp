@@ -64,7 +64,7 @@ void Timer::BeginSession(const char* filepath)
 {
 	EndSession();
 
-	m_File = std::fstream(filepath, std::ios::trunc);
+	m_File = std::fstream(filepath, std::ios::out | std::ios::trunc);
 	if (!m_File.is_open())
 		MIRU_WARN(true, "WARN: Unable to open file for profiling.");
 }
