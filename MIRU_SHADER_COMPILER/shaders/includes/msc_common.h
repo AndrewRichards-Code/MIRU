@@ -9,42 +9,50 @@
 
 //Constant Buffers / Uniform Buffers
 #if defined MIRU_VULKAN
-#define MIRU_CONSTANT_BUFFER(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] ConstantBuffer<type> name
+#define MIRU_CONSTANT_BUFFER(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] ConstantBuffer<type> name
 #else
-#define MIRU_CONSTANT_BUFFER(bind_num, set_num, type, name) ConstantBuffer<type> name : register(b##bind_num, space##set_num)
+#define MIRU_CONSTANT_BUFFER(set_num, bind_num, type, name) ConstantBuffer<type> name : register(b##bind_num, space##set_num)
 #endif
-#define MIRU_UNIFORM_BUFFER(bind_num, set_num, type, name) MIRU_CONSTANT_BUFFER(bind_num, set_num, type, name)
+#define MIRU_UNIFORM_BUFFER(set_num, bind_num, type, name) MIRU_CONSTANT_BUFFER(set_num, bind_num, type, name)
+
+//RWStructured Buffers / Storage Buffers
+#if defined MIRU_VULKAN
+#define MIRU_RW_STRUCTURED_BUFFER(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWStructuredBuffer<type> name
+#else
+#define MIRU_RW_STRUCTURED_BUFFER(set_num, bind_num, type, name) RWStructuredBuffer<type> name : register(u##bind_num, space##set_num)
+#endif
+#define MIRU_STORAGE_BUFFER(set_num, bind_num, type, name) MIRU_RW_STRUCTURED_BUFFER(set_num, bind_num, type, name)
 
 //Images and Samplers
 #if defined MIRU_VULKAN
-#define MIRU_IMAGE_1D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1D<type> name 
-#define MIRU_IMAGE_2D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2D<type> name 
-#define MIRU_IMAGE_3D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] Texture3D<type> name 
-#define MIRU_IMAGE_CUBE(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] TextureCube<type> name 
-#define MIRU_IMAGE_1D_ARRAY(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1DArray<type> name 
-#define MIRU_IMAGE_2D_ARRAY(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2DArray<type> name 
-#define MIRU_IMAGE_CUBE_ARRAY(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] TextureCubeArray<type> name 
-#define MIRU_RW_IMAGE_1D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture1D<type> name 
-#define MIRU_RW_IMAGE_2D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2D<type> name 
-#define MIRU_RW_IMAGE_3D(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture3D<type> name 
-#define MIRU_RW_IMAGE_1D_ARRAY(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture1DArray<type> name 
-#define MIRU_RW_IMAGE_2D_ARRAY(bind_num, set_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name 
-#define MIRU_SAMPLER(bind_num, set_num, name) [[vk::binding(bind_num, set_num)]] SamplerState name
+#define MIRU_IMAGE_1D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1D<type> name 
+#define MIRU_IMAGE_2D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2D<type> name 
+#define MIRU_IMAGE_3D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture3D<type> name 
+#define MIRU_IMAGE_CUBE(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] TextureCube<type> name 
+#define MIRU_IMAGE_1D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1DArray<type> name 
+#define MIRU_IMAGE_2D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2DArray<type> name 
+#define MIRU_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] TextureCubeArray<type> name 
+#define MIRU_RW_IMAGE_1D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture1D<type> name 
+#define MIRU_RW_IMAGE_2D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2D<type> name 
+#define MIRU_RW_IMAGE_3D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture3D<type> name 
+#define MIRU_RW_IMAGE_1D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture1DArray<type> name 
+#define MIRU_RW_IMAGE_2D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name 
+#define MIRU_SAMPLER(set_num, bind_num, name) [[vk::binding(bind_num, set_num)]] SamplerState name
 #else
-#define MIRU_IMAGE_1D(bind_num, set_num, type, name) Texture1D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_2D(bind_num, set_num, type, name) Texture2D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_3D(bind_num, set_num, type, name) Texture3D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_CUBE(bind_num, set_num, type, name) TextureCube<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_1D_ARRAY(bind_num, set_num, type, name) Texture1DArray<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_2D_ARRAY(bind_num, set_num, type, name) Texture2DArray<type> name : register(t##bind_num, space##set_num)
-#define MIRU_IMAGE_CUBE_ARRAY(bind_num, set_num, type, name) TextureCubeArray<type> name : register(t##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_1D(bind_num, set_num, type, name) RWTexture1D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_2D(bind_num, set_num, type, name) RWTexture2D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_3D(bind_num, set_num, type, name) RWTexture3D<type> name : register(t##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_1D_ARRAY(bind_num, set_num, type, name) RWTexture1DArray<type> name : register(t##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_2D_ARRAY(bind_num, set_num, type, name) RWTexture2DArray<type> name : register(t##bind_num, space##set_num)
-#define MIRU_SAMPLER(bind_num, set_num, name) SamplerState name : register(s##bind_num, space##set_num)
+#define MIRU_IMAGE_1D(set_num, bind_num, type, name) Texture1D<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_2D(set_num, bind_num, type, name) Texture2D<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_3D(set_num, bind_num, type, name) Texture3D<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_CUBE(set_num, bind_num, type, name) TextureCube<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_1D_ARRAY(set_num, bind_num, type, name) Texture1DArray<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_2D_ARRAY(set_num, bind_num, type, name) Texture2DArray<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) TextureCubeArray<type> name : register(t##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_1D(set_num, bind_num, type, name) RWTexture1D<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_2D(set_num, bind_num, type, name) RWTexture2D<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_3D(set_num, bind_num, type, name) RWTexture3D<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_1D_ARRAY(set_num, bind_num, type, name) RWTexture1DArray<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_2D_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
+#define MIRU_SAMPLER(set_num, bind_num, name) SamplerState name : register(s##bind_num, space##set_num)
 #endif
 //The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
-#define MIRU_COMBINED_IMAGE_SAMPLER(image_type, bind_num, set_num, type, name) image_type(bind_num, set_num, type, name##_image_cis); MIRU_SAMPLER(bind_num, set_num, name##_sampler_cis)
-#define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, bind_num, set_num, type, name, count) image_type(bind_num, set_num, type, name##_image_cis[count]); MIRU_SAMPLER(bind_num, set_num, name##_sampler_cis[count])
+#define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_image_cis); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis)
+#define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_image_cis[count]); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis[count])

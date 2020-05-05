@@ -38,7 +38,7 @@ namespace crossplatform
 		typedef enum class VertexType Type;
 		struct FragmentShaderOutputAttributeDescription
 		{
-			uint32_t	binding;
+			uint32_t	location;
 			Type		outputType;
 			std::string semanticName;
 		};

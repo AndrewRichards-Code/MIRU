@@ -60,7 +60,6 @@ int main(int argc, const char** argv)
 	//Parse compile flags
 	bool cso = false;
 	bool spv = false;
-	bool noasm = false;
 	for(int i = 0; i < argc; i++)
 	{
 		if (!_stricmp(argv[i], "-cso"))
@@ -71,11 +70,6 @@ int main(int argc, const char** argv)
 		if (!_stricmp(argv[i], "-spv"))
 		{
 			spv = true;
-			continue;
-		}
-		if (!_stricmp(argv[i], "-noasm"))
-		{
-			noasm = true;
 			continue;
 		}
 	}
@@ -161,13 +155,13 @@ int main(int argc, const char** argv)
 	if (cso)
 	{
 		CONSOLE_OUTPUT_GREEN;
-		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, args, dxc_path, noasm);
+		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, args, dxc_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	if (spv)
 	{
 		CONSOLE_OUTPUT_RED;
-		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, args, glslang_path, noasm);
+		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, args, glslang_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SRV Shader Compile Error. MIRU_SHADER_COMPILER.");
 	}
 	CONSOLE_OUTPUT_WHITE;

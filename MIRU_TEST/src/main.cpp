@@ -381,11 +381,11 @@ int main()
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic Shader DescSetLayout";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER,  1, Shader::StageBit::VERTEX_BIT } };
+	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
 	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.descriptorSetLayoutBinding = { 
-		{1, DescriptorType::COMBINED_IMAGE_SAMPLER,  1, Shader::StageBit::FRAGMENT_BIT }, 
-		{0, DescriptorType::UNIFORM_BUFFER,  1, Shader::StageBit::VERTEX_BIT }
+		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }, 
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT }
 	};
 	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;

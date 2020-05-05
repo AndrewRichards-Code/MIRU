@@ -15,6 +15,8 @@ namespace d3d12
 		void Reconstruct() override;
 		void GetShaderResources() override;
 
+		void D3D12ShaderReflection();
+
 		//Members
 	public:
 		ID3D12Device* m_Device;

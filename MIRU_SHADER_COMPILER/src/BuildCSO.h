@@ -136,8 +136,7 @@ namespace shader_compiler
 		const std::string& entryPoint = "main", 
 		const std::string& shaderModel = "6_O", 
 		const std::string& additionCommandlineArgs = "", 
-		const std::string& compiler_dir = "", 
-		bool disableAsemblyFile = false)
+		const std::string& compiler_dir = "")
 	{
 		//Find Get DXC Directory
 	#if _WIN64
@@ -170,8 +169,6 @@ namespace shader_compiler
 		}
 		
 		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir;
-		if (!disableAsemblyFile)
-			command += " -Fc " + absoluteDstDir + ".asm";
 		for (auto& includeDirectory : includeDirectories)
 			command += " -I " + includeDirectory;
 		command += " -DMIRU_D3D12 " + additionCommandlineArgs;

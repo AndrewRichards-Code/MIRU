@@ -65,228 +65,175 @@ void Shader::Reconstruct()
 	m_ShaderStageCI.pSpecializationInfo = nullptr;
 }
 
-#include "spirv-headers/spirv.h"
 #include "crossplatform/DescriptorPoolSet.h"
-
-struct MiruSpvId
-{
-	SpvOp opcode = SpvOp::SpvOpMax;
-	uint32_t referenceId = ~0;
-	SpvStorageClass storageClass = SpvStorageClass::SpvStorageClassMax;
-	uint32_t set = ~0;
-	uint32_t binding = ~0;
-	uint32_t count = ~0;
-	uint32_t location = ~0;
-	bool signedType = false;
-	std::string name;
-};
 
 void Shader::GetShaderResources()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	const uint32_t* code = m_ShaderModuleCI.pCode;
-	if (code[0] != SpvMagicNumber)
-		MIRU_ASSERT(true, "ERROR: VULKAN: Provided SPIR-V source file is not valid.");
+	SpirvCrossReflection();
+}
 
-	std::vector<MiruSpvId> ids(code[3]);
-	SpvExecutionModel stage;
+void Shader::SpirvCrossReflection()
+{
+	const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
+	size_t spv_bin_word_count = m_ShaderBinary.size() / 4;
+	spirv_cross::Compiler compiled_bin(spv_bin, spv_bin_word_count);
+	spirv_cross::ShaderResources resources = compiled_bin.get_shader_resources();
 
-	const uint32_t* _code = code + uint32_t(5);
-	while (_code < code + m_ShaderModuleCI.codeSize)
-	{
-		uint16_t opcode = uint16_t(_code[0] & SpvOpCodeMask);
-		uint16_t wordCount = uint16_t(_code[0] >> SpvWordCountShift);
-
-		switch (opcode)
-		{
-		case SpvOpEntryPoint:
-		{
-			stage = SpvExecutionModel(_code[1]);
-			break;
-		}
-		case SpvOpName:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp(opcode);
-			ids[id].name = (const char*)(&_code[2]);
-			break;
-		}
-		case SpvOpDecorate:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp(opcode);
-			SpvDecoration dec = SpvDecoration(_code[2]);
-			switch (dec)
-			{
-			case SpvDecorationLocation:
-			{
-				ids[id].location = _code[3];
-				break;
-			}
-			case SpvDecorationDescriptorSet:
-			{
-				ids[id].set = _code[3];
-				break;
-			}
-			case SpvDecorationBinding:
-			{
-				ids[id].binding = _code[3];
-				break;
-			}
-			}
-			break;
-		}
-		case SpvOpTypeInt:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp_(opcode);
-			ids[id].count = _code[2];
-			ids[id].signedType= (bool)_code[3];
-			break;
-		}
-		case SpvOpTypeFloat:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp_(opcode);
-			ids[id].count = _code[2];
-			break;
-		}
-		case SpvOpTypeVector:
-		case SpvOpTypeMatrix:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp_(opcode);
-			ids[id].referenceId = _code[2];
-			ids[id].count = _code[3];
-			break;
-		}
-		case SpvOpTypeVoid:
-		case SpvOpTypeBool:
-		case SpvOpTypeStruct:
-		case SpvOpTypeImage:
-		case SpvOpTypeSampler:
-		case SpvOpTypeSampledImage:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp_(opcode);
-			break;
-		}
-		case SpvOpTypePointer:
-		{
-			uint32_t id = _code[1];
-			ids[id].opcode = SpvOp_(opcode);
-			ids[id].storageClass = SpvStorageClass(_code[2]);
-			ids[id].referenceId = _code[3];
-			break;
-		}
-		case SpvOpVariable:
-		{
-			uint32_t id = _code[2];
-			ids[id].opcode = SpvOp_(opcode);
-			ids[id].referenceId = _code[1];
-			ids[id].storageClass = SpvStorageClass(_code[3]);
-			break;
-		}
-
-		}
-
-		_code += size_t(wordCount);
-	}
+	spv::ExecutionModel stage = compiled_bin.get_execution_model();
 	if ((uint32_t)stage != (uint32_t)log2((double)m_CI.stage)) // Convert Bitfield to uint32_t
 		MIRU_ASSERT(true, "ERROR: VULKAN: The SPIR-V source file doesn't match the specified stage.");
 
-	std::vector<std::string> cis_list;
-	for (auto id : ids)
+	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType = 
+		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> crossplatform::VertexType
 	{
-		if (id.opcode != SpvOpVariable)
-			continue;
-		if ((uint32_t)stage == (uint32_t)SpvExecutionModel::SpvExecutionModelVertex
-			&& (uint32_t)id.storageClass == (uint32_t)SpvStorageClassInput)
+		switch (type)
 		{
-			MiruSpvId& typeID = ids[ids[id.referenceId].referenceId];
-			crossplatform::VertexType vertexType;
-			uint32_t count, enumOffset;
-			if (typeID.referenceId != ~0) // Either Vector or Matrix type.
-			{
-				count = typeID.count;
-				switch (ids[typeID.referenceId].opcode)
-				{
-					case SpvOpTypeInt:
-						enumOffset = (ids[typeID.referenceId].signedType ? 8 : 12); break;
-					case SpvOpTypeFloat:
-						enumOffset = (ids[typeID.referenceId].count == 32 ? 0 : 4); break;
-				}
-			}
-			else //Either Int of Float base type 
-			{
-				count = 1;
-				switch (typeID.opcode)
-				{
-				case SpvOpTypeInt:
-					enumOffset = (typeID.signedType ? 8 : 12); break;
-				case SpvOpTypeFloat:
-					enumOffset = (typeID.count == 32 ? 0 : 4); break;
-				}
-			}
-			vertexType = (crossplatform::VertexType)((count - 1) + enumOffset);
-			uint32_t offest = m_VSIADs.size() == 0 ? 0 : (((uint32_t)m_VSIADs[m_VSIADs.size() - 1].vertexType % (uint32_t)4)+(uint32_t)1) 
-				* (m_VSIADs[m_VSIADs.size() - 1].vertexType >= crossplatform::VertexType::DOUBLE ? (uint32_t)8 : (uint32_t)4) + m_VSIADs[m_VSIADs.size() - 1].offset;
-			m_VSIADs.push_back({id.location, 0, vertexType, offest, id.name});
-			continue;
+		case spirv_cross::SPIRType::BaseType::Unknown:
+			break;
+		case spirv_cross::SPIRType::BaseType::Void:
+			break;
+		case spirv_cross::SPIRType::BaseType::Boolean:
+			break;
+		case spirv_cross::SPIRType::BaseType::SByte:
+			break;
+		case spirv_cross::SPIRType::BaseType::UByte:
+			break;
+		case spirv_cross::SPIRType::BaseType::Short:
+			break;
+		case spirv_cross::SPIRType::BaseType::UShort:
+			break;
+		case spirv_cross::SPIRType::BaseType::Int:
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT) 
+				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+		case spirv_cross::SPIRType::BaseType::UInt:
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT) 
+				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+		case spirv_cross::SPIRType::BaseType::Int64:
+			break;
+		case spirv_cross::SPIRType::BaseType::UInt64:
+			break;
+		case spirv_cross::SPIRType::BaseType::AtomicCounter:
+			break;
+		case spirv_cross::SPIRType::BaseType::Half:
+			break;
+		case spirv_cross::SPIRType::BaseType::Float:
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT) 
+				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+		case spirv_cross::SPIRType::BaseType::Double:
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::DOUBLE) 
+				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+		case spirv_cross::SPIRType::BaseType::Struct:
+			break;
+		case spirv_cross::SPIRType::BaseType::Image:
+			break;
+		case spirv_cross::SPIRType::BaseType::SampledImage:
+			break;
+		case spirv_cross::SPIRType::BaseType::Sampler:
+			break;
+		case spirv_cross::SPIRType::BaseType::AccelerationStructureNV:
+			break;
+		case spirv_cross::SPIRType::BaseType::ControlPointArray:
+			break;
+		case spirv_cross::SPIRType::BaseType::Char:
+			break;
+		default:
+			break;
 		}
-		if ((uint32_t)stage == (uint32_t)SpvExecutionModel::SpvExecutionModelFragment
-			&& (uint32_t)id.storageClass == (uint32_t)SpvStorageClassOutput)
+
+		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
+		return static_cast<crossplatform::VertexType>(0);
+	};
+
+	auto sizeof_miru_crossplatform_VertexType =
+		[](crossplatform::VertexType type) -> uint32_t
+	{
+		switch (type)
 		{
-			MiruSpvId& typeID = ids[ids[id.referenceId].referenceId];
-			crossplatform::VertexType type;
-			uint32_t count, enumOffset;
-			if (typeID.referenceId != ~0) // Either Vector or Matrix type.
-			{
-				count = typeID.count;
-				switch (ids[typeID.referenceId].opcode)
-				{
-				case SpvOpTypeInt:
-					enumOffset = (ids[typeID.referenceId].signedType ? 8 : 12); break;
-				case SpvOpTypeFloat:
-					enumOffset = (ids[typeID.referenceId].count == 32 ? 0 : 4); break;
-				}
-			}
-			else //Either Int of Float base type 
-			{
-				count = 1;
-				switch (typeID.opcode)
-				{
-				case SpvOpTypeInt:
-					enumOffset = (typeID.signedType ? 8 : 12); break;
-				case SpvOpTypeFloat:
-					enumOffset = (typeID.count == 32 ? 0 : 4); break;
-				}
-			}
-			type = (crossplatform::VertexType)((count - 1) + enumOffset);
-			m_PSOADs.push_back({ id.location, type, id.name });
-			continue;
+		case miru::crossplatform::VertexType::FLOAT:
+		case miru::crossplatform::VertexType::INT:
+		case miru::crossplatform::VertexType::UINT:
+			return 4;
+		case miru::crossplatform::VertexType::VEC2:
+		case miru::crossplatform::VertexType::IVEC2:
+		case miru::crossplatform::VertexType::UVEC2:
+			return 8;
+		case miru::crossplatform::VertexType::VEC3:
+		case miru::crossplatform::VertexType::IVEC3:
+		case miru::crossplatform::VertexType::UVEC3:
+			return 12;
+		case miru::crossplatform::VertexType::VEC4:
+		case miru::crossplatform::VertexType::IVEC4:
+		case miru::crossplatform::VertexType::UVEC4:
+			return 16;
+		case miru::crossplatform::VertexType::DOUBLE:
+			return 8;
+		case miru::crossplatform::VertexType::DVEC2:
+			return 16;
+		case miru::crossplatform::VertexType::DVEC3:
+			return 24;
+		case miru::crossplatform::VertexType::DVEC4:
+			return 32;
+		default:
+			return 0;
 		}
-		//ShaderResourceBindingDescription
-		if ((uint32_t)id.storageClass != (uint32_t)SpvStorageClassInput
-			&& (uint32_t)id.storageClass != (uint32_t)SpvStorageClassOutput)
+	};
+
+	if (stage == spv::ExecutionModel::ExecutionModelVertex)
+	{
+		for (auto& res : resources.stage_inputs)
 		{
-			//These are shader internal global variables, treated similarly uniform variables.
-			if (id.storageClass == SpvStorageClassPrivate)
-				continue;
+			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
+			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
 
-			uint32_t& refId = id.referenceId;
-			MiruSpvId& ref = ids[refId];
+			VertexShaderInputAttributeDescription vsiad;
+			vsiad.location = compiled_bin.get_decoration(res.id, spv::DecorationLocation);
+			vsiad.binding = 0;
+			vsiad.vertexType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
+			vsiad.offset = m_VSIADs.empty() ? 0 : m_VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(m_VSIADs.back().vertexType);
+			vsiad.semanticName = res.name;
+			m_VSIADs.push_back(vsiad);
+		}
+	}
+	if (stage == spv::ExecutionModel::ExecutionModelFragment)
+	{
+		for (auto& res : resources.stage_outputs)
+		{
+			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
+			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
 
-			uint32_t& refTypeId = ref.referenceId;
-			MiruSpvId& refType = ids[refTypeId];
-			crossplatform::DescriptorType type = crossplatform::DescriptorType(0);
-			if (id.name.find("_cis") != std::string::npos)
+			uint32_t location = compiled_bin.get_decoration(res.id, spv::DecorationLocation);
+			uint32_t index = compiled_bin.get_decoration(res.id, spv::DecorationIndex);
+			uint32_t componenet = compiled_bin.get_decoration(res.id, spv::DecorationComponent);
+
+			FragmentShaderOutputAttributeDescription fsoad;
+			fsoad.location = location;
+			fsoad.outputType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
+			fsoad.semanticName = res.name;
+			m_PSOADs.push_back(fsoad);
+		}
+	}
+
+	std::vector<std::string> cis_list;
+	auto push_back_ResourceBindingDescription = 
+		[&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, crossplatform::DescriptorType descriptorType) -> void
+	{
+		for (auto& res : resources)
+		{
+			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
+			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
+
+			uint32_t set = compiled_bin.get_decoration(res.id, spv::DecorationDescriptorSet);
+			uint32_t binding = compiled_bin.get_decoration(res.id, spv::DecorationBinding);
+
+			crossplatform::DescriptorType descType = descriptorType;
+			if (res.name.find("_cis") != std::string::npos)
 			{
 				bool found = false;
 				for (auto& cis : cis_list)
 				{
-					if (cis.compare(id.name.substr(0, id.name.find_first_of('_'))) == 0)
+					if (cis.compare(res.name.substr(0, res.name.find_first_of('_'))) == 0)
 					{
 						found = true;
 						break;
@@ -297,30 +244,27 @@ void Shader::GetShaderResources()
 					continue;
 				}
 				else
-					cis_list.push_back(id.name.substr(0, id.name.find_first_of('_')));
-					type = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
+					cis_list.push_back(res.name.substr(0, res.name.find_first_of('_')));
+				descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
-			else
-			{
-				switch (refType.opcode)
-				{
-				case SpvOpTypeStruct:
-				{
-					if (ref.storageClass == SpvStorageClassUniform)
-						type = crossplatform::DescriptorType::UNIFORM_BUFFER; break;
-					if (ref.storageClass == SpvStorageClassStorageBuffer)
-						type = crossplatform::DescriptorType::STORAGE_BUFFER; break;
 
-				}
-				case SpvOpTypeImage:
-					type = crossplatform::DescriptorType::STORAGE_IMAGE; break;
-				case SpvOpTypeSampler:
-					type = crossplatform::DescriptorType::SAMPLER; break;
-				case SpvOpTypeSampledImage:
-					type = crossplatform::DescriptorType::SAMPLED_IMAGE; break;
-				};
-			}
-			m_RBDs[id.set].push_back({ id.binding, type, 1, m_CI.stage });
+			ResourceBindingDescription rbd;
+			rbd.binding = binding;
+			rbd.type = descType;
+			rbd.descriptorCount = static_cast<uint32_t>(type.array.size()) + 1;			
+			rbd.stage = m_CI.stage;
+			m_RBDs[set].push_back(rbd);
 		}
-	}
+	};
+
+	push_back_ResourceBindingDescription(resources.uniform_buffers, crossplatform::DescriptorType::UNIFORM_BUFFER);
+	push_back_ResourceBindingDescription(resources.storage_buffers, crossplatform::DescriptorType::STORAGE_BUFFER);
+	push_back_ResourceBindingDescription(resources.subpass_inputs, crossplatform::DescriptorType::INPUT_ATTACHMENT);
+	push_back_ResourceBindingDescription(resources.storage_images, crossplatform::DescriptorType::STORAGE_IMAGE);
+	push_back_ResourceBindingDescription(resources.sampled_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
+	//push_back_ResourceBindingDescription(resources.atomic_counters, crossplatform::DescriptorType);
+	//push_back_ResourceBindingDescription(resources.acceleration_structures, crossplatform::DescriptorType);
+	//push_back_ResourceBindingDescription(resources.push_constant_buffers, crossplatform::DescriptorType);
+	push_back_ResourceBindingDescription(resources.separate_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
+	push_back_ResourceBindingDescription(resources.separate_samplers, crossplatform::DescriptorType::SAMPLER);
 }

@@ -41,6 +41,8 @@
 #if defined(MIRU_D3D12)
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <d3d12shader.h>
+#include <dxcapi.h>
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -57,6 +59,13 @@
 #endif
 #include "vulkan/vulkan.h"
 #pragma comment(lib, "vulkan-1.lib")
+
+#include "spirv_cross/spirv_cross.hpp"
+#if defined(_DEBUG)
+#pragma comment(lib, "spirv-cross-cored.lib")
+#else
+#pragma comment(lib, "spirv-cross-core.lib")
+#endif
 #endif
 
 #include "crossplatform/GraphicsAPI.h"
@@ -290,7 +299,7 @@ namespace miru
 #endif
 
 //MIRU printf
-#if _DEBUG
+#if defined(_DEBUG)
 #define MIRU_PRINTF(s, ...) printf((s), __VA_ARGS__)
 #else
 #define MIRU_PRINTF(s, ...) printf("")

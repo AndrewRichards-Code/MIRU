@@ -15,6 +15,8 @@ namespace vulkan
 		void Reconstruct() override;
 		void GetShaderResources() override;
 
+		void SpirvCrossReflection();
+
 		//Members
 	public:
 		VkDevice& m_Device;
