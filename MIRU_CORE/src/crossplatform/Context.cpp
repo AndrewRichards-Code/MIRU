@@ -10,9 +10,9 @@ Ref<Context> Context::Create(Context::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Context>(pCreateInfo);
+		return CreateRef<d3d12::Context>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Context>(pCreateInfo);
+		return CreateRef<vulkan::Context>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;

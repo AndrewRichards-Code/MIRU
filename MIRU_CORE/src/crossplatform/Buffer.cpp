@@ -10,9 +10,9 @@ Ref<Buffer> Buffer::Create(Buffer::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Buffer>(pCreateInfo);
+		return CreateRef<d3d12::Buffer>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Buffer>(pCreateInfo);
+		return CreateRef<vulkan::Buffer>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -24,9 +24,9 @@ Ref<BufferView> BufferView::Create(BufferView::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::BufferView>(pCreateInfo);
+		return CreateRef<d3d12::BufferView>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::BufferView>(pCreateInfo);
+		return CreateRef<vulkan::BufferView>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;

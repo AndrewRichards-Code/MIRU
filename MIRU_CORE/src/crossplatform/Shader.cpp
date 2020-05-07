@@ -10,9 +10,9 @@ Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Shader>(pCreateInfo);
+		return CreateRef<d3d12::Shader>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Shader>(pCreateInfo);
+		return CreateRef<vulkan::Shader>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;

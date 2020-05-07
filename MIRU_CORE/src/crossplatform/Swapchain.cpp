@@ -10,9 +10,9 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Swapchain>(pCreateInfo);
+		return CreateRef<d3d12::Swapchain>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Swapchain>(pCreateInfo);
+		return CreateRef<vulkan::Swapchain>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -58,28 +58,28 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	{
 		if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
 		{
-			swapchainImage = std::make_shared<d3d12::Image>();
+			swapchainImage = CreateRef<d3d12::Image>();
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<d3d12::Image>(swapchainImage)->m_Image = reinterpret_cast<ID3D12Resource*>(pImages[i]);
 			ref_cast<d3d12::Image>(swapchainImage)->m_CurrentResourceState = D3D12_RESOURCE_STATE_COMMON;
 			
 			swapchainImageViewCI.pImage = swapchainImage;
-			m_SwapchainImageViews[i] = std::make_shared<d3d12::ImageView>();
+			m_SwapchainImageViews[i] = CreateRef<d3d12::ImageView>();
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;
 			ref_cast<d3d12::ImageView>(m_SwapchainImageViews[i])->m_RTVDescHandle = reinterpret_cast<D3D12_CPU_DESCRIPTOR_HANDLE*>(pImageViews)[i];
 		}
 		else
 		{
-			swapchainImage = std::make_shared<vulkan::Image>();
+			swapchainImage = CreateRef<vulkan::Image>();
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<vulkan::Image>(swapchainImage)->m_Image = *reinterpret_cast<VkImage*>(pImages[i]);
 			ref_cast<vulkan::Image>(swapchainImage)->m_CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			
 			swapchainImageViewCI.pImage = swapchainImage;
-			m_SwapchainImageViews[i] = std::make_shared<vulkan::ImageView>();
+			m_SwapchainImageViews[i] = CreateRef<vulkan::ImageView>();
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;
 			ref_cast<vulkan::ImageView>(m_SwapchainImageViews[i])->m_ImageView = reinterpret_cast<VkImageView*>(pImageViews)[i];

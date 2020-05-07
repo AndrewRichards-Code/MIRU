@@ -14,9 +14,9 @@ Ref<MemoryBlock> MemoryBlock::Create(MemoryBlock::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::MemoryBlock>(pCreateInfo);
+		return CreateRef<d3d12::MemoryBlock>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::MemoryBlock>(pCreateInfo);
+		return CreateRef<vulkan::MemoryBlock>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;

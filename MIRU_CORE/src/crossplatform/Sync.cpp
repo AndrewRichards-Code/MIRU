@@ -10,9 +10,9 @@ Ref<Fence> Fence::Create(Fence::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Fence>(pCreateInfo);
+		return CreateRef<d3d12::Fence>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Fence>(pCreateInfo);
+		return CreateRef<vulkan::Fence>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -24,9 +24,9 @@ Ref<Semaphore> Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Semaphore>(pCreateInfo);
+		return CreateRef<d3d12::Semaphore>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Semaphore>(pCreateInfo);
+		return CreateRef<vulkan::Semaphore>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -38,9 +38,9 @@ Ref<Event> Event::Create(Event::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Event>(pCreateInfo);
+		return CreateRef<d3d12::Event>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Event>(pCreateInfo);
+		return CreateRef<vulkan::Event>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -52,9 +52,9 @@ Ref<Barrier> Barrier::Create(Barrier::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::Barrier>(pCreateInfo);
+		return CreateRef<d3d12::Barrier>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::Barrier>(pCreateInfo);
+		return CreateRef<vulkan::Barrier>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;

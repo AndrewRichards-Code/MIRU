@@ -10,9 +10,9 @@ Ref<DescriptorPool> DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateIn
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::DescriptorPool>(pCreateInfo);
+		return CreateRef<d3d12::DescriptorPool>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::DescriptorPool>(pCreateInfo);
+		return CreateRef<vulkan::DescriptorPool>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -24,9 +24,9 @@ Ref<DescriptorSetLayout> DescriptorSetLayout::Create(DescriptorSetLayout::Create
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::DescriptorSetLayout>(pCreateInfo);
+		return CreateRef<d3d12::DescriptorSetLayout>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::DescriptorSetLayout>(pCreateInfo);
+		return CreateRef<vulkan::DescriptorSetLayout>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -38,9 +38,9 @@ Ref<DescriptorSet> DescriptorSet::Create(DescriptorSet::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
-		return std::make_shared<d3d12::DescriptorSet>(pCreateInfo);
+		return CreateRef<d3d12::DescriptorSet>(pCreateInfo);
 	case GraphicsAPI::API::VULKAN:
-		return std::make_shared<vulkan::DescriptorSet>(pCreateInfo);
+		return CreateRef<vulkan::DescriptorSet>(pCreateInfo);
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
