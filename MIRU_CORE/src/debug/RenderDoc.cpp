@@ -4,17 +4,41 @@
 using namespace miru;
 using namespace debug;
 
-#if defined(_WIN64) //&& !defined(MIRU_DXIL)
+HMODULE RenderDoc::s_HModuleRenderDoc;
+std::filesystem::path RenderDoc::s_RenderDocFullpath;
+uint32_t RenderDoc::s_RefCount = 0;
 
+#if defined(_WIN64)
 RenderDoc::RenderDoc()
-	:m_RenderDocApi(nullptr), m_HInstance(nullptr), m_HModule(nullptr)
+	:m_RenderDocApi(nullptr)
 {
-	if (m_HInstance = LoadLibrary(MIRU_RENDERDOC_LIBRARY))
+	if (!s_HModuleRenderDoc)
 	{
-		if (m_HModule = GetModuleHandleA(MIRU_RENDERDOC_LIBRARY))
+		s_RenderDocFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/renderdoc/lib/x64/renderdoc.dll";
+		s_HModuleRenderDoc = LoadLibraryA(s_RenderDocFullpath.generic_string().c_str());
+		if (!s_HModuleRenderDoc)
 		{
-			pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(m_HModule, "RENDERDOC_GetAPI");
-			int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_0, (void**)&m_RenderDocApi);
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
+	}
+	else
+	{
+		pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(s_HModuleRenderDoc, "RENDERDOC_GetAPI");
+		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_0, (void**)&m_RenderDocApi);
+	}
+	s_RefCount++;
+}
+
+RenderDoc::~RenderDoc()
+{
+	s_RefCount--;
+	if (!s_RefCount)
+	{
+		if (!FreeLibrary(s_HModuleRenderDoc))
+		{
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
 }
@@ -22,7 +46,7 @@ RenderDoc::RenderDoc()
 #else
 
 RenderDoc::RenderDoc()
-	:m_RenderDocApi(nullptr), m_HInstance(nullptr), m_HModule(nullptr)
+	:m_RenderDocApi(nullptr)
 {
 }
 

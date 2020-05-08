@@ -5,6 +5,10 @@
 using namespace miru;
 using namespace d3d12;
 
+HMODULE Context::s_HModeuleDXIL;
+std::filesystem::path Context::s_DXILFullpath;
+uint32_t Context::s_RefCount = 0;
+
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -12,26 +16,34 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 
 	//Setup Debug
-	#if defined(_DEBUG)
+#if defined(_DEBUG)
 	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
 	m_Debug->EnableDebugLayer();
 	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
-	#endif
+#endif
 
 	//Create Factory
 	UINT createFactoryFlags = 0;
-	#if defined(_DEBUG)
+#if defined(_DEBUG)
 	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-	#endif
+#endif
 	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
-	
+
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
 
 	//Load dxil.dll
-	HMODULE dxil = LoadLibrary("C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxil.dll");
-	if (!dxil)
-		MIRU_WARN(GetLastError(), "WARN: D3D12: Unable to load 'C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxil.dll'.");
+	if (!s_HModeuleDXIL)
+	{
+		s_DXILFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/dxc/lib/x64/dxil.dll";
+		s_HModeuleDXIL = LoadLibraryA(s_DXILFullpath.generic_string().c_str());
+		if (!s_HModeuleDXIL)
+		{
+			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
+	}
+	s_RefCount++;
 	
 	//Create Device
 	uint32_t featureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -63,6 +75,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 Context::~Context()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
+
+	s_RefCount--;
+	if (!s_RefCount)
+	{
+		if (!FreeLibrary(s_HModeuleDXIL))
+		{
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
+	}
 
 	for (auto& queue : m_Queues)
 		SAFE_RELEASE(queue);

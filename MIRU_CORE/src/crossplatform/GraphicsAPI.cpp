@@ -9,7 +9,7 @@ bool GraphicsAPI::s_ApiInitialised = false;
 bool GraphicsAPI::s_AllowSetName = false;
 bool GraphicsAPI::s_AllowSetNameInitialised = false;
 
-debug::RenderDoc GraphicsAPI::s_RenderDoc = {};
+std::unique_ptr<debug::RenderDoc> GraphicsAPI::s_RenderDoc;
 
 void GraphicsAPI::SetAPI(GraphicsAPI::API api)
 {
@@ -31,5 +31,8 @@ void GraphicsAPI::AllowSetName(bool allowSetName)
 
 void GraphicsAPI::LoadRenderDoc()
 {
-	s_RenderDoc = debug::RenderDoc();
+	if (GraphicsAPI::IsVulkan())
+		s_RenderDoc = std::make_unique<debug::RenderDoc>();
+	else
+		MIRU_WARN(true, "WARN: GraphicsAPI:API is not VULKAN. Can not LoadRenderDoc.");
 }

@@ -23,6 +23,12 @@ namespace d3d12
 
 		D3D12_SHADER_BYTECODE m_ShaderByteCode;
 		D3D12_FEATURE_DATA_SHADER_MODEL m_ShaderModelData = {};
+
+	private:
+		//DXCompiler Library
+		static HMODULE s_HModeuleDXCompiler;
+		static std::filesystem::path s_DXCompilerFullpath;
+		static uint32_t s_RefCount;
 	};
 }
 }

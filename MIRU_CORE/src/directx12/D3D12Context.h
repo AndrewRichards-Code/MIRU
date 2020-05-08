@@ -48,6 +48,11 @@ namespace d3d12
 		std::vector<ID3D12CommandQueue*> m_Queues;
 		std::vector<D3D12_COMMAND_QUEUE_DESC> m_QueueDescs;
 
+	private:
+		//DXIL Library
+		static HMODULE s_HModeuleDXIL;
+		static std::filesystem::path s_DXILFullpath;
+		static uint32_t s_RefCount;
 	};
 }
 }

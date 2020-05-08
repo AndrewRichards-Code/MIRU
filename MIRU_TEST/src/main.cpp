@@ -61,16 +61,15 @@ void WindowUpdate()
 
 int main()
 {
-	GraphicsAPI api;
-	api.LoadRenderDoc();
-	api.AllowSetName();
-	//api.SetAPI(GraphicsAPI::API::D3D12);
-	api.SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::LoadRenderDoc();
+	GraphicsAPI::AllowSetName();
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Context::CreateInfo contextCI;
-	contextCI.api_version_major = api.IsD3D12() ? 11 : 1;
+	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 11 : 1;
 	contextCI.api_version_minor = 1;
 	contextCI.applicationName = "MIRU_TEST";
 	contextCI.instanceLayers = { "VK_LAYER_LUNARG_standard_validation" };
@@ -359,7 +358,7 @@ int main()
 	depthCI.arrayLayers = 1;
 	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
-	depthCI.layout = api.IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
+	depthCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.pMemoryBlock = gpu_mb_0;
@@ -408,7 +407,7 @@ int main()
 		RenderPass::AttachmentStoreOp::STORE,
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
-		api.IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
+		GraphicsAPI::IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
 		Image::Layout::PRESENT_SRC
 		},
 		{depthImage->GetCreateInfo().format,
@@ -556,7 +555,7 @@ int main()
 		}
 		{
 			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
-			if(api.IsVulkan())
+			if(GraphicsAPI::IsVulkan())
 				proj.f *= -1;
 			modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
 			memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());

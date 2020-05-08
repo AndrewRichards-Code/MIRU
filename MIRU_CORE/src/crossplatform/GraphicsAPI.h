@@ -14,6 +14,9 @@ namespace miru
 		};
 
 	public:
+		GraphicsAPI() = delete;
+		~GraphicsAPI() = delete;
+
 		static void SetAPI(API api);
 		static const API& GetAPI() { return s_API; }
 
@@ -24,7 +27,7 @@ namespace miru
 		static const bool& IsSetNameAllowed() { return s_AllowSetName; }
 		
 		static void LoadRenderDoc();
-		static const debug::RenderDoc& GetRenderDoc() { return s_RenderDoc; }
+		static const debug::RenderDoc& GetRenderDoc() { return *s_RenderDoc; }
 
 	private:
 		static API s_API;
@@ -33,6 +36,6 @@ namespace miru
 		static bool s_ApiInitialised;
 		static bool s_AllowSetNameInitialised;
 
-		static debug::RenderDoc s_RenderDoc;
+		static std::unique_ptr<debug::RenderDoc> s_RenderDoc;
 	};
 }

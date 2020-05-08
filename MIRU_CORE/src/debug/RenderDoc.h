@@ -1,7 +1,5 @@
 #pragma once
-#define MIRU_RENDERDOC_HEADER "C:/Program Files/RenderDoc/renderdoc_app.h"
-#define MIRU_RENDERDOC_LIBRARY "C:/Program Files/RenderDoc/renderdoc.dll"
-#include MIRU_RENDERDOC_HEADER
+#include "renderdoc/Include/renderdoc_app.h"
 
 #if defined(_WIN64)
 #include <Windows.h>
@@ -15,14 +13,17 @@ namespace debug
 		//Methods
 	public:
 		RenderDoc();
+		~RenderDoc();
 
 		//Members
 	public:
 		RENDERDOC_API_1_4_0* m_RenderDocApi;
 	
 	private:
-		HINSTANCE m_HInstance;
-		HMODULE m_HModule;
+		//RenderDoc Library
+		static HMODULE s_HModuleRenderDoc;
+		static std::filesystem::path s_RenderDocFullpath;
+		static uint32_t s_RefCount;
 	};
 }
 }

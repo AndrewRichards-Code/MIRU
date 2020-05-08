@@ -4,6 +4,10 @@
 using namespace miru;
 using namespace d3d12;
 
+HMODULE Shader::s_HModeuleDXCompiler;
+std::filesystem::path Shader::s_DXCompilerFullpath;
+uint32_t Shader::s_RefCount = 0;
+
 Shader::Shader(CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
 {
@@ -25,6 +29,16 @@ Shader::~Shader()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	s_RefCount--;
+	if (!s_RefCount)
+	{
+		if (!FreeLibrary(s_HModeuleDXCompiler))
+		{
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DXCompilerFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
+	}
+
 	m_ShaderByteCode.pShaderBytecode = nullptr;
 	m_ShaderByteCode.BytecodeLength = 0;
 }
@@ -40,6 +54,7 @@ void Shader::Reconstruct()
 
 #include "crossplatform/DescriptorPoolSet.h"
 
+
 void Shader::GetShaderResources()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -50,15 +65,21 @@ void Shader::GetShaderResources()
 void Shader::D3D12ShaderReflection()
 {
 	//Load dxcompiler.dll
-	HMODULE dxcompiler = LoadLibrary("C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxcompiler.dll");
-	if (!dxcompiler)
+	if (!s_HModeuleDXCompiler)
 	{
-		MIRU_WARN(GetLastError(), "WARN: D3D12: Unable to load 'C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64/dxcompiler.dll'.");
-		return;
+		s_DXCompilerFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/dxc/lib/x64/dxcompiler.dll";
+		s_HModeuleDXCompiler = LoadLibraryA(s_DXCompilerFullpath.generic_string().c_str());
+		if (!s_HModeuleDXCompiler)
+		{
+			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXCompilerFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+			return;
+		}
 	}
+	s_RefCount++;
 
 	IDxcLibrary* dxc_library;
-	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)::GetProcAddress(dxcompiler, "DxcCreateInstance");
+	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)::GetProcAddress(s_HModeuleDXCompiler, "DxcCreateInstance");
 	DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library));
 
 	IDxcBlobEncoding* dxc_shader_bin;
@@ -69,11 +90,8 @@ void Shader::D3D12ShaderReflection()
 	dxc_container_reflection->Load(dxc_shader_bin);
 	
 	uint32_t partIndex;
-#ifndef MAKEFOURCC
-#define MAKEFOURCC(a, b, c, d) (unsigned int)((unsigned char)(a) | (unsigned char)(b) << 8 | (unsigned char)(c) << 16 | (unsigned char)(d) << 24)
-#endif
-	dxc_container_reflection->FindFirstPartKind(MAKEFOURCC('D', 'X', 'I', 'L'), &partIndex);
-#undef MAKEFOURCC
+	uint32_t dxil_kind = 0x4c495844; //MAKEFOURCC('D', 'X', 'I', 'L')
+	dxc_container_reflection->FindFirstPartKind(dxil_kind, &partIndex);
 
 	ID3D12ShaderReflection* shader_reflection;
 	dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection));

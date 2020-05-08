@@ -21,6 +21,36 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_AI.engineVersion = apiVersion;
 	m_AI.apiVersion = apiVersion;
 
+	//Add additional instance/device layers/extensions
+	auto push_back_exclusive = [](std::vector<std::string>& list, const std::string& string) -> void
+	{
+		bool found = false;
+		for (auto& item : list)
+		{
+			if (strcmp(string.c_str(), item.c_str()) == 0)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			list.push_back(string);
+	};
+
+#if defined(_DEBUG)
+	push_back_exclusive(m_CI.instanceLayers, "VK_LAYER_LUNARG_standard_validation");
+	push_back_exclusive(m_CI.deviceLayers, "VK_LAYER_LUNARG_standard_validation");
+#endif
+
+	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_surface");
+	push_back_exclusive(m_CI.deviceExtensions, "VK_KHR_swapchain");
+
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_win32_surface");
+#elif defined(VK_USE_PLATFORM_ANDROIOD_KHR)
+	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_android_surface");
+#endif
+
 	uint32_t layerCount = 0;
 	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
 	std::vector<VkLayerProperties> instanceLayerProperties;
@@ -33,12 +63,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			if (strcmp(requestLayer.c_str(), layerProperty.layerName))
 				continue;
 			else
-				m_ActiveInstanceLayers.push_back(requestLayer.c_str());
+				m_ActiveInstanceLayers.push_back(requestLayer.c_str()); break;
 		}
 	}
 
 	if (GraphicsAPI::IsSetNameAllowed())
-		m_CI.instanceExtensions.push_back("VK_EXT_debug_utils");
+		push_back_exclusive(m_CI.instanceExtensions, "VK_EXT_debug_utils");
 
 	uint32_t extensionCount = 0;
 	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
@@ -52,7 +82,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			if (strcmp(requestExtension.c_str(), extensionProperty.extensionName))
 				continue;
 			else
-				m_ActiveInstanceExtensions.push_back(requestExtension.c_str());
+				m_ActiveInstanceExtensions.push_back(requestExtension.c_str()); break;
 		}
 	}
 
@@ -106,7 +136,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			if (strcmp(requestLayer.c_str(), layerProperty.layerName))
 				continue;
 			else
-				m_ActiveDeviceLayers.push_back(requestLayer.c_str());
+				m_ActiveDeviceLayers.push_back(requestLayer.c_str()); break;
 		}
 	}
 
@@ -122,7 +152,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			if (strcmp(requestExtension.c_str(), extensionProperty.extensionName))
 				continue;
 			else
-				m_ActiveDeviceExtensions.push_back(requestExtension.c_str());
+				m_ActiveDeviceExtensions.push_back(requestExtension.c_str()); break;
 		}
 	}
 

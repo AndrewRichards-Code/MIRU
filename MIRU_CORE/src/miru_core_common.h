@@ -33,20 +33,24 @@
 #define MIRU_VULKAN
 #elif defined(__APPLE__)
 #define MIRU_METAL //Use Metal?
-#efif defined(__linux__)
+#elif defined(__linux__)
+#define MIRU_VULKAN
+#elif defined(__ANDROID__)
 #define MIRU_VULKAN
 #endif
 
 //D3D12
 #if defined(MIRU_D3D12)
+//Header and Library
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <d3d12shader.h>
-#include <dxcapi.h>
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
-#define MIRU_DXIL
+//DXC Header and Library
+#include <d3d12shader.h>
+#include <dxcapi.h>
+//#pragma comment(lib, "dxc/lib/x64/dxcompiler.lib")
 
 #define SAFE_RELEASE(x) if(x) { x->Release(); x = nullptr; }
 
@@ -54,17 +58,23 @@
 
 //Vulkan
 #if defined(MIRU_VULKAN)
+//Platform usage
 #if defined(_WIN64)
 #define VK_USE_PLATFORM_WIN32_KHR
+#elif defined(__ANDROID__)
+#define VK_USE_PLATFORM_ANDROID_KHR
 #endif
+
+//Header and Library
 #include "vulkan/vulkan.h"
 #pragma comment(lib, "vulkan-1.lib")
 
+//Spirv-cross Header and Library
 #include "spirv_cross/spirv_cross.hpp"
 #if defined(_DEBUG)
-#pragma comment(lib, "spirv-cross-cored.lib")
+#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
 #else
-#pragma comment(lib, "spirv-cross-core.lib")
+#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-core.lib")
 #endif
 #endif
 
@@ -321,6 +331,7 @@ namespace miru
 #if defined(_MSC_VER)
 #define DEBUG_BREAK __debugbreak()
 #else
+#include <signal.h>
 #define DEBUG_BREAK raise(SIGTRAP)
 #endif
 
