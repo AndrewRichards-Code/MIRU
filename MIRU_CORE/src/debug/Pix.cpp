@@ -37,4 +37,19 @@ Pix::~Pix()
 	}
 }
 
+#elif defined(__ANDROID__)
+
+void* Pix::s_LibPix;
+std::string Pix::s_PixFullpath;
+uint32_t Pix::s_RefCount = 0;
+
+Pix::Pix()
+{
+	m_Debugger = DebuggerType::PIX;
+}
+
+Pix::~Pix()
+{
+}
+
 #endif

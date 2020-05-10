@@ -1,14 +1,17 @@
 #pragma once
+#include "GraphicsDebugger.h"
 #include "renderdoc/Include/renderdoc_app.h"
 
 #if defined(_WIN64)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 
 namespace miru
 {
 namespace debug
 {
-	class RenderDoc
+	class RenderDoc final : public GraphicsDebugger
 	{
 		//Methods
 	public:
@@ -27,25 +30,28 @@ namespace debug
 	};
 }
 }
-#else
+#elif defined(__ANDROID__)
 
 namespace miru
 {
 namespace debug
 {
-	class RenderDoc
+	class RenderDoc final : public GraphicsDebugger
 	{
 		//Methods
 	public:
 		RenderDoc();
+		~RenderDoc();
 
 		//Members
 	public:
 		RENDERDOC_API_1_4_0* m_RenderDocApi;
 
 	private:
-		void* m_Instance;
-		void* m_Module;
+		//RenderDoc Library
+		static void* s_LibRenderDoc;
+		static std::string s_RenderDocFullpath;
+		static uint32_t s_RefCount;
 	};
 }
 }

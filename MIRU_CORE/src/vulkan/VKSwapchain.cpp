@@ -6,8 +6,8 @@ using namespace miru;
 using namespace vulkan;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
-	m_Instance(ref_cast<Context>(pCreateInfo->pContext)->m_Instance)
+	:m_Instance(ref_cast<Context>(pCreateInfo->pContext)->m_Instance),
+	m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

@@ -1,6 +1,10 @@
 #include "miru_core_common.h"
+#if defined (MIRU_D3D12)
 #include "directx12/D3D12Shader.h"
+#endif
+#if defined (MIRU_VULKAN)
 #include "vulkan/VKShader.h"
+#endif
 
 using namespace miru;
 using namespace crossplatform;
@@ -10,9 +14,17 @@ Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
+		#if defined (MIRU_D3D12)
 		return CreateRef<d3d12::Shader>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
 	case GraphicsAPI::API::VULKAN:
+		#if defined (MIRU_VULKAN)
 		return CreateRef<vulkan::Shader>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
@@ -62,6 +74,7 @@ void Shader::Recompile()
 	std::string shaderModel = "6_0";
 	if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
 	{
+		#if defined(MIRU_D3D12)
 		switch (((d3d12::Shader*)this)->m_ShaderModelData.HighestShaderModel)
 		{
 		case D3D_SHADER_MODEL_5_1:
@@ -81,9 +94,13 @@ void Shader::Recompile()
 		default:
 			shaderModel = "6_0"; break;
 		}
+		#endif
 	}
-
+	#ifndef __cpp_lib_filesystem
+	std::string currentWorkingDir = std::experimental::filesystem::current_path().string();
+	#else
 	std::string currentWorkingDir = std::filesystem::current_path().string();
+	#endif
 
 	std::string filepath = currentWorkingDir + "/res/shaders" + fileName + ".hlsl";
 	std::string outputDir = currentWorkingDir + "/res/bin";

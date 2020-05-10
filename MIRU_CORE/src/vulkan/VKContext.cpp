@@ -10,8 +10,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	//Instance
+	//Instance 
 	uint32_t apiVersion = VK_MAKE_VERSION(m_CI.api_version_major, m_CI.api_version_minor, 0);
+
+#if defined(VK_USE_PLATFORM_ANDROID_KHR)
+	if (!InitVulkan()) 
+	{
+		MIRU_ASSERT(true, "ERROR: VULKAN: Failed to load 'libvulkan.so'.");
+	}
+	apiVersion = VK_MAKE_VERSION(1, 0, 0);
+#endif
 
 	m_AI.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	m_AI.pNext = nullptr;

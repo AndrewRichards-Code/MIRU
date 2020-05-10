@@ -1,12 +1,13 @@
 #pragma once
+#if defined(_MSC_VER)
 #pragma warning(disable : 26812) //Disables 'Prefered scoped enum' warning C26812
 #pragma warning(disable : 26495) //Disables 'Unitialised variable' warning C26495
 #pragma warning(disable : 26451) //Disables  'Arithmetic overflow' warning C26451
+#endif
 
 //CSTDLIB
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -18,13 +19,26 @@
 #include <mutex>
 #include <chrono>
 #include <assert.h>
+#include <cmath>
 
-//WINDOWING SYSTEM
+#ifndef __cpp_lib_filesystem
+#include <experimental/filesystem>
+#else
+#include <filesystem>
+#endif
+
+//PLATORM SYSTEM
 #if defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
-#else
+
+#elif defined (__ANDROID__) && (__ANDROID_API__ >= 24)
+#include <dlfcn.h>
+#include <jni.h>
+#include <errno.h>
+#include <sys/resource.h>
+#include <android/log.h>
 #endif
 
 //GRAPHICS API
@@ -33,9 +47,9 @@
 #define MIRU_VULKAN
 #elif defined(__APPLE__)
 #define MIRU_METAL //Use Metal?
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
 #define MIRU_VULKAN
-#elif defined(__ANDROID__)
+#elif defined (__ANDROID__) && (__ANDROID_API__ >= 24)
 #define MIRU_VULKAN
 #endif
 
@@ -61,9 +75,6 @@
 //Platform usage
 #if defined(_WIN64)
 #define VK_USE_PLATFORM_WIN32_KHR
-#elif defined(__ANDROID__)
-#define VK_USE_PLATFORM_ANDROID_KHR
-#endif
 
 //Header and Library
 #include "vulkan/vulkan.h"
@@ -75,6 +86,17 @@
 #pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
 #else
 #pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-core.lib")
+#endif
+
+#elif defined(__ANDROID__)
+#define VK_USE_PLATFORM_ANDROID_KHR
+
+//Header and Library
+#include "vulkan_wrapper.h"
+
+//Spirv-cross Header and Library
+//NOT USED
+
 #endif
 #endif
 

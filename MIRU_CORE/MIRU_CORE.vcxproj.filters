@@ -129,6 +129,12 @@
     <ClInclude Include="src\miru_core_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\debug\Pix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\GraphicsDebugger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\crossplatform\Buffer.cpp">
@@ -237,6 +243,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\miru_core_common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug\Pix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

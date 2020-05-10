@@ -35,11 +35,10 @@ namespace crossplatform
 			uint32_t	offset;
 			std::string semanticName;
 		};
-		typedef enum class VertexType Type;
 		struct FragmentShaderOutputAttributeDescription
 		{
 			uint32_t	location;
-			Type		outputType;
+			VertexType	outputType;
 			std::string semanticName;
 		};
 		typedef FragmentShaderOutputAttributeDescription PixelShaderOutputAttributeDescription;

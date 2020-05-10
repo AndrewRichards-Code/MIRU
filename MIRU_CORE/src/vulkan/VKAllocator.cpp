@@ -190,7 +190,7 @@ uint32_t MemoryBlock::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 	else
 		boundedInvQueueType = (~queueType & 0x0000000F) - (0x0000000F - nextPowerOfTwo) - 1;
 
-	uint32_t i = 0, queueIndex = 0;
+	uint32_t i = 0;
 	for (auto& queueFamilyProperty : queueFamilyProperties)
 	{
 		if ((queueFamilyProperty.queueFlags & queueType) == queueType)

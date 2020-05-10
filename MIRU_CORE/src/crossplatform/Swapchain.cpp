@@ -1,6 +1,13 @@
 #include "miru_core_common.h"
+#include "crossplatform/Context.h"
+#if defined (MIRU_D3D12)
 #include "directx12/D3D12Swapchain.h"
+#include "directx12/D3D12Image.h"
+#endif
+#if defined (MIRU_VULKAN)
 #include "vulkan/VKSwapchain.h"
+#include "vulkan/VKImage.h"
+#endif
 
 using namespace miru;
 using namespace crossplatform;
@@ -10,18 +17,23 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
+		#if defined (MIRU_D3D12)
 		return CreateRef<d3d12::Swapchain>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
 	case GraphicsAPI::API::VULKAN:
+		#if defined (MIRU_VULKAN)
 		return CreateRef<vulkan::Swapchain>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
-#include "directx12/D3D12Image.h"
-#include "vulkan/VKImage.h"
-#include "crossplatform/Context.h"
 
 void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height)
 {
@@ -58,6 +70,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	{
 		if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
 		{
+			#if defined (MIRU_D3D12)
 			swapchainImage = CreateRef<d3d12::Image>();
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
@@ -69,9 +82,11 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;
 			ref_cast<d3d12::ImageView>(m_SwapchainImageViews[i])->m_RTVDescHandle = reinterpret_cast<D3D12_CPU_DESCRIPTOR_HANDLE*>(pImageViews)[i];
+			#endif	
 		}
 		else
 		{
+			#if defined (MIRU_VULKAN)
 			swapchainImage = CreateRef<vulkan::Image>();
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
@@ -83,6 +98,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;
 			ref_cast<vulkan::ImageView>(m_SwapchainImageViews[i])->m_ImageView = reinterpret_cast<VkImageView*>(pImageViews)[i];
+			#endif		
 		}
 		i++;
 	}

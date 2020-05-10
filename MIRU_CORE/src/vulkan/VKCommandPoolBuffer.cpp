@@ -436,7 +436,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 	VkBuffer& buffer = ref_cast<Buffer>(ref_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
 	const BufferView::CreateInfo& ci = indexBufferView->GetCreateInfo();
 
-	VkIndexType type;
+	VkIndexType type = VK_INDEX_TYPE_UINT16;
 	if (ci.stride == 2)
 		type = VK_INDEX_TYPE_UINT16;
 	else if (ci.stride == 4)
@@ -553,4 +553,3 @@ void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crosspla
 
 	vkCmdCopyImageToBuffer(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
-\

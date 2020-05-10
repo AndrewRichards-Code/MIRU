@@ -1,4 +1,5 @@
 #pragma once
+#include "debug/Pix.h"
 #include "debug/RenderDoc.h"
 
 namespace miru
@@ -26,8 +27,10 @@ namespace miru
 		static void AllowSetName(bool useSetName = true);
 		static const bool& IsSetNameAllowed() { return s_AllowSetName; }
 		
-		static void LoadRenderDoc();
-		static const debug::RenderDoc& GetRenderDoc() { return *s_RenderDoc; }
+		static void LoadGraphicsDebugger();
+		template<class T>
+		static const std::shared_ptr<T>& GetGraphicsDebugger() { return std::dynamic_pointer_cast<T>(s_GraphicsDebugger);}
+		static const std::shared_ptr<debug::GraphicsDebugger>& GetGraphicsDebugger() { return s_GraphicsDebugger;}
 
 	private:
 		static API s_API;
@@ -36,6 +39,6 @@ namespace miru
 		static bool s_ApiInitialised;
 		static bool s_AllowSetNameInitialised;
 
-		static std::unique_ptr<debug::RenderDoc> s_RenderDoc;
+		static std::shared_ptr<debug::GraphicsDebugger> s_GraphicsDebugger;
 	};
 }

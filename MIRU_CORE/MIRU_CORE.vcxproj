@@ -101,43 +101,45 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\crossplatform\Allocator.h" />
+    <ClInclude Include="src\crossplatform\Buffer.h" />
     <ClInclude Include="src\crossplatform\CommandPoolBuffer.h" />
+    <ClInclude Include="src\crossplatform\Context.h" />
     <ClInclude Include="src\crossplatform\DescriptorPoolSet.h" />
     <ClInclude Include="src\crossplatform\Framebuffer.h" />
+    <ClInclude Include="src\crossplatform\GraphicsAPI.h" />
+    <ClInclude Include="src\crossplatform\Image.h" />
     <ClInclude Include="src\crossplatform\Pipeline.h" />
     <ClInclude Include="src\crossplatform\PipelineHelper.h" />
     <ClInclude Include="src\crossplatform\Shader.h" />
+    <ClInclude Include="src\crossplatform\Swapchain.h" />
     <ClInclude Include="src\crossplatform\Sync.h" />
+    <ClInclude Include="src\debug\GraphicsDebugger.h" />
+    <ClInclude Include="src\debug\Pix.h" />
     <ClInclude Include="src\debug\RenderDoc.h" />
+    <ClInclude Include="src\directx12\D3D12Allocator.h" />
+    <ClInclude Include="src\directx12\D3D12Buffer.h" />
     <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
+    <ClInclude Include="src\directx12\D3D12Context.h" />
+    <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h" />
     <ClInclude Include="src\directx12\D3D12Framebuffer.h" />
+    <ClInclude Include="src\directx12\D3D12Image.h" />
     <ClInclude Include="src\directx12\D3D12Pipeline.h" />
     <ClInclude Include="src\directx12\D3D12Shader.h" />
-    <ClInclude Include="src\directx12\D3D12Sync.h" />
-    <ClInclude Include="src\directx12\D3D12Allocator.h" />
-    <ClInclude Include="src\directx12\D3D12DescriptorPoolSet.h" />
-    <ClInclude Include="src\miru_core.h" />
-    <ClInclude Include="src\crossplatform\Buffer.h" />
-    <ClInclude Include="src\crossplatform\Context.h" />
-    <ClInclude Include="src\crossplatform\GraphicsAPI.h" />
-    <ClInclude Include="src\crossplatform\Image.h" />
-    <ClInclude Include="src\crossplatform\Swapchain.h" />
-    <ClInclude Include="src\directx12\D3D12Buffer.h" />
-    <ClInclude Include="src\directx12\D3D12Context.h" />
-    <ClInclude Include="src\directx12\D3D12Image.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
-    <ClInclude Include="src\miru_core_common.h" />
-    <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
-    <ClInclude Include="src\vulkan\VKFramebuffer.h" />
-    <ClInclude Include="src\vulkan\VKPipeline.h" />
-    <ClInclude Include="src\vulkan\VKShader.h" />
-    <ClInclude Include="src\vulkan\VKSync.h" />
+    <ClInclude Include="src\directx12\D3D12Sync.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
     <ClInclude Include="src\vulkan\VKBuffer.h" />
     <ClInclude Include="src\vulkan\VKCommandPoolBuffer.h" />
     <ClInclude Include="src\vulkan\VKContext.h" />
+    <ClInclude Include="src\vulkan\VKDescriptorPoolSet.h" />
+    <ClInclude Include="src\vulkan\VKFramebuffer.h" />
     <ClInclude Include="src\vulkan\VKImage.h" />
+    <ClInclude Include="src\vulkan\VKPipeline.h" />
+    <ClInclude Include="src\vulkan\VKShader.h" />
     <ClInclude Include="src\vulkan\VKSwapchain.h" />
+    <ClInclude Include="src\vulkan\VKSync.h" />
+    <ClInclude Include="src\miru_core.h" />
+    <ClInclude Include="src\miru_core_common.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\crossplatform\Allocator.cpp" />
@@ -147,40 +149,41 @@
     <ClCompile Include="src\crossplatform\DescriptorPoolSet.cpp" />
     <ClCompile Include="src\crossplatform\Framebuffer.cpp" />
     <ClCompile Include="src\crossplatform\GraphicsAPI.cpp" />
+    <ClCompile Include="src\crossplatform\Image.cpp" />
     <ClCompile Include="src\crossplatform\Pipeline.cpp" />
     <ClCompile Include="src\crossplatform\Shader.cpp" />
     <ClCompile Include="src\crossplatform\Sync.cpp" />
-    <ClCompile Include="src\crossplatform\Image.cpp" />
     <ClCompile Include="src\crossplatform\Swapchain.cpp" />
+    <ClCompile Include="src\debug\Pix.cpp" />
     <ClCompile Include="src\debug\RenderDoc.cpp" />
+    <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
     <ClCompile Include="src\directx12\D3D12Buffer.cpp" />
+    <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
     <ClCompile Include="src\directx12\D3D12Context.cpp" />
+    <ClCompile Include="src\directx12\D3D12DescriptorPoolSet.cpp" />
     <ClCompile Include="src\directx12\D3D12Framebuffer.cpp" />
+    <ClCompile Include="src\directx12\D3D12Image.cpp" />
     <ClCompile Include="src\directx12\D3D12Pipeline.cpp" />
     <ClCompile Include="src\directx12\D3D12Shader.cpp" />
     <ClCompile Include="src\directx12\D3D12Swapchain.cpp" />
     <ClCompile Include="src\directx12\D3D12Sync.cpp" />
-    <ClCompile Include="src\directx12\D3D12Image.cpp" />
-    <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
-    <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
-    <ClCompile Include="src\directx12\D3D12DescriptorPoolSet.cpp" />
+    <ClCompile Include="src\vulkan\VKAllocator.cpp" />
+    <ClCompile Include="src\vulkan\VKBuffer.cpp" />
+    <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
+    <ClCompile Include="src\vulkan\VKContext.cpp" />
+    <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
+    <ClCompile Include="src\vulkan\VKFramebuffer.cpp" />
+    <ClCompile Include="src\vulkan\VKImage.cpp" />
+    <ClCompile Include="src\vulkan\VKPipeline.cpp" />
+    <ClCompile Include="src\vulkan\VKShader.cpp" />
+    <ClCompile Include="src\vulkan\VKSwapchain.cpp" />
+    <ClCompile Include="src\vulkan\VKSync.cpp" />
     <ClCompile Include="src\miru_core_common.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">miru_core_common.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">miru_core_common.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\vulkan\VKBuffer.cpp" />
-    <ClCompile Include="src\vulkan\VKDescriptorPoolSet.cpp" />
-    <ClCompile Include="src\vulkan\VKAllocator.cpp" />
-    <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />
-    <ClCompile Include="src\vulkan\VKContext.cpp" />
-    <ClCompile Include="src\vulkan\VKFramebuffer.cpp" />
-    <ClCompile Include="src\vulkan\VKPipeline.cpp" />
-    <ClCompile Include="src\vulkan\VKShader.cpp" />
-    <ClCompile Include="src\vulkan\VKSync.cpp" />
-    <ClCompile Include="src\vulkan\VKImage.cpp" />
-    <ClCompile Include="src\vulkan\VKSwapchain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
