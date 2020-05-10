@@ -29,19 +29,19 @@ Simple test application for development, test and demostration. Build as executa
 
 ### MIRU_ANDRIOD:
 >### MIRU_CORE_ANDRIOD:
->An Android version of the build project version of MIRU_CORE. Provide paths to AndroidSDK and AndroidNDK; Build as static library.
+>An Android version of the MIRU_CORE build project. Provide paths to AndroidSDK and AndroidNDK; Build as static library.
 
 ## Build Tools with Visual Studio:
-### Windows x64
+### Windows x64:
 - Miscrosoft Visual Studio 2019
 - Toolset: v142 
 - Windows SDK: 10.0.18362
 - ISO C++ 17
 
-### Linux x64
+### Linux x64:
 - No project available to build.
 
-### Android ARM64
+### Android ARM64:
 - Miscrosoft Visual Studio 2019
 - Toolset: Clang 5.0 
 - Android API: 24
