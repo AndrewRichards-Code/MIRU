@@ -39,6 +39,9 @@
 #include <errno.h>
 #include <sys/resource.h>
 #include <android/log.h>
+#include <android/sensor.h>
+#include <android/window.h>
+#include <android_native_app_glue.h>
 #endif
 
 //GRAPHICS API
@@ -235,7 +238,11 @@ namespace miru
 #define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath) miru::Timer::BeginSession(filepath);
 #define MIRU_CPU_PROFILE_END_SESSION() miru::Timer::EndSession();
 #define MIRU_CPU_PROFILE_SCOPE(name) miru::Timer timer##__LINE__(name)
+#if(_WIN64)
 #define MIRU_CPU_PROFILE_FUNCTION() MIRU_CPU_PROFILE_SCOPE(__FUNCSIG__)
+#elif(__linux__)
+#define MIRU_CPU_PROFILE_FUNCTION() MIRU_CPU_PROFILE_SCOPE(__PRETTY_FUNCTION__)
+#endif
 #else
 #define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath);
 #define MIRU_CPU_PROFILE_END_SESSION();
