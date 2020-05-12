@@ -133,11 +133,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-exceptions
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 #----MIRU_TEST-----
-add_library(MIRU_TEST_ANDROID SHARED
+add_library(MIRU_TEST SHARED
         ${ANDROID_VULKAN_COMMON_DIR}/vulkan_wrapper.cpp #Load PFNs
         src/main/cpp/main.cpp                           #entry point
         )
-target_link_libraries(MIRU_TEST_ANDROID
+target_link_libraries(MIRU_TEST
         android
         native_app_glue
         ${log-lib}
