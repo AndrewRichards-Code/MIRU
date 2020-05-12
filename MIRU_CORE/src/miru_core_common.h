@@ -351,7 +351,11 @@ namespace miru
 
 //MIRU printf
 #if defined(_DEBUG)
+#if !defined(__ANDROID__)
 #define MIRU_PRINTF(s, ...) printf((s), __VA_ARGS__)
+#else
+#define MIRU_PRINTF(s, ...) __android_log_print(ANDROID_LOG_DEBUG, "MIRU_CORE", s, __VA_ARGS__)
+#endif
 #else
 #define MIRU_PRINTF(s, ...) printf("")
 #endif
