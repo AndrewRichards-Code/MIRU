@@ -28,8 +28,8 @@ A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using glsla
 Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD).
 
 ### MIRU_ANDRIOD:
->### MIRU_CORE_ANDRIOD:
->An Android version of the MIRU_CORE build project. Provide paths to AndroidSDK and AndroidNDK; Build as static library.
+>### MIRU_TEST:
+>An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded as native activity, and libMIRU_CORE.a;
 
 ## Build Tools with Visual Studio:
 ### Windows x64:
@@ -42,9 +42,14 @@ Simple test application for development, test and demostration. Build as executa
 - No project available to build.
 
 ### Android ARM64:
-- Miscrosoft Visual Studio 2019
-- Toolset: Clang 5.0 
-- Android API: 24
+- Android Studio 3.6.3
+- Android SDK Build-Tools: 29.0.3
+- Android SDK Platform-Tools: 30.0.1
+- Android NDK: 20.1.5948944
+- Android Gradle Plugin Version: 3.6.3
+- Gradle Version: 5.6.4
+- Android CMake: 3.10.2.4988404
+- Android API: Minimum 24 - Target 28
 - ISO C++ 17 (-std=c++1z)
 
 ## Build Tools with CMake:
