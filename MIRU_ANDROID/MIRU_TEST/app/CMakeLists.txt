@@ -113,7 +113,7 @@ set( src_public
 
 #Sets C++17 and build arguements
 #Sets the VK_USE_PLATFORM_ANDROID_KHR and _DEBUG definition
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -D_DEBUG -DSOLUTION_DIR")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG -DSOLUTION_DIR")
 
 add_library(MIRU_CORE STATIC ${src_public})
 target_compile_features(MIRU_CORE PUBLIC cxx_std_17)
@@ -126,7 +126,7 @@ find_library(log-lib log)
 #-----BUILD_OPT----
 #Sets C++17 and build arguements
 #Sets the VK_USE_PLATFORM_ANDROID_KHR and _DEBUG definition
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-exceptions -Wno-unused-private-field -Wno-unused-function -Wno-unused-variable -Wno-missing-braces -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG")
 
 #----EXPORT_JNI----
 #Set the export of JNIEXPORT void ANativeActivity_onCreate(...);

@@ -35,7 +35,7 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 }
 
 
-void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height)
+void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -43,7 +43,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	m_SwapchainImageViews.resize(m_CI.swapchainCount);
 
 	Image::CreateInfo swapchainImageCI;
-	swapchainImageCI.debugName = "";
+	swapchainImageCI.debugName = "SwapchainImage";
 	swapchainImageCI.device = m_CI.pContext->GetDevice();
 	swapchainImageCI.type = Image::Type::TYPE_2D;
 	swapchainImageCI.format = Image::Format::B8G8R8A8_UNORM;
@@ -60,7 +60,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	swapchainImageCI.pMemoryBlock = nullptr;
 
 	ImageView::CreateInfo swapchainImageViewCI;
-	swapchainImageViewCI.debugName = "";
+	swapchainImageViewCI.debugName = "SwapchainImageViewCI";
 	swapchainImageViewCI.device = m_CI.pContext->GetDevice();
 	swapchainImageViewCI.pImage = nullptr;
 	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -88,6 +88,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 		{
 			#if defined (MIRU_VULKAN)
 			swapchainImage = CreateRef<vulkan::Image>();
+			swapchainImageCI.format = static_cast<Image::Format>(format);
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<vulkan::Image>(swapchainImage)->m_Image = *reinterpret_cast<VkImage*>(pImages[i]);

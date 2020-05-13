@@ -152,7 +152,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		images.push_back(&swapchainImage);
 	}
 
-	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height);
+	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 }
 
 Swapchain::~Swapchain()
@@ -216,6 +216,6 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		images.push_back(&swapchainImage);
 	}
 
-	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height);
+	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 	m_Resized = true;
 }

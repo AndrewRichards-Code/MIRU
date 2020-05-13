@@ -92,7 +92,9 @@
 #endif
 
 #elif defined(__ANDROID__)
+#if !defined( VK_USE_PLATFORM_ANDROID_KHR)
 #define VK_USE_PLATFORM_ANDROID_KHR
+#endif
 
 //Header and Library
 #include "vulkan_wrapper.h"

@@ -50,6 +50,19 @@ void android_main(struct android_app* app) {
     contextCI.deviceDebugName = "GPU Device";
     Ref<Context> context = Context::Create(&contextCI);
 
+    Swapchain::CreateInfo swapchainCI;
+    swapchainCI.debugName = "Swapchain";
+    swapchainCI.pContext = context;
+    swapchainCI.pWindow = gp_AndroidWindow;
+    swapchainCI.width = 0;
+    swapchainCI.height = 0;
+    swapchainCI.swapchainCount = 2;
+    swapchainCI.vSync = true;
+    Ref<Swapchain> swapchain = Swapchain::Create(&swapchainCI);
+    uint32_t width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
+    uint32_t height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
+
+
     while (!g_CloseWindow)
     {
         if(ALooper_pollAll(1, nullptr, &events, (void**)&source) >=0)
@@ -57,11 +70,9 @@ void android_main(struct android_app* app) {
             if (source != NULL)
                 source->process(app, source);
         }
-        int a = 5;
-        int b = 3;
-        int c = a + b;
 
-        __android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", std::to_string(c).c_str());
+        __android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", std::to_string(width).c_str());
+        __android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", std::to_string(height).c_str());
     }
     return;
 }
