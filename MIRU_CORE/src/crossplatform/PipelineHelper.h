@@ -292,5 +292,14 @@ namespace crossplatform
 		DOMAIN_SHADER_BIT = TESSELLATION_EVALUATION_SHADER_BIT,
 		PIXEL_SHADER_BIT = FRAGMENT_SHADER_BIT,
 	};
+
+	//Rendering Locality
+	enum class DependencyBit : uint32_t
+	{
+		NONE_BIT = 0x00000000,
+		BY_REGION_BIT = 0x00000001,
+		DEVICE_GROUP_BIT = 0x00000004,
+		VIEW_LOCAL_BIT = 0x00000002
+	};
 }
 }

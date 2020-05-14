@@ -84,7 +84,7 @@ namespace crossplatform
 		virtual void SetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, Ref<Event> event, PipelineStageBit pipelineStage) = 0;
 		virtual void WaitEvents(uint32_t index, const std::vector<Ref<Event>>& events, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<Ref<Barrier>>& barriers) = 0;
-		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<Ref<Barrier>>& barriers) = 0;
+		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, DependencyBit dependencies, const std::vector<Ref<Barrier>>& barriers) = 0;
 
 		virtual void ClearColourImage(uint32_t index, Ref<Image> image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
 		virtual void ClearDepthStencilImage(uint32_t index, Ref<Image> image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;

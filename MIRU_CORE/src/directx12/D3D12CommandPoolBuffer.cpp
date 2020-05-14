@@ -184,7 +184,7 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatfo
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, crossplatform::DependencyBit dependencies, const std::vector<Ref<crossplatform::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -443,7 +443,7 @@ void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuff
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
 		i++;
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
 
 	//Begin first subpass
 	NextSubpass(index);
@@ -474,7 +474,7 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
 		i++;
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
 };
 
 void CommandBuffer::NextSubpass(uint32_t index)
@@ -534,7 +534,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, barriers);
+	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
 
 	//Set RenderTargets
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;

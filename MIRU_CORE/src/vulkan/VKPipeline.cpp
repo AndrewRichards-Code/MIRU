@@ -76,7 +76,7 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 			static_cast<VkPipelineStageFlags>(dependency.dstStage),
 			static_cast<VkAccessFlags>(dependency.srcAccess),
 			static_cast<VkAccessFlags>(dependency.dstAccess),
-			static_cast<VkDependencyFlags>(0)
+			static_cast<VkDependencyFlags>(dependency.dependencies)
 			});
 	
 	m_RenderPassCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

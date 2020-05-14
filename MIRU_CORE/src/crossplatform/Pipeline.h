@@ -54,10 +54,11 @@ namespace crossplatform
 		{
 			uint32_t srcSubpass;			//Index of the Subpass that this subpass is dependent on.
 			uint32_t dstSubpass;			//Index of this subpass.
-			PipelineStageBit srcStage;		//Which stage of the previous subpass needs to by completed?
-			PipelineStageBit dstStage;		//Which stage of this subpass needs to by completed?
-			Barrier::AccessBit srcAccess;	//What access is needed into the previous subpass stage?
-			Barrier::AccessBit dstAccess;	//What access is needed into this subpass stage?
+			PipelineStageBit srcStage;		//Which stages of the previous subpass need to by completed?
+			PipelineStageBit dstStage;		//Which stages of this subpass are being waitied on?
+			Barrier::AccessBit srcAccess;	//What accesses are needed into the previous subpass stage?
+			Barrier::AccessBit dstAccess;	//What accesses are needed into this subpass stage?
+			DependencyBit dependencies;		//What rendering localities are needed between subpasses?
 		};
 		#define MIRU_SUBPASS_EXTERNAL (~0U)
 		struct CreateInfo

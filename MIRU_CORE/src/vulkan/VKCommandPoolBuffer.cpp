@@ -288,7 +288,7 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatfo
 
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, crossplatform::DependencyBit dependencies, const std::vector<Ref<crossplatform::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -314,7 +314,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	}
 
 	vkCmdPipelineBarrier(m_CmdBuffers[index],
-		static_cast<VkPipelineStageFlags>(srcStage), static_cast<VkPipelineStageFlags>(dstStage), static_cast<VkDependencyFlags>(0),
+		static_cast<VkPipelineStageFlags>(srcStage), static_cast<VkPipelineStageFlags>(dstStage), static_cast<VkDependencyFlags>(dependencies),
 		static_cast<uint32_t>(vkMemoryBarriers.size()), vkMemoryBarriers.data(),
 		static_cast<uint32_t>(vkBufferBarriers.size()), vkBufferBarriers.data(),
 		static_cast<uint32_t>(vkImageBarriers.size()), vkImageBarriers.data());

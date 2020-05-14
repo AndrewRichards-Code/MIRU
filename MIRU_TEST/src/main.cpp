@@ -61,8 +61,8 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger();
 	
@@ -230,7 +230,7 @@ int main()
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
-		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, { b });
+		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { {0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} });
 		
 		cmdCopyBuffer->End(0);
@@ -250,7 +250,7 @@ int main()
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
-		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, { b });
+		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
 		cmdBuffer->End(2);
 	}
@@ -426,7 +426,7 @@ int main()
 	renderPassCI.subpassDependencies = {
 		{MIRU_SUBPASS_EXTERNAL, 0,
 		PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
-		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT}
+		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT}
 	};
 	Ref<RenderPass> renderPass = RenderPass::Create(&renderPassCI);
 
