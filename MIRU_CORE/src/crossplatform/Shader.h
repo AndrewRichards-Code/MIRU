@@ -50,13 +50,35 @@ namespace crossplatform
 			Shader::StageBit	stage;
 		};
 
+		//See MSCDocumentation.h 
+		//All filepaths and directories must be relative to the current working directory.
+		//All locations must be full paths i.e. dxc and glslangValidator.
+		struct RecompileArguments
+		{
+			const char*					hlslFilepath;
+			const char*					outputDirectory;	//Optional
+			std::vector<const char*>	includeDirectories;	//Optional
+			const char*					entryPoint;			//Optional
+			const char*					shaderModel;		//Optional
+			std::vector<const char*>	macros;				//Optional
+			bool						cso;				//Either cso or spv must be true
+			bool						spv;				//Either cso or spv must be true
+			const char*					dxcLocation;		//Optional
+			const char*					glslangLocation;	//Optional
+			std::vector<const char*>	additioalArguments; //Optional
+			bool						nologo;				//Optional
+			bool						nooutput;			//Optional
+		};
+
 		struct CreateInfo
 		{
-			const char*		debugName;
-			void*			device;
-			StageBit		stage;
-			const char*		filepath;
-			const char*		entryPoint;
+			const char*			debugName;
+			void*				device;
+			StageBit			stage;
+			const char*			entryPoint;
+			const char*			binaryFilepath;
+			std::vector<char>	binaryCode;
+			RecompileArguments	recompileArguments;
 		};
 
 		//Methods

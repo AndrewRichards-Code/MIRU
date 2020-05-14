@@ -106,12 +106,30 @@ int main()
 	shaderCI.debugName = "Basic_Vertex";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stage = Shader::StageBit::VERTEX_BIT;
-	shaderCI.filepath = "res/bin/basic.vert.spv";
 	shaderCI.entryPoint = "main";
+	shaderCI.binaryFilepath = "res/bin/basic.vert.spv";
+	shaderCI.binaryCode = {};
+	shaderCI.recompileArguments =
+	{
+		"res/shaders/basic.vert.hlsl",
+		"res/bin",
+		{"../MIRU_SHADER_COMPILER/shaders/includes"},
+		nullptr,
+		"6_4",
+		{},
+		true,
+		true,
+		nullptr,
+		nullptr,
+		{},
+		false,
+		false
+	};
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic_Fragment";
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;
-	shaderCI.filepath = "res/bin/basic.frag.spv";
+	shaderCI.binaryFilepath = "res/bin/basic.frag.spv";
+	shaderCI.recompileArguments.hlslFilepath = "res/shaders/basic.frag.hlsl";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;

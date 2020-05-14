@@ -35,10 +35,19 @@ void Shader::GetShaderByteCode()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	std::string filepath(m_CI.filepath);
-	if (filepath.empty())
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path provided.");
+	//Check for valid shader source
+	std::string binFilepath(m_CI.binaryFilepath);
+	if (binFilepath.empty() && m_CI.binaryCode.empty())
+		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path or binary code provided.");
 
+	//Load from binary code if no binary filapath is provided
+	if (binFilepath.empty() && !m_CI.binaryCode.empty())
+	{
+		m_ShaderBinary = m_CI.binaryCode;
+		return;
+	}
+
+	//Load from binary filepath
 	std::string shaderBinaryFileExtension;
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -51,9 +60,9 @@ void Shader::GetShaderByteCode()
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return;
 	}
 	
-	filepath = filepath.replace(filepath.find_last_of('.'), 4, shaderBinaryFileExtension);
+	binFilepath = binFilepath.replace(binFilepath.find_last_of('.'), 4, shaderBinaryFileExtension);
 
-	std::ifstream stream(filepath, std::ios::ate | std::ios::binary);
+	std::ifstream stream(binFilepath, std::ios::ate | std::ios::binary);
 	if (!stream.is_open())
 	{
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unable to read shader binary file.");
@@ -68,45 +77,41 @@ void Shader::Recompile()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	std::string binFilepath(m_CI.filepath);
-	std::string fileName = binFilepath.substr(binFilepath.find_last_of('/'), binFilepath.find_last_of('.') - binFilepath.find_last_of('/'));
-	
-	std::string shaderModel = "6_0";
-	if (GraphicsAPI::GetAPI() == GraphicsAPI::API::D3D12)
+	if (!m_CI.recompileArguments.hlslFilepath && (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
 	{
-		#if defined(MIRU_D3D12)
-		switch (((d3d12::Shader*)this)->m_ShaderModelData.HighestShaderModel)
-		{
-		case D3D_SHADER_MODEL_5_1:
-			shaderModel = "5_1"; break;
-		case D3D_SHADER_MODEL_6_0:
-			shaderModel = "6_0"; break;
-		case D3D_SHADER_MODEL_6_1:
-			shaderModel = "6_1"; break;
-		case D3D_SHADER_MODEL_6_2:
-			shaderModel = "6_2"; break;
-		case D3D_SHADER_MODEL_6_3:
-			shaderModel = "6_3"; break;
-		case D3D_SHADER_MODEL_6_4:
-			shaderModel = "6_4"; break;
-		case D3D_SHADER_MODEL_6_5:
-			shaderModel = "6_5"; break;
-		default:
-			shaderModel = "6_0"; break;
-		}
-		#endif
+		MIRU_WARN(true, "WARN: CROSSPLATFORM: Invalid recompile arguments provided.");
+		return;
 	}
+
 	#ifndef __cpp_lib_filesystem
-	std::string currentWorkingDir = std::experimental::filesystem::current_path().string();
+	std::string currentWorkingDir = std::experimental::filesystem::current_path().string() + "/";
 	#else
-	std::string currentWorkingDir = std::filesystem::current_path().string();
+	std::string currentWorkingDir = std::filesystem::current_path().string() + "/";
 	#endif
 
-	std::string filepath = currentWorkingDir + "/res/shaders" + fileName + ".hlsl";
-	std::string outputDir = currentWorkingDir + "/res/bin";
-	std::string includeDir = currentWorkingDir + "/../MIRU_SHADER_COMPILER/shaders/includes/";
-	std::string command = "MIRU_SHADER_COMPILER -cso -spv -t:" + shaderModel + " -f:" + filepath + " -o:" + outputDir + " -i:" + includeDir;
-
+	std::string command = "MIRU_SHADER_COMPILER ";
+	command += " -f:" + currentWorkingDir + m_CI.recompileArguments.hlslFilepath;
+	command += " -o:" + currentWorkingDir + m_CI.recompileArguments.outputDirectory;
+	for(auto& includeDir : m_CI.recompileArguments.includeDirectories)
+		command += " -i:" + currentWorkingDir + includeDir;
+	if(m_CI.recompileArguments.entryPoint)
+		command += " -e:" + std::string(m_CI.recompileArguments.entryPoint);
+	if(m_CI.recompileArguments.shaderModel)
+		command += " -t:" + std::string(m_CI.recompileArguments.shaderModel);
+	for (auto& macro : m_CI.recompileArguments.macros)
+		command += " -d:" + std::string(macro);
+	if (m_CI.recompileArguments.cso)
+		command += " -cso";
+	if (m_CI.recompileArguments.spv)
+		command += " -spv";
+	if (m_CI.recompileArguments.dxcLocation)
+		command += " -dxc:" + std::string(m_CI.recompileArguments.dxcLocation);
+	if (m_CI.recompileArguments.glslangLocation)
+		command += " -glslang:" + std::string(m_CI.recompileArguments.glslangLocation);
+	if (m_CI.recompileArguments.nologo)
+		command += " -nologo";
+	if (m_CI.recompileArguments.nooutput)
+		command += " -nooutput";
 
 	std::string mscLocation;
 	#ifdef _DEBUG
@@ -115,14 +120,18 @@ void Shader::Recompile()
 	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Release";
 	#endif
 
-	MIRU_PRINTF("%s", (std::string("MIRU_CORE: Recompiling shader: ") + filepath + "\n").c_str());
+	MIRU_PRINTF("%s", (std::string("MIRU_CORE: Recompiling shader: ") + currentWorkingDir + m_CI.recompileArguments.hlslFilepath + "\n").c_str());
 	MIRU_PRINTF("%s", ("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
 	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
 	MIRU_PRINTF("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);
 	MIRU_PRINTF("%s", "MIRU_CORE: Recompiling shader finished.\n\n");
 
-	MIRU_ASSERT(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
-	system("CLS");
-
-	Reconstruct();
+	if (returnCode != 0)
+	{
+		MIRU_WARN(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
+	}
+	else
+	{
+		Reconstruct();
+	}
 }

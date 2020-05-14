@@ -62,6 +62,75 @@ void android_main(struct android_app* app) {
     uint32_t width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
     uint32_t height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
 
+    CommandPool::CreateInfo cmdPoolCI;
+    cmdPoolCI.debugName = "CmdPool";
+    cmdPoolCI.pContext = context;
+    cmdPoolCI.flags =CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
+    cmdPoolCI.queueFamilyIndex = 0;
+    Ref<CommandPool> cmdPool = CommandPool::Create(&cmdPoolCI);
+
+    CommandBuffer::CreateInfo cmdBufferCI;
+    cmdBufferCI.debugName = "PresentCmdBuffers";
+    cmdBufferCI.pCommandPool = cmdPool;
+    cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
+    cmdBufferCI.commandBufferCount = swapchainCI.swapchainCount;
+    Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
+
+    MemoryBlock::CreateInfo mbCI;
+    mbCI.debugName = "UMA_MB_0";
+    mbCI.pContext = context;
+    mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_64MB;
+    mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT
+            | MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT
+            | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
+    Ref<MemoryBlock> uma_mb_0 = MemoryBlock::Create(&mbCI);
+
+    float vertices[24] =
+            {
+                    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+                    +0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
+                    +0.5f, +0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
+                    -0.5f, +0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+            };
+    uint32_t indices[6] = { 0,1,2,2,3,0 };
+
+    Buffer::CreateInfo vbCI;
+    vbCI.debugName = "Quad_VB";
+    vbCI.device = context->GetDevice();
+    vbCI.usage = Buffer::UsageBit::VERTEX;
+    vbCI.size = sizeof(vertices);
+    vbCI.data = (void*)vertices;
+    vbCI.pMemoryBlock = uma_mb_0;
+    Ref<Buffer> vb = Buffer::Create(&vbCI);
+
+    BufferView::CreateInfo vbvCI;
+    vbvCI.debugName = "Quad_VBV";
+    vbvCI.device = context->GetDevice();
+    vbvCI.type = BufferView::Type::VERTEX;
+    vbvCI.pBuffer = vb;
+    vbvCI.offset = 0;
+    vbvCI.size = vbCI.size;
+    vbvCI.stride = 6 * sizeof(float);
+    Ref<BufferView> vbv = BufferView::Create(&vbvCI);
+
+    Buffer::CreateInfo ibCI;
+    ibCI.debugName = "Quad_IB";
+    ibCI.device = context->GetDevice();
+    ibCI.usage = Buffer::UsageBit::INDEX;
+    ibCI.size = sizeof(indices);
+    ibCI.data = (void*)indices;
+    ibCI.pMemoryBlock = uma_mb_0;
+    Ref<Buffer> ib = Buffer::Create(&ibCI);
+
+    BufferView::CreateInfo ibvCI;
+    ibvCI.debugName = "Quad_IBV";
+    ibvCI.device = context->GetDevice();
+    ibvCI.type = BufferView::Type::INDEX;
+    ibvCI.pBuffer = ib;
+    ibvCI.offset = 0;
+    ibvCI.size = ibCI.size;
+    ibvCI.stride = sizeof(uint32_t);
+    Ref<BufferView> ibv = BufferView::Create(&ibvCI);
 
     while (!g_CloseWindow)
     {
