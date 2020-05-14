@@ -29,8 +29,6 @@ namespace vulkan
 		VkDeviceMemory m_DeviceMemory;
 		VkMemoryAllocateInfo m_AI;
 
-		uint32_t m_MemoryTypeIndex = 0;
-
 		static VkPhysicalDeviceProperties s_PhysicalDeviceProperties;
 		static VkPhysicalDeviceMemoryProperties s_PhysicalDeviceMemoryProperties;
 		static uint32_t s_MaxAllocations;

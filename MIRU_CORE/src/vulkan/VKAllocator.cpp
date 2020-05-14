@@ -29,11 +29,10 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 	else
 		s_CurrentAllocations++;
 
-	m_MemoryTypeIndex = GetMemoryTypeIndex(static_cast<VkMemoryPropertyFlags>(m_CI.properties));
 	m_AI.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	m_AI.pNext = nullptr;
 	m_AI.allocationSize = static_cast<VkDeviceSize>(m_CI.blockSize);
-	m_AI.memoryTypeIndex = m_MemoryTypeIndex;
+	m_AI.memoryTypeIndex = GetMemoryTypeIndex(static_cast<VkMemoryPropertyFlags>(m_CI.properties));
 
 	MIRU_ASSERT(vkAllocateMemory(m_Device, &m_AI, nullptr, &m_DeviceMemory), "ERROR: VULKAN: Failed to allocate Memory.");
 	VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);
@@ -88,14 +87,32 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if ((m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-		|| m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT|VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-		&& data)
+	if (data)
 	{
-		void* mappedData;
-		MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
-		memcpy(mappedData, data, static_cast<size_t>(resource.size));
-		vkUnmapMemory(m_Device, m_DeviceMemory);
+		bool hostVisible = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		bool hostCoherent = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		if (hostVisible)
+		{
+			void* mappedData;
+			MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
+			memcpy(mappedData, data, resource.size);
+			if (!hostCoherent)
+			{
+				//Must align the size: https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples
+				const VkDeviceSize& nonCoherentAtomSize = s_PhysicalDeviceProperties.limits.nonCoherentAtomSize;
+				VkDeviceSize alignedSize = (static_cast<VkDeviceSize>(resource.size - 1)) - 
+					((static_cast<VkDeviceSize>(resource.size - 1)) % nonCoherentAtomSize) + nonCoherentAtomSize;
+				
+				VkMappedMemoryRange range;
+				range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+				range.pNext = nullptr;
+				range.memory = m_DeviceMemory;
+				range.offset = resource.offset;
+				range.size = alignedSize;
+				vkFlushMappedMemoryRanges(m_Device, 1, &range);
+			}
+			vkUnmapMemory(m_Device, m_DeviceMemory);
+		}
 	}
 }
 
@@ -103,13 +120,28 @@ void MemoryBlock::AccessData(const crossplatform::Resource& resource, size_t siz
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if ((m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-		|| m_MemoryTypeIndex == GetMemoryTypeIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-		&& data)
+	bool hostVisible = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+	bool hostCoherent = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	if (hostVisible)
 	{
 		void* mappedData;
 		MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
-		memcpy(data, mappedData, static_cast<size_t>(resource.size));
+		if (!hostCoherent)
+		{
+			//Must align the size: https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples
+			const VkDeviceSize& nonCoherentAtomSize = s_PhysicalDeviceProperties.limits.nonCoherentAtomSize;
+			VkDeviceSize alignedSize = (static_cast<VkDeviceSize>(resource.size - 1)) -
+				((static_cast<VkDeviceSize>(resource.size - 1)) % nonCoherentAtomSize) + nonCoherentAtomSize;
+
+			VkMappedMemoryRange range;
+			range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+			range.pNext = nullptr;
+			range.memory = m_DeviceMemory;
+			range.offset = resource.offset;
+			range.size = alignedSize;
+			vkInvalidateMappedMemoryRanges(m_Device, 1, &range);
+		}
+		memcpy(data, mappedData, resource.size);
 		vkUnmapMemory(m_Device, m_DeviceMemory);
 	}
 }
