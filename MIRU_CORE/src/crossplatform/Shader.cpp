@@ -75,6 +75,9 @@ void Shader::GetShaderByteCode()
 
 void Shader::Recompile()
 {
+#if defined(__ANDROID__)
+    return;
+#endif
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	if (!m_CI.recompileArguments.hlslFilepath && (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))

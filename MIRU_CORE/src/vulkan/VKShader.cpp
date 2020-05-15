@@ -74,7 +74,6 @@ void Shader::GetShaderResources()
 	SpirvCrossReflection();
 }
 
-#if defined(VK_USE_PLATFORM_WIN32_KHR)
 void Shader::SpirvCrossReflection()
 {
 	const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
@@ -133,8 +132,8 @@ void Shader::SpirvCrossReflection()
 			break;
 		case spirv_cross::SPIRType::BaseType::Sampler:
 			break;
-		case spirv_cross::SPIRType::BaseType::AccelerationStructureNV:
-			break;
+		//case spirv_cross::SPIRType::BaseType::AccelerationStructureNV:
+		//	break;
 		case spirv_cross::SPIRType::BaseType::ControlPointArray:
 			break;
 		case spirv_cross::SPIRType::BaseType::Char:
@@ -269,9 +268,3 @@ void Shader::SpirvCrossReflection()
 	push_back_ResourceBindingDescription(resources.separate_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
 	push_back_ResourceBindingDescription(resources.separate_samplers, crossplatform::DescriptorType::SAMPLER);
 }
-#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
-void Shader::SpirvCrossReflection()
-{
-	return;
-}
-#endif

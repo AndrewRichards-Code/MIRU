@@ -88,8 +88,8 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		void Recompile();
-		virtual void GetShaderResources() = 0;
 
+		virtual void GetShaderResources() = 0;
 		const std::vector<VertexShaderInputAttributeDescription>& GetVSIADs() const { return m_VSIADs; };
 		const std::vector<PixelShaderOutputAttributeDescription>& GetPSOADs() const { return m_PSOADs; };
 		const std::map<uint32_t, std::vector<ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
@@ -97,7 +97,6 @@ namespace crossplatform
 	protected:
 		void GetShaderByteCode();
 		virtual void Reconstruct() = 0;
-		void LoadAssemblyFile();
 
 		//Members
 	protected:

@@ -1,0 +1,1 @@
+x64 and ARM64 spirv-cross-core libraries were compiled from source: https://github.com/KhronosGroup/SPIRV-Cross

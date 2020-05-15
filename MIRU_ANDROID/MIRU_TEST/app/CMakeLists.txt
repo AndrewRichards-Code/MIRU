@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.6.0)
 
+#MIRU_SOLUTION_DIR
+set( MIRU_SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+
 #------VULKAN------
 #Sets the Vulkan Include directory for source code build.
 set(ANDROID_VULKAN_INCLUDE_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src/include)
 include_directories(${ANDROID_VULKAN_INCLUDE_DIR})
 #Sets the Vulkan Common directory for load function pointer into the vulkan driver.
-set(ANDROID_VULKAN_COMMON_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src/common)
-include_directories(${ANDROID_VULKAN_COMMON_DIR})
+#set(ANDROID_VULKAN_COMMON_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src/common)
+#include_directories(${ANDROID_VULKAN_COMMON_DIR})
 
 #---ANDROID_GLUE---
 #Sets up the application for native c++ usage.
@@ -15,9 +18,37 @@ include_directories(${ANDROID_GLUE_INCLUDE_DIR})
 add_library(native_app_glue STATIC ${ANDROID_GLUE_INCLUDE_DIR}/android_native_app_glue.c)
 target_include_directories(native_app_glue PUBLIC ${ANDROID_GLUE_INCLUDE_DIR})
 
-#----MIRU_CORE-----
-set( MIRU_SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+#-SPIRV_CROSS_CORE-
+set(SPIRV_CROSS_CORE_DIR D:/MASS\ STORAGE/SPIRV-Cross)
+set(BUILD_SPIRV_CROSS_CORE TRUE)
+if(BUILD_SPIRV_CROSS_CORE)
+    set(spirv_cross_core_src
+            ${SPIRV_CROSS_CORE_DIR}/GLSL.std.450.h
+            ${SPIRV_CROSS_CORE_DIR}/spirv_common.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross_containers.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross_error_handling.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross.cpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_parser.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_parser.cpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross_parsed_ir.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cross_parsed_ir.cpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cfg.hpp
+            ${SPIRV_CROSS_CORE_DIR}/spirv_cfg.cpp
+            )
 
+    add_library(spirv-cross-core STATIC ${spirv_cross_core_src})
+    target_include_directories(spirv-cross-core PUBLIC ${SPIRV_CROSS_CORE})
+
+    if(FALSE)
+    #Copy to redist folder
+    file(COPY ${CMAKE_CURRENT_BINARY_DIR}/libspirv-cross-core.a
+        DESTINATION ${MIRU_SOLUTION_DIR}/MIRU_CORE/redist/spirv_cross/lib/ARM64)
+    endif()
+endif()
+
+#----MIRU_CORE-----
 set( src_crossplatform_h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/crossplatform/Allocator.h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/crossplatform/Buffer.h
@@ -113,10 +144,12 @@ set( src_public
 
 #Sets C++17 and build arguements
 #Sets the VK_USE_PLATFORM_ANDROID_KHR and _DEBUG definition
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG -DSOLUTION_DIR")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-unused-variable -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG -DSOLUTION_DIR")
 
 add_library(MIRU_CORE STATIC ${src_public})
+link_directories(${MIRU_SOLUTION_DIR}/MIRU_CORE/redist/spirv_cross/lib/ARM64)
 target_compile_features(MIRU_CORE PUBLIC cxx_std_17)
+target_link_libraries(MIRU_CORE spirv-cross-core)
 #target_precompile_headers(MIRU_CORE PUBLIC MIRU_CORE/src/miru_core_common.h )
 
 #---ANDROID_LOG----
@@ -126,16 +159,18 @@ find_library(log-lib log)
 #-----BUILD_OPT----
 #Sets C++17 and build arguements
 #Sets the VK_USE_PLATFORM_ANDROID_KHR and _DEBUG definition
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-unused-variable -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG")
 
 #----EXPORT_JNI----
 #Set the export of JNIEXPORT void ANativeActivity_onCreate(...);
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 #----MIRU_TEST-----
+include_directories(${MIRU_SOLUTION_DIR}/MIRU_ANDROID/MIRU_TEST/app/src/main/cpp)
 add_library(MIRU_TEST SHARED
-        ${ANDROID_VULKAN_COMMON_DIR}/vulkan_wrapper.cpp #Load PFNs
-        src/main/cpp/main.cpp                           #entry point
+        src/main/cpp/vulkan_wrapper.h   #Load PFNs
+        src/main/cpp/vulkan_wrapper.cpp #Load PFNs
+        src/main/cpp/main.cpp           #entry point
         )
 target_link_libraries(MIRU_TEST
         android
