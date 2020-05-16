@@ -111,6 +111,8 @@ void Shader::Recompile()
 		command += " -dxc:" + std::string(m_CI.recompileArguments.dxcLocation);
 	if (m_CI.recompileArguments.glslangLocation)
 		command += " -glslang:" + std::string(m_CI.recompileArguments.glslangLocation);
+	if (m_CI.recompileArguments.additioalArguments)
+		command += " -args:" + std::string(m_CI.recompileArguments.additioalArguments);
 	if (m_CI.recompileArguments.nologo)
 		command += " -nologo";
 	if (m_CI.recompileArguments.nooutput)

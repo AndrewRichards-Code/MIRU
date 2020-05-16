@@ -21,7 +21,7 @@ The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and builds .cso or .spv 
 -glslang:, -GLSLANG:[directory]     : Specify location of the glslangValidator.exe. Optional.
 -cso, -CSO                          : Generates binaries(.cso) for Direct3D 12. This argument or -spv must be set.
 -spv, -SPV                          : Generates binaries(.spv) for Vulkan. This argument or -cso must be set.
--args:, -ARGS:[__VA_ARGS__]         : Provide additional arguments.
+-args:, -ARGS:["..."]               : Provide additional arguments directly to dxc or glslangValidator. Enclose all arguments in double quotation marks e.g. -args:"-Zi -Od".
 
 Supported Shader Types <shader_type>:
 vert   for a vertex shader

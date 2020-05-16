@@ -215,16 +215,16 @@ namespace shader_compiler
 		command += " -DMIRU_VULKAN " + additionCommandlineArgs;
 
 		//Run glslangValidator
-		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
-		MIRU_SC_PRINTF(("Executing: " + glslValiditorLocation + "> " + command + "\n").c_str());
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
+		MIRU_SHADER_COMPILER_PRINTF(("Executing: " + glslValiditorLocation + "> " + command + "\n").c_str());
 		int errorCode = system(("cd " + glslValiditorLocation + " && " + command).c_str());
-		MIRU_SC_PRINTF("'glslangValidator.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
-		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV finished.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("'glslangValidator.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV finished.\n\n");
 
 		if (errorCode)
-			return ErrorCode::MIRU_SC_SPV_ERROR;
+			return ErrorCode::MIRU_SHADER_COMPILER_SPV_ERROR;
 		else
-			return ErrorCode::MIRU_SC_OK;
+			return ErrorCode::MIRU_SHADER_COMPILER_OK;
 	}
 
 	void ClearConsoleScreenSPV()

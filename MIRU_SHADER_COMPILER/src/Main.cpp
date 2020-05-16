@@ -23,14 +23,14 @@ using namespace shader_compiler;
 
 int main(int argc, const char** argv)
 {
-	ErrorCode error = ErrorCode::MIRU_SC_OK;
+	ErrorCode error = ErrorCode::MIRU_SHADER_COMPILER_OK;
 
 	CONSOLE_OUTPUT_WHITE;
 
 	//Null arguments
 	if (!argc)
 	{
-		error = ErrorCode::MIRU_SC_NO_ARGS;
+		error = ErrorCode::MIRU_SHADER_COMPILER_NO_ARGS;
 		MIRU_SHADER_COMPILER_RETURN(error, "No arguements passed to MIRU_SHADER_COMPILER.");
 	}
 
@@ -50,11 +50,11 @@ int main(int argc, const char** argv)
 			output = false;
 	}
 	if (logo)
-		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2020 Andrew Richards.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2020 Andrew Richards.\n\n");
 	if (help)
 	{
-		MIRU_SC_PRINTF(help_doucumentation);
-		MIRU_SC_PRINTF("\n");
+		MIRU_SHADER_COMPILER_PRINTF(help_doucumentation);
+		MIRU_SHADER_COMPILER_PRINTF("\n");
 	}
 
 	//Parse compile flags
@@ -75,7 +75,7 @@ int main(int argc, const char** argv)
 	}
 	if (!cso && !spv)
 	{
-		error = ErrorCode::MIRU_SC_NO_OUTPUT_FILE_FORMAT;
+		error = ErrorCode::MIRU_SHADER_COMPILER_NO_OUTPUT_FILE_FORMAT;
 		MIRU_SHADER_COMPILER_RETURN(error, "No output file formats passed to MIRU_SHADER_COMPILER.");
 	}
 
@@ -134,7 +134,7 @@ int main(int argc, const char** argv)
 	}
 	if(filepath.empty())
 	{
-		error = ErrorCode::MIRU_SC_NO_SHADER_FILE;
+		error = ErrorCode::MIRU_SHADER_COMPILER_NO_SHADER_FILE;
 		MIRU_SHADER_COMPILER_RETURN(error, "No shader has been passed to MIRU_SHADER_COMPILER.");
 	}
 	if (outputDir.empty())
@@ -156,13 +156,13 @@ int main(int argc, const char** argv)
 	{
 		CONSOLE_OUTPUT_GREEN;
 		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, args, dxc_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error. MIRU_SHADER_COMPILER.");
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.");
 	}
 	if (spv)
 	{
 		CONSOLE_OUTPUT_RED;
 		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, args, glslang_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SRV Shader Compile Error. MIRU_SHADER_COMPILER.");
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.");
 	}
 	CONSOLE_OUTPUT_WHITE;
 
@@ -170,5 +170,6 @@ int main(int argc, const char** argv)
 	{
 		system("PAUSE");
 	}
-	MIRU_SHADER_COMPILER_RETURN(error, "Success. MIRU_SHADER_COMPILER.");
+	MIRU_SHADER_COMPILER_PRINTF("\n");
+	MIRU_SHADER_COMPILER_RETURN(error, "MIRU_SHADER_COMPILER returned an error.");
 }

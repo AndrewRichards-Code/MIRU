@@ -174,16 +174,16 @@ namespace shader_compiler
 		command += " -DMIRU_D3D12 " + additionCommandlineArgs;
 
 		//Run dxc
-		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
-		MIRU_SC_PRINTF(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO using DXC\n");
+		MIRU_SHADER_COMPILER_PRINTF(("Executing: " + dxcLocation + "> " + command + "\n").c_str());
 		int errorCode = system(("cd " + dxcLocation + " && " + command).c_str());
-		MIRU_SC_PRINTF("'dxc.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
-		MIRU_SC_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO finished.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("'dxc.exe' has exited with code %d (0x%x).\n", errorCode, errorCode);
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> CSO finished.\n\n");
 
 		if (errorCode)
-			return ErrorCode::MIRU_SC_CSO_ERROR;
+			return ErrorCode::MIRU_SHADER_COMPILER_CSO_ERROR;
 		else
-			return ErrorCode::MIRU_SC_OK;
+			return ErrorCode::MIRU_SHADER_COMPILER_OK;
 	}
 
 	static void ClearConsoleScreenCSO()

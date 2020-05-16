@@ -50,7 +50,7 @@ namespace crossplatform
 			Shader::StageBit	stage;
 		};
 
-		//See MSCDocumentation.h 
+		//See MSCDocumentation.h for correct usage.
 		//All filepaths and directories must be relative to the current working directory.
 		//All locations must be full paths i.e. dxc and glslangValidator.
 		struct RecompileArguments
@@ -65,7 +65,7 @@ namespace crossplatform
 			bool						spv;				//Either cso or spv must be true
 			const char*					dxcLocation;		//Optional
 			const char*					glslangLocation;	//Optional
-			std::vector<const char*>	additioalArguments; //Optional
+			const char*					additioalArguments; //Optional. Example: ""\-Zi -Od"\".
 			bool						nologo;				//Optional
 			bool						nooutput;			//Optional
 		};
