@@ -109,8 +109,7 @@ int main()
 	shaderCI.entryPoint = "main";
 	shaderCI.binaryFilepath = "res/bin/basic.vert.spv";
 	shaderCI.binaryCode = {};
-	shaderCI.recompileArguments =
-	{
+	shaderCI.recompileArguments = {
 		"res/shaders/basic.vert.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
@@ -121,10 +120,9 @@ int main()
 		true,
 		nullptr,
 		nullptr,
-		{},
+		nullptr,
 		false,
-		false
-	};
+		false };
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic_Fragment";
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;

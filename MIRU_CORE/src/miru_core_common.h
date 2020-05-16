@@ -84,7 +84,7 @@
 #pragma comment(lib, "vulkan-1.lib")
 
 //Spirv-cross Header and Library
-#include "spirv_cross/spirv_cross.hpp"
+#include "spirv_cross/Include/spirv_cross.hpp"
 #if defined(_DEBUG)
 #pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
 #else
@@ -100,7 +100,7 @@
 #include "vulkan_wrapper.h"
 
 //Spirv-cross Header and Library
-#include "D:/MASS STORAGE/SPIRV-Cross/spirv_cross.hpp"
+#include "spirv_cross/Include/spirv_cross.hpp"
 
 #endif
 #endif

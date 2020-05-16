@@ -20,7 +20,7 @@ target_include_directories(native_app_glue PUBLIC ${ANDROID_GLUE_INCLUDE_DIR})
 
 #-SPIRV_CROSS_CORE-
 set(SPIRV_CROSS_CORE_DIR D:/MASS\ STORAGE/SPIRV-Cross)
-set(BUILD_SPIRV_CROSS_CORE TRUE)
+set(BUILD_SPIRV_CROSS_CORE FALSE)
 if(BUILD_SPIRV_CROSS_CORE)
     set(spirv_cross_core_src
             ${SPIRV_CROSS_CORE_DIR}/GLSL.std.450.h
