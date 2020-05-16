@@ -36,7 +36,10 @@ void Shader::GetShaderByteCode()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	//Check for valid shader source
-	std::string binFilepath(m_CI.binaryFilepath);
+	std::string binFilepath;
+	if(m_CI.binaryFilepath)
+		binFilepath = std::string(m_CI.binaryFilepath);
+
 	if (binFilepath.empty() && m_CI.binaryCode.empty())
 		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path or binary code provided.");
 

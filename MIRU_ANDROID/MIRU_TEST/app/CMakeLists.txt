@@ -7,9 +7,6 @@ set( MIRU_SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
 #Sets the Vulkan Include directory for source code build.
 set(ANDROID_VULKAN_INCLUDE_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src/include)
 include_directories(${ANDROID_VULKAN_INCLUDE_DIR})
-#Sets the Vulkan Common directory for load function pointer into the vulkan driver.
-#set(ANDROID_VULKAN_COMMON_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src/common)
-#include_directories(${ANDROID_VULKAN_COMMON_DIR})
 
 #---ANDROID_GLUE---
 #Sets up the application for native c++ usage.
@@ -39,7 +36,7 @@ if(BUILD_SPIRV_CROSS_CORE)
             )
 
     add_library(spirv-cross-core STATIC ${spirv_cross_core_src})
-    target_include_directories(spirv-cross-core PUBLIC ${SPIRV_CROSS_CORE})
+    target_include_directories(spirv-cross-core PUBLIC ${SPIRV_CROSS_CORE_DIR})
 
     if(FALSE)
     #Copy to redist folder
@@ -134,8 +131,6 @@ set( src_public
         ${src_crossplatform_cpp}
         ${src_debug_h}
         ${src_debug_cpp}
-        ${src_directx12_h}
-        ${src_directx12_cpp}
         ${src_vulkan_h}
         ${src_vulkan_cpp}
         ${src_h}
