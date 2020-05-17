@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.6.0)
 
 #MIRU_SOLUTION_DIR
 set( MIRU_SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+set( MIRU_TEST_MARS_DIR "C:/Users/Andrew/source/repos/MARS" CACHE STRING "Directory to MARS folder" )
 
 #------VULKAN------
 #Sets the Vulkan Include directory for source code build.
@@ -154,18 +155,27 @@ find_library(log-lib log)
 #-----BUILD_OPT----
 #Sets C++17 and build arguements
 #Sets the VK_USE_PLATFORM_ANDROID_KHR and _DEBUG definition
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-unused-variable -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Werror -Wno-unused-variable -Wno-self-assign-field -DVK_USE_PLATFORM_ANDROID_KHR -D_DEBUG")
 
 #----EXPORT_JNI----
 #Set the export of JNIEXPORT void ANativeActivity_onCreate(...);
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 #----MIRU_TEST-----
-include_directories(${MIRU_SOLUTION_DIR}/MIRU_ANDROID/MIRU_TEST/app/src/main/cpp)
+include_directories(${MIRU_SOLUTION_DIR}/MIRU_ANDROID/MIRU_TEST/app/src/main/cpp ${MIRU_TEST_MARS_DIR})
 add_library(MIRU_TEST SHARED
-        src/main/cpp/vulkan_wrapper.h   #Load PFNs
-        src/main/cpp/vulkan_wrapper.cpp #Load PFNs
-        src/main/cpp/main.cpp           #entry point
+        src/main/cpp/vulkan_wrapper.h           #Load PFNs
+        src/main/cpp/vulkan_wrapper.cpp         #Load PFNs
+        src/main/cpp/main.cpp                   #entry point
+        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat2.cpp
+        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat3.cpp
+        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat4.cpp
+        ${MIRU_TEST_MARS_DIR}/src/vector/Vec2.cpp
+        ${MIRU_TEST_MARS_DIR}/src/vector/Vec3.cpp
+        ${MIRU_TEST_MARS_DIR}/src/vector/Vec4.cpp
+        ${MIRU_TEST_MARS_DIR}/src/quaternion/Quat.cpp
+        ${MIRU_TEST_MARS_DIR}/src/calculus/differentiation.cpp
+        ${MIRU_TEST_MARS_DIR}/src/calculus/integration.cpp
         )
 target_link_libraries(MIRU_TEST
         android

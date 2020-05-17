@@ -3,6 +3,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../dep/STBI/stb_image.h"
 
+#include "src/mars.h"
+
 using namespace miru;
 using namespace crossplatform;
 
@@ -220,6 +222,226 @@ void android_main(struct android_app* app) {
     }
     cmdBuffer->Submit({ 2 }, {}, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
 
+    ImageView::CreateInfo logoVICI;
+    logoVICI.debugName = "LogoVI";
+    logoVICI.device = context->GetDevice();
+    logoVICI.pImage = logo;
+    logoVICI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+    Ref<ImageView> logoIV = ImageView::Create(&logoVICI);
+
+    Sampler::CreateInfo samplerCI;
+    samplerCI.debugName = "Default Sampler";
+    samplerCI.device = context->GetDevice();
+    samplerCI.magFilter = Sampler::Filter::NEAREST;
+    samplerCI.minFilter = Sampler::Filter::NEAREST;
+    samplerCI.mipmapMode = Sampler::MipmapMode::NEAREST;
+    samplerCI.addressModeU = Sampler::AddressMode::REPEAT;
+    samplerCI.addressModeV = Sampler::AddressMode::REPEAT;
+    samplerCI.addressModeW = Sampler::AddressMode::REPEAT;
+    samplerCI.mipLodBias = 1;
+    samplerCI.anisotropyEnable = false;
+    samplerCI.maxAnisotropy = 1.0f;
+    samplerCI.compareEnable = false;
+    samplerCI.compareOp = CompareOp::NEVER;
+    samplerCI.minLod = 0;
+    samplerCI.maxLod = 1;
+    samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
+    samplerCI.unnormalisedCoordinates = false;
+    Ref<Sampler> sampler = Sampler::Create(&samplerCI);
+
+    mars::Mat4 proj = mars::Mat4::Identity();
+    mars::Mat4 view = mars::Mat4::Identity();
+    mars::Mat4 modl = mars::Mat4::Identity();
+
+    float ubData[2 * mars::Mat4::GetSize()];
+    memcpy(ubData + 0 * 16,	proj.GetData(), mars::Mat4::GetSize());
+    memcpy(ubData + 1 * 16,	view.GetData(), mars::Mat4::GetSize());
+
+    Buffer::CreateInfo ubCI;
+    ubCI.debugName = "CameraUB";
+    ubCI.device = context->GetDevice();
+    ubCI.usage = Buffer::UsageBit::UNIFORM;
+    ubCI.size = 2 * mars::Mat4::GetSize();
+    ubCI.data = ubData;
+    ubCI.pMemoryBlock = uma_mb_0;
+    Ref<Buffer> ub1 = Buffer::Create(&ubCI);
+    ubCI.debugName = "ModelUB";
+    ubCI.device = context->GetDevice();
+    ubCI.usage = Buffer::UsageBit::UNIFORM;
+    ubCI.size = mars::Mat4::GetSize();
+    ubCI.data = (void*)modl.GetData();
+    ubCI.pMemoryBlock = uma_mb_0;
+    Ref<Buffer> ub2 = Buffer::Create(&ubCI);
+
+    BufferView::CreateInfo ubViewCamCI;
+    ubViewCamCI.debugName = "CameraUBView";
+    ubViewCamCI.device = context->GetDevice();
+    ubViewCamCI.type = BufferView::Type::UNIFORM;
+    ubViewCamCI.pBuffer = ub1;
+    ubViewCamCI.offset = 0;
+    ubViewCamCI.size = 2 * mars::Mat4::GetSize();
+    ubViewCamCI.stride = 0;
+    Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
+    BufferView::CreateInfo ubViewMdlCI;
+    ubViewMdlCI.debugName = "ModelUBView";
+    ubViewMdlCI.device = context->GetDevice();
+    ubViewMdlCI.type = BufferView::Type::UNIFORM;
+    ubViewMdlCI.pBuffer = ub2;
+    ubViewMdlCI.offset = 0;
+    ubViewMdlCI.size = mars::Mat4::GetSize();
+    ubViewMdlCI.stride = 0;
+    Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
+
+    Image::CreateInfo depthCI;
+    depthCI.debugName = "DepthImage";
+    depthCI.device = context->GetDevice();
+    depthCI.type = Image::Type::TYPE_2D;
+    depthCI.format = Image::Format::D32_SFLOAT;
+    depthCI.width = width;
+    depthCI.height = height;
+    depthCI.depth = 1;
+    depthCI.mipLevels = 1;
+    depthCI.arrayLayers = 1;
+    depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+    depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
+    depthCI.layout = Image::Layout::UNKNOWN;
+    depthCI.size = 0;
+    depthCI.data = nullptr;
+    depthCI.pMemoryBlock = uma_mb_0;
+    Ref<Image> depthImage = Image::Create(&depthCI);
+
+    ImageView::CreateInfo depthImageViewCI;
+    depthImageViewCI.debugName = "DepthImageView";
+    depthImageViewCI.device = context->GetDevice();
+    depthImageViewCI.pImage = depthImage;
+    depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
+    Ref<ImageView> depthImageView = ImageView::Create(&depthImageViewCI);
+
+    DescriptorPool::CreateInfo descriptorPoolCI;
+    descriptorPoolCI.debugName = "Image Descriptor Pool";
+    descriptorPoolCI.device = context->GetDevice();
+    descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2} };
+    descriptorPoolCI.maxSets = 2;
+    Ref<DescriptorPool> descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
+    DescriptorSetLayout::CreateInfo setLayoutCI;
+    setLayoutCI.debugName = "Basic Shader DescSetLayout";
+    setLayoutCI.device = context->GetDevice();
+    setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
+    Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
+    setLayoutCI.descriptorSetLayoutBinding = {
+            {1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT },
+            {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT }
+    };
+    Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
+    DescriptorSet::CreateInfo descriptorSetCI;
+    descriptorSetCI.debugName = "Image Descriptor Set";
+    descriptorSetCI.pDescriptorPool = descriptorPool;
+    descriptorSetCI.pDescriptorSetLayouts = {setLayout1, setLayout2 };
+    Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
+    descriptorSet->AddBuffer(0, 0, { { ubViewCam } });
+    descriptorSet->AddBuffer(1, 0, { { ubViewMdl } });
+    descriptorSet->AddImage(1, 1, { { sampler, logoIV, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+    descriptorSet->Update();
+
+    RenderPass::CreateInfo renderPassCI;
+    renderPassCI.debugName = "Basic";
+    renderPassCI.device = context->GetDevice();
+    renderPassCI.attachments = {
+            {swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
+                    Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+                    RenderPass::AttachmentLoadOp::CLEAR,
+                    RenderPass::AttachmentStoreOp::STORE,
+                    RenderPass::AttachmentLoadOp::DONT_CARE,
+                    RenderPass::AttachmentStoreOp::DONT_CARE,
+                    Image::Layout::UNKNOWN,
+                    Image::Layout::PRESENT_SRC
+            },
+            {depthImage->GetCreateInfo().format,
+                    Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+                    RenderPass::AttachmentLoadOp::CLEAR,
+                    RenderPass::AttachmentStoreOp::DONT_CARE,
+                    RenderPass::AttachmentLoadOp::DONT_CARE,
+                    RenderPass::AttachmentStoreOp::DONT_CARE,
+                    Image::Layout::UNKNOWN,
+                    Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            }
+    };
+    renderPassCI.subpassDescriptions = {
+            {PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
+    };
+    renderPassCI.subpassDependencies = {
+            {MIRU_SUBPASS_EXTERNAL, 0,
+                    PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
+                    (Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT}
+    };
+    Ref<RenderPass> renderPass = RenderPass::Create(&renderPassCI);
+
+    Pipeline::CreateInfo pCI;
+    pCI.debugName = "Basic";
+    pCI.device = context->GetDevice();
+    pCI.type = PipelineType::GRAPHICS;
+    pCI.shaders = { vertexShader, fragmentShader };
+    pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices)/4, VertexInputRate::VERTEX} };
+    pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, ""}, {1, 0, VertexType::VEC2, 16, ""} };
+    pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
+    pCI.tessellationState = {};
+    pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
+    pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
+    pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
+    pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
+    pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
+    pCI.colourBlendState.logicOpEnable = false;
+    pCI.colourBlendState.logicOp = LogicOp::COPY;
+    pCI.colourBlendState.attachments = { {true, BlendFactor::SRC_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA, BlendOp::ADD,
+                                                 BlendFactor::ONE, BlendFactor::ZERO, BlendOp::ADD, (ColourComponentBit)15 } };
+    pCI.colourBlendState.blendConstants[0] = 0.0f;
+    pCI.colourBlendState.blendConstants[1] = 0.0f;
+    pCI.colourBlendState.blendConstants[2] = 0.0f;
+    pCI.colourBlendState.blendConstants[3] = 0.0f;
+    pCI.dynamicStates = {};
+    pCI.layout = { {setLayout1, setLayout2}, {} };
+    pCI.renderPass = renderPass;
+    pCI.subpassIndex = 0;
+    Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
+
+    Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
+    framebufferCI_0.debugName = "Framebuffer0";
+    framebufferCI_0.device = context->GetDevice();
+    framebufferCI_0.renderPass = renderPass;
+    framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
+    framebufferCI_0.width = width;
+    framebufferCI_0.height = height;
+    framebufferCI_0.layers = 1;
+    Ref<Framebuffer> framebuffer0 = Framebuffer::Create(&framebufferCI_0);
+    framebufferCI_1.debugName = "Framebuffer1";
+    framebufferCI_1.device = context->GetDevice();
+    framebufferCI_1.renderPass = renderPass;
+    framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1], depthImageView };
+    framebufferCI_1.width = width;
+    framebufferCI_1.height = height;
+    framebufferCI_1.layers = 1;
+    Ref<Framebuffer> framebuffer1 = Framebuffer::Create(&framebufferCI_1);
+
+    Fence::CreateInfo fenceCI;
+    fenceCI.debugName = "DrawFence";
+    fenceCI.device = context->GetDevice();
+    fenceCI.signaled = true;
+    fenceCI.timeout = UINT64_MAX;
+    std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
+    Semaphore::CreateInfo semaphoreCI = { "Seamphore", context->GetDevice() };
+    std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+    std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+
+    uint32_t frameIndex = 0;
+    uint32_t frameCount = 0;
+    float r = 1.00f;
+    float g = 0.00f;
+    float b = 0.00f;
+    float increment = 1.0f / 60.0f;
+    int var_x = 0;
+    int var_y = 0;
+    int var_z = 0;
+    bool windowResize;
     while (!g_CloseWindow)
     {
         if(ALooper_pollAll(1, nullptr, &events, (void**)&source) >=0)
@@ -228,10 +450,67 @@ void android_main(struct android_app* app) {
                 source->process(app, source);
         }
 
+        if (r > b && b < increment)
+        {
+            b = 0.0f;
+            r -= increment;
+            g += increment;
+        }
+        if (g > r && r < increment)
+        {
+            r = 0.0f;
+            g -= increment;
+            b += increment;
+        }
+        if (b > g && g < increment)
+        {
+            g = 0.0f;
+            b -= increment;
+            r += increment;
+        }
+
+        while (draws[frameIndex]->Wait()) {}
+
+        Image::ClearValue colour, depth;
+        colour.colour.float32[0] = r;
+        colour.colour.float32[1] = g;
+        colour.colour.float32[2] = b;
+        colour.colour.float32[3] = 1.0f;
+        depth.depthStencil.depth = 0.0f;
+        depth.depthStencil.stencil = 0;
+
+        cmdBuffer->Reset(frameIndex, false);
+        cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
+        cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { colour, depth });
+        cmdBuffer->BindPipeline(frameIndex, pipeline);
+        cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
+        cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
+        cmdBuffer->BindIndexBuffer(frameIndex, ibv);
+        cmdBuffer->DrawIndexed(frameIndex, 6);
+        cmdBuffer->EndRenderPass(frameIndex);
+        cmdBuffer->End(frameIndex);
+
+
+        //Update Uniform buffers
+        proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
+        if(GraphicsAPI::IsVulkan())
+            proj.f *= -1;
+        modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
+        memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());
+        memcpy(ubData + 1 * 16, view.GetData(), mars::Mat4::GetSize());
+
+        //Present
+        uma_mb_0->SubmitData(ub1->GetResource(), 2 * mars::Mat4::GetSize(), ubData);
+        uma_mb_0->SubmitData(ub2->GetResource(), 2 * mars::Mat4::GetSize(), (void*)modl.GetData());
+
+        cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
+        frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;
+        frameCount++;
+
         __android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", std::to_string(width).c_str());
         __android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", std::to_string(height).c_str());
     }
-    return;
+    context->DeviceWaitIdle();
 }
 
 }

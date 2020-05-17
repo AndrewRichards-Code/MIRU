@@ -38,7 +38,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_Resource.device = m_Device;
 	m_Resource.type = crossplatform::Resource::Type::IMAGE;
 	m_Resource.resource = (uint64_t)m_Image; // This image handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);;
+	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
 	m_Resource.size = m_AllocationInfo.SizeInBytes;
 	m_Resource.alignment = m_AllocationInfo.Alignment;
 
