@@ -72,6 +72,7 @@ namespace d3d12
 		Ref<crossplatform::Framebuffer> m_RenderPassFramebuffer;
 		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;
 		uint32_t m_SubpassIndex = (uint32_t)-1;
+		bool m_Resettable = false;
 	};
 }
 }

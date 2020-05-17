@@ -130,7 +130,7 @@ void Context::DeviceWaitIdle()
 		ref_cast<Fence>(fence)->GetValue()++;
 
 		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
-		while (!fence->Wait()) {}
+		while (fence->Wait()) {}
 		fence->~Fence();
 		fence = nullptr;
 	}

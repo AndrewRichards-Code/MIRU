@@ -61,8 +61,8 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger();
 	
@@ -507,7 +507,7 @@ int main()
 			cmdBuffer->End(i);
 		}
 	};
-	RecordPresentCmdBuffers();
+	//RecordPresentCmdBuffers();
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
@@ -522,6 +522,11 @@ int main()
 	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
+	uint32_t frameCount = 0;
+	float r = 1.00f;
+	float g = 0.00f;
+	float b = 0.00f;
+	float increment = 1.0f / 60.0f;
 	MSG msg = { 0 };
 	//Main Render Loop
 	while (!g_WindowQuit)
@@ -570,6 +575,38 @@ int main()
 			swapchain->m_Resized = false;
 		}
 		{
+			if (r > b && b < increment)
+			{
+				b = 0.0f;
+				r -= increment;
+				g += increment;
+			}
+			if (g > r && r < increment)
+			{
+				r = 0.0f;
+				g -= increment;
+				b += increment;
+			}
+			if (b > g && g < increment)
+			{
+				g = 0.0f;
+				b -= increment;
+				r += increment;
+			}
+
+			while (draws[frameIndex]->Wait()) {}
+
+			cmdBuffer->Reset(frameIndex, false);
+			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
+			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0} });
+			cmdBuffer->BindPipeline(frameIndex, pipeline);
+			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
+			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
+			cmdBuffer->BindIndexBuffer(frameIndex, ibv);
+			cmdBuffer->DrawIndexed(frameIndex, 6);
+			cmdBuffer->EndRenderPass(frameIndex);
+			cmdBuffer->End(frameIndex);
+
 			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
 			if(GraphicsAPI::IsVulkan())
 				proj.f *= -1;
@@ -581,7 +618,8 @@ int main()
 			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * mars::Mat4::GetSize(), (void*)modl.GetData());
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
-		frameIndex++;
+		frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;
+		frameCount++;
 	}
 	context->DeviceWaitIdle();
 }

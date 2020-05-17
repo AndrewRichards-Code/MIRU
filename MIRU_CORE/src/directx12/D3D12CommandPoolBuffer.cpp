@@ -87,16 +87,20 @@ void CommandBuffer::End(uint32_t index)
 
 	CHECK_VALID_INDEX_RETURN(index);
 	MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Close(), "ERROR: D3D12: Failed to end CommandBuffer.");
+	m_Resettable = true;
 }
 
 void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	CHECK_VALID_INDEX_RETURN(index);
-	MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(m_CmdPool, nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
+	if (m_Resettable)
+	{
+		CHECK_VALID_INDEX_RETURN(index);
+		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(m_CmdPool, nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
+		m_Resettable = false;
+	}
 }
-
 void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplatform::CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
