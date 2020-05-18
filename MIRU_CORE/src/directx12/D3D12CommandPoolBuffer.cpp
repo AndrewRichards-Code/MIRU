@@ -163,6 +163,13 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	draws[m_CurrentFrame]->Wait();
 	draws[m_CurrentFrame]->Reset();
 
+	if (resized)
+	{
+		resized = false;
+		swapchain->m_Resized = true;
+		return;
+	}
+
 	//UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
 	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE, {});
 	

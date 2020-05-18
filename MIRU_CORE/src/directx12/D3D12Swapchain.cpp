@@ -32,7 +32,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
 	D3D12SetName(m_Swapchain, m_CI.debugName);
-	m_Swapchain->GetSourceSize(&m_Width, &m_Height);
+	MIRU_ASSERT(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
 	m_Format = m_SwapchainDesc.Format;
 
 	//Create Swapchian RTV
@@ -78,37 +78,43 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	m_CI.pContext->DeviceWaitIdle();
+
 	m_Width = width;
 	m_Height = height;
 
 	//Resize Buffers and release old resources
-	m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags);
-
 	for (auto& swapchainRTV : m_SwapchainRTVs)
 		SAFE_RELEASE(swapchainRTV);
 
 	SAFE_RELEASE(m_SwapchainRTVDescHeap);
+	m_SwapchainRTVs.clear();
+	m_SwapchainRTV_CPU_Desc_Handles.clear();
+
+	MIRU_ASSERT(m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags), "ERROR: ");
 
 	//Create Swapchian RTV
 	m_SwapchainRTVDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	m_SwapchainRTVDescHeapDesc.NumDescriptors = m_SwapchainDesc.BufferCount;
 	m_SwapchainRTVDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_SwapchainRTVDescHeapDesc.NodeMask = 0;
-	m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap));
+	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to get Swapchain Images");
 	D3D12SetName(m_SwapchainRTVDescHeap, (std::string(m_CI.debugName) + ": RTV Descriptor Heap").c_str());
 
 	D3D12_CPU_DESCRIPTOR_HANDLE swapchainRTV_CPUDescHandle = m_SwapchainRTVDescHeap->GetCPUDescriptorHandleForHeapStart();
 	size_t rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	m_SwapchainRTVs.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
+	m_SwapchainRTV_CPU_Desc_Handles.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
 	for (UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
-		m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV));
+		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Images");
 		m_Device->CreateRenderTargetView(swapchainRTV, nullptr, swapchainRTV_CPUDescHandle);
 		D3D12SetName(swapchainRTV, (std::string(m_CI.debugName) + ": RTV " + std::to_string(i)).c_str());
 
 		m_SwapchainRTVs.push_back(swapchainRTV);
+		m_SwapchainRTV_CPU_Desc_Handles.push_back(swapchainRTV_CPUDescHandle);
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
 
