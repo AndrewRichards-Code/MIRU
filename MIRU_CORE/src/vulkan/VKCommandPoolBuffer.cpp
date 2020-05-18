@@ -199,7 +199,6 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	{
 		resized = false;
 		swapchain->m_Resized = true;
-		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
 		return;
 	}
 	else
@@ -224,7 +223,6 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	{
 		resized = false;
 		swapchain->m_Resized = true;
-		vkDeviceWaitIdle(*reinterpret_cast<VkDevice*>(swapchain->GetCreateInfo().pContext->GetDevice()));
 		return;
 	}
 	else

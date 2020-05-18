@@ -172,6 +172,8 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	m_CI.pContext->DeviceWaitIdle();
+
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
 		vkDestroyImageView(m_Device, imageView, 0);

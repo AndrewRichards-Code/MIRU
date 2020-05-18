@@ -58,8 +58,8 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger();
 	
@@ -570,13 +570,13 @@ int main()
 			framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
-			RecordPresentCmdBuffers();
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 			acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
 			submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
 
 			swapchain->m_Resized = false;
+			frameIndex = 0;
 		}
 		{
 			if (r > b && b < increment)
