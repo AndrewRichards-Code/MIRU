@@ -25,9 +25,6 @@ LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		width = LOWORD(lparam);
 		height = HIWORD(lparam);
-	}
-	if (msg == WM_EXITSIZEMOVE)
-	{
 		windowResize = true;
 	}
 	if (msg == WM_KEYDOWN && wparam == 0x52) //R
@@ -154,7 +151,7 @@ int main()
 	MemoryBlock::CreateInfo mbCI;
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
-	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_8MB;
+	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_16MB;
 	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
 	mbCI.debugName = "GPU_MB_0";
@@ -554,6 +551,13 @@ int main()
 			pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 			pipeline = Pipeline::Create(&pCI);
+
+			depthCI.width = width;
+			depthCI.height = height;
+			depthImage->GetCreateInfo().pMemoryBlock->RemoveResource(depthImage->GetResource().id);
+			depthImage = Image::Create(&depthCI);
+			depthImageViewCI.pImage = depthImage;
+			depthImageView = ImageView::Create(&depthImageViewCI);
 
 			framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
 			framebufferCI_0.width = width;
