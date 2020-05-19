@@ -510,7 +510,7 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 		ref_cast<Image>(dstImage)->m_Image, ref_cast<Image>(dstImage)->m_CurrentLayout, static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
 
-void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -531,7 +531,7 @@ void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crosspla
 	vkCmdCopyBufferToImage(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy> regions)
+void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

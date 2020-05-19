@@ -549,6 +549,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_SRVDesc.TextureCube.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
 			m_SRVDesc.TextureCube.MipLevels = m_CI.subresourceRange.mipLevelCount;
 			m_SRVDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+			break;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
 		{
@@ -588,6 +589,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_SRVDesc.TextureCubeArray.First2DArrayFace = 0;
 			m_SRVDesc.TextureCubeArray.NumCubes = resourceDesc.DepthOrArraySize / 6;
 			m_SRVDesc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
+			break;
 		}
 		}
 	}
@@ -618,6 +620,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_UAVDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
 			m_UAVDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
 			m_UAVDesc.Texture3D.MipSlice = i;
+			break;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
 		{

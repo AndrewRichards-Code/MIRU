@@ -32,9 +32,9 @@ LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 		shaderRecompile = true;
 	}
 	if (msg == WM_KEYDOWN && wparam == 0x49) //I
-		var_y++;
-	if (msg == WM_KEYDOWN && wparam == 0x4B) //K
 		var_y--;
+	if (msg == WM_KEYDOWN && wparam == 0x4B) //K
+		var_y++;
 	if (msg == WM_KEYDOWN && wparam == 0x4A) //J
 		var_x--;
 	if (msg == WM_KEYDOWN && wparam == 0x4C) //L
@@ -61,7 +61,7 @@ int main()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	//GraphicsAPI::LoadGraphicsDebugger();
+	GraphicsAPI::LoadGraphicsDebugger();
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -151,21 +151,32 @@ int main()
 	MemoryBlock::CreateInfo mbCI;
 	mbCI.debugName = "CPU_MB_0";
 	mbCI.pContext = context;
-	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_16MB;
+	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_64MB;
 	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
 	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
 	mbCI.debugName = "GPU_MB_0";
 	mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT ;
 	Ref<MemoryBlock> gpu_mb_0 = MemoryBlock::Create(&mbCI);
 
-	float vertices[24] =
+	float vertices[32] =
 	{
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-		+0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
-		+0.5f, +0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
-		-0.5f, +0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 1.0f,
+		+0.5f, -0.5f, -0.5f, 1.0f,
+		+0.5f, +0.5f, -0.5f, 1.0f,
+		-0.5f, +0.5f, -0.5f, 1.0f,
+		-0.5f, -0.5f, +0.5f, 1.0f,
+		+0.5f, -0.5f, +0.5f, 1.0f,
+		+0.5f, +0.5f, +0.5f, 1.0f,
+		-0.5f, +0.5f, +0.5f, 1.0f,
 	};
-	uint32_t indices[6] = { 0,1,2,2,3,0 };
+	uint32_t indices[36] = {
+		0, 1, 2, 2, 3, 0,
+		1, 5, 6, 6, 2, 1,
+		5, 4, 7, 7, 6, 5,
+		4, 0, 3, 3, 7, 4,
+		3, 2, 6, 6, 7, 3,
+		4, 5, 1, 1, 0, 4
+	};
 
 	int img_width;
 	int img_height; 
@@ -209,13 +220,13 @@ int main()
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "Image";
 	imageCI.device = context->GetDevice();
-	imageCI.type = Image::Type::TYPE_2D;
+	imageCI.type = Image::Type::TYPE_CUBE;
 	imageCI.format = Image::Format::R8G8B8A8_UNORM;
 	imageCI.width = img_width;
 	imageCI.height = img_height;
 	imageCI.depth = 1;
 	imageCI.mipLevels = 1;
-	imageCI.arrayLayers = 1;
+	imageCI.arrayLayers = 6;
 	imageCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	imageCI.usage = Image::UsageBit::TRANSFER_DST_BIT | Image::UsageBit::SAMPLED_BIT;
 	imageCI.layout = Image::Layout::UNKNOWN;
@@ -241,10 +252,17 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
-		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { {0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} });
+		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}, 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}, 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 2, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}, 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 3, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}, 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 4, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}, 
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 5, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}} 
+		});
 		
 		cmdCopyBuffer->End(0);
 	}
@@ -261,7 +279,7 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
@@ -276,7 +294,7 @@ int main()
 	vbViewCI.pBuffer = g_vb;
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
-	vbViewCI.stride = 6 * sizeof(float);
+	vbViewCI.stride = 4 * sizeof(float);
 	Ref<BufferView> vbv = BufferView::Create(&vbViewCI);
 
 	BufferView::CreateInfo ibViewCI;
@@ -293,7 +311,7 @@ int main()
 	imageViewCI.debugName = "ImageView";
 	imageViewCI.device = context->GetDevice();
 	imageViewCI.pImage = image;
-	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
 
 	Sampler::CreateInfo samplerCI;
@@ -448,13 +466,13 @@ int main()
 	pCI.device = context->GetDevice();
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { vertexShader, fragmentShader };
-	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices)/4, VertexInputRate::VERTEX} };
-	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"}, {1, 0, VertexType::VEC2, 16, "TEXCOORD"} };
+	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices)/8, VertexInputRate::VERTEX} };
+	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
 	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
-	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
+	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::BACK_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
 	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
 	pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
 	pCI.colourBlendState.logicOpEnable = false;
@@ -488,23 +506,6 @@ int main()
 	framebufferCI_1.height = height;
 	framebufferCI_1.layers = 1;
 	Ref<Framebuffer> framebuffer1 = Framebuffer::Create(&framebufferCI_1);
-
-	auto RecordPresentCmdBuffers = [&]()
-	{	
-		for (uint32_t i = 0; i < cmdBuffer->GetCreateInfo().commandBufferCount - 1; i++)
-		{
-			cmdBuffer->Begin(i, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(i, i == 0 ? framebuffer0 : framebuffer1, { {0.5f, 0.5f, 0.5f, 1.0f}, {0.0f, 0} });
-			cmdBuffer->BindPipeline(i, pipeline);
-			cmdBuffer->BindDescriptorSets(i, { descriptorSet }, pipeline);
-			cmdBuffer->BindVertexBuffers(i, { vbv });
-			cmdBuffer->BindIndexBuffer(i, ibv);
-			cmdBuffer->DrawIndexed(i, 6);
-			cmdBuffer->EndRenderPass(i);
-			cmdBuffer->End(i);
-		}
-	};
-	//RecordPresentCmdBuffers();
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
@@ -540,9 +541,9 @@ int main()
 			pipeline = Pipeline::Create(&pCI);
 
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
-			RecordPresentCmdBuffers();
 
 			shaderRecompile = false;
+			frameIndex = 0;
 		}
 		if (swapchain->m_Resized)
 		{
@@ -607,14 +608,18 @@ int main()
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
 			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
 			cmdBuffer->BindIndexBuffer(frameIndex, ibv);
-			cmdBuffer->DrawIndexed(frameIndex, 6);
+			cmdBuffer->DrawIndexed(frameIndex, 36);
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
 
 			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
-			if(GraphicsAPI::IsVulkan())
+			if (GraphicsAPI::IsVulkan())
 				proj.f *= -1;
-			modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
+			modl = mars::Mat4::Translation({ 0.0f, 0.0f, -1.0f })
+				* mars::Mat4::Rotation(mars::DegToRad(var_x * 5.0), { 0, 1, 0 })
+				* mars::Mat4::Rotation(mars::DegToRad(var_y * 5.0), { 1, 0, 0 })
+				* mars::Mat4::Rotation(mars::DegToRad(var_z * 5.0), { 0, 0, 1 })
+				;
 			memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());
 			memcpy(ubData + 1 * 16, view.GetData(), mars::Mat4::GetSize());
 
