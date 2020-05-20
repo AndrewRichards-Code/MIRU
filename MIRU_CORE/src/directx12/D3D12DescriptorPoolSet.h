@@ -17,10 +17,15 @@ namespace d3d12
 		ID3D12Device* m_Device;
 
 		//Per Set per type
-		//[i][0] == HEAP_TYPE_CBV_SRV_UAV	and [i][1] == HEAP_TYPE_SAMPLER
-		//[i][2] == HEAP_TYPE_RTV			and [i][3] == HEAP_TYPE_DSV
+		//[set][0] == HEAP_TYPE_CBV_SRV_UAV and [set][1] == HEAP_TYPE_SAMPLER
+		//[set][2] == HEAP_TYPE_RTV         and [set][3] == HEAP_TYPE_DSV
 		std::vector<std::array<ID3D12DescriptorHeap*, 4>> m_DescriptorPools; 
 		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDescs[4];
+
+		//Per Set per binding per type
+		//[set][binding][0] == HEAP_TYPE_CBV_SRV_UAV and [set][binding][1] == HEAP_TYPE_SAMPLER
+		//[set][binding][2] == HEAP_TYPE_RTV         and [set][binding][3] == HEAP_TYPE_DSV
+		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
 	};
 
 	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
@@ -34,11 +39,12 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTable = { 0, nullptr };
-		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTableSampler = { 0, nullptr };
+		//Valid if NumDescriptors > 0.
+		//BaseShaderRegister and RegisterSpace with values ~0U are unknowns.
+		std::array<D3D12_DESCRIPTOR_RANGE, 4> m_DescriptorRanges;
 	};
 
-	class DescriptorSet final : public crossplatform::DescriptorSet //DescriptorTables???
+	class DescriptorSet final : public crossplatform::DescriptorSet
 	{
 		//Methods
 	public:
@@ -53,25 +59,7 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		//Per Set per type
-		//[i][0] == HEAP_TYPE_CBV_SRV_UAV	and [i][1] == HEAP_TYPE_SAMPLER
-		//[i][2] == HEAP_TYPE_RTV			and [i][3] == HEAP_TYPE_DSV
-		std::vector<std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>> m_DescHeapBaseCPUHandles;
-		//Per Set per binding per type
-		//[set][binding][0] == HEAP_TYPE_CBV_SRV_UAV	and [set][binding][1] == HEAP_TYPE_SAMPLER
-		//[set][binding][2] == HEAP_TYPE_RTV			and [set][binding][3] == HEAP_TYPE_DSV
-		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
-
-		//Per Set per available type in the potential order:
-		//RANGE_TYPE_SRV, RANGE_TYPE_UAV and RANGE_TYPE_CBV
-		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRanges;
-		std::vector<D3D12_ROOT_DESCRIPTOR_TABLE> m_DescriptorTables;
-		
-		//Per Set per type RANGE_TYPE_SAMPLER:
-		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRangeSampler;
-		D3D12_ROOT_DESCRIPTOR_TABLE m_DescriptorTableSampler;
-		
-		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
+		std::map<uint32_t, std::map<uint32_t, uint32_t>> m_SamplerBindings;
 	};
 
 }

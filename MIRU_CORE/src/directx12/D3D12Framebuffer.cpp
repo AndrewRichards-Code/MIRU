@@ -99,42 +99,44 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	UINT j = 0;
+	UINT rtvBinding = 0;
+	UINT dsvBinding = 0;
+	UINT srvBinding = 0;
 	for (auto& imageView : m_ImageView_RTV_DSV_SRVs)
 	{
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapBaseCPUHandles[0][2];
-			descriptorWriteLocation.ptr += (rtvDescriptorSize * j);
+			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][rtvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
 
 			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
 				&ref_cast<ImageView>(imageView.imageView)->m_RTVDesc, descriptorWriteLocation);
 			ref_cast<ImageView>(imageView.imageView)->m_RTVDescHandle = descriptorWriteLocation;
 			imageView.HasRTV = true;
+			rtvBinding++;
 		}
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapBaseCPUHandles[0][3];
+			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][dsvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
 
 			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
 				&ref_cast<ImageView>(imageView.imageView)->m_DSVDesc, descriptorWriteLocation);
 			ref_cast<ImageView>(imageView.imageView)->m_DSVDescHandle = descriptorWriteLocation;
 			imageView.HasDSV = true;
+			dsvBinding++;
 		}
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorSet>(m_FramebufferDescriptorSet)->m_DescHeapBaseCPUHandles[0][1];
-			descriptorWriteLocation.ptr += (cbv_srv_uav_DescriptorSize * j);
+			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][srvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 
 			m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
 				/*&ref_cast<ImageView>(imageView.imageView)->m_SRVDesc*/0, descriptorWriteLocation);
 			ref_cast<ImageView>(imageView.imageView)->m_SRVDescHandle = descriptorWriteLocation;
 			imageView.HasSRV = true;
+			srvBinding++;
 		}
-		j++;
 	}
 
 }

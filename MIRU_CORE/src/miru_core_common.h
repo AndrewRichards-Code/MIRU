@@ -254,6 +254,7 @@ namespace miru
 #endif
 
 //MIRU SetName
+//#define MIRU_ALLOW_API_SETNAME_FN_COMPILE
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE)
 namespace miru
 {

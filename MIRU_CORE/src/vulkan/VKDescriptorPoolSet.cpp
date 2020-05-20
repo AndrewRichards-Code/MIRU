@@ -92,7 +92,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	uint32_t i = 0;
 	for (auto& descriptorSet : m_DescriptorSets)
 	{
-		VKSetName<VkDescriptorSetLayout>(m_Device, (uint64_t)descriptorSet, (m_CI.debugName + std::string(" : ") + std::to_string(i)).c_str());
+		VKSetName<VkDescriptorSet>(m_Device, (uint64_t)descriptorSet, (m_CI.debugName + std::string(" : ") + std::to_string(i)).c_str());
 		i++;
 	}
 }

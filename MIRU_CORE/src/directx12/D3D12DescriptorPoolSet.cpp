@@ -80,6 +80,39 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 			D3D12SetName(m_DescriptorPools[i][3], (m_CI.debugName + std::string(" : HEAP_TYPE_DSV")).c_str());
 		}
 	}
+
+	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	for (uint32_t set = 0; set < m_CI.maxSets; set++)
+	{
+		for (uint32_t binding = 0; binding < numDescriptors_CBV_SRV_UAV; binding++)
+		{
+			m_DescCPUHandles[set][binding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].ptr =
+				m_DescriptorPools[set][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]->GetCPUDescriptorHandleForHeapStart().ptr
+				+ binding * cbv_srv_uav_DescriptorSize;
+		}
+		for (uint32_t binding = 0; binding < numDescriptors_Sampler; binding++)
+		{
+			m_DescCPUHandles[set][binding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].ptr =
+				m_DescriptorPools[set][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER]->GetCPUDescriptorHandleForHeapStart().ptr
+				+ binding * samplerDescriptorSize;
+		}
+		for (uint32_t binding = 0; binding < numDescriptors_RTV; binding++)
+		{
+			m_DescCPUHandles[set][binding][D3D12_DESCRIPTOR_HEAP_TYPE_RTV].ptr =
+				m_DescriptorPools[set][D3D12_DESCRIPTOR_HEAP_TYPE_RTV]->GetCPUDescriptorHandleForHeapStart().ptr
+				+ binding * rtvDescriptorSize;
+		}
+		for (uint32_t binding = 0; binding < numDescriptors_DSV; binding++)
+		{
+			m_DescCPUHandles[set][binding][D3D12_DESCRIPTOR_HEAP_TYPE_DSV].ptr =
+				m_DescriptorPools[set][D3D12_DESCRIPTOR_HEAP_TYPE_DSV]->GetCPUDescriptorHandleForHeapStart().ptr
+				+ binding * dsvDescriptorSize;
+		}
+	}
 }
 
 DescriptorPool::~DescriptorPool()
@@ -102,6 +135,95 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
+
+	UINT countCBV = 0;
+	UINT countSRV = 0;
+	UINT countUAV = 0;
+	UINT countSampler = 0;
+
+	INT baseBindingSRV = ~0U;
+	INT baseBindingUAV = ~0U;
+	INT baseBindingCBV = ~0U;
+	INT baseBindingSampler = ~0U;
+
+	for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayoutBinding)
+	{
+		switch (descriptorSetLayoutBinding.type)
+		{
+		case crossplatform::DescriptorType::SAMPLER:
+		{
+			countSampler++;
+			if (baseBindingSampler == ~0U)
+				baseBindingSampler = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER:
+		{
+			countSRV++;
+			countSampler++;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			if (baseBindingSampler == ~0U)
+				baseBindingSampler = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::SAMPLED_IMAGE:
+		{
+			countSRV++;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::STORAGE_IMAGE:
+		{
+			countUAV++;
+			if (baseBindingUAV == ~0U)
+				baseBindingUAV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER:
+		case crossplatform::DescriptorType::UNIFORM_BUFFER:
+		case crossplatform::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
+		{
+			countCBV++;
+			if (baseBindingCBV == ~0U)
+				baseBindingCBV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::STORAGE_TEXEL_BUFFER:
+		case crossplatform::DescriptorType::STORAGE_BUFFER:
+		case crossplatform::DescriptorType::STORAGE_BUFFER_DYNAMIC:
+		{
+			countUAV++;
+			if (baseBindingUAV == ~0U)
+				baseBindingUAV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		case crossplatform::DescriptorType::INPUT_ATTACHMENT:
+		{
+			countSRV++;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		default:
+		{
+			countSRV++;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
+		}
+	}
+
+	for (size_t i = 0; i < m_DescriptorRanges.size(); i++)
+	{
+		m_DescriptorRanges[i].RangeType = static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(i);
+		m_DescriptorRanges[i].NumDescriptors = i == 0 ? countSRV : i == 1 ? countUAV : i == 2 ? countCBV : countSampler;
+		m_DescriptorRanges[i].BaseShaderRegister = i == 0 ? baseBindingSRV : i == 1 ? baseBindingUAV : i == 2 ? baseBindingCBV : baseBindingSampler;
+		m_DescriptorRanges[i].RegisterSpace = ~0U;
+		m_DescriptorRanges[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	}
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()
@@ -117,140 +239,23 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	ID3D12DescriptorHeap* heap;
-
-	m_DescHeapBaseCPUHandles.resize(ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPools.size());
-	for (size_t i = 0; i < ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPools.size(); i++)
-	{
-		for (size_t j = 0; j < 4; j++)
-		{
-			heap = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPools[i][j];
-			if (heap)
-				m_DescHeapBaseCPUHandles[i][j] = heap->GetCPUDescriptorHandleForHeapStart();
-		}
-	}
-
-	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
-	m_DescriptorRanges.resize(m_CI.pDescriptorPool->GetCreateInfo().maxSets);
-	m_DescriptorRangeSampler.resize(m_CI.pDescriptorPool->GetCreateInfo().maxSets);
-	m_DescriptorTables.resize(m_CI.pDescriptorPool->GetCreateInfo().maxSets);
-	UINT set = 0;
+	uint32_t index = 0;
 	for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
 	{
-		UINT countCBV = 0;
-		UINT countSRV = 0;
-		UINT countUAV = 0;
-		UINT countSampler = 0;
-
-		INT baseBindingSRV = -1;
-		INT baseBindingUAV = -1;
-		INT baseBindingCBV = -1;
-		INT baseBindingSampler = -1;
-
+		uint32_t binding = 0;
 		for (auto& descriptorSetLayoutBinding : descriptorSetLayout->GetCreateInfo().descriptorSetLayoutBinding)
 		{
-			switch (descriptorSetLayoutBinding.type)
+			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER
+				|| descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
-			case crossplatform::DescriptorType::SAMPLER:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][1].ptr = m_DescHeapBaseCPUHandles[set][1].ptr + countSampler * samplerDescriptorSize;
-				countSampler++;
-				if (baseBindingSampler == -1) baseBindingSampler = descriptorSetLayoutBinding.binding;
-				continue; 
-			}
-			case crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][1].ptr = m_DescHeapBaseCPUHandles[set][1].ptr + countSampler * samplerDescriptorSize;
-				countSRV++;
-				countSampler++;
-				if (baseBindingSRV == -1) baseBindingSRV = descriptorSetLayoutBinding.binding;
-				if (baseBindingSampler == -1) baseBindingSampler = descriptorSetLayoutBinding.binding;
-				continue; 
-			}
-			case crossplatform::DescriptorType::SAMPLED_IMAGE:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countSRV++;
-				if (baseBindingSRV == -1) baseBindingSRV = descriptorSetLayoutBinding.binding;
-				continue; 
-			}
-			case crossplatform::DescriptorType::STORAGE_IMAGE:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countUAV++;
-				if (baseBindingUAV == -1) baseBindingUAV = descriptorSetLayoutBinding.binding;
-				continue; 
-			}
-			case crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER:
-			case crossplatform::DescriptorType::UNIFORM_BUFFER:
-			case crossplatform::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countCBV++;
-				if (baseBindingCBV == -1) baseBindingCBV = descriptorSetLayoutBinding.binding;
-				continue;
-			}
-			case crossplatform::DescriptorType::STORAGE_TEXEL_BUFFER:
-			case crossplatform::DescriptorType::STORAGE_BUFFER:
-			case crossplatform::DescriptorType::STORAGE_BUFFER_DYNAMIC:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countUAV++;
-				if (baseBindingUAV == -1) baseBindingUAV = descriptorSetLayoutBinding.binding;
-				continue;
-			}
-			case crossplatform::DescriptorType::INPUT_ATTACHMENT:
-			{ 
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countSRV++; 
-				if (baseBindingSRV == -1) baseBindingSRV = descriptorSetLayoutBinding.binding;
-				continue;
-			}
-			default:
-			{ 				
-				m_DescCPUHandles[set][descriptorSetLayoutBinding.binding][0].ptr = m_DescHeapBaseCPUHandles[set][0].ptr + (countCBV + countSRV + countUAV) * cbv_srv_uav_DescriptorSize;
-				countSRV++; 
-				if (baseBindingSRV == -1) baseBindingSRV = descriptorSetLayoutBinding.binding;
-				continue;
-			}
+				uint32_t currentBinding = descriptorSetLayoutBinding.binding;
+				m_SamplerBindings[index][currentBinding] = binding;
+				binding++;
 			}
 		}
-
-		for (size_t i = 0; i < 4; i++)
-		{
-			D3D12_DESCRIPTOR_RANGE descRange;
-			descRange.RangeType = static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(i);
-			descRange.NumDescriptors = i == 0 ? countSRV : i == 1 ? countUAV : i == 2 ? countCBV : countSampler;
-			descRange.BaseShaderRegister = i == 0 ? baseBindingSRV : i == 1 ? baseBindingUAV : i == 2 ? baseBindingCBV : baseBindingSampler;
-			descRange.RegisterSpace = set;
-			descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-
-			if (descRange.NumDescriptors > 0)
-			{
-				if(descRange.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-					m_DescriptorRangeSampler[set] = descRange;
-				else
-					m_DescriptorRanges[set].push_back(descRange);
-			}
-		}
-
-		m_DescriptorTables[set].NumDescriptorRanges = static_cast<UINT>(m_DescriptorRanges[set].size());
-		m_DescriptorTables[set].pDescriptorRanges = m_DescriptorRanges[set].data();
-		ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable = m_DescriptorTables[set];
-
-		if (countSampler > 0)
-		{
-			m_DescriptorTableSampler.NumDescriptorRanges = 1;
-			m_DescriptorTableSampler.pDescriptorRanges = &m_DescriptorRangeSampler[set];
-			ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTableSampler = m_DescriptorTableSampler;
-		}
-
-		set++;
+		index++;
 	}
+
 }
 
 DescriptorSet::~DescriptorSet()
@@ -265,7 +270,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	CHECK_VALID_INDEX_RETURN(index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
-	//UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto descCPUHandles = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescCPUHandles;
 
 	for (auto& descriptorBufferInfo : descriptorBufferInfos)
 	{
@@ -274,7 +279,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 		//CBV
 		if (type == BufferView::Type::UNIFORM || type == BufferView::Type::UNIFORM_TEXEL)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][0];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 
 			m_Device->CreateConstantBufferView(&ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_CBVDesc, descriptorWriteLocation);
 			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_CBVDescHandle = descriptorWriteLocation;
@@ -282,7 +287,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 		//UAV
 		if (type == BufferView::Type::STORAGE || type == BufferView::Type::STORAGE_TEXEL)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][0];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 
 			m_Device->CreateUnorderedAccessView(ref_cast<Buffer>(descriptorBufferInfo.bufferView)->m_Buffer, nullptr,
 				&ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_UAVDesc, descriptorWriteLocation);
@@ -298,11 +303,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	CHECK_VALID_INDEX_RETURN(index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
-
-	//UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	//UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	//UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	auto descCPUHandles = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescCPUHandles;
 
 	for (auto& descriptorImageInfo : descriptorImageInfos)
 	{
@@ -311,7 +312,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		//RTV
 		if (usage == Image::UsageBit::COLOUR_ATTACHMENT_BIT)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][2];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
 			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
 				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDesc, descriptorWriteLocation);
 			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDescHandle = descriptorWriteLocation;
@@ -319,7 +320,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		//DSV
 		else if (usage == Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][3];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
 			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
 				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDesc, descriptorWriteLocation);
 			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDescHandle = descriptorWriteLocation;
@@ -327,7 +328,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		//UAV
 		else if (usage == Image::UsageBit::STORAGE_BIT)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][0];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 			m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
 				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDesc, descriptorWriteLocation);
 			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDescHandle = descriptorWriteLocation;
@@ -335,7 +336,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		//SRV
 		else
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][0];
+			descriptorWriteLocation = descCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 			m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
 				/*&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDesc*/0, descriptorWriteLocation);
 			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDescHandle = descriptorWriteLocation;
@@ -344,7 +345,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		//Sampler
 		if (descriptorImageInfo.sampler)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][1];
+			uint32_t samplerBinding = m_SamplerBindings[index][bindingIndex];
+			descriptorWriteLocation = descCPUHandles[index][samplerBinding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER];
 			m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfo.sampler)->m_SamplerDesc, descriptorWriteLocation);
 			ref_cast<Sampler>(descriptorImageInfo.sampler)->m_DescHandle = descriptorWriteLocation;
 		}
@@ -355,20 +357,5 @@ void DescriptorSet::Update()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_RootParameters.clear();
-
-	D3D12_ROOT_PARAMETER rootParameter = {};
-	for (auto& descriptorTable : m_DescriptorTables)
-	{
-		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameter.DescriptorTable = descriptorTable;
-		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		m_RootParameters.push_back(rootParameter);
-	}
-
-	rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameter.DescriptorTable = m_DescriptorTableSampler;
-	rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	m_RootParameters.push_back(rootParameter);
 }
 

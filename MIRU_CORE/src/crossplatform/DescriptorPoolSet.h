@@ -68,7 +68,7 @@ namespace crossplatform
 		{
 			const char*				debugName;
 			void*					device;
-			std::vector<Binding>	descriptorSetLayoutBinding; //Collect by type and then by ascending binding number.
+			std::vector<Binding>	descriptorSetLayoutBinding; //Order by type and then by ascending binding number.
 		};
 		//Methods
 	public:

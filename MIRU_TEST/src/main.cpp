@@ -414,14 +414,14 @@ int main()
 	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
 	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.descriptorSetLayoutBinding = { 
-		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }, 
-		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT }
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
+		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
 	};
 	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Image Descriptor Set";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = {setLayout1, setLayout2 };
+	descriptorSetCI.pDescriptorSetLayouts = { setLayout1, setLayout2 };
 	Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet->AddBuffer(0, 0, { { ubViewCam } });
 	descriptorSet->AddBuffer(1, 0, { { ubViewMdl } });
@@ -484,7 +484,7 @@ int main()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
-	pCI.layout = { {setLayout1, setLayout2}, {} };
+	pCI.layout = { {setLayout1, setLayout2 }, {} };
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
@@ -615,7 +615,7 @@ int main()
 			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
 				proj.f *= -1;
-			modl = mars::Mat4::Translation({ 0.0f, 0.0f, -1.0f })
+			modl = mars::Mat4::Translation({ 0.0f, 0.0f, -1.5f })
 				* mars::Mat4::Rotation(mars::DegToRad(var_x * 5.0), { 0, 1, 0 })
 				* mars::Mat4::Rotation(mars::DegToRad(var_y * 5.0), { 1, 0, 0 })
 				* mars::Mat4::Rotation(mars::DegToRad(var_z * 5.0), { 0, 0, 1 })

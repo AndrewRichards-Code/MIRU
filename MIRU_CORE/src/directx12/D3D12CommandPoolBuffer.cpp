@@ -616,7 +616,6 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
-bool operator== (const D3D12_ROOT_DESCRIPTOR_TABLE& a, const D3D12_ROOT_DESCRIPTOR_TABLE& b) { return (a.NumDescriptorRanges == b.NumDescriptorRanges) && (a.pDescriptorRanges == b.pDescriptorRanges); }
 void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -624,40 +623,42 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	CHECK_VALID_INDEX_RETURN(index);
 
 	size_t i = 0;
-	for (auto& descriptorSet : descriptorSets)
+	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_RootParameters)
 	{
-		for (auto& rootParam : ref_cast<DescriptorSet>(descriptorSet)->m_RootParameters)
-		{
-			D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
-			D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
+		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
+		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
 
-			D3D12_ROOT_DESCRIPTOR_TABLE descSet_table = rootParam.DescriptorTable;
-			if (pipeline_table == descSet_table)
+		size_t set = pipeline_table.pDescriptorRanges[0].RegisterSpace;
+		for (auto& descriptorSet : descriptorSets)
+		{
+			if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
 			{
-				size_t set = descSet_table.pDescriptorRanges[0].RegisterSpace;
-				if (descSet_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+				auto samplerHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][1];
+				if (samplerHeap)
 				{
-					auto samplerHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][1];
 					gpuDescHandle = samplerHeap->GetGPUDescriptorHandleForHeapStart();
 					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &samplerHeap);
 				}
-				else
+			}
+			else
+			{
+				auto cbvSrvUavHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][0];
+				if (cbvSrvUavHeap)
 				{
-					auto cbvSrvUavHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][0];
 					gpuDescHandle = cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
 					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &cbvSrvUavHeap);
 				}
-
-				if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
-					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
-				else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
-					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
-
-				i++;
-				if (i >= ref_cast<Pipeline>(pipeline)->m_RootParameters.size())
-					break;
 			}
 		}
+		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+
+		i++;
+		if (i >= ref_cast<Pipeline>(pipeline)->m_RootParameters.size())
+			break;
+		
 	}
 };
 

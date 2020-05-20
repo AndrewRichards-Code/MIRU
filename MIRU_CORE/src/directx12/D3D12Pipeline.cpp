@@ -30,21 +30,59 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 
 	m_RootParameters.clear();
+	
+	UINT set = 0;
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorRanges = {};
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTableSampler = {};
+
 	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
 	{
+		m_DescriptorRanges.push_back({});
+		for (size_t i = 0; i < 4; i++)
+		{
+			D3D12_DESCRIPTOR_RANGE descRange = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[i];
+			if (descRange.NumDescriptors > 0)
+			{
+				descRange.RegisterSpace = set;
+				if (descRange.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+					m_DescriptorRangesSampler.push_back(descRange);
+				else
+					m_DescriptorRanges.back().push_back(descRange);
+			}
+		}
+
+		std::sort(m_DescriptorRanges.back().begin(), m_DescriptorRanges.back().end(),
+			[](const D3D12_DESCRIPTOR_RANGE& a, const D3D12_DESCRIPTOR_RANGE& b)
+			{
+				return a.BaseShaderRegister < b.BaseShaderRegister;
+			});
+
+		descriptorRanges.NumDescriptorRanges = static_cast<UINT>(m_DescriptorRanges.back().size());
+		descriptorRanges.pDescriptorRanges = m_DescriptorRanges.back().data();
+		if (!m_DescriptorRangesSampler.empty())
+		{
+			if (m_DescriptorRangesSampler.back().NumDescriptors)
+			{
+				descriptorTableSampler.NumDescriptorRanges = 1;
+				descriptorTableSampler.pDescriptorRanges = &m_DescriptorRangesSampler.back();
+			}
+		}
+
 		D3D12_ROOT_PARAMETER rootParameter;
 		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTable;
+		rootParameter.DescriptorTable = descriptorRanges;
 		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		m_RootParameters.push_back(rootParameter);
 
-		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTableSampler.pDescriptorRanges)
+		if (descriptorTableSampler.pDescriptorRanges)
 		{
 			rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			rootParameter.DescriptorTable = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorTableSampler;
+			rootParameter.DescriptorTable = descriptorTableSampler;
 			rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 			m_RootParameters.push_back(rootParameter);
 		}
+
+		set++;
 	}
 	for (auto& pushConstantRange : m_CI.layout.pushConstantRanges)
 	{
