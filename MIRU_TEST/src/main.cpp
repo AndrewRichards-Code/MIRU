@@ -141,11 +141,13 @@ int main()
 	cmdBufferCI.pCommandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
+	cmdBufferCI.allocateNewCommandPoolPerBuffer = GraphicsAPI::IsD3D12();
 	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
 	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
+	cmdCopyBufferCI.allocateNewCommandPoolPerBuffer = false;
 	Ref<CommandBuffer> cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	MemoryBlock::CreateInfo mbCI;
@@ -411,21 +413,23 @@ int main()
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic Shader DescSetLayout";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
-	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.descriptorSetLayoutBinding = { 
-		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
-		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT }, 
+		{1, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
+		{2, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
 	};
-	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
+	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
+	/*setLayoutCI.descriptorSetLayoutBinding = { 
+	};
+	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);*/
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Image Descriptor Set";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout1, setLayout2 };
+	descriptorSetCI.pDescriptorSetLayouts = { setLayout1 /*, setLayout2*/ };
 	Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet->AddBuffer(0, 0, { { ubViewCam } });
-	descriptorSet->AddBuffer(1, 0, { { ubViewMdl } });
-	descriptorSet->AddImage(1, 1, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descriptorSet->AddBuffer(0, 1, { { ubViewMdl } });
+	descriptorSet->AddImage(0, 2, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descriptorSet->Update();
 
 	RenderPass::CreateInfo renderPassCI;
@@ -484,7 +488,7 @@ int main()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
-	pCI.layout = { {setLayout1, setLayout2 }, {} };
+	pCI.layout = { {setLayout1/*, setLayout2*/ }, {} };
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
@@ -599,7 +603,7 @@ int main()
 				r += increment;
 			}
 
-			while (draws[frameIndex]->Wait()) {}
+			draws[frameIndex]->Wait();
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);

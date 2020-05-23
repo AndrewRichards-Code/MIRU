@@ -27,9 +27,9 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Reset() = 0;
-		//Returns false if Fence is signaled.
+		//Returns true if Fence is signaled.
 		virtual bool GetStatus() = 0;
-		//Returns false if Fence is signaled.
+		//Returns false if the wait times out.
 		virtual bool Wait() = 0;
 
 		//Members

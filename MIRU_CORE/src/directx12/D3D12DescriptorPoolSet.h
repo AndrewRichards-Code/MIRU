@@ -16,16 +16,7 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		//Per Set per type
-		//[set][0] == HEAP_TYPE_CBV_SRV_UAV and [set][1] == HEAP_TYPE_SAMPLER
-		//[set][2] == HEAP_TYPE_RTV         and [set][3] == HEAP_TYPE_DSV
-		std::vector<std::array<ID3D12DescriptorHeap*, 4>> m_DescriptorPools; 
-		D3D12_DESCRIPTOR_HEAP_DESC m_DescriptorPoolDescs[4];
-
-		//Per Set per binding per type
-		//[set][binding][0] == HEAP_TYPE_CBV_SRV_UAV and [set][binding][1] == HEAP_TYPE_SAMPLER
-		//[set][binding][2] == HEAP_TYPE_RTV         and [set][binding][3] == HEAP_TYPE_DSV
-		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
+		size_t m_AssignedSets = 0;
 	};
 
 	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
@@ -58,6 +49,17 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
+
+		//Per Index per type
+		//[index][0] == HEAP_TYPE_CBV_SRV_UAV and [index][1] == HEAP_TYPE_SAMPLER
+		//[index][2] == HEAP_TYPE_RTV         and [index][3] == HEAP_TYPE_DSV
+		std::vector<std::array<ID3D12DescriptorHeap*, 4>> m_DescriptorHeaps;
+		std::vector<std::array<D3D12_DESCRIPTOR_HEAP_DESC, 4>> m_DescriptorHeapDescs;
+
+		//Per Index per binding per type
+		//[index][binding][0] == HEAP_TYPE_CBV_SRV_UAV and [index][binding][1] == HEAP_TYPE_SAMPLER
+		//[index][binding][2] == HEAP_TYPE_RTV         and [index][binding][3] == HEAP_TYPE_DSV
+		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
 
 		std::map<uint32_t, std::map<uint32_t, uint32_t>> m_SamplerBindings;
 	};

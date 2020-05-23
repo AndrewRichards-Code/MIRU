@@ -22,7 +22,7 @@ struct Model
 {
     float4x4 modl;
 };
-MIRU_UNIFORM_BUFFER(1, 0, Model, model);
+MIRU_UNIFORM_BUFFER(0, 1, Model, model);
 
 VS_OUT main(VS_IN IN)
 {

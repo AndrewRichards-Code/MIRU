@@ -17,15 +17,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Setup Debug
 #if defined(_DEBUG)
-	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
-	m_Debug->EnableDebugLayer();
-	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
+	//TO DO: Re-enable
+	//MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
+	//m_Debug->EnableDebugLayer();
+	//reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
 #endif
 
 	//Create Factory
 	UINT createFactoryFlags = 0;
 #if defined(_DEBUG)
-	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+	//createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
 
@@ -130,7 +131,7 @@ void Context::DeviceWaitIdle()
 		ref_cast<Fence>(fence)->GetValue()++;
 
 		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
-		while (fence->Wait()) {}
+		fence->Wait();
 		fence->~Fence();
 		fence = nullptr;
 	}

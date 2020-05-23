@@ -18,9 +18,9 @@ namespace crossplatform
 	public:
 		enum class FlagBit : uint32_t
 		{
-			TRANSIENT_BIT = 0x00000001,
-			RESET_COMMAND_BUFFER_BIT = 0x00000002,
-			PROTECTED_BIT = 0x00000004,
+			TRANSIENT_BIT				= 0x00000001,
+			RESET_COMMAND_BUFFER_BIT	= 0x00000002,
+			PROTECTED_BIT				= 0x00000004,
 		};
 		struct CreateInfo
 		{
@@ -66,6 +66,7 @@ namespace crossplatform
 			Ref<CommandPool>	pCommandPool;
 			Level				level;
 			uint32_t			commandBufferCount;
+			bool				allocateNewCommandPoolPerBuffer; //For D3D12 only: 1:1 CmdBuffer-CmdPool usage.
 		};
 
 		//Methods

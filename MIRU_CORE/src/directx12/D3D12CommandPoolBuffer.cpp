@@ -56,22 +56,90 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	m_CmdPool = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPool;
 	D3D12_COMMAND_QUEUE_DESC queueDesc = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue->GetDesc();
 
+	if (m_CI.allocateNewCommandPoolPerBuffer)
+	{
+		m_CmdPools.resize(m_CI.commandBufferCount);
+		for (size_t i = 0; i < m_CmdPools.size(); i++)
+		{
+			MIRU_ASSERT(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&m_CmdPools[i])), "ERROR: D3D12: Failed to create CommandPool.");
+			D3D12SetName(m_CmdPools[i], m_CI.debugName);
+		}
+	}
+
 	m_CmdBuffers.resize(m_CI.commandBufferCount);
 	for (size_t i = 0; i < m_CmdBuffers.size(); i++)
 	{
-		MIRU_ASSERT(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, m_CmdPool, nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
+		ID3D12CommandAllocator* cmdPool = m_CmdPool;
+		if (m_CI.allocateNewCommandPoolPerBuffer)
+			cmdPool = m_CmdPools[i];
+
+		MIRU_ASSERT(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, cmdPool, nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
 		D3D12SetName(m_CmdBuffers[i], (std::string(m_CI.debugName) + ": " + std::to_string(i)).c_str());
 		End(static_cast<uint32_t>(i));
 	}
 
+	D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12Options;
+	MIRU_ASSERT(m_Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &d3d12Options, sizeof(d3d12Options)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS");
+	
+	switch (d3d12Options.ResourceBindingTier)
+	{
+	case D3D12_RESOURCE_BINDING_TIER_3:
+	{
+		m_MaxDescriptorCount 
+			= m_MaxCBVsPerStage 
+			= m_MaxSRVsPerStage 
+			= m_MaxUAVsPerStage 
+			= m_MaxSamplersPerStage 
+			= 1000000;
+		break;
+	}
+	case D3D12_RESOURCE_BINDING_TIER_2:
+	{
+		m_MaxDescriptorCount = 1000000;
+		m_MaxCBVsPerStage = 14;
+		m_MaxSRVsPerStage = 1000000;
+		m_MaxUAVsPerStage = 64;
+		m_MaxSamplersPerStage = 1000000;
+		break;
+	}
+	case D3D12_RESOURCE_BINDING_TIER_1:
+	default:
+	{
+		auto contextCI = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext)->GetCreateInfo();
+		m_MaxDescriptorCount = 1000000;
+		m_MaxCBVsPerStage = 14;
+		m_MaxSRVsPerStage = 128;
+		m_MaxUAVsPerStage = (contextCI.api_version_major == 11 && contextCI.api_version_minor == 0) ? 8 : 64;
+		m_MaxSamplersPerStage = 16;
+		break;
+	}
+	}
+	
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.NumDescriptors = m_MaxDescriptorCount;
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.NodeMask = 0;
+	m_Device->CreateDescriptorHeap(&m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap));
+
+	m_CmdBuffer_Sampler_DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+	m_CmdBuffer_Sampler_DescriptorHeapDesc.NumDescriptors = m_MaxSamplerCount;
+	m_CmdBuffer_Sampler_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	m_CmdBuffer_Sampler_DescriptorHeapDesc.NodeMask = 0;
+	m_Device->CreateDescriptorHeap(&m_CmdBuffer_Sampler_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_Sampler_DescriptorHeap));
 }
 
 CommandBuffer::~CommandBuffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	SAFE_RELEASE(m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap);
+	SAFE_RELEASE(m_CmdBuffer_Sampler_DescriptorHeap);
+
 	for (auto& cmdBuffer : m_CmdBuffers)
 		SAFE_RELEASE(cmdBuffer);
+
+	for (auto& cmdPool : m_CmdPools)
+		SAFE_RELEASE(cmdPool);
 }
 
 void CommandBuffer::Begin(uint32_t index, UsageBit usage)
@@ -97,7 +165,14 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	if (m_Resettable)
 	{
 		CHECK_VALID_INDEX_RETURN(index);
-		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(m_CmdPool, nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
+		ID3D12CommandAllocator* cmdPool = m_CmdPool;
+		if (m_CI.allocateNewCommandPoolPerBuffer)
+		{
+			cmdPool = m_CmdPools[index];
+			MIRU_ASSERT(cmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+		}
+
+		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(cmdPool, nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
 		m_Resettable = false;
 	}
 }
@@ -173,7 +248,15 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	//UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
 	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE, {});
 	
-	MIRU_ASSERT(d3d12Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+	if (swapchain->GetCreateInfo().vSync)
+	{
+		MIRU_ASSERT(d3d12Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+	}
+	else
+	{
+		MIRU_ASSERT(d3d12Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+	}
+	
 	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
 	d3d12Queue->Signal(ref_cast<Fence>(draws[m_CurrentFrame])->m_Fence, ref_cast<Fence>(draws[m_CurrentFrame])->GetValue());
 
@@ -622,34 +705,58 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 
 	CHECK_VALID_INDEX_RETURN(index);
 
+	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+	UINT cbv_srv_uav_DescriptorOffset = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle;
+	
+	UINT samplerDescriptorOffset = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_Sampler_DescriptorHeapHandle;
+
+	for(auto& descriptorSet : descriptorSets)
+	{
+		auto d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
+		auto heap = d3d12DescriptorSet->m_DescriptorHeaps;
+		auto heapDesc = d3d12DescriptorSet->m_DescriptorHeapDescs;
+		
+		for (size_t i = 0; i < heap.size(); i++)
+		{
+			m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = 
+				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset;
+			m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, 
+				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle,
+				heap[i][0]->GetCPUDescriptorHandleForHeapStart(), 
+				D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			cbv_srv_uav_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
+
+			m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = 
+				m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset;
+			m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors,
+				m_CmdBuffer_Sampler_DescriptorHeapHandle,
+				heap[i][1]->GetCPUDescriptorHandleForHeapStart(),
+				D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+			samplerDescriptorOffset += heapDesc[i][0].NumDescriptors * samplerDescriptorSize;
+		}
+	}
+	
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvUavGpuDescHandle = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE samplerGpuDescHandle = m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	ID3D12DescriptorHeap* heaps[2] = { m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap,  m_CmdBuffer_Sampler_DescriptorHeap };
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(2, heaps);
+	
 	size_t i = 0;
 	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_RootParameters)
 	{
 		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
 		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
+	
+		if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+			gpuDescHandle = samplerGpuDescHandle;
+		else
+			gpuDescHandle = cbvSrvUavGpuDescHandle;
 
-		size_t set = pipeline_table.pDescriptorRanges[0].RegisterSpace;
-		for (auto& descriptorSet : descriptorSets)
-		{
-			if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-			{
-				auto samplerHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][1];
-				if (samplerHeap)
-				{
-					gpuDescHandle = samplerHeap->GetGPUDescriptorHandleForHeapStart();
-					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &samplerHeap);
-				}
-			}
-			else
-			{
-				auto cbvSrvUavHeap = ref_cast<DescriptorPool>(descriptorSet->GetCreateInfo().pDescriptorPool)->m_DescriptorPools[set][0];
-				if (cbvSrvUavHeap)
-				{
-					gpuDescHandle = cbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart();
-					reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(1, &cbvSrvUavHeap);
-				}
-			}
-		}
 		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
 		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)

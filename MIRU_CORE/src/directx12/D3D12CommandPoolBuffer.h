@@ -66,8 +66,22 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 		ID3D12CommandAllocator* m_CmdPool;
+		std::vector<ID3D12CommandAllocator*> m_CmdPools;
 
 		std::vector<ID3D12CommandList*> m_CmdBuffers;
+
+		D3D12_RESOURCE_BINDING_TIER m_ResourceBindingTier;
+		uint32_t m_MaxDescriptorCount;
+		uint32_t m_MaxCBVsPerStage;
+		uint32_t m_MaxSRVsPerStage;
+		uint32_t m_MaxUAVsPerStage;
+		uint32_t m_MaxSamplersPerStage;
+		const uint32_t m_MaxSamplerCount = 2048;
+
+		ID3D12DescriptorHeap* m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap;
+		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc;
+		ID3D12DescriptorHeap* m_CmdBuffer_Sampler_DescriptorHeap;
+		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_Sampler_DescriptorHeapDesc;
 
 		Ref<crossplatform::Framebuffer> m_RenderPassFramebuffer;
 		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;

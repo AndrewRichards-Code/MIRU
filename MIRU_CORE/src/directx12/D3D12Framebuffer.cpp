@@ -89,16 +89,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorPoolCI.maxSets = 1;
 	m_FramebufferDescriptorPool = crossplatform::DescriptorPool::Create(&m_FramebufferDescriptorPoolCI);
 
-	m_FramebufferDescriptorSetCI.debugName = (std::string(m_CI.debugName) + "Framebuffer DescriptorSet").c_str();
-	m_FramebufferDescriptorSetCI.pDescriptorPool = m_FramebufferDescriptorPool;
-	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = {};
-	m_FramebufferDescriptorSet = crossplatform::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
-	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
+	std::vector<DescriptorSetLayout::Binding> framebufferDescriptorBindings;
 	UINT rtvBinding = 0;
 	UINT dsvBinding = 0;
 	UINT srvBinding = 0;
@@ -107,33 +98,56 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][rtvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
+			framebufferDescriptorBindings.push_back({ rtvBinding , crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			rtvBinding++;
+		}
+		//DSV
+		else if (imageView.NeedDSV && !imageView.HasDSV)
+		{
+			framebufferDescriptorBindings.push_back({ dsvBinding , crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			dsvBinding++;
+		}
+		//SRV
+		else if (imageView.NeedSRV && !imageView.HasSRV)
+		{
+			framebufferDescriptorBindings.push_back({ srvBinding , crossplatform::DescriptorType::SAMPLED_IMAGE, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			srvBinding++;
+		}
+	}
 
-			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
-				&ref_cast<ImageView>(imageView.imageView)->m_RTVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(imageView.imageView)->m_RTVDescHandle = descriptorWriteLocation;
+	m_FramebufferDescriptorSetLayoutCI.debugName = "Framebuffer DescriptorSetLayout";
+	m_FramebufferDescriptorSetLayoutCI.device = m_Device;
+	m_FramebufferDescriptorSetLayoutCI.descriptorSetLayoutBinding = framebufferDescriptorBindings;
+	m_FramebufferDescriptorSetLayout = DescriptorSetLayout::Create(&m_FramebufferDescriptorSetLayoutCI);
+
+	m_FramebufferDescriptorSetCI.debugName = (std::string(m_CI.debugName) + "Framebuffer DescriptorSet").c_str();
+	m_FramebufferDescriptorSetCI.pDescriptorPool = m_FramebufferDescriptorPool;
+	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
+	m_FramebufferDescriptorSet = crossplatform::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
+
+	rtvBinding = 0;
+	dsvBinding = 0;
+	srvBinding = 0;
+	for (auto& imageView : m_ImageView_RTV_DSV_SRVs)
+	{
+		//RTV
+		if (imageView.NeedRTV && !imageView.HasRTV)
+		{
+			m_FramebufferDescriptorSet->AddImage(0, rtvBinding, { {nullptr, imageView.imageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL} });
 			imageView.HasRTV = true;
 			rtvBinding++;
 		}
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][dsvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
-
-			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
-				&ref_cast<ImageView>(imageView.imageView)->m_DSVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(imageView.imageView)->m_DSVDescHandle = descriptorWriteLocation;
+			m_FramebufferDescriptorSet->AddImage(0, dsvBinding, { {nullptr, imageView.imageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL} });
 			imageView.HasDSV = true;
 			dsvBinding++;
 		}
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			descriptorWriteLocation = ref_cast<DescriptorPool>(m_FramebufferDescriptorSet->GetCreateInfo().pDescriptorPool)->m_DescCPUHandles[0][srvBinding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-
-			m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(imageView.imageView)->GetCreateInfo().pImage)->m_Image,
-				/*&ref_cast<ImageView>(imageView.imageView)->m_SRVDesc*/0, descriptorWriteLocation);
-			ref_cast<ImageView>(imageView.imageView)->m_SRVDescHandle = descriptorWriteLocation;
+			m_FramebufferDescriptorSet->AddImage(0, srvBinding, { {nullptr, imageView.imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL} });
 			imageView.HasSRV = true;
 			srvBinding++;
 		}

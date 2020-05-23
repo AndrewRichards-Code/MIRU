@@ -11,7 +11,7 @@ struct PS_OUT
     MIRU_LOCATION(0, float4, colour, SV_TARGET0);
 };
 
-MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_CUBE, 1, 1, float4, colour);
+MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_CUBE, 0, 2, float4, colour);
 
 PS_OUT main(PS_IN IN)
 {

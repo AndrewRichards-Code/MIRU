@@ -25,7 +25,23 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::COLOUR_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET : D3D12_RESOURCE_FLAGS(0);
 	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAGS(0);
-	D3D12_CLEAR_VALUE* clear = nullptr;
+	
+	D3D12_CLEAR_VALUE clear = {};
+	bool useClear = false;
+
+	if (useClear = m_ResourceDesc.Flags == D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	{
+		clear.Format = m_ResourceDesc.Format;
+		clear.Color[0] = 0.0f;
+		clear.Color[1] = 0.0f;
+		clear.Color[2] = 0.0f;
+		clear.Color[3] = 0.0f;
+	}
+	if (useClear = m_ResourceDesc.Flags == D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	{
+		clear.Format = m_ResourceDesc.Format;
+		clear.DepthStencil = { 0.0f, 0 };
+	}
 
 	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
@@ -46,7 +62,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	{
 		m_CI.pMemoryBlock->AddResource(m_Resource);
 
-		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_CurrentResourceState, clear, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
+		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_CurrentResourceState, useClear ? &clear : nullptr, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 		D3D12SetName(m_Image, m_CI.debugName);
 
 		m_Resource.resource = (uint64_t)m_Image;
@@ -447,7 +463,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
 		{
 			m_DSVDesc.Format = resourceDesc.Format;
-			//m_DSVDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+			m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
 			switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 			{
@@ -507,6 +523,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	//SRV
 	{
 		m_SRVDesc.Format = resourceDesc.Format;
+		m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
 		{

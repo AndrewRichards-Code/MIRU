@@ -20,6 +20,9 @@ namespace d3d12
 		Ref<crossplatform::DescriptorPool> m_FramebufferDescriptorPool;
 		crossplatform::DescriptorPool::CreateInfo m_FramebufferDescriptorPoolCI;
 
+		Ref<crossplatform::DescriptorSetLayout> m_FramebufferDescriptorSetLayout;
+		crossplatform::DescriptorSetLayout::CreateInfo m_FramebufferDescriptorSetLayoutCI;
+
 		Ref<crossplatform::DescriptorSet> m_FramebufferDescriptorSet;
 		crossplatform::DescriptorSet::CreateInfo m_FramebufferDescriptorSetCI;
 

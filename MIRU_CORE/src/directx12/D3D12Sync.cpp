@@ -30,6 +30,8 @@ void Fence::Reset()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	Wait();
+	m_Value = 0;
 	return;
 }
 
@@ -37,21 +39,28 @@ bool Fence::GetStatus()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	return Wait();
+	return !(m_Fence->GetCompletedValue() < m_Value);
 }
 
 bool Fence::Wait()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (m_Fence->GetCompletedValue() == m_Value)
+	if (m_Fence->GetCompletedValue() < m_Value)
 	{
 		MIRU_ASSERT(m_Fence->SetEventOnCompletion(m_Value, m_Event), "ERROR: D3D12: Failed to wait for Fence.");
-		WaitForSingleObject(m_Event, static_cast<DWORD>(m_CI.timeout/1000));
-		return false;
+		DWORD result = WaitForSingleObject(m_Event, static_cast<DWORD>(m_CI.timeout/1000));
+		if (result == WAIT_OBJECT_0)
+			return true;
+		else if (result == WAIT_TIMEOUT)
+			return false;
+		else
+		{
+			MIRU_ASSERT(result, "ERROR: D3D12: Failed to get status of Fence.");
+			return false;
+		}
 	}
-	else
-		return true;
+	return true;
 }
 
 void Fence::Signal()

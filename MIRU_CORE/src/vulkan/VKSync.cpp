@@ -43,16 +43,14 @@ bool Fence::GetStatus()
 
 	VkResult result = vkGetFenceStatus(m_Device, m_Fence);
 	if (result == VK_SUCCESS)
-		return false;
-	else if (result == VK_NOT_READY)
 		return true;
-	else if (result)
+	else if (result == VK_NOT_READY)
+		return false;
+	else
 	{
 		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to get status of Fence.");
-		return true;
+		return false;
 	}
-	else
-		return true;
 }
 
 bool Fence::Wait()
@@ -61,16 +59,14 @@ bool Fence::Wait()
 
 	VkResult result = vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, m_CI.timeout);
 	if (result == VK_SUCCESS)
-		return false;
-	else if (result == VK_TIMEOUT)
 		return true;
-	else if (result)
+	else if (result == VK_TIMEOUT)
+		return false;
+	else
 	{
 		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to wait for Fence.");
 		return false;
 	}
-	else
-		return true;
 }
 
 //Semaphore
