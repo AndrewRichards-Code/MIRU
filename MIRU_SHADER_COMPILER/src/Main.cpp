@@ -80,7 +80,7 @@ int main(int argc, const char** argv)
 	}
 
 	//Get Filepath, Directories and others
-	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderModel, args;
+	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderModel, dxc_args, glslang_args;
 	std::vector<std::string> includeDirs;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
@@ -121,14 +121,20 @@ int main(int argc, const char** argv)
 			tempFilepath.erase(0, std::string("-GLSLANG:").size());
 			glslang_path = tempFilepath;
 		}
-		if (tempFilepath.find("-args:") != std::string::npos || tempFilepath.find("-ARGS:") != std::string::npos)
+		if (tempFilepath.find("-dxc_args:") != std::string::npos || tempFilepath.find("-DXC_ARGS:") != std::string::npos)
 		{
-			tempFilepath.erase(0, std::string("-ARGS:").size());
-			args = tempFilepath;
+			tempFilepath.erase(0, std::string("-DXC_ARGS:").size());
+			dxc_args = tempFilepath;
+		}
+		if (tempFilepath.find("-glslang_args:") != std::string::npos || tempFilepath.find("-GLSLANG_ARGS:") != std::string::npos)
+		{
+			tempFilepath.erase(0, std::string("-GLSLANG_ARGS:").size());
+			glslang_args = tempFilepath;
 		}
 		if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
 		{
-			args += tempFilepath + " ";
+			dxc_args += tempFilepath + " ";
+			glslang_args += tempFilepath + " ";
 		}
 
 	}
@@ -155,13 +161,13 @@ int main(int argc, const char** argv)
 	if (cso)
 	{
 		CONSOLE_OUTPUT_GREEN;
-		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, args, dxc_path);
+		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, dxc_args, dxc_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.");
 	}
 	if (spv)
 	{
 		CONSOLE_OUTPUT_RED;
-		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, args, glslang_path);
+		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, glslang_args, glslang_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.");
 	}
 	CONSOLE_OUTPUT_WHITE;

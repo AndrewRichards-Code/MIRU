@@ -112,12 +112,13 @@ namespace crossplatform
 	};
 	enum class CullModeBit : uint32_t
 	{
-		NONE = 0x00000000,
+		NONE_BIT = 0x00000000,
 		FRONT_BIT = 0x00000001,
 		BACK_BIT = 0x00000002,
-		FRONT_AND_BACK = 0x00000003,
+		FRONT_AND_BACK_BIT = 0x00000003,
 	};
-	enum class FrontFace {
+	enum class FrontFace
+	{
 		COUNTER_CLOCKWISE = 0,
 		CLOCKWISE = 1,
 	};
@@ -262,7 +263,7 @@ namespace crossplatform
 	};
 	enum class PipelineStageBit : uint32_t
 	{
-		NONE = 0x00000000,
+		NONE_BIT = 0x00000000,
 		TOP_OF_PIPE_BIT = 0x00000001,
 		DRAW_INDIRECT_BIT = 0x00000002,
 		VERTEX_INPUT_BIT = 0x00000004,

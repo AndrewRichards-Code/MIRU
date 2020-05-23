@@ -33,8 +33,6 @@ void GraphicsAPI::LoadGraphicsDebugger()
 {
 	if (GraphicsAPI::IsD3D12())
 		s_GraphicsDebugger = std::make_shared<debug::Pix>();
-	else if (GraphicsAPI::IsVulkan())
-		s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
 	else
-		MIRU_WARN(true, "WARN: GraphicsAPI:API is not VULKAN. Can not LoadRenderDoc.");
+		s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
 }

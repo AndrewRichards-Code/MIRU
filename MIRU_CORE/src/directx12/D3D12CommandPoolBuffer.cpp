@@ -246,7 +246,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	}
 
 	//UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE, {});
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE_BIT, {});
 	
 	if (swapchain->GetCreateInfo().vSync)
 	{
@@ -714,6 +714,9 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	UINT samplerDescriptorOffset = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_Sampler_DescriptorHeapHandle;
 
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> CBV_SRV_UAV_DescriptorHeapHandles;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> SamplerDescriptorHeapHandles;
+
 	for(auto& descriptorSet : descriptorSets)
 	{
 		auto d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
@@ -722,30 +725,30 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		
 		for (size_t i = 0; i < heap.size(); i++)
 		{
-			m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = 
-				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset;
-			m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, 
-				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle,
-				heap[i][0]->GetCPUDescriptorHandleForHeapStart(), 
-				D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			cbv_srv_uav_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
+			if (heapDesc[i][0].NumDescriptors)
+			{
+				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset;
+				CBV_SRV_UAV_DescriptorHeapHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset });
+				m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle, heap[i][0]->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+				cbv_srv_uav_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
+			}
 
-			m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = 
-				m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset;
-			m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors,
-				m_CmdBuffer_Sampler_DescriptorHeapHandle,
-				heap[i][1]->GetCPUDescriptorHandleForHeapStart(),
-				D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-			samplerDescriptorOffset += heapDesc[i][0].NumDescriptors * samplerDescriptorSize;
+			if (heapDesc[i][1].NumDescriptors)
+			{
+				m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset;
+				SamplerDescriptorHeapHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset });
+				m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors, m_CmdBuffer_Sampler_DescriptorHeapHandle, heap[i][1]->GetCPUDescriptorHandleForHeapStart(),D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+				samplerDescriptorOffset += heapDesc[i][0].NumDescriptors * samplerDescriptorSize;
+			}
 		}
 	}
 	
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvUavGpuDescHandle = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE samplerGpuDescHandle = m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-
 	ID3D12DescriptorHeap* heaps[2] = { m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap,  m_CmdBuffer_Sampler_DescriptorHeap };
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(2, heaps);
 	
+	size_t CBV_SRV_UAV_DescriptorHeapHandleIndex = 0;
+	size_t SamplerDescriptorHeapHandleIndex = 0;
+
 	size_t i = 0;
 	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_RootParameters)
 	{
@@ -753,9 +756,17 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
 	
 		if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-			gpuDescHandle = samplerGpuDescHandle;
+		{
+			MIRU_ASSERT(!(SamplerDescriptorHeapHandleIndex < SamplerDescriptorHeapHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			gpuDescHandle = SamplerDescriptorHeapHandles[SamplerDescriptorHeapHandleIndex];
+			SamplerDescriptorHeapHandleIndex++;
+		}
 		else
-			gpuDescHandle = cbvSrvUavGpuDescHandle;
+		{
+			MIRU_ASSERT(!(CBV_SRV_UAV_DescriptorHeapHandleIndex < CBV_SRV_UAV_DescriptorHeapHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			gpuDescHandle = CBV_SRV_UAV_DescriptorHeapHandles[CBV_SRV_UAV_DescriptorHeapHandleIndex];
+			CBV_SRV_UAV_DescriptorHeapHandleIndex++;
+		}
 
 		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
@@ -844,7 +855,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer>
 		m_Device->GetCopyableFootprints(&dst.pResource->GetDesc(), 0, 1, 0, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		src.PlacedFootprint = Layout;
 
-		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
+		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < (region.imageSubresource.arrayLayerCount + region.imageSubresource.baseArrayLayer); i++)
 		{
 			const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
 			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
