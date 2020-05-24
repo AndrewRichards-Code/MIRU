@@ -42,7 +42,7 @@ RenderDoc::~RenderDoc()
 	{
 		if (!FreeLibrary(s_HModuleRenderDoc))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to free'" + s_RenderDocFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
@@ -87,7 +87,7 @@ RenderDoc::~RenderDoc()
 	{
 		if (!dlclose(s_LibRenderDoc))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath + "'.";
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to free'" + s_RenderDocFullpath + "'.";
 			MIRU_WARN(true, error_str.c_str());
 		}
 	}

@@ -17,16 +17,15 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Setup Debug
 #if defined(_DEBUG)
-	//TO DO: Re-enable
-	//MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
-	//m_Debug->EnableDebugLayer();
-	//reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
+	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
+	m_Debug->EnableDebugLayer();
+	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
 #endif
 
 	//Create Factory
 	UINT createFactoryFlags = 0;
 #if defined(_DEBUG)
-	//createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+	createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
 
@@ -82,7 +81,7 @@ Context::~Context()
 	{
 		if (!FreeLibrary(s_HModeuleDXIL))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: D3D12: Unable to free'" + s_DXILFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
@@ -128,10 +127,11 @@ void Context::DeviceWaitIdle()
 	for (auto& queue : m_Queues)
 	{
 		fence = Fence::Create(&ci);
-		ref_cast<Fence>(fence)->GetValue()++;
 
+		ref_cast<Fence>(fence)->GetValue()++;
 		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
 		fence->Wait();
+		
 		fence->~Fence();
 		fence = nullptr;
 	}

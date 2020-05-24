@@ -43,7 +43,7 @@ void CommandPool::Reset(bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_CmdPool->Reset();
+	MIRU_ASSERT(m_CmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
 }
 
 //CmdBuffer
@@ -201,20 +201,24 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 
 	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
+
 	for (auto& index : cmdBufferIndices)
 	{
 		if (index < m_CI.commandBufferCount)
 			submitCmdBuffers.push_back(m_CmdBuffers[index]);
 	}
+
 	for (auto& wait : waits)
-		queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, ref_cast<Semaphore>(wait)->GetValue());
+	{
+		MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, ref_cast<Semaphore>(wait)->GetValue()), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+	}
 	
 	queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
 	
 	for (auto& signal : signals)
 	{
 		ref_cast<Semaphore>(signal)->GetValue()++;
-		queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, ref_cast<Semaphore>(signal)->GetValue());
+		MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, ref_cast<Semaphore>(signal)->GetValue()), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 	}
 }
 
@@ -234,6 +238,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	
 	IDXGISwapChain4* d3d12Swapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
 	ID3D12CommandQueue* d3d12Queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
 
 	draws[m_CurrentFrame]->Wait();
 	draws[m_CurrentFrame]->Reset();
@@ -245,7 +250,6 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 		return;
 	}
 
-	//UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
 	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE_BIT, {});
 	
 	if (swapchain->GetCreateInfo().vSync)
@@ -256,10 +260,10 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	{
 		MIRU_ASSERT(d3d12Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
 	}
-	
-	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
-	d3d12Queue->Signal(ref_cast<Fence>(draws[m_CurrentFrame])->m_Fence, ref_cast<Fence>(draws[m_CurrentFrame])->GetValue());
 
+	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
+	MIRU_ASSERT(d3d12Queue->Signal(ref_cast<Fence>(draws[m_CurrentFrame])->m_Fence, ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
+	
 	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
 }
 

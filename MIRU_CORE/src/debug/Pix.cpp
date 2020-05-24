@@ -31,7 +31,7 @@ Pix::~Pix()
 	{
 		if (!FreeLibrary(s_HModulePix))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_PixFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: CROSSPLATFORM: Unable to free '" + s_PixFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}

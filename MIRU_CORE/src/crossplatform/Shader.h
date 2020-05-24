@@ -103,13 +103,10 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 		std::vector<char> m_ShaderBinary;
 
-		std::vector<char> m_ShaderAssembly;
-		bool m_AssemblyFileFound = false;
-
 		std::vector<VertexShaderInputAttributeDescription> m_VSIADs;
 		std::vector<PixelShaderOutputAttributeDescription> m_PSOADs;
 
-		//Key the set number
+		//Key is the set number
 		std::map<uint32_t, std::vector<ResourceBindingDescription>> m_RBDs;
 	};
 }

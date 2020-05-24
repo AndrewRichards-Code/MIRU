@@ -31,7 +31,7 @@ void Fence::Reset()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	Wait();
-	m_Value = 0;
+	m_Value = m_Fence->GetCompletedValue();
 	return;
 }
 
@@ -46,7 +46,8 @@ bool Fence::Wait()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (m_Fence->GetCompletedValue() < m_Value)
+	UINT64 currentValue = m_Fence->GetCompletedValue();
+	if (currentValue < m_Value)
 	{
 		MIRU_ASSERT(m_Fence->SetEventOnCompletion(m_Value, m_Event), "ERROR: D3D12: Failed to wait for Fence.");
 		DWORD result = WaitForSingleObject(m_Event, static_cast<DWORD>(m_CI.timeout/1000));

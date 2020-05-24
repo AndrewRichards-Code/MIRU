@@ -34,7 +34,7 @@ Shader::~Shader()
 	{
 		if (!FreeLibrary(s_HModeuleDXCompiler))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DXCompilerFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: D3D12: Unable to free '" + s_DXCompilerFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
@@ -125,7 +125,7 @@ void Shader::D3D12ShaderReflection()
 		default:
 			break;
 		}
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
+		MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
 		return static_cast<crossplatform::VertexType>(0);
 	};
 
