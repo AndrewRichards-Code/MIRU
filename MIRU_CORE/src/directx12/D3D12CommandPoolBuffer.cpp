@@ -114,7 +114,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 		break;
 	}
 	}
-	
+
 	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.NumDescriptors = m_MaxDescriptorCount;
 	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -147,6 +147,16 @@ void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	Reset(index, false);
+
+	m_SetDescriptorHeaps_PerCmdBuffer.resize(m_CmdBuffers.size());
+	for (auto setDescriptorHeap : m_SetDescriptorHeaps_PerCmdBuffer)
+		setDescriptorHeap = true;
+
+	if (index == 0)
+	{
+		m_CBV_SRV_UAV_DescriptorOffset = 0;
+		m_SamplerDescriptorOffset = 0;
+	}
 }
 
 void CommandBuffer::End(uint32_t index)
@@ -709,8 +719,18 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 
 	CHECK_VALID_INDEX_RETURN(index);
 
+	if (m_SetDescriptorHeaps_PerCmdBuffer[index])
+	{
+		ID3D12DescriptorHeap* heaps[2] = { m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap,  m_CmdBuffer_Sampler_DescriptorHeap };
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(2, heaps);
+		m_SetDescriptorHeaps_PerCmdBuffer[index] = false;
+	}
+	
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	
+	MIRU_ASSERT(!(m_CBV_SRV_UAV_DescriptorOffset < m_MaxDescriptorCount * cbv_srv_uav_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
+	MIRU_ASSERT(!(m_SamplerDescriptorOffset < m_MaxSamplerCount * samplerDescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
 
 	UINT cbv_srv_uav_DescriptorOffset = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle;
@@ -731,24 +751,24 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		{
 			if (heapDesc[i][0].NumDescriptors)
 			{
-				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset;
-				CBV_SRV_UAV_DescriptorHeapHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset });
+				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset + m_CBV_SRV_UAV_DescriptorOffset;
+				CBV_SRV_UAV_DescriptorHeapHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset + m_CBV_SRV_UAV_DescriptorOffset });
 				m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle, heap[i][0]->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 				cbv_srv_uav_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
 			}
 
 			if (heapDesc[i][1].NumDescriptors)
 			{
-				m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset;
-				SamplerDescriptorHeapHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset });
+				m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset + m_SamplerDescriptorOffset;
+				SamplerDescriptorHeapHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset + m_SamplerDescriptorOffset });
 				m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors, m_CmdBuffer_Sampler_DescriptorHeapHandle, heap[i][1]->GetCPUDescriptorHandleForHeapStart(),D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-				samplerDescriptorOffset += heapDesc[i][0].NumDescriptors * samplerDescriptorSize;
+				samplerDescriptorOffset += heapDesc[i][1].NumDescriptors * samplerDescriptorSize;
 			}
 		}
 	}
-	
-	ID3D12DescriptorHeap* heaps[2] = { m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap,  m_CmdBuffer_Sampler_DescriptorHeap };
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(2, heaps);
+
+	m_CBV_SRV_UAV_DescriptorOffset += cbv_srv_uav_DescriptorOffset;
+	m_SamplerDescriptorOffset += samplerDescriptorOffset;
 	
 	size_t CBV_SRV_UAV_DescriptorHeapHandleIndex = 0;
 	size_t SamplerDescriptorHeapHandleIndex = 0;

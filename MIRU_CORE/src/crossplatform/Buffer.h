@@ -10,6 +10,12 @@ namespace crossplatform
 	{
 		//enums/structs
 	public:
+		struct ImageDimension
+		{
+			uint32_t width;
+			uint32_t height;
+			uint32_t channels;
+		};
 		struct Copy
 		{
 			size_t srcOffset;
@@ -35,6 +41,7 @@ namespace crossplatform
 			void*				device;
 			UsageBit			usage;
 			size_t				size;
+			ImageDimension		imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for a image.
 			void*				data;
 			Ref<MemoryBlock>	pMemoryBlock;
 		};

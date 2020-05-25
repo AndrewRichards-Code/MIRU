@@ -62,13 +62,36 @@ void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t siz
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	bool copyByRow = resource.rowPitch && resource.rowPadding && resource.height;
+
 	D3D12_RANGE readRange = { 0, 0}; //We never intend to read from the resource;
 	if (m_HeapDesc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD && data)
 	{
 		ID3D12Resource* d3d12Resource = (ID3D12Resource*)(void*)(resource.resource);
 		void* mappedData;
 		MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
-		memcpy(mappedData, data, size);
+		
+		if (copyByRow)
+		{
+			size_t rowWidth = resource.rowPitch - resource.rowPadding;
+			std::vector<char> paddingData(resource.rowPadding, 0);
+			char* _mappedData = (char*)mappedData;
+			char* _data = (char*)data;
+
+			for (size_t i = 0; i < resource.height; i++)
+			{
+				memcpy(_mappedData, _data, rowWidth);
+				_mappedData += rowWidth;
+				_data += rowWidth;
+				memcpy(_mappedData, paddingData.data(), resource.rowPadding);
+				_mappedData += resource.rowPadding;
+			}
+		}
+		else
+		{
+			memcpy(mappedData, data, size);
+		}
+
 		d3d12Resource->Unmap(0, nullptr);
 	}
 }

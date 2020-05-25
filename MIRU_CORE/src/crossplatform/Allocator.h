@@ -21,6 +21,9 @@ namespace crossplatform
 		uint32_t	usage;
 		size_t		size;
 		size_t		alignment;
+		size_t		rowPitch;
+		size_t		rowPadding;
+		size_t		height;
 
 		size_t		offset = 0;
 		uint64_t	memoryBlock = 0;

@@ -67,7 +67,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 		m_Resource.resource = (uint64_t)m_Image;
 		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock.get()).at(m_Resource.id).resource = (uint64_t)m_Image;
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_AllocationInfo.SizeInBytes, m_CI.data);
+		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
 }
 

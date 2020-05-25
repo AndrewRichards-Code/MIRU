@@ -42,7 +42,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	if (m_CI.pMemoryBlock)
 	{
 		m_CI.pMemoryBlock->AddResource(m_Resource);
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_MemoryRequirements.size, m_CI.data);
+		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
 
 	m_CurrentLayout = m_ImageCI.initialLayout;

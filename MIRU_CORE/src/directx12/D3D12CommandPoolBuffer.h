@@ -70,6 +70,7 @@ namespace d3d12
 
 		std::vector<ID3D12CommandList*> m_CmdBuffers;
 
+	private:
 		D3D12_RESOURCE_BINDING_TIER m_ResourceBindingTier;
 		uint32_t m_MaxDescriptorCount;
 		uint32_t m_MaxCBVsPerStage;
@@ -77,6 +78,10 @@ namespace d3d12
 		uint32_t m_MaxUAVsPerStage;
 		uint32_t m_MaxSamplersPerStage;
 		const uint32_t m_MaxSamplerCount = 2048;
+
+		std::vector<bool> m_SetDescriptorHeaps_PerCmdBuffer;
+		UINT m_CBV_SRV_UAV_DescriptorOffset;
+		UINT m_SamplerDescriptorOffset;
 
 		ID3D12DescriptorHeap* m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap;
 		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc;

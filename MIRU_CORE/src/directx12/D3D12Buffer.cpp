@@ -12,9 +12,25 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
+	size_t width = m_CI.size;
+	size_t rowPitch = 0;
+	size_t rowPadding = 0;
+	size_t height = 0;
+	if ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL))
+	{
+		width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+	}
+	else if (m_CI.imageDimension.width % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
+	{
+		rowPitch = ((m_CI.imageDimension.width * m_CI.imageDimension.channels) + (D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1)) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
+		rowPadding = rowPitch - (m_CI.imageDimension.width * m_CI.imageDimension.channels);
+		width = rowPitch * m_CI.imageDimension.height;
+		height = m_CI.imageDimension.height;
+	}
+
 	m_ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
 	m_ResourceDesc.Alignment = 0;
-	m_ResourceDesc.Width = ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL)) ? std::max(static_cast<size_t>(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT), m_CI.size) : m_CI.size;								//Alias for bufferSize
+	m_ResourceDesc.Width = width;									//Alias for bufferSize
 	m_ResourceDesc.Height = 1;
 	m_ResourceDesc.DepthOrArraySize = 1;
 	m_ResourceDesc.MipLevels = 1;
@@ -38,6 +54,9 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
 	m_Resource.size = m_AllocationInfo.SizeInBytes;
 	m_Resource.alignment = m_AllocationInfo.Alignment;
+	m_Resource.rowPitch = rowPitch;
+	m_Resource.rowPadding = rowPadding;
+	m_Resource.height = height;
 
 	if (m_CI.pMemoryBlock)
 	{
@@ -109,7 +128,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::UNIFORM:
 		{
 			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_CBVDesc.SizeInBytes = (static_cast<UINT>(m_CI.size) + 255) & ~255;
+			m_CBVDesc.SizeInBytes = (static_cast<UINT>(m_CI.size) + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 			break;
 		}
 		case Type::STORAGE_TEXEL:
