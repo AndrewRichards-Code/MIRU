@@ -165,8 +165,6 @@ target_compile_features(MIRU_CORE PUBLIC cxx_std_17)
 #target_precompile_headers(MIRU_CORE PUBLIC MIRU_CORE/src/miru_core_common.h )
 
 #MIRU_TEST
-set(MIRU_TEST_MARS_LIB_DIR "C:/Users/Andrew/source/repos/MARS/MARS/lib" CACHE STRING "Directory to MARS library folder" )
-
 set( src_cpp
     MIRU_TEST/src/main.cpp
 )
@@ -177,7 +175,6 @@ include_directories(
     $ENV{VULKAN_SDK}/Include
 )
 link_directories(
-    ${MIRU_TEST_MARS_LIB_DIR}/${CMAKE_VS_PLATFORM_NAME}
     MIRU_CORE/lib/${CMAKE_VS_PLATFORM_NAME}
     MIRU_CORE/redist
     ${MIRU_VULKAN_SDK_DIR}/Lib
@@ -194,6 +191,6 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/MIRU_TEST/exe/$
 
 add_executable(MIRU_TEST ${src_public})
 add_dependencies(MIRU_TEST MIRU_CORE)
-target_link_libraries(MIRU_TEST PUBLIC MARS.lib MIRU_CORE.lib vulkan-1.lib)
+target_link_libraries(MIRU_TEST PUBLIC MIRU_CORE.lib vulkan-1.lib)
 target_compile_features(MIRU_TEST PUBLIC cxx_std_17)
 set_target_properties( MIRU_TEST PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/MIRU_TEST/")

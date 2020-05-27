@@ -1,10 +1,15 @@
-#include "../../../MARS/MARS/src/mars.h"
 #include "miru_core.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "../dep/STBI/stb_image.h"
 
+#include "../dep/glm/glm/glm.hpp"
+#include "../dep/glm/glm/gtc/matrix_transform.hpp"
+
 using namespace miru;
 using namespace crossplatform;
+
+using namespace glm;
 
 HWND window;
 bool g_WindowQuit = false;
@@ -336,27 +341,27 @@ int main()
 	samplerCI.unnormalisedCoordinates = false;
 	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
 
-	mars::Mat4 proj = mars::Mat4::Identity();
-	mars::Mat4 view = mars::Mat4::Identity();
-	mars::Mat4 modl = mars::Mat4::Identity();
-
-	float ubData[2 * mars::Mat4::GetSize()];
-	memcpy(ubData + 0 * 16,	proj.GetData(), mars::Mat4::GetSize());
-	memcpy(ubData + 1 * 16,	view.GetData(), mars::Mat4::GetSize());
+	mat4 proj = identity<mat4>();
+	mat4 view = identity<mat4>();
+	mat4 modl = identity<mat4>();
+	
+	float ubData[2 * sizeof(mat4)];
+	memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
+	memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
 	Buffer::CreateInfo ubCI;
 	ubCI.debugName = "CameraUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = 2 * mars::Mat4::GetSize();
+	ubCI.size = 2 * sizeof(mat4);
 	ubCI.data = ubData;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "ModelUB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
-	ubCI.size = mars::Mat4::GetSize();
-	ubCI.data = &modl.a;
+	ubCI.size = sizeof(mat4);
+	ubCI.data = &modl[0][0];
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
 
@@ -366,7 +371,7 @@ int main()
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
 	ubViewCamCI.pBuffer = ub1;
 	ubViewCamCI.offset = 0;
-	ubViewCamCI.size = 2 * mars::Mat4::GetSize();
+	ubViewCamCI.size = 2 * sizeof(mat4);
 	ubViewCamCI.stride = 0;
 	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
 	BufferView::CreateInfo ubViewMdlCI;
@@ -375,7 +380,7 @@ int main()
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.pBuffer = ub2;
 	ubViewMdlCI.offset = 0;
-	ubViewMdlCI.size = mars::Mat4::GetSize();
+	ubViewMdlCI.size = sizeof(mat4);
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
@@ -614,20 +619,22 @@ int main()
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
 
-			proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
+			proj = perspectiveFov(radians(90.0f), float(width), float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
-				proj.f *= -1;
-			modl = mars::Mat4::Translation({ 0.0f, 0.0f, -1.5f })
-				//* mars::Mat4::Translation({ float(var_x)/10.0f, float(var_y)/10.0f, float(var_z)/10.0f})
-				* mars::Mat4::Rotation(mars::DegToRad(var_x * 5.0), { 0, 1, 0 })
-				* mars::Mat4::Rotation(mars::DegToRad(var_y * 5.0), { 1, 0, 0 })
-				* mars::Mat4::Rotation(mars::DegToRad(var_z * 5.0), { 0, 0, 1 })
-				;
-			memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());
-			memcpy(ubData + 1 * 16, view.GetData(), mars::Mat4::GetSize());
+				proj[1][1] *= -1;
+			modl = translate(glm::mat4(1.0f), { 0.0f, 0.0f, -1.5f })
+				//* translate(mat4(1.0f), { float(var_x)/10.0f, float(var_y)/10.0f, float(var_z)/10.0f})
+				* rotate(glm::mat4(1.0f), radians(var_x * 5.0f), { 0, 1, 0 })
+				* rotate(glm::mat4(1.0f), radians(var_y * 5.0f), { 1, 0, 0 })
+				* rotate(glm::mat4(1.0f), radians(var_z * 5.0f), { 0, 0, 1 });
+			proj = transpose(proj);
+			modl = transpose(modl);
 
-			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * mars::Mat4::GetSize(), ubData);
-			cpu_mb_0->SubmitData(ub2->GetResource(), 2 * mars::Mat4::GetSize(), (void*)modl.GetData());
+			memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
+			memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
+
+			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(mat4), ubData);
+			cpu_mb_0->SubmitData(ub2->GetResource(), sizeof(mat4), (void*)&modl[0][0]);
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 		frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;
