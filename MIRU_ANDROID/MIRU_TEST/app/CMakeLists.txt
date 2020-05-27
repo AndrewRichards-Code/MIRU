@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.6.0)
 
 #MIRU_SOLUTION_DIR
 set( MIRU_SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
-set( MIRU_TEST_MARS_DIR "C:/Users/Andrew/source/repos/MARS" CACHE STRING "Directory to MARS folder" )
 
 #------VULKAN------
 #Sets the Vulkan Include directory for source code build.
@@ -167,15 +166,6 @@ add_library(MIRU_TEST SHARED
         src/main/cpp/vulkan_wrapper.h           #Load PFNs
         src/main/cpp/vulkan_wrapper.cpp         #Load PFNs
         src/main/cpp/main.cpp                   #entry point
-        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat2.cpp
-        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat3.cpp
-        ${MIRU_TEST_MARS_DIR}/src/matrix/Mat4.cpp
-        ${MIRU_TEST_MARS_DIR}/src/vector/Vec2.cpp
-        ${MIRU_TEST_MARS_DIR}/src/vector/Vec3.cpp
-        ${MIRU_TEST_MARS_DIR}/src/vector/Vec4.cpp
-        ${MIRU_TEST_MARS_DIR}/src/quaternion/Quat.cpp
-        ${MIRU_TEST_MARS_DIR}/src/calculus/differentiation.cpp
-        ${MIRU_TEST_MARS_DIR}/src/calculus/integration.cpp
         )
 target_link_libraries(MIRU_TEST
         android

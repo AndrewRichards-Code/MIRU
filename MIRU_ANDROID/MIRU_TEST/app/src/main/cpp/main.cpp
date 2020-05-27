@@ -3,10 +3,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../dep/STBI/stb_image.h"
 
-#include "src/mars.h"
+#include "../dep/glm/glm/glm.hpp"
+#include "../dep/glm/glm/gtc/matrix_transform.hpp"
 
 using namespace miru;
 using namespace crossplatform;
+
+using namespace glm;
 
 std::vector<char> load_file_bin(const char* filepath, android_app* app)
 {
@@ -249,27 +252,27 @@ void android_main(struct android_app* app) {
     samplerCI.unnormalisedCoordinates = false;
     Ref<Sampler> sampler = Sampler::Create(&samplerCI);
 
-    mars::Mat4 proj = mars::Mat4::Identity();
-    mars::Mat4 view = mars::Mat4::Identity();
-    mars::Mat4 modl = mars::Mat4::Identity();
+    mat4 proj = identity<mat4>();
+    mat4 view = identity<mat4>();
+    mat4 modl = identity<mat4>();
 
-    float ubData[2 * mars::Mat4::GetSize()];
-    memcpy(ubData + 0 * 16,	proj.GetData(), mars::Mat4::GetSize());
-    memcpy(ubData + 1 * 16,	view.GetData(), mars::Mat4::GetSize());
+    float ubData[2 * sizeof(mat4)];
+    memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
+    memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
     Buffer::CreateInfo ubCI;
     ubCI.debugName = "CameraUB";
     ubCI.device = context->GetDevice();
     ubCI.usage = Buffer::UsageBit::UNIFORM;
-    ubCI.size = 2 * mars::Mat4::GetSize();
+    ubCI.size = 2 * sizeof(mat4);
     ubCI.data = ubData;
     ubCI.pMemoryBlock = uma_mb_0;
     Ref<Buffer> ub1 = Buffer::Create(&ubCI);
     ubCI.debugName = "ModelUB";
     ubCI.device = context->GetDevice();
     ubCI.usage = Buffer::UsageBit::UNIFORM;
-    ubCI.size = mars::Mat4::GetSize();
-    ubCI.data = (void*)modl.GetData();
+    ubCI.size = sizeof(mat4);
+    ubCI.data = &modl[0][0];
     ubCI.pMemoryBlock = uma_mb_0;
     Ref<Buffer> ub2 = Buffer::Create(&ubCI);
 
@@ -279,7 +282,7 @@ void android_main(struct android_app* app) {
     ubViewCamCI.type = BufferView::Type::UNIFORM;
     ubViewCamCI.pBuffer = ub1;
     ubViewCamCI.offset = 0;
-    ubViewCamCI.size = 2 * mars::Mat4::GetSize();
+    ubViewCamCI.size = 2 * sizeof(mat4);
     ubViewCamCI.stride = 0;
     Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
     BufferView::CreateInfo ubViewMdlCI;
@@ -288,7 +291,7 @@ void android_main(struct android_app* app) {
     ubViewMdlCI.type = BufferView::Type::UNIFORM;
     ubViewMdlCI.pBuffer = ub2;
     ubViewMdlCI.offset = 0;
-    ubViewMdlCI.size = mars::Mat4::GetSize();
+    ubViewMdlCI.size = sizeof(mat4);
     ubViewMdlCI.stride = 0;
     Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
@@ -387,7 +390,7 @@ void android_main(struct android_app* app) {
     pCI.tessellationState = {};
     pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
     pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
-    pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
+    pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
     pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
     pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
     pCI.colourBlendState.logicOpEnable = false;
@@ -469,7 +472,7 @@ void android_main(struct android_app* app) {
             r += increment;
         }
 
-        while (draws[frameIndex]->Wait()) {}
+        draws[frameIndex]->Wait();
 
         Image::ClearValue colour, depth;
         colour.colour.float32[0] = r;
@@ -490,18 +493,20 @@ void android_main(struct android_app* app) {
         cmdBuffer->EndRenderPass(frameIndex);
         cmdBuffer->End(frameIndex);
 
-
         //Update Uniform buffers
-        proj = mars::Mat4::Perspective(90.0f, float(width) / float(height), 0.1f, 100.0f);
-        if(GraphicsAPI::IsVulkan())
-            proj.f *= -1;
-        modl = mars::Mat4::Translation({(float)var_x / 10.0f, (float)var_y / 10.0f, -1.0f + (float)var_z / 10.0f });
-        memcpy(ubData + 0 * 16, proj.GetData(), mars::Mat4::GetSize());
-        memcpy(ubData + 1 * 16, view.GetData(), mars::Mat4::GetSize());
+        proj = perspectiveFov(radians(90.0f), float(width), float(height), 0.1f, 100.0f);
+        if (GraphicsAPI::IsVulkan())
+            proj[1][1] *= -1;
+        modl = translate(mat4(1.0f),{(float)var_x / 10.0f, (float)var_y / 10.0f, -1.5f + (float)var_z / 10.0f });
+        proj = transpose(proj);
+        modl = transpose(modl);
+
+        memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
+        memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
         //Present
-        uma_mb_0->SubmitData(ub1->GetResource(), 2 * mars::Mat4::GetSize(), ubData);
-        uma_mb_0->SubmitData(ub2->GetResource(), 2 * mars::Mat4::GetSize(), (void*)modl.GetData());
+        uma_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(mat4), ubData);
+        uma_mb_0->SubmitData(ub2->GetResource(), sizeof(mat4), (void*)&modl[0][0]);
 
         cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
         frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;

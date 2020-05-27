@@ -1,8 +1,12 @@
+Dependencies:
+GLM
+STB Image
+
 Redistributions:
 DirectXShaderCompiler
 Pix
 RenderDoc
 Spirv-Cross
-STB Image
-Licence details for redistributions of any headers, sources and binaries are located alongside those files or in relevant directory.
-Please support the original creators/
+
+Licence details for dependencies and redistributions of any headers, sources and binaries are located alongside those files or in relevant directory.
+Please support the original creators.
