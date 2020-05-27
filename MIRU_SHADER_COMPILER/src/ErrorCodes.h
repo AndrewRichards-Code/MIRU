@@ -52,11 +52,7 @@ namespace shader_compiler
 	static bool output = true;
 
 	//MIRU printf
-	#if _DEBUG
 	#define MIRU_SHADER_COMPILER_PRINTF(s, ...) if(output) {printf((s), __VA_ARGS__);}
-	#else
-	#define MIRU_SHADER_COMPILER_PRINTF(s, ...) if(output) {printf("");}
-	#endif
 
 	//Log error code
 	#define MIRU_SHADER_COMPILER_RETURN(x, y) {if(x != miru::shader_compiler::ErrorCode::MIRU_SHADER_COMPILER_OK) { printf("MIRU_SHADER_COMPILER_ASSERT: %s(%d): [%s] %s\n", __FILE__, __LINE__, ErrorCodeStr(x).c_str(), y); DEBUG_BREAK; } return static_cast<int>(x); } 
