@@ -876,7 +876,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer>
 		UINT NumRows;
 		UINT64 RowSizesInBytes;
 		UINT64 RequiredSize;
-		m_Device->GetCopyableFootprints(&dst.pResource->GetDesc(), 0, 1, 0, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		m_Device->GetCopyableFootprints(&dst.pResource->GetDesc(), 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		src.PlacedFootprint = Layout;
 
 		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < (region.imageSubresource.arrayLayerCount + region.imageSubresource.baseArrayLayer); i++)
@@ -907,7 +907,7 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> 
 		UINT NumRows;
 		UINT64 RowSizesInBytes;
 		UINT64 RequiredSize;
-		m_Device->GetCopyableFootprints(&src.pResource->GetDesc(), 0, 1, 0, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		m_Device->GetCopyableFootprints(&src.pResource->GetDesc(), 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		dst.PlacedFootprint = Layout;
 
 		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
