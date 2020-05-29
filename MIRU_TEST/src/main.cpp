@@ -63,10 +63,10 @@ void WindowUpdate()
 
 int main()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	//GraphicsAPI::LoadGraphicsDebugger();
+	GraphicsAPI::LoadGraphicsDebugger();
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -74,9 +74,9 @@ int main()
 	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 11 : 1;
 	contextCI.api_version_minor = 1;
 	contextCI.applicationName = "MIRU_TEST";
-	contextCI.instanceLayers = { "VK_LAYER_LUNARG_standard_validation" };
+	contextCI.instanceLayers = { "VK_LAYER_KHRONOS_validation" };
 	contextCI.instanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
-	contextCI.deviceLayers = { "VK_LAYER_LUNARG_standard_validation" };
+	contextCI.deviceLayers = { "VK_LAYER_KHRONOS_validation" };
 	contextCI.deviceExtensions = { "VK_KHR_swapchain" };
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
@@ -105,7 +105,7 @@ int main()
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
 
 	Shader::CreateInfo shaderCI;
-	shaderCI.debugName = "Basic_Vertex";
+	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stage = Shader::StageBit::VERTEX_BIT;
 	shaderCI.entryPoint = "main";
@@ -126,7 +126,7 @@ int main()
 		false,
 		false };
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
-	shaderCI.debugName = "Basic_Fragment";
+	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;
 	shaderCI.binaryFilepath = "res/bin/basic.frag.spv";
 	shaderCI.recompileArguments.hlslFilepath = "res/shaders/basic.frag.hlsl";
@@ -191,7 +191,7 @@ int main()
 	uint8_t* imageData = stbi_load("../logo.png", &img_width, &img_height, &bpp, 4);
 
 	Buffer::CreateInfo verticesBufferCI;
-	verticesBufferCI.debugName = "Vertices";
+	verticesBufferCI.debugName = "Vertices Buffer";
 	verticesBufferCI.device = context->GetDevice();
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
 	verticesBufferCI.size = sizeof(vertices);
@@ -204,7 +204,7 @@ int main()
 	Ref<Buffer> g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
-	indicesBufferCI.debugName = "Indices";
+	indicesBufferCI.debugName = "Indices Buffer";
 	indicesBufferCI.device = context->GetDevice();
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
 	indicesBufferCI.size = sizeof(indices);
@@ -217,7 +217,7 @@ int main()
 	Ref<Buffer> g_ib = Buffer::Create(&indicesBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
-	imageBufferCI.debugName = "Image";
+	imageBufferCI.debugName = "MIRU logo upload buffer";
 	imageBufferCI.device = context->GetDevice();
 	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC;
 	imageBufferCI.size = img_width * img_height * 4;
@@ -225,7 +225,7 @@ int main()
 	imageBufferCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> c_imageBuffer = Buffer::Create(&imageBufferCI);
 	Image::CreateInfo imageCI;
-	imageCI.debugName = "Image";
+	imageCI.debugName = "MIRU logo Image";
 	imageCI.device = context->GetDevice();
 	imageCI.type = Image::Type::TYPE_CUBE;
 	imageCI.format = Image::Format::R8G8B8A8_UNORM;
@@ -242,7 +242,7 @@ int main()
 	imageCI.pMemoryBlock = gpu_mb_0;
 	Ref<Image> image = Image::Create(&imageCI);
 
-	Semaphore::CreateInfo transSemaphoreCI = { "Transfer", context->GetDevice() };
+	Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
 	Ref<Semaphore> transfer = Semaphore::Create(&transSemaphoreCI);
 	{
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
@@ -305,7 +305,7 @@ int main()
 	Ref<BufferView> vbv = BufferView::Create(&vbViewCI);
 
 	BufferView::CreateInfo ibViewCI;
-	ibViewCI.debugName = "VerticesBufferView";
+	ibViewCI.debugName = "IndicesBufferView";
 	ibViewCI.device = context->GetDevice();
 	ibViewCI.type = BufferView::Type::INDEX;
 	ibViewCI.pBuffer = g_ib;
@@ -315,7 +315,7 @@ int main()
 	Ref<BufferView> ibv = BufferView::Create(&ibViewCI);
 
 	ImageView::CreateInfo imageViewCI;
-	imageViewCI.debugName = "ImageView";
+	imageViewCI.debugName = "MIRU logo ImageView";
 	imageViewCI.device = context->GetDevice();
 	imageViewCI.pImage = image;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -350,14 +350,14 @@ int main()
 	memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
 	Buffer::CreateInfo ubCI;
-	ubCI.debugName = "CameraUB";
+	ubCI.debugName = "Camera UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
 	ubCI.size = 2 * sizeof(mat4);
 	ubCI.data = ubData;
 	ubCI.pMemoryBlock = cpu_mb_0;
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
-	ubCI.debugName = "ModelUB";
+	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM;
 	ubCI.size = sizeof(mat4);
@@ -366,7 +366,7 @@ int main()
 	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewCamCI;
-	ubViewCamCI.debugName = "CameraUBView";
+	ubViewCamCI.debugName = "Camera UBView";
 	ubViewCamCI.device = context->GetDevice();
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
 	ubViewCamCI.pBuffer = ub1;
@@ -375,7 +375,7 @@ int main()
 	ubViewCamCI.stride = 0;
 	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
 	BufferView::CreateInfo ubViewMdlCI;
-	ubViewMdlCI.debugName = "ModelUBView";
+	ubViewMdlCI.debugName = "Model UBView";
 	ubViewMdlCI.device = context->GetDevice();
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.pBuffer = ub2;
@@ -385,7 +385,7 @@ int main()
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
 	Image::CreateInfo depthCI;
-	depthCI.debugName = "DepthImage";
+	depthCI.debugName = "Depth Image";
 	depthCI.device = context->GetDevice();
 	depthCI.type = Image::Type::TYPE_2D;
 	depthCI.format = Image::Format::D32_SFLOAT;
@@ -403,30 +403,31 @@ int main()
 	Ref<Image> depthImage = Image::Create(&depthCI);
 	
 	ImageView::CreateInfo depthImageViewCI;
-	depthImageViewCI.debugName = "DepthImageView";
+	depthImageViewCI.debugName = "Depth ImageView";
 	depthImageViewCI.device = context->GetDevice();
 	depthImageViewCI.pImage = depthImage;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
 	Ref<ImageView> depthImageView = ImageView::Create(&depthImageViewCI);
 
 	DescriptorPool::CreateInfo descriptorPoolCI;
-	descriptorPoolCI.debugName = "Image Descriptor Pool";
+	descriptorPoolCI.debugName = "Basic: Descriptor Pool";
 	descriptorPoolCI.device = context->GetDevice();
 	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2} };
 	descriptorPoolCI.maxSets = 2;
 	Ref<DescriptorPool> descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
-	setLayoutCI.debugName = "Basic Shader DescSetLayout";
+	setLayoutCI.debugName = "Basic: DescSetLayout1";
 	setLayoutCI.device = context->GetDevice();
 	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
 	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.debugName = "Basic: DescSetLayout2";
 	setLayoutCI.descriptorSetLayoutBinding = { 
 		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
 		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
 	};
 	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
-	descriptorSetCI.debugName = "Image Descriptor Set";
+	descriptorSetCI.debugName = "Basic: Descriptor Set";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
 	descriptorSetCI.pDescriptorSetLayouts = { setLayout1, setLayout2 };
 	Ref<DescriptorSet> descriptorSet = DescriptorSet::Create(&descriptorSetCI);
@@ -436,7 +437,7 @@ int main()
 	descriptorSet->Update();
 
 	RenderPass::CreateInfo renderPassCI;
-	renderPassCI.debugName = "Basic";
+	renderPassCI.debugName = "Basic: RenderPass";
 	renderPassCI.device = context->GetDevice();
 	renderPassCI.attachments = {
 		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
@@ -520,9 +521,10 @@ int main()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo semaphoreCI = { "Seamphore", context->GetDevice() };
-	std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
-	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
+	std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
@@ -580,8 +582,8 @@ int main()
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
-			submit = { Semaphore::Create(&semaphoreCI), Semaphore::Create(&semaphoreCI) };
+			acquire = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+			submit = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 			swapchain->m_Resized = false;
 			frameIndex = 0;

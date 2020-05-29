@@ -129,6 +129,8 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
+		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], (std::string(m_CI.debugName) + ": Image" + std::to_string(i)).c_str());
+		
 		VkImageViewCreateInfo ci = {};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		ci.pNext = nullptr;
@@ -195,6 +197,8 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
+		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], (std::string(m_CI.debugName) + ": Image" + std::to_string(i)).c_str());
+		
 		VkImageViewCreateInfo ci = {};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		ci.pNext = nullptr;

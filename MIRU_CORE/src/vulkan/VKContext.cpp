@@ -48,8 +48,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	};
 
 #if defined(_DEBUG)
-	push_back_exclusive(m_CI.instanceLayers, "VK_LAYER_LUNARG_standard_validation");
-	push_back_exclusive(m_CI.deviceLayers, "VK_LAYER_LUNARG_standard_validation");
+	push_back_exclusive(m_CI.instanceLayers, "VK_LAYER_KHRONOS_validation");
+	push_back_exclusive(m_CI.deviceLayers, "VK_LAYER_KHRONOS_validation");
 #endif
 
 	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_surface");
@@ -179,9 +179,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
-	vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(m_Device, "vkSetDebugUtilsObjectNameEXT");
+	vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT");
 	VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, (std::string(m_AI.pEngineName) + " - VkInstance").c_str());
-	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName);
+	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], (std::string("PhysicalDevice: ") + m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName).c_str());
 	VKSetName<VkDevice>(m_Device, (uint64_t)m_Device, m_CI.deviceDebugName);
 	
 	for (size_t i = 0; i < m_DeviceQueueCIs.size(); i++)
@@ -195,9 +195,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			
 			VkQueueFlags flags = m_QueueFamilyProperties[i].queueFlags;
 			std::string typeStr("");
-			flags & VK_QUEUE_GRAPHICS_BIT ? typeStr + "Graphics/" : + "";
-			flags & VK_QUEUE_COMPUTE_BIT ? typeStr + "Compute/" : + "";
-			flags & VK_QUEUE_TRANSFER_BIT ? typeStr + "Transfer " : + "";
+			if((flags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
+				typeStr += "Graphics/";
+			if ((flags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
+				typeStr += "Compute/";
+			if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
+				typeStr += "Transfer";
 			VKSetName<VkQueue>(m_Device, (uint64_t)queue, (std::string(m_CI.deviceDebugName) + ": Queue - " + typeStr).c_str());
 		}
 		m_Queues.push_back(localQueues);

@@ -254,10 +254,11 @@ namespace miru
 #endif
 
 //MIRU SetName
-//#define MIRU_ALLOW_API_SETNAME_FN_COMPILE
+#define MIRU_ALLOW_API_SETNAME_FN_COMPILE
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE)
 namespace miru
 {
+	#if defined(MIRU_D3D12)
 	static inline void D3D12SetName(void* object, const char* name)
 	{
 		if (!GraphicsAPI::IsSetNameAllowed())
@@ -265,8 +266,10 @@ namespace miru
 
 		reinterpret_cast<ID3D12Object*>(object)->SetName(reinterpret_cast<LPCWSTR>(name));
 	}
+	#endif
 
-	static PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
+	#if defined(MIRU_VULKAN)
+	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
 	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name)
 	{
@@ -338,17 +341,23 @@ namespace miru
 		nameInfo.objectHandle = objectHandle;
 		nameInfo.pObjectName = name;
 
-		vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
+		if(vkSetDebugUtilsObjectNameEXT)
+			vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
 	}
+	#endif
 }
 #else
 namespace miru
 {
+	#if defined(MIRU_D3D12)
 	static inline void D3D12SetName(void* object, const char* name) { return; }
+	#endif
 
-	static PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
+	#if defined(MIRU_VULKAN)
+	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
 	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name) { return; }
+	#endif
 }
 #endif
 
