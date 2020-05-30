@@ -31,13 +31,16 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 	m_RootParameters.clear();
 	
-	UINT set = 0;
-	D3D12_ROOT_DESCRIPTOR_TABLE descriptorRanges = {};
-	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTableSampler = {};
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorRanges;
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTableSampler;
 
+	UINT set = 0;
 	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
 	{
+		descriptorRanges = {};
+		descriptorTableSampler = {};
 		m_DescriptorRanges.push_back({});
+		
 		for (size_t i = 0; i < 4; i++)
 		{
 			D3D12_DESCRIPTOR_RANGE descRange = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[i];
@@ -59,13 +62,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		descriptorRanges.NumDescriptorRanges = static_cast<UINT>(m_DescriptorRanges.back().size());
 		descriptorRanges.pDescriptorRanges = m_DescriptorRanges.back().data();
-		if (!m_DescriptorRangesSampler.empty())
+		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[3].NumDescriptors)
 		{
-			if (m_DescriptorRangesSampler.back().NumDescriptors)
-			{
-				descriptorTableSampler.NumDescriptorRanges = 1;
-				descriptorTableSampler.pDescriptorRanges = &m_DescriptorRangesSampler.back();
-			}
+			descriptorTableSampler.NumDescriptorRanges = 1;
+			descriptorTableSampler.pDescriptorRanges = &m_DescriptorRangesSampler.back();
 		}
 
 		D3D12_ROOT_PARAMETER rootParameter;
