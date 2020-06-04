@@ -5,7 +5,7 @@ Low level Graphics API wrapper over D3D12 and Vulkan.
 
 ![MIRU_LOGO](/logo.png)
 
-In a broad sense MIRU stands for Multiple Interface Rendering Unit and name is based on the Japanese verb 'to see' [見る・みる]. This standalone rendering unit is primarily targeted at graphics developers, who work on graphically intensive applications or are developing their own game engine or for an in-house one. The library is intended to be as lean as possible, hence the exclusion of model/texture loading or a crossplatform windowing system; the sole purpose of this library is to draw graphics, execute compute and enable low level access to modern Graphics APIs. The API is based heavily on Vulkan's coding style and is intended to be as clean and modern as possible.
+In a broad sense MIRU stands for Multiple Interface Rendering Unit and its name is based on the Japanese verb 'to see' [見る・みる]. This standalone rendering unit is primarily targeted at graphics developers, who work on graphically intensive applications or are developing their own game engine or for an in-house one. The library is intended to be as lean as possible, hence the exclusion of model/texture loading or a crossplatform windowing system; the sole purpose of this library is to draw graphics, execute compute and enable low level access to modern Graphics APIs. The API is based heavily on Vulkan's coding style and is intended to be as clean and modern as possible.
 I hope you find this repository useful however you wish to use or learn from it; and any constructive criticism is always welcomed.
 
 ## Features:
