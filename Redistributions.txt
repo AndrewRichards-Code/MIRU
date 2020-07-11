@@ -1,3 +1,5 @@
+The licence declaration in LICENCE.txt does not cover the redistributed works in this repository. They contain their own licensing, and all redistributors of this repository are solely responsible to follow any and all redistribution requirements of the following works.
+
 Dependencies:
 GLM
 STB Image
