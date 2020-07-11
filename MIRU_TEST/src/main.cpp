@@ -116,7 +116,7 @@ int main()
 	#if _DEBUG
 	bool debug = true;
 	#else
-	bool debug = false
+	bool debug = false;
 	#endif
 	shaderCI.recompileArguments = {
 
