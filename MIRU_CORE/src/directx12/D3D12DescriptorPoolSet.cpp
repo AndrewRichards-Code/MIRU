@@ -44,7 +44,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		{
 		case crossplatform::DescriptorType::SAMPLER:
 		{
-			countSampler++;
+			countSampler += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSampler == ~0U)
 				baseBindingSampler = descriptorSetLayoutBinding.binding;
 			continue;
@@ -52,7 +52,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		case crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER:
 		{
 			countSRV++;
-			countSampler++;
+			countSampler += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSRV == ~0U)
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			if (baseBindingSampler == ~0U)
@@ -61,14 +61,14 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		}
 		case crossplatform::DescriptorType::SAMPLED_IMAGE:
 		{
-			countSRV++;
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSRV == ~0U)
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			continue;
 		}
 		case crossplatform::DescriptorType::STORAGE_IMAGE:
 		{
-			countUAV++;
+			countUAV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingUAV == ~0U)
 				baseBindingUAV = descriptorSetLayoutBinding.binding;
 			continue;
@@ -77,7 +77,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		case crossplatform::DescriptorType::UNIFORM_BUFFER:
 		case crossplatform::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
 		{
-			countCBV++;
+			countCBV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingCBV == ~0U)
 				baseBindingCBV = descriptorSetLayoutBinding.binding;
 			continue;
@@ -86,21 +86,21 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		case crossplatform::DescriptorType::STORAGE_BUFFER:
 		case crossplatform::DescriptorType::STORAGE_BUFFER_DYNAMIC:
 		{
-			countUAV++;
+			countUAV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingUAV == ~0U)
 				baseBindingUAV = descriptorSetLayoutBinding.binding;
 			continue;
 		}
 		case crossplatform::DescriptorType::INPUT_ATTACHMENT:
 		{
-			countSRV++;
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSRV == ~0U)
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			continue;
 		}
 		default:
 		{
-			countSRV++;
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSRV == ~0U)
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			continue;
@@ -155,25 +155,25 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		for (auto& descriptorSetLayoutBinding : descriptorSetLayouts->GetCreateInfo().descriptorSetLayoutBinding)
 		{
 			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER)
-				numDescriptors_Sampler++;
+				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
-				numDescriptors_Sampler++;
-				numDescriptors_CBV_SRV_UAV++;
+				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
+				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
 			}
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
-				numDescriptors_RTV++;
+				numDescriptors_RTV += descriptorSetLayoutBinding.descriptorCount;
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
-				numDescriptors_DSV++;
+				numDescriptors_DSV += descriptorSetLayoutBinding.descriptorCount;
 			else
-				numDescriptors_CBV_SRV_UAV++;
+				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
 
 			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER
 				|| descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
 				uint32_t currentBinding = descriptorSetLayoutBinding.binding;
 				m_SamplerBindings[index][currentBinding] = binding;
-				binding++;
+				binding += descriptorSetLayoutBinding.descriptorCount;
 			}
 		}
 		m_DescriptorHeaps.push_back({});

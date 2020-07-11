@@ -83,7 +83,9 @@ void Shader::Recompile()
 #endif
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (!m_CI.recompileArguments.hlslFilepath && (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
+	if (!m_CI.recompileArguments.hlslFilepath 
+		&& !m_CI.recompileArguments.mscDirectory
+		&& (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
 	{
 		MIRU_WARN(true, "WARN: CROSSPLATFORM: Invalid recompile arguments provided.");
 		return;
@@ -121,12 +123,7 @@ void Shader::Recompile()
 	if (m_CI.recompileArguments.nooutput)
 		command += " -nooutput";
 
-	std::string mscLocation;
-	#ifdef _DEBUG
-	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Debug";
-	#else
-	mscLocation = currentWorkingDir + "/../MIRU_SHADER_COMPILER/exe/x64/Release";
-	#endif
+	std::string mscLocation = currentWorkingDir + std::string(m_CI.recompileArguments.mscDirectory);
 
 	MIRU_PRINTF("%s", (std::string("MIRU_CORE: Recompiling shader: ") + currentWorkingDir + m_CI.recompileArguments.hlslFilepath + "\n").c_str());
 	MIRU_PRINTF("%s", ("Executing: " + mscLocation + "> " + command + "\n\n").c_str());

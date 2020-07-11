@@ -55,6 +55,7 @@ namespace crossplatform
 		//All locations must be full paths i.e. dxc and glslangValidator.
 		struct RecompileArguments
 		{
+			const char*					mscDirectory;
 			const char*					hlslFilepath;
 			const char*					outputDirectory;	//Optional
 			std::vector<const char*>	includeDirectories;	//Optional

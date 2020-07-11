@@ -11,6 +11,8 @@ using namespace crossplatform;
 
 using namespace glm;
 
+
+
 HWND window;
 bool g_WindowQuit = false;
 uint32_t width = 800;
@@ -66,7 +68,7 @@ int main()
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger();
+	//GraphicsAPI::LoadGraphicsDebugger();
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -111,7 +113,14 @@ int main()
 	shaderCI.entryPoint = "main";
 	shaderCI.binaryFilepath = "res/bin/basic.vert.spv";
 	shaderCI.binaryCode = {};
+	#if _DEBUG
+	bool debug = true;
+	#else
+	bool debug = false
+	#endif
 	shaderCI.recompileArguments = {
+
+		debug ? "../MIRU_SHADER_COMPILER/exe/x64/Debug" : "../MIRU_SHADER_COMPILER/exe/x64/Release",
 		"res/shaders/basic.vert.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},

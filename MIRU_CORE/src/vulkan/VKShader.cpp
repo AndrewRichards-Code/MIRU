@@ -226,6 +226,7 @@ void Shader::SpirvCrossReflection()
 
 			uint32_t set = compiled_bin.get_decoration(res.id, spv::DecorationDescriptorSet);
 			uint32_t binding = compiled_bin.get_decoration(res.id, spv::DecorationBinding);
+			uint32_t descCount = !type.array.empty() ? type.array[0] : 1;
 
 			crossplatform::DescriptorType descType = descriptorType;
 			if (res.name.find("_cis") != std::string::npos)
@@ -251,7 +252,7 @@ void Shader::SpirvCrossReflection()
 			ResourceBindingDescription rbd;
 			rbd.binding = binding;
 			rbd.type = descType;
-			rbd.descriptorCount = static_cast<uint32_t>(type.array.size()) + 1;			
+			rbd.descriptorCount = descCount;
 			rbd.stage = m_CI.stage;
 			m_RBDs[set].push_back(rbd);
 		}
