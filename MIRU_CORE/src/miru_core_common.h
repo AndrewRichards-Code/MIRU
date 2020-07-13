@@ -264,7 +264,10 @@ namespace miru
 		if (!GraphicsAPI::IsSetNameAllowed())
 			return;
 
-		reinterpret_cast<ID3D12Object*>(object)->SetName(reinterpret_cast<LPCWSTR>(name));
+		std::string _name = name;
+		std::wstring w_name(_name.begin(), _name.end());
+
+		reinterpret_cast<ID3D12Object*>(object)->SetName(w_name.c_str());
 	}
 	#endif
 
