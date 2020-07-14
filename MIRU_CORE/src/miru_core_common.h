@@ -264,10 +264,16 @@ namespace miru
 		if (!GraphicsAPI::IsSetNameAllowed())
 			return;
 
-		std::string _name = name;
-		std::wstring w_name(_name.begin(), _name.end());
+		auto to_wstring = [](const std::string& string) -> std::wstring
+		{
+			wchar_t* wstr = new wchar_t[string.size() + 1];
+			mbstowcs_s(nullptr, wstr, string.size() + 1, string.c_str(), string.size() + 1);
+			std::wstring result(wstr);
+			delete[] wstr;
+			return result;
+		};
 
-		reinterpret_cast<ID3D12Object*>(object)->SetName(w_name.c_str());
+		reinterpret_cast<ID3D12Object*>(object)->SetName(to_wstring(name).c_str());
 	}
 	#endif
 
