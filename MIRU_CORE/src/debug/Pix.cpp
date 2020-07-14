@@ -14,7 +14,7 @@ Pix::Pix()
 	m_Debugger = DebuggerType::PIX;
 	if (!s_HModulePix)
 	{
-		s_PixFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/pix/lib/x64/WinPixEventRuntime.dll";
+		s_PixFullpath = std::string(PROJECT_DIR) + "redist/pix/lib/x64/WinPixEventRuntime.dll";
 		s_HModulePix = LoadLibraryA(s_PixFullpath.generic_string().c_str());
 		if (!s_HModulePix)
 		{

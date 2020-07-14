@@ -57,8 +57,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SOLUTION_DIR=R"($(SolutionDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -70,7 +70,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_CORE\redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -81,8 +81,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SOLUTION_DIR=R"($(SolutionDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -96,7 +96,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_CORE\redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>

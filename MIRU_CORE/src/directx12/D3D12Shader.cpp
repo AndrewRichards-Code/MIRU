@@ -67,7 +67,7 @@ void Shader::D3D12ShaderReflection()
 	//Load dxcompiler.dll
 	if (!s_HModeuleDXCompiler)
 	{
-		s_DXCompilerFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/dxc/lib/x64/dxcompiler.dll";
+		s_DXCompilerFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxcompiler.dll";
 		s_HModeuleDXCompiler = LoadLibraryA(s_DXCompilerFullpath.generic_string().c_str());
 		if (!s_HModeuleDXCompiler)
 		{

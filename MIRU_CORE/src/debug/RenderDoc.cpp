@@ -15,7 +15,7 @@ RenderDoc::RenderDoc()
 	m_Debugger = DebuggerType::RENDER_DOC;
 	if (!s_HModuleRenderDoc)
 	{
-		s_RenderDocFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/renderdoc/lib/x64/renderdoc.dll";
+		s_RenderDocFullpath = std::string(PROJECT_DIR) + "redist/renderdoc/lib/x64/renderdoc.dll";
 		s_HModuleRenderDoc = LoadLibraryA(s_RenderDocFullpath.generic_string().c_str());
 		if (!s_HModuleRenderDoc)
 		{

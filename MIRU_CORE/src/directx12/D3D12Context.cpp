@@ -35,7 +35,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-		s_DXILFullpath = std::string(SOLUTION_DIR) + "MIRU_CORE/redist/dxc/lib/x64/dxil.dll";
+		s_DXILFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxil.dll";
 		s_HModeuleDXIL = LoadLibraryA(s_DXILFullpath.generic_string().c_str());
 		if (!s_HModeuleDXIL)
 		{
