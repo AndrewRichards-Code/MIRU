@@ -131,7 +131,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	Ref<DescriptorPool> descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool);
+	const Ref<DescriptorPool>& descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool);
 	DescriptorPool::CreateInfo descriptorPoolCI = descriptorPool->GetCreateInfo();
 	
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

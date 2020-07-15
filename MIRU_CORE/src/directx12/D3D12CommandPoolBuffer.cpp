@@ -186,7 +186,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 		m_Resettable = false;
 	}
 }
-void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplatform::CommandBuffer> commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
+void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<crossplatform::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -205,7 +205,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, Ref<crossplat
 
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, Ref<crossplatform::Fence> fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, const Ref<crossplatform::Fence>& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -232,7 +232,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<crossplatform::Swapchain> swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
+void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const Ref<crossplatform::Swapchain>& swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -277,12 +277,12 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, Ref<c
 	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
 }
 
-void CommandBuffer::SetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::ResetEvent(uint32_t index, Ref<crossplatform::Event> event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::ResetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
@@ -311,7 +311,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
 }
 
-void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -424,7 +424,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, Ref<crossplatform::Image> i
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
 	SAFE_RELEASE(heap);
 }
-void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Image> image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -524,7 +524,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, Ref<crossplatform::Im
 	SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuffer> framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 
+void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -534,7 +534,7 @@ void CommandBuffer::BeginRenderPass(uint32_t index, Ref<crossplatform::Framebuff
 	
 	//Transition resources to be begin render pass.
 	m_SubpassIndex = (uint32_t)-1;
-	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
 
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
@@ -564,7 +564,7 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	CHECK_VALID_INDEX_RETURN(index);
 
 	//Transition resources to be end render pass.
-	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
 	m_SubpassIndex = (uint32_t)-1;
 
 	std::vector<Ref<crossplatform::Barrier>> barriers;
@@ -591,8 +591,8 @@ void CommandBuffer::NextSubpass(uint32_t index)
 
 	CHECK_VALID_INDEX_RETURN(index);
 	m_SubpassIndex++;
-	Ref<crossplatform::RenderPass> renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
-	RenderPass::SubpassDescription subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
+	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
 	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = m_RenderPassFramebuffer->GetCreateInfo().attachments;
 	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
@@ -604,7 +604,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 	for (auto& input : subpassDesc.inputAttachments)
 	{
-		Ref<crossplatform::ImageView> imageView = framebufferAttachments[input.attachmentIndex];
+		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
 		barrierCI.newLayout = input.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
@@ -612,7 +612,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& colour : subpassDesc.colourAttachments)
 	{
-		Ref<crossplatform::ImageView> imageView = framebufferAttachments[colour.attachmentIndex];
+		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
 		barrierCI.newLayout = colour.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
@@ -620,7 +620,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& resolve : subpassDesc.resolveAttachments)
 	{
-		Ref<crossplatform::ImageView> imageView = framebufferAttachments[resolve.attachmentIndex];
+		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
 		barrierCI.newLayout = resolve.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
@@ -628,7 +628,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
 	{
-		Ref<crossplatform::ImageView> imageView = framebufferAttachments[depthStencil.attachmentIndex];
+		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
 		barrierCI.newLayout = depthStencil.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
@@ -636,7 +636,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& preseverse : subpassDesc.preseverseAttachments)
 	{
-		Ref<crossplatform::ImageView> imageView = framebufferAttachments[preseverse.attachmentIndex];
+		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
 		barrierCI.newLayout = preseverse.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
@@ -678,7 +678,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 }
 
-void CommandBuffer::BindPipeline(uint32_t index, Ref<crossplatform::Pipeline> pipeline) 
+void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeline>& pipeline) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -705,7 +705,7 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<cros
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetVertexBuffers(0, static_cast<UINT>(vbvs.size()), vbvs.data());
 
 };
-void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferView> indexBufferView) 
+void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::BufferView>& indexBufferView) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -713,7 +713,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, Ref<crossplatform::BufferVie
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, Ref<crossplatform::Pipeline> pipeline) 
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, const Ref<crossplatform::Pipeline>& pipeline) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -812,7 +812,7 @@ void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t in
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 };
 
-void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Buffer> dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 
+void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -823,7 +823,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, Ref<crossplatform::Buffer> srcBuf
 			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
 };
 
-void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Image> dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) 
+void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Image>& dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -857,7 +857,7 @@ void CommandBuffer::CopyImage(uint32_t index, Ref<crossplatform::Image> srcImage
 	}
 };
 
-void CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer> srcBuffer, Ref<crossplatform::Image> dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -888,7 +888,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, Ref<crossplatform::Buffer>
 	}	
 }
 
-void CommandBuffer::CopyImageToBuffer(uint32_t index, Ref<crossplatform::Image> srcImage, Ref<crossplatform::Buffer> dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

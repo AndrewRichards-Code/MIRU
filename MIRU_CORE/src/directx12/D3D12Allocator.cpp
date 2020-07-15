@@ -11,7 +11,6 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	m_Device = reinterpret_cast<ID3D12Device*>(m_CI.pContext->GetDevice());
-	Ref<d3d12::Context> context = ref_cast<d3d12::Context>(m_CI.pContext);
 
 	m_HeapDesc.SizeInBytes = static_cast<UINT64>(m_CI.blockSize);
 	m_HeapDesc.Properties = GetHeapProperties(m_CI.properties);

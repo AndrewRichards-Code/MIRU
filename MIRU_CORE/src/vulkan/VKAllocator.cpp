@@ -16,7 +16,7 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
-	Ref<vulkan::Context> context = ref_cast<vulkan::Context>(m_CI.pContext);
+	const Ref<vulkan::Context>& context = ref_cast<vulkan::Context>(m_CI.pContext);
 
 	s_PhysicalDeviceProperties = context->m_PhysicalDevices.m_PhysicalDeviceProperties[0];
 	s_PhysicalDeviceMemoryProperties = context->m_PhysicalDevices.m_PhysicalDeviceMemoryProperties[0];

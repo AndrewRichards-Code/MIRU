@@ -25,7 +25,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	{
 		bool HasRTV = false, HasDSV = false, HasSRV = false;
 		bool NeedRTV = false, NeedDSV = false, NeedSRV = false;
-		Ref<ImageView> d3d12ImageView = ref_cast<ImageView>(imageView);
+		const Ref<ImageView>& d3d12ImageView = ref_cast<ImageView>(imageView);
 		if (d3d12ImageView->m_RTVDescHandle.ptr)
 			HasRTV = true;
 		if (d3d12ImageView->m_DSVDescHandle.ptr)
