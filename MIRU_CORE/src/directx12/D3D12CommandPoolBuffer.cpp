@@ -230,6 +230,12 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 		ref_cast<Semaphore>(signal)->GetValue()++;
 		MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, ref_cast<Semaphore>(signal)->GetValue()), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 	}
+
+	if (fence)
+	{
+		ref_cast<Fence>(fence)->GetValue()++;
+		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
+	}
 }
 
 void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const Ref<crossplatform::Swapchain>& swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
