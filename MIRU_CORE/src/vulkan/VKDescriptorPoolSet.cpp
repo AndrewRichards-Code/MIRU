@@ -19,7 +19,7 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 
 	m_DescriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	m_DescriptorPoolCI.pNext = nullptr;
-	m_DescriptorPoolCI.flags = 0;
+	m_DescriptorPoolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 	m_DescriptorPoolCI.maxSets = m_CI.maxSets;
 	m_DescriptorPoolCI.poolSizeCount = static_cast<uint32_t>(m_PoolSizes.size());
 	m_DescriptorPoolCI.pPoolSizes = m_PoolSizes.data();
