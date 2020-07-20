@@ -9,8 +9,8 @@
 using namespace miru;
 using namespace crossplatform;
 
-std::vector<MemoryBlock*> MemoryBlock::s_MemoryBlocks = {};
-std::map<MemoryBlock*, std::map<uint64_t, Resource>> MemoryBlock::s_AllocatedResources = {};
+std::vector<Ref<MemoryBlock>> MemoryBlock::s_MemoryBlocks = {};
+std::map<Ref<MemoryBlock>, std::map<uint64_t, Resource>> MemoryBlock::s_AllocatedResources = {};
 uint64_t MemoryBlock::ruid_src = 0;
 
 Ref<MemoryBlock> MemoryBlock::Create(MemoryBlock::CreateInfo* pCreateInfo)
@@ -39,12 +39,12 @@ void MemoryBlock::CalculateOffsets()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	for (auto it = s_AllocatedResources[this].begin(); it != s_AllocatedResources[this].end(); it++)
+	for (auto it = s_AllocatedResources[get_this_shared_ptr()].begin(); it != s_AllocatedResources[get_this_shared_ptr()].end(); it++)
 	{
 		auto& resource = *it;
-		auto& prev = it != s_AllocatedResources[this].begin() ? *std::prev(it) : *it;
+		auto& prev = it != s_AllocatedResources[get_this_shared_ptr()].begin() ? *std::prev(it) : *it;
 
-		if (it == s_AllocatedResources[this].begin())
+		if (it == s_AllocatedResources[get_this_shared_ptr()].begin())
 			resource.second.offset = 0;
 		else
 		{
@@ -64,7 +64,7 @@ bool MemoryBlock::ResourceBackable(crossplatform::Resource& resource)
 	CalculateOffsets();
 	size_t maxSize = static_cast<size_t>(m_CI.blockSize);
 	size_t currentSize = 0;
-	if(!s_AllocatedResources[this].empty())
-		currentSize = s_AllocatedResources[this].rbegin()->second.offset + s_AllocatedResources[this].rbegin()->second.size;
+	if(!s_AllocatedResources[get_this_shared_ptr()].empty())
+		currentSize = s_AllocatedResources[get_this_shared_ptr()].rbegin()->second.offset + s_AllocatedResources[get_this_shared_ptr()].rbegin()->second.size;
 	return (maxSize > (((currentSize / resource.alignment) + 1) * resource.alignment) + resource.size);
 }

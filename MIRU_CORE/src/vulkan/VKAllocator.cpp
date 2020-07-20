@@ -36,9 +36,6 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 	MIRU_ASSERT(vkAllocateMemory(m_Device, &m_AI, nullptr, &m_DeviceMemory), "ERROR: VULKAN: Failed to allocate Memory.");
 	VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);
-
-	s_MemoryBlocks.push_back(this);
-	s_AllocatedResources[this];
 }
 
 MemoryBlock::~MemoryBlock()
@@ -52,21 +49,38 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	bool found = false;
+	for (auto& memoryBlock : s_MemoryBlocks)
+	{
+		if (found = memoryBlock == get_this_shared_ptr())
+			break;
+	}
+	if (!found)
+	{
+		s_MemoryBlocks.push_back(get_this_shared_ptr());
+		s_AllocatedResources[get_this_shared_ptr()];
+	}
+
 	if (m_Device != *reinterpret_cast<VkDevice*>(resource.device))
 		return false;
 
-	if (!ResourceBackable(resource))
-		return false;
+	if (!ResourceBackable(resource) && !resource.newMemoryBlock)
+	{
+		MIRU_ASSERT(!(resource.size > (size_t)m_CI.blockSize), "ERROR: VULKAN: Resource is larger than the MemoryBlock::BlockSize.");
 
+		resource.newMemoryBlock = true;
+		return Create(&m_CI)->AddResource(resource);
+	}
+	
 	//TODO Re-enable this. Issue with GetMemoryPropertyFlag()
 	/*if (m_MemoryTypeIndex != GetMemoryTypeIndex(GetMemoryPropertyFlag(resource.type, resource.usage)))
 		return false;*/
 
 	resource.memoryBlock = (uint64_t)m_DeviceMemory;
 	resource.id = GenerateURID();
-	s_AllocatedResources[this][resource.id] = resource;
+	s_AllocatedResources[get_this_shared_ptr()][resource.id] = resource;
 	CalculateOffsets();
-	resource = s_AllocatedResources[this][resource.id];
+	resource = s_AllocatedResources[get_this_shared_ptr()][resource.id];
 
 	if (resource.type == crossplatform::Resource::Type::BUFFER)
 		MIRU_ASSERT(vkBindBufferMemory(m_Device, (VkBuffer)resource.resource, m_DeviceMemory, resource.offset), "ERROR: VULKAN: Failed to bind Buffer.");
@@ -80,7 +94,7 @@ void MemoryBlock::RemoveResource(uint64_t id)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	s_AllocatedResources[this].erase(id);
+	s_AllocatedResources[get_this_shared_ptr()].erase(id);
 }
 
 void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)

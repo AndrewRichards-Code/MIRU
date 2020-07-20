@@ -28,9 +28,10 @@ namespace crossplatform
 		size_t		offset = 0;
 		uint64_t	memoryBlock = 0;
 		uint64_t	id = 0;
+		bool		newMemoryBlock = false;
 	};
 
-	class MemoryBlock
+	class MemoryBlock : public std::enable_shared_from_this<MemoryBlock>
 	{
 		//enums/structs
 	public:
@@ -74,20 +75,21 @@ namespace crossplatform
 		virtual void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
 		virtual void AccessData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
 
-		static inline std::vector<MemoryBlock*>& GetMemoryBlocks() { return s_MemoryBlocks; }
-		static inline std::map<MemoryBlock*, std::map<uint64_t, Resource>>& GetAllocatedResources() { return s_AllocatedResources; }
+		static inline std::vector<Ref<MemoryBlock>>& GetMemoryBlocks() { return s_MemoryBlocks; }
+		static inline std::map<Ref<MemoryBlock>, std::map<uint64_t, Resource>>& GetAllocatedResources() { return s_AllocatedResources; }
 
 	protected:
 		void CalculateOffsets();
 		bool ResourceBackable(Resource& resource);
-		static inline const uint64_t GenerateURID() { return (ruid_src++); };
+		static inline const uint64_t GenerateURID() { return (ruid_src++); }
+		inline Ref<crossplatform::MemoryBlock> get_this_shared_ptr() { return shared_from_this(); }
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 		
-		static std::vector<MemoryBlock*> s_MemoryBlocks;
-		static std::map<MemoryBlock*, std::map<uint64_t, Resource>> s_AllocatedResources;
+		static std::vector<Ref<MemoryBlock>> s_MemoryBlocks;
+		static std::map<Ref<MemoryBlock>, std::map<uint64_t, Resource>> s_AllocatedResources;
 
 	private:
 		static uint64_t ruid_src;

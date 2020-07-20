@@ -60,13 +60,15 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 	if (m_CI.pMemoryBlock)
 	{
-		m_CI.pMemoryBlock->AddResource(m_Resource);
+		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: D3D12: Unable to add the Image to a MemoryBlock.");
+		if (m_Resource.newMemoryBlock)
+			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
 
 		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_CurrentResourceState, useClear ? &clear : nullptr, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 		D3D12SetName(m_Image, m_CI.debugName);
 
 		m_Resource.resource = (uint64_t)m_Image;
-		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock.get()).at(m_Resource.id).resource = (uint64_t)m_Image;
+		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock).at(m_Resource.id).resource = (uint64_t)m_Image;
 		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
 }

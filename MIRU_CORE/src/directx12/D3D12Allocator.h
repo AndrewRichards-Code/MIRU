@@ -26,7 +26,6 @@ namespace d3d12
 	private:
 		ID3D12Device* m_Device;
 
-
 	public:
 		ID3D12Heap* m_MemoryHeap;
 		D3D12_HEAP_DESC m_HeapDesc;

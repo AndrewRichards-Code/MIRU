@@ -35,7 +35,10 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	
 	if (m_CI.pMemoryBlock)
 	{
-		m_CI.pMemoryBlock->AddResource(m_Resource);
+		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: VULKAN: Unable to add the Buffer to a MemoryBlock.");
+		if (m_Resource.newMemoryBlock)
+			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
+
 		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
 }

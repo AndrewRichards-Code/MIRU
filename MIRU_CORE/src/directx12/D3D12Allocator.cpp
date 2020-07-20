@@ -19,9 +19,6 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 
 	MIRU_ASSERT(m_Device->CreateHeap(&m_HeapDesc, IID_PPV_ARGS(&m_MemoryHeap)), "ERROR: D3D12: Failed to create Heap.");
 	D3D12SetName(m_MemoryHeap, m_CI.debugName);
-
-	s_MemoryBlocks.push_back(this);
-	s_AllocatedResources[this];
 }
 
 MemoryBlock::~MemoryBlock()
@@ -35,17 +32,34 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	bool found = false;
+	for (auto& memoryBlock : s_MemoryBlocks)
+	{
+		if (found = memoryBlock == get_this_shared_ptr())
+			break;
+	}
+	if (!found)
+	{
+		s_MemoryBlocks.push_back(get_this_shared_ptr());
+		s_AllocatedResources[get_this_shared_ptr()];
+	}
+
 	if (m_Device != reinterpret_cast<ID3D12Device*>(resource.device))
 		return false;
 
-	if (!ResourceBackable(resource))
-		return false;
+	if (!ResourceBackable(resource) && !resource.newMemoryBlock)
+	{
+		MIRU_ASSERT(!(resource.size > (size_t)m_CI.blockSize), "ERROR: D3D12: Resource is larger than the MemoryBlock::BlockSize.");
+
+		resource.newMemoryBlock = true;
+		return Create(&m_CI)->AddResource(resource);
+	}
 
 	resource.memoryBlock = (uint64_t)m_MemoryHeap;
 	resource.id = GenerateURID();
-	s_AllocatedResources[this][resource.id] = resource;
+	s_AllocatedResources[get_this_shared_ptr()][resource.id] = resource;
 	CalculateOffsets();
-	resource = s_AllocatedResources[this][resource.id];
+	resource = s_AllocatedResources[get_this_shared_ptr()][resource.id];
 
 	return true;
 }
@@ -54,7 +68,7 @@ void MemoryBlock::RemoveResource(uint64_t id)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	s_AllocatedResources[this].erase(id);
+	s_AllocatedResources[get_this_shared_ptr()].erase(id);
 }
 
 void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
