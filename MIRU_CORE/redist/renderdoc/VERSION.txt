@@ -1,2 +1,2 @@
-RenderDoc v1.7 2020/03/10
+RenderDoc v1.9 2020/07/22
 Redistribution - No Modifications.
