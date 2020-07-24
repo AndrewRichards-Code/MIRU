@@ -65,6 +65,7 @@ namespace crossplatform
 	};
 	
 	//ViewportState
+
 	struct Viewport
 	{
 		float x;
@@ -125,7 +126,7 @@ namespace crossplatform
 	
 	//DepthStencilState
 
-	enum StencilOp : uint32_t
+	enum class StencilOp : uint32_t
 	{
 		KEEP = 0,
 		ZERO = 1,
