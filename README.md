@@ -66,7 +66,7 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 
 ## Build Tools with Visual Studio:
 ### Windows x64:
-- Miscrosoft Visual Studio 2019
+- Microsoft Visual Studio 2019
 - Toolset: v142 
 - Windows SDK: 10.0.18362
 - ISO C++ 17
