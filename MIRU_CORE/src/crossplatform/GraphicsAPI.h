@@ -4,6 +4,8 @@
 
 namespace miru
 {
+namespace crossplatform
+{
 	class GraphicsAPI
 	{
 	public:
@@ -27,7 +29,7 @@ namespace miru
 		static void AllowSetName(bool useSetName = true);
 		static const bool& IsSetNameAllowed() { return s_AllowSetName; }
 		
-		static void LoadGraphicsDebugger();
+		static void LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType debugger);
 		template<class T>
 		static const std::shared_ptr<T>& GetGraphicsDebugger() { return std::dynamic_pointer_cast<T>(s_GraphicsDebugger);}
 		static const std::shared_ptr<debug::GraphicsDebugger>& GetGraphicsDebugger() { return s_GraphicsDebugger;}
@@ -41,4 +43,5 @@ namespace miru
 
 		static std::shared_ptr<debug::GraphicsDebugger> s_GraphicsDebugger;
 	};
+}
 }

@@ -9,7 +9,7 @@ namespace debug
 	public:
 		enum class DebuggerType : uint32_t
 		{
-			UNKNOWN = 0,
+			NONE = 0,
 			PIX,
 			RENDER_DOC
 		};
@@ -20,7 +20,7 @@ namespace debug
 		const DebuggerType& GetDebuggerType() { return m_Debugger; }
 
 	protected:
-		DebuggerType m_Debugger = DebuggerType::UNKNOWN;
+		DebuggerType m_Debugger = DebuggerType::NONE;
 	};
 }
 }

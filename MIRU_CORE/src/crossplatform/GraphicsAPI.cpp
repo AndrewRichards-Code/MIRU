@@ -2,6 +2,7 @@
 #include "GraphicsAPI.h"
 
 using namespace miru;
+using namespace crossplatform;
 
 GraphicsAPI::API GraphicsAPI::s_API = GraphicsAPI::API::UNKNOWN;
 bool GraphicsAPI::s_ApiInitialised = false;
@@ -29,10 +30,29 @@ void GraphicsAPI::AllowSetName(bool allowSetName)
 	}
 }
 
-void GraphicsAPI::LoadGraphicsDebugger()
+void GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType debugger)
 {
-	if (GraphicsAPI::IsD3D12())
-		s_GraphicsDebugger = std::make_shared<debug::Pix>();
-	else
-		s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+	if (!s_AllowSetNameInitialised)
+	{
+		switch (debugger)
+		{
+		default:
+		case debug::GraphicsDebugger::DebuggerType::NONE:
+		{
+			s_GraphicsDebugger = nullptr;
+		}
+		case debug::GraphicsDebugger::DebuggerType::PIX:
+		{
+			if (GraphicsAPI::IsD3D12())
+				s_GraphicsDebugger = std::make_shared<debug::Pix>();
+			else
+				s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+		}
+		case debug::GraphicsDebugger::DebuggerType::RENDER_DOC:
+		{
+			s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+		}
+		}
+	}
+
 }
