@@ -32,27 +32,23 @@ void GraphicsAPI::AllowSetName(bool allowSetName)
 
 void GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType debugger)
 {
-	if (!s_AllowSetNameInitialised)
+	switch (debugger)
 	{
-		switch (debugger)
-		{
-		default:
-		case debug::GraphicsDebugger::DebuggerType::NONE:
-		{
-			s_GraphicsDebugger = nullptr;
-		}
-		case debug::GraphicsDebugger::DebuggerType::PIX:
-		{
-			if (GraphicsAPI::IsD3D12())
-				s_GraphicsDebugger = std::make_shared<debug::Pix>();
-			else
-				s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
-		}
-		case debug::GraphicsDebugger::DebuggerType::RENDER_DOC:
-		{
-			s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
-		}
-		}
+	default:
+	case debug::GraphicsDebugger::DebuggerType::NONE:
+	{
+		s_GraphicsDebugger = nullptr;
 	}
-
+	case debug::GraphicsDebugger::DebuggerType::PIX:
+	{
+		if (GraphicsAPI::IsD3D12())
+			s_GraphicsDebugger = std::make_shared<debug::Pix>();
+		else
+			s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+	}
+	case debug::GraphicsDebugger::DebuggerType::RENDER_DOC:
+	{
+		s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+	}
+	}
 }
