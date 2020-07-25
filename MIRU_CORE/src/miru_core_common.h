@@ -261,7 +261,7 @@ namespace miru
 	#if defined(MIRU_D3D12)
 	static inline void D3D12SetName(void* object, const char* name)
 	{
-		if (!GraphicsAPI::IsSetNameAllowed())
+		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
 			return;
 
 		std::string _name = name;			
@@ -276,7 +276,7 @@ namespace miru
 	template<class T>
 	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name)
 	{
-		if (!GraphicsAPI::IsSetNameAllowed())
+		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
 			return;
 
 		VkObjectType objectType = VK_OBJECT_TYPE_UNKNOWN;

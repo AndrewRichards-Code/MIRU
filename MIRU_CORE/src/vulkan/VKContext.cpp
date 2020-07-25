@@ -77,7 +77,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	if (GraphicsAPI::IsSetNameAllowed())
+	if (crossplatform::GraphicsAPI::IsSetNameAllowed())
 		push_back_exclusive(m_CI.instanceExtensions, "VK_EXT_debug_utils");
 
 	uint32_t extensionCount = 0;
