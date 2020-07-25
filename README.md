@@ -45,11 +45,11 @@ This repository is under active development and is not currently intended for co
 - OS: Windows, Linux and Android
 - Graphics Debuggers: Pix, RenderDoc
 
-| OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for Vulkan |
-| ------- | -------- | ---------------- | ---------------- | ---------------- | -------------------- |
-| Windows | x64      |:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:    |
-| Linux   | x64      |:x:               |:heavy_check_mark:|:x:               |:heavy_check_mark:    |
-| Android | ARM64    |:x:               |:heavy_check_mark:|:x:               |:heavy_check_mark:    |
+| OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
+| ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
+| Windows | x64      |:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:   |:heavy_check_mark:    |
+| Linux   | x64      |:x:               |:heavy_check_mark:|:x:               |:x:                  |:heavy_check_mark:    |
+| Android | ARM64    |:x:               |:heavy_check_mark:|:x:               |:x:                  |:heavy_check_mark:    |
 
 ## Projects:
 ### MIRU_CORE: 
