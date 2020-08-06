@@ -255,7 +255,7 @@ namespace miru
 
 //MIRU SetName
 #define MIRU_ALLOW_API_SETNAME_FN_COMPILE
-#if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE)
+#if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
 namespace miru
 {
 	#if defined(MIRU_D3D12)

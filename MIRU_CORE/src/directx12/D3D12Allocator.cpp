@@ -49,7 +49,7 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 
 	if (!ResourceBackable(resource) && !resource.newMemoryBlock)
 	{
-		MIRU_ASSERT(!(resource.size > (size_t)m_CI.blockSize), "ERROR: D3D12: Resource is larger than the MemoryBlock::BlockSize.");
+		MIRU_ASSERT((resource.size > (size_t)m_CI.blockSize), "ERROR: D3D12: Resource is larger than the MemoryBlock::BlockSize.");
 
 		resource.newMemoryBlock = true;
 		return Create(&m_CI)->AddResource(resource);
