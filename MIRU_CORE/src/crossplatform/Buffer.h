@@ -40,8 +40,8 @@ namespace crossplatform
 			const char*			debugName;
 			void*				device;
 			UsageBit			usage;
-			size_t				size;
 			ImageDimension		imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for a image.
+			size_t				size;
 			void*				data;
 			Ref<MemoryBlock>	pMemoryBlock;
 		};

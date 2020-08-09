@@ -75,7 +75,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<d3d12::Image>(swapchainImage)->m_Image = reinterpret_cast<ID3D12Resource*>(pImages[i]);
-			ref_cast<d3d12::Image>(swapchainImage)->m_CurrentResourceState = D3D12_RESOURCE_STATE_COMMON;
+			ref_cast<d3d12::Image>(swapchainImage)->m_InitialResourceState = D3D12_RESOURCE_STATE_COMMON;
 			
 			swapchainImageViewCI.pImage = swapchainImage;
 			m_SwapchainImageViews[i] = CreateRef<d3d12::ImageView>();
@@ -92,7 +92,6 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			swapchainImage->m_CI = swapchainImageCI;
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<vulkan::Image>(swapchainImage)->m_Image = *reinterpret_cast<VkImage*>(pImages[i]);
-			ref_cast<vulkan::Image>(swapchainImage)->m_CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			
 			swapchainImageViewCI.pImage = swapchainImage;
 			m_SwapchainImageViews[i] = CreateRef<vulkan::ImageView>();

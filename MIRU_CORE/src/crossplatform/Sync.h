@@ -18,7 +18,7 @@ namespace crossplatform
 			const char* debugName;
 			void*		device;
 			bool		signaled;
-			uint64_t	timeout; //In nanoseconds
+			uint64_t	timeout;	//In nanoseconds
 		};
 		//Methods
 	public:
@@ -126,10 +126,10 @@ namespace crossplatform
 			AccessBit					dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			Ref<Buffer>					pBuffer;				//For Type::BUFFER. For D3D12 UAV Barriers on buffers.
+			Ref<Buffer>					pBuffer;				//For Type::BUFFER
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
-			Ref<Image>					pImage;					//For Type::IMAGE For D3D12 UAV Barriers on images.
+			Ref<Image>					pImage;					//For Type::IMAGE
 			Image::Layout				oldLayout;				//For Type::IMAGE
 			Image::Layout				newLayout;				//For Type::IMAGE
 			Image::SubresourceRange		subresoureRange;		//For Type::IMAGE

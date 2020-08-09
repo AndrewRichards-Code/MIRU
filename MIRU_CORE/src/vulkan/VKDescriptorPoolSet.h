@@ -49,10 +49,6 @@ namespace vulkan
 		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void Update() override;
 
-	private:
-		VkDescriptorType BufferViewTypeToVkDescriptorType(crossplatform::BufferView::Type type);
-		VkDescriptorType ImageUsageToVkDescriptorType(crossplatform::Image::UsageBit usage, bool sampler, bool image);
-
 		//Members
 	public:
 		VkDevice& m_Device;

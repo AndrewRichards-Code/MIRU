@@ -93,7 +93,7 @@ namespace crossplatform
 		virtual void GetShaderResources() = 0;
 		const std::vector<VertexShaderInputAttributeDescription>& GetVSIADs() const { return m_VSIADs; };
 		const std::vector<PixelShaderOutputAttributeDescription>& GetPSOADs() const { return m_PSOADs; };
-		const std::map<uint32_t, std::vector<ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
+		const std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
 
 	protected:
 		void GetShaderByteCode();
@@ -108,7 +108,7 @@ namespace crossplatform
 		std::vector<PixelShaderOutputAttributeDescription> m_PSOADs;
 
 		//Key is the set number
-		std::map<uint32_t, std::vector<ResourceBindingDescription>> m_RBDs;
+		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
 	};
 }
 }

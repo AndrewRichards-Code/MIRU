@@ -21,7 +21,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ImageCI.arrayLayers = m_CI.arrayLayers;
 	m_ImageCI.samples = static_cast<VkSampleCountFlagBits>(m_CI.sampleCount);
 	m_ImageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
-	m_ImageCI.usage = static_cast<VkImageUsageFlags>(m_CI.usage) + (m_CI.mipLevels > 1 ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
+	m_ImageCI.usage = static_cast<VkImageUsageFlags>(m_CI.usage) | (m_CI.mipLevels > 1 ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
 	m_ImageCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	m_ImageCI.queueFamilyIndexCount = 0;
 	m_ImageCI.pQueueFamilyIndices = nullptr;
@@ -47,8 +47,6 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
 	}
-
-	m_CurrentLayout = m_ImageCI.initialLayout;
 }
 
 Image::~Image()
