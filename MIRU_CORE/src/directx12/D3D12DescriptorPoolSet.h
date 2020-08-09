@@ -60,8 +60,6 @@ namespace d3d12
 		//[index][binding][0] == HEAP_TYPE_CBV_SRV_UAV and [index][binding][1] == HEAP_TYPE_SAMPLER
 		//[index][binding][2] == HEAP_TYPE_RTV         and [index][binding][3] == HEAP_TYPE_DSV
 		std::map<uint32_t, std::map<uint32_t, std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>>> m_DescCPUHandles;
-
-		std::map<uint32_t, std::map<uint32_t, uint32_t>> m_SamplerBindings;
 	};
 
 }

@@ -25,6 +25,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::COLOUR_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET : D3D12_RESOURCE_FLAGS(0);
 	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAGS(0);
+	m_ResourceDesc.Flags |= (bool)(m_CI.usage & Image::UsageBit::STORAGE_BIT) ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
 	
 	D3D12_CLEAR_VALUE clear = {};
 	bool useClear = false;
@@ -392,7 +393,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	ID3D12Resource* image = ref_cast<Image>(m_CI.pImage)->m_Image;
 
 	//RTV
-	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
+	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
 	{
 		m_RTVDesc.Format = resourceDesc.Format;
 
@@ -462,7 +463,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	//DSV
 	if(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
 	{
-		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
+		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
 		{
 			m_DSVDesc.Format = resourceDesc.Format;
 			m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
@@ -603,7 +604,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		}
 		case Image::Type::TYPE_CUBE_ARRAY:
 		{
-			m_SRVDesc.TextureCubeArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;;
+			m_SRVDesc.TextureCubeArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
 			m_SRVDesc.TextureCubeArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
 			m_SRVDesc.TextureCubeArray.First2DArrayFace = 0;
 			m_SRVDesc.TextureCubeArray.NumCubes = resourceDesc.DepthOrArraySize / 6;
@@ -614,7 +615,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	}
 
 	//UAV
-	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.mipLevelCount; i++)
+	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
 	{
 		m_UAVDesc.Format = resourceDesc.Format;
 
