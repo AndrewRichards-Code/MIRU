@@ -153,16 +153,16 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-
-	switch (m_CI.type)
+	if (m_CI.type == Barrier::Type::MEMORY)
 	{
-	case Type::MEMORY:
+
 		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 		m_MB.pNext = nullptr;
 		m_MB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
 		m_MB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
-	
-	case Type::BUFFER:
+	}
+	else if (m_CI.type == Barrier::Type::BUFFER)
+	{
 		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 		m_BMB.pNext = nullptr;
 		m_BMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -172,12 +172,9 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_BMB.buffer = ref_cast<vulkan::Buffer>(m_CI.pBuffer)->m_Buffer;
 		m_BMB.offset = m_CI.offset;
 		m_BMB.size = m_CI.size;
-
-	case Type::IMAGE:
-
-		if (ref_cast<Image>(m_CI.pImage)->m_CurrentLayout != static_cast<VkImageLayout>(m_CI.oldLayout))
-			MIRU_WARN(true, "WARN: VULKAN: Provided oldLayout Layout does not match CurrentLayout. Using the CurrentLayout in Barrier.");
-
+	}
+	else if (m_CI.type == Barrier::Type::IMAGE)
+	{
 		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		m_IMB.pNext = nullptr;
 		m_IMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -191,13 +188,10 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_IMB.subresourceRange.baseMipLevel = m_CI.subresoureRange.baseMipLevel;
 		m_IMB.subresourceRange.levelCount = m_CI.subresoureRange.mipLevelCount;
 		m_IMB.subresourceRange.baseArrayLayer = m_CI.subresoureRange.baseArrayLayer;
-		m_IMB.subresourceRange.layerCount= m_CI.subresoureRange.arrayLayerCount;
-
-		ref_cast<Image>(m_CI.pImage)->m_CurrentLayout = static_cast<VkImageLayout>(m_CI.newLayout);
-
-	default:
-		return;
+		m_IMB.subresourceRange.layerCount = m_CI.subresoureRange.arrayLayerCount;
 	}
+	else
+		return;
 }
 
 Barrier::~Barrier()

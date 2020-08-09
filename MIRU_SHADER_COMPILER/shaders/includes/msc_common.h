@@ -56,3 +56,16 @@
 //The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
 #define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_image_cis); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis)
 #define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_image_cis[count]); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis[count])
+
+//Compute Shaders
+
+//Number of Threads per Group
+#define MIRU_COMPUTE_LAYOUT(x, y, z) [numthreads(x, y, z)]
+//The GroupID within the Dispatch.
+#define MIRU_GROUP_ID SV_GroupID
+//The ThreadID within the Group.
+#define MIRU_GROUP_THREAD_ID SV_GroupThreadID
+//The ThreadID within the whole Dispatch.
+#define MIRU_DISPATCH_THREAD_ID SV_GroupThreadID
+//The "flattened" index of the Thread within the Group
+#define MIRU_GROUP_INDEX SV_GroupIndex

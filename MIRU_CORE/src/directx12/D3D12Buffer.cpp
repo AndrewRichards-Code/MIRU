@@ -42,9 +42,9 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
-		m_CurrentResourceState = ToD3D12BufferType(m_CI.usage);
+		m_InitialResourceState = ToD3D12BufferType(m_CI.usage);
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
-		m_CurrentResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+		m_InitialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
 	m_AllocationInfo = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
 
@@ -64,7 +64,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 		if (m_Resource.newMemoryBlock)
 			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
 
-		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_CurrentResourceState, clear, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to place Buffer.");
+		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_InitialResourceState, clear, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to place Buffer.");
 		D3D12SetName(m_Buffer, m_CI.debugName);
 
 		m_Resource.resource = (uint64_t)m_Buffer;
