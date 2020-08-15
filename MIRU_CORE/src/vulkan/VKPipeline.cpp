@@ -127,7 +127,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_PLCI.pPushConstantRanges = vkPushConstantRanges.data();
 	
 	MIRU_ASSERT(vkCreatePipelineLayout(m_Device, &m_PLCI, nullptr, &m_PipelineLayout), "ERROR: VULKAN: Failed to create PipelineLayout.");
-	VKSetName<VkPipelineLayout>(m_Device, (uint64_t)m_PipelineLayout, (std::string(m_CI.debugName) + std::string(" : PipelineLayout")).c_str());
+	VKSetName<VkPipelineLayout>(m_Device, (uint64_t)m_PipelineLayout, m_CI.debugName + " : PipelineLayout");
 
 	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
 	{
@@ -315,7 +315,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.basePipelineIndex = -1;
 
 		MIRU_ASSERT(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &m_GPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Graphics Pipeline.");
-		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Graphics Pipeline")).c_str());
+		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
 	{
@@ -328,7 +328,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPCI.basePipelineIndex = -1;
 		
 		MIRU_ASSERT(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
-		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Compute Pipeline")).c_str());
+		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");

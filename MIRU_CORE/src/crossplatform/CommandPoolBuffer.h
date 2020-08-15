@@ -24,7 +24,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*		debugName;
+			std::string		debugName;
 			Ref<Context>	pContext;
 			FlagBit			flags;
 			uint32_t		queueFamilyIndex;
@@ -62,7 +62,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*			debugName;
+			std::string			debugName;
 			Ref<CommandPool>	pCommandPool;
 			Level				level;
 			uint32_t			commandBufferCount;

@@ -16,6 +16,7 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 	m_Value = 0;
 	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence)), "ERROR: D3D12: Failed to a create Fence.");
+	D3D12SetName(m_Fence, m_CI.debugName + " : Fence");
 	m_Event = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
@@ -81,6 +82,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 	m_Value = 0;
 	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create Semaphore.");
+	D3D12SetName(m_Semaphore, m_CI.debugName + " : Semaphore");
 }
 
 Semaphore::~Semaphore()

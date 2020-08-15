@@ -15,7 +15,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char* debugName;
+			std::string debugName;
 			void*		device;
 			bool		signaled;
 			uint64_t	timeout; //In nanoseconds
@@ -44,7 +44,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char* debugName;
+			std::string debugName;
 			void*		device;
 		};
 		//Methods
@@ -65,7 +65,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char* debugName;
+			std::string debugName;
 			void*		device;
 		};
 		//Methods

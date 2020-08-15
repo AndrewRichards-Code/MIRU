@@ -63,7 +63,7 @@ namespace crossplatform
 		#define MIRU_SUBPASS_EXTERNAL (~0U)
 		struct CreateInfo
 		{
-			const char*							debugName;
+			std::string							debugName;
 			void*								device;
 			std::vector<AttachmentDescription>	attachments;				//List of a images and their usage throughout the whole RenderPass.
 			std::vector<SubpassDescription>		subpassDescriptions;		//List of subpass to executed with the RenderPass.
@@ -156,7 +156,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*					debugName;
+			std::string					debugName;
 			void*						device;
 			PipelineType				type;
 			std::vector<Ref<Shader>>	shaders;			//One shader only for compute.

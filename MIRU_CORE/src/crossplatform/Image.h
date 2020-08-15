@@ -256,7 +256,7 @@ namespace crossplatform
 
 		struct CreateInfo
 		{
-			const char*			debugName;
+			std::string			debugName;
 			void*				device;
 			Type				type;
 			Format				format;
@@ -294,7 +294,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char*				debugName;
+			std::string				debugName;
 			void*					device;
 			Ref<Image>				pImage;
 			Image::SubresourceRange subresourceRange;
@@ -346,7 +346,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*		debugName;
+			std::string		debugName;
 			void*			device;
 			Filter			magFilter;
 			Filter			minFilter;

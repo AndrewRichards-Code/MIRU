@@ -25,7 +25,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SurfaceCI.hinstance = GetModuleHandle(nullptr);
 
 	MIRU_ASSERT(vkCreateWin32SurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create Win32Surface.");
-	VKSetName<VkSurfaceKHR>(m_Device, (uint64_t)m_Surface, (std::string(m_CI.debugName) + ": Surface").c_str());
+	VKSetName<VkSurfaceKHR>(m_Device, (uint64_t)m_Surface, m_CI.debugName + ": Surface");
 
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
 	VkAndroidSurfaceCreateInfoKHR m_SurfaceCI;
@@ -35,7 +35,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SurfaceCI.window = reinterpret_cast<ANativeWindow*>(m_CI.pWindow);
 
 	MIRU_ASSERT(vkCreateAndroidSurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create AndroidSurface.");
-	VKSetName<VkSurfaceKHR>(m_Device, (uint64_t)m_Surface, (std::string(m_CI.debugName) + ": Surface").c_str());
+	VKSetName<VkSurfaceKHR>(m_Device, (uint64_t)m_Surface, m_CI.debugName + ": Surface").c_str());
 
 #else
 	MIRU_ASSERT(true, "ERROR: VULKAN: Unknown Platform.");
@@ -129,7 +129,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
-		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], (std::string(m_CI.debugName) + ": Image" + std::to_string(i)).c_str());
+		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], m_CI.debugName + ": Image" + std::to_string(i));
 		
 		VkImageViewCreateInfo ci = {};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -143,7 +143,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 		VkImageView imageView;
 		MIRU_ASSERT(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
-		VKSetName<VkImageView>(m_Device, (uint64_t)imageView, (std::string(m_CI.debugName) + ": ImageView " + std::to_string(i)).c_str());
+		VKSetName<VkImageView>(m_Device, (uint64_t)imageView, m_CI.debugName + ": ImageView " + std::to_string(i));
 
 		m_SwapchainImageViews.push_back(imageView);
 	}
@@ -197,7 +197,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
-		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], (std::string(m_CI.debugName) + ": Image" + std::to_string(i)).c_str());
+		VKSetName<VkImage>(m_Device, (uint64_t)m_SwapchainImages[i], m_CI.debugName + ": Image" + std::to_string(i));
 		
 		VkImageViewCreateInfo ci = {};
 		ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -211,7 +211,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 		VkImageView imageView;
 		MIRU_ASSERT(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
-		VKSetName<VkImageView>(m_Device, (uint64_t)imageView, (std::string(m_CI.debugName) + ": ImageView " + std::to_string(i)).c_str());
+		VKSetName<VkImageView>(m_Device, (uint64_t)imageView, m_CI.debugName + ": ImageView " + std::to_string(i));
 
 		m_SwapchainImageViews.push_back(imageView);
 	}

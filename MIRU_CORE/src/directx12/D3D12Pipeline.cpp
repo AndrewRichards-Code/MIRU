@@ -138,7 +138,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		for (auto& attrib : m_CI.vertexInputState.vertexInputAttributeDescriptions)
 		{
 			D3D12_INPUT_ELEMENT_DESC il;
-			il.SemanticName = attrib.semanticName;
+			il.SemanticName = attrib.semanticName.c_str();
 			il.SemanticIndex = attrib.location;
 			il.Format = ToDXGI_FORMAT(attrib.vertexType);
 			il.InputSlot = attrib.binding;
@@ -273,7 +273,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 		MIRU_ASSERT(m_Device->CreateGraphicsPipelineState(&m_GPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
-		D3D12SetName(m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Graphics Pipeline")).c_str());
+		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
 	{
@@ -284,7 +284,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 		MIRU_ASSERT(m_Device->CreateComputePipelineState(&m_CPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
-		D3D12SetName(m_Pipeline, (std::string(m_CI.debugName) + std::string(" : Compute Pipeline")).c_str());
+		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");

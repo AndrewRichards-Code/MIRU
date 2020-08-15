@@ -44,7 +44,7 @@ namespace crossplatform
 		uint32_t	binding;
 		VertexType	vertexType;
 		uint32_t	offset;
-		const char* semanticName;
+		std::string semanticName;
 	};
 	
 	//InputAssemblyState

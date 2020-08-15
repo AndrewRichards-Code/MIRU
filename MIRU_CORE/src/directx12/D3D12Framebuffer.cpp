@@ -83,7 +83,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		i++;
 	}
 
-	m_FramebufferDescriptorPoolCI.debugName = (std::string(m_CI.debugName) + "Framebuffer DescriptorPool").c_str();
+	m_FramebufferDescriptorPoolCI.debugName = m_CI.debugName + " : Framebuffer DescriptorPool";
 	m_FramebufferDescriptorPoolCI.device = m_Device;
 	m_FramebufferDescriptorPoolCI.poolSizes = poolSizes;
 	m_FramebufferDescriptorPoolCI.maxSets = 1;
@@ -115,12 +115,12 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		}
 	}
 
-	m_FramebufferDescriptorSetLayoutCI.debugName = "Framebuffer DescriptorSetLayout";
+	m_FramebufferDescriptorSetLayoutCI.debugName = m_CI.debugName + " : Framebuffer DescriptorSetLayout";
 	m_FramebufferDescriptorSetLayoutCI.device = m_Device;
 	m_FramebufferDescriptorSetLayoutCI.descriptorSetLayoutBinding = framebufferDescriptorBindings;
 	m_FramebufferDescriptorSetLayout = DescriptorSetLayout::Create(&m_FramebufferDescriptorSetLayoutCI);
 
-	m_FramebufferDescriptorSetCI.debugName = (std::string(m_CI.debugName) + "Framebuffer DescriptorSet").c_str();
+	m_FramebufferDescriptorSetCI.debugName = m_CI.debugName + " : Framebuffer DescriptorSet";
 	m_FramebufferDescriptorSetCI.pDescriptorPool = m_FramebufferDescriptorPool;
 	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
 	m_FramebufferDescriptorSet = crossplatform::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);

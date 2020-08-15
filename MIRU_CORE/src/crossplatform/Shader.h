@@ -55,29 +55,29 @@ namespace crossplatform
 		//All locations must be full paths i.e. dxc and glslangValidator.
 		struct RecompileArguments
 		{
-			const char*					mscDirectory;
-			const char*					hlslFilepath;
-			const char*					outputDirectory;	//Optional
-			std::vector<const char*>	includeDirectories;	//Optional
-			const char*					entryPoint;			//Optional
-			const char*					shaderModel;		//Optional
-			std::vector<const char*>	macros;				//Optional
+			std::string					mscDirectory;
+			std::string					hlslFilepath;
+			std::string					outputDirectory;	//Optional
+			std::vector<std::string>	includeDirectories;	//Optional
+			std::string					entryPoint;			//Optional
+			std::string					shaderModel;		//Optional
+			std::vector<std::string>	macros;				//Optional
 			bool						cso;				//Either cso or spv must be true
 			bool						spv;				//Either cso or spv must be true
-			const char*					dxcLocation;		//Optional
-			const char*					glslangLocation;	//Optional
-			const char*					additioalArguments; //Optional. Example: ""\-Zi -Od"\".
+			std::string					dxcLocation;		//Optional
+			std::string					glslangLocation;	//Optional
+			std::string					additioalArguments; //Optional. Example: ""\-Zi -Od"\".
 			bool						nologo;				//Optional
 			bool						nooutput;			//Optional
 		};
 
 		struct CreateInfo
 		{
-			const char*			debugName;
+			std::string			debugName;
 			void*				device;
 			StageBit			stage;
-			const char*			entryPoint;
-			const char*			binaryFilepath;
+			std::string			entryPoint;
+			std::string			binaryFilepath;
 			std::vector<char>	binaryCode;
 			RecompileArguments	recompileArguments;
 		};

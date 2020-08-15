@@ -202,22 +202,22 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		if (numDescriptors_CBV_SRV_UAV > 0)
 		{
 			MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_DescriptorHeapDescs[index][0], IID_PPV_ARGS(&m_DescriptorHeaps[index][0])), "ERROR: D3D12: Failed to create DescriptorPool for HEAP_TYPE_CBV_SRV_UAV.");
-			D3D12SetName(m_DescriptorHeaps[index][0], (descriptorPoolCI.debugName + std::string(" : HEAP_TYPE_CBV_SRV_UAV")).c_str());
+			D3D12SetName(m_DescriptorHeaps[index][0], descriptorPoolCI.debugName + " : HEAP_TYPE_CBV_SRV_UAV");
 		}
 		if (numDescriptors_Sampler > 0)
 		{
 			MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_DescriptorHeapDescs[index][1], IID_PPV_ARGS(&m_DescriptorHeaps[index][1])), "ERROR: D3D12: Failed to create DescriptorPool for HEAP_TYPE_SAMPLER.");
-			D3D12SetName(m_DescriptorHeaps[index][1], (descriptorPoolCI.debugName + std::string(" : HEAP_TYPE_SAMPLER")).c_str());
+			D3D12SetName(m_DescriptorHeaps[index][1], descriptorPoolCI.debugName + " : HEAP_TYPE_SAMPLER");
 		}
 		if (numDescriptors_RTV > 0)
 		{
 			MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_DescriptorHeapDescs[index][2], IID_PPV_ARGS(&m_DescriptorHeaps[index][2])), "ERROR: D3D12: Failed to create DescriptorPool for HEAP_TYPE_RTV.");
-			D3D12SetName(m_DescriptorHeaps[index][2], (descriptorPoolCI.debugName + std::string(" : HEAP_TYPE_RTV")).c_str());
+			D3D12SetName(m_DescriptorHeaps[index][2], descriptorPoolCI.debugName + " : HEAP_TYPE_RTV");
 		}
 		if (numDescriptors_DSV > 0)
 		{
 			MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_DescriptorHeapDescs[index][3], IID_PPV_ARGS(&m_DescriptorHeaps[index][3])), "ERROR: D3D12: Failed to create DescriptorPool for HEAP_TYPE_DSV.");
-			D3D12SetName(m_DescriptorHeaps[index][3], (descriptorPoolCI.debugName + std::string(" : HEAP_TYPE_DSV")).c_str());
+			D3D12SetName(m_DescriptorHeaps[index][3], (descriptorPoolCI.debugName + " : HEAP_TYPE_DSV");
 		}
 
 		for (uint32_t binding = 0; binding < numDescriptors_CBV_SRV_UAV; binding++)

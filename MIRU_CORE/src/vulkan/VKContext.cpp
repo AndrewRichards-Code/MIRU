@@ -25,7 +25,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	m_AI.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	m_AI.pNext = nullptr;
-	m_AI.pApplicationName = m_CI.applicationName;
+	m_AI.pApplicationName = m_CI.applicationName.c_str();
 	m_AI.applicationVersion = 1;
 	m_AI.pEngineName = engineName;
 	m_AI.engineVersion = 1;
@@ -180,8 +180,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
 	vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT");
-	VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, (std::string(m_AI.pEngineName) + " - VkInstance").c_str());
-	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], (std::string("PhysicalDevice: ") + m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName).c_str());
+	VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
+	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName));
 	VKSetName<VkDevice>(m_Device, (uint64_t)m_Device, m_CI.deviceDebugName);
 	
 	for (size_t i = 0; i < m_DeviceQueueCIs.size(); i++)
@@ -201,7 +201,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				typeStr += "Compute/";
 			if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
 				typeStr += "Transfer";
-			VKSetName<VkQueue>(m_Device, (uint64_t)queue, (std::string(m_CI.deviceDebugName) + ": Queue - " + typeStr).c_str());
+			VKSetName<VkQueue>(m_Device, (uint64_t)queue, m_CI.deviceDebugName + ": Queue - " + typeStr);
 		}
 		m_Queues.push_back(localQueues);
 		localQueues.clear();

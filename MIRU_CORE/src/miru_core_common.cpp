@@ -29,7 +29,7 @@ uint64_t Timer::m_ScopeCount = 0;
 std::vector<Timer::ProfileDatum> Timer::m_ProfileData = {};
 std::fstream Timer::m_File = {};
 
-Timer::Timer(const char* name)
+Timer::Timer(const std::string& name)
 	:m_Name(name)
 {
 	m_StartTP = std::chrono::high_resolution_clock::now();
@@ -60,7 +60,7 @@ void Timer::Stop()
 	}
 }
 
-void Timer::BeginSession(const char* filepath)
+void Timer::BeginSession(const std::string& filepath)
 {
 	EndSession();
 

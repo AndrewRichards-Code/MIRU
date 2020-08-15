@@ -37,7 +37,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*			debugName;
+			std::string			debugName;
 			void*				device;
 			UsageBit			usage;
 			size_t				size;
@@ -75,7 +75,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*			debugName;
+			std::string			debugName;
 			void*				device;
 			Type				type;
 			Ref<Buffer>			pBuffer;

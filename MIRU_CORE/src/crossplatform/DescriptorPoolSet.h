@@ -37,7 +37,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*				debugName;
+			std::string				debugName;
 			void*					device;
 			std::vector<PoolSize>	poolSizes;
 			uint32_t				maxSets;
@@ -66,7 +66,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*				debugName;
+			std::string				debugName;
 			void*					device;
 			std::vector<Binding>	descriptorSetLayoutBinding; //Order by type and then by ascending binding number.
 		};
@@ -97,7 +97,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*								debugName;
+			std::string								debugName;
 			Ref<DescriptorPool>						pDescriptorPool;
 			std::vector<Ref<DescriptorSetLayout>>	pDescriptorSetLayouts; //One set is created for each DescriptorSetLayout provided.
 		};

@@ -72,7 +72,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	size_t i = 0;
 	for (auto& cmdBuffer : m_CmdBuffers)
 	{
-		VKSetName<VkCommandBuffer>(m_Device, (uint64_t)cmdBuffer, (std::string(m_CI.debugName) + std::to_string(i)).c_str());
+		VKSetName<VkCommandBuffer>(m_Device, (uint64_t)cmdBuffer, m_CI.debugName + std::to_string(i));
 		i++;
 	}
 	

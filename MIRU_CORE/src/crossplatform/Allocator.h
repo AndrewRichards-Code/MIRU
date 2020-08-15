@@ -58,7 +58,7 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			const char*		debugName;
+			std::string		debugName;
 			Ref<Context>	pContext;
 			BlockSize		blockSize;
 			PropertiesBit	properties;

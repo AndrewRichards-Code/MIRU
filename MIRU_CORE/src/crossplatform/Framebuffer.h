@@ -14,7 +14,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char*					debugName;
+			std::string					debugName;
 			void*						device;
 			Ref<RenderPass>				renderPass;
 			std::vector<Ref<ImageView>>	attachments;

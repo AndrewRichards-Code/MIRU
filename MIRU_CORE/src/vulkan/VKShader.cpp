@@ -26,7 +26,7 @@ Shader::Shader(CreateInfo* pCreateInfo)
 	m_ShaderStageCI.flags = 0;
 	m_ShaderStageCI.stage = static_cast<VkShaderStageFlagBits>(m_CI.stage);
 	m_ShaderStageCI.module = m_ShaderModule;
-	m_ShaderStageCI.pName = m_CI.entryPoint;
+	m_ShaderStageCI.pName = m_CI.entryPoint.c_str();
 	m_ShaderStageCI.pSpecializationInfo = nullptr;
 
 	GetShaderResources();
@@ -61,7 +61,7 @@ void Shader::Reconstruct()
 	m_ShaderStageCI.flags = 0;
 	m_ShaderStageCI.stage = static_cast<VkShaderStageFlagBits>(m_CI.stage);
 	m_ShaderStageCI.module = m_ShaderModule;
-	m_ShaderStageCI.pName = m_CI.entryPoint;
+	m_ShaderStageCI.pName = m_CI.entryPoint.c_str();
 	m_ShaderStageCI.pSpecializationInfo = nullptr;
 }
 

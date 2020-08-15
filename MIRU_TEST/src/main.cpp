@@ -11,8 +11,6 @@ using namespace crossplatform;
 
 using namespace glm;
 
-
-
 HWND window;
 bool g_WindowQuit = false;
 uint32_t width = 800;

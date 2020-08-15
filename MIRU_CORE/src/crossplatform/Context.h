@@ -11,14 +11,14 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char*					applicationName = nullptr;
+			std::string					applicationName;
 			uint32_t					api_version_major = 0;
 			uint32_t					api_version_minor = 0;
 			std::vector<std::string>	instanceLayers;
 			std::vector<std::string>	instanceExtensions;
 			std::vector<std::string>	deviceLayers;
 			std::vector<std::string>	deviceExtensions;
-			const char*					deviceDebugName = nullptr;
+			std::string					deviceDebugName;
 		};
 
 		//Methods

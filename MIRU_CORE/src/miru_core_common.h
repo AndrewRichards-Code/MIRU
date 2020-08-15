@@ -210,23 +210,23 @@ namespace miru
 		struct ProfileDatum
 		{
 			uint64_t scopeNumber;
-			const char* name;
+			std::string name;
 			double duration;
 		};
 
 		//Methods
 	public:
-		Timer(const char* name);
+		Timer(const std::string& name);
 		~Timer();
 
 		void Stop();
 
-		static void BeginSession(const char* filepath);
+		static void BeginSession(const std::string& filepath);
 		static void EndSession();
 
 		//Members
 	private:
-		const char* m_Name;
+		const std::string& m_Name;
 		bool m_Stopped = false;
 		std::chrono::time_point<std::chrono::steady_clock> m_StartTP, m_EndTP;
 
@@ -259,13 +259,12 @@ namespace miru
 namespace miru
 {
 	#if defined(MIRU_D3D12)
-	static inline void D3D12SetName(void* object, const char* name)
+	static inline void D3D12SetName(void* object, const std::string& name)
 	{
 		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
 			return;
 
-		std::string _name = name;			
-		std::wstring w_name(_name.begin(), _name.end());
+		std::wstring w_name(name.begin(), name.end());
 
 		reinterpret_cast<ID3D12Object*>(object)->SetName(w_name.c_str());
 	}
@@ -274,7 +273,7 @@ namespace miru
 	#if defined(MIRU_VULKAN)
 	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
-	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name)
+	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const std::string& name)
 	{
 		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
 			return;
@@ -342,7 +341,7 @@ namespace miru
 		nameInfo.pNext = nullptr;
 		nameInfo.objectType = objectType;
 		nameInfo.objectHandle = objectHandle;
-		nameInfo.pObjectName = name;
+		nameInfo.pObjectName = name.c_str();
 
 		if(vkSetDebugUtilsObjectNameEXT)
 			vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
@@ -353,13 +352,13 @@ namespace miru
 namespace miru
 {
 	#if defined(MIRU_D3D12)
-	static inline void D3D12SetName(void* object, const char* name) { return; }
+	static inline void D3D12SetName(void* object, const std::string& name) { return; }
 	#endif
 
 	#if defined(MIRU_VULKAN)
 	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
-	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const char* name) { return; }
+	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const std::string& name) { return; }
 	#endif
 }
 #endif

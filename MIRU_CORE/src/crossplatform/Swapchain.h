@@ -15,7 +15,7 @@ namespace crossplatform
 	public:
 		struct CreateInfo
 		{
-			const char*		debugName;
+			std::string		debugName;
 			Ref<Context>	pContext;
 			void*			pWindow;
 			uint32_t		width;

@@ -68,7 +68,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(m_Device->CreateCommandQueue(&m_QueueDescs[i], IID_PPV_ARGS(&m_Queues[i])), "ERROR: D3D12: Failed to create CommandQueue.");
 
 		std::string typeStr = i == 0 ? "Direct" : i == 1 ? "Compute" : i == 2 ? "Copy" : "";
-		D3D12SetName(m_Queues[i], (std::string(m_CI.deviceDebugName) + ": Queue - " + typeStr).c_str());
+		D3D12SetName(m_Queues[i], m_CI.deviceDebugName + ": Queue - " + typeStr);
 	}
 }
 
