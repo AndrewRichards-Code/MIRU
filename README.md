@@ -21,7 +21,6 @@ This repository is under active development and is not currently intended for co
 - Assign debug names to low level primitives.
 
 ## Known issues and features to test/implement:
-- Compute functionality.
 - Draw/Dispatch commands using indirect buffers.
 - D3D12 Root Constants/Vulkan Push constants.
 - Vulkan dynamic states and their implementation in D3D12.
@@ -30,7 +29,6 @@ This repository is under active development and is not currently intended for co
 - D3D12 Subpasses conformance.
 - Fill/Update Buffer commands.
 - Queries for GPU timing.
-- Blit and Resolve images.
 - Mipmap generation, likely offline with compute shaders.
 - Improvements to linear memory allocators.
 - Arrays of Descriptors register/binding number conflict.

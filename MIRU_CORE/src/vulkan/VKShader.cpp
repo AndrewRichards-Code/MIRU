@@ -254,7 +254,7 @@ void Shader::SpirvCrossReflection()
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
 			rbd.stage = m_CI.stage;
-			m_RBDs[set].push_back(rbd);
+			m_RBDs[set][binding] = rbd;
 		}
 	};
 

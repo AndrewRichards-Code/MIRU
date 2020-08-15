@@ -31,7 +31,7 @@ int main(int argc, const char** argv)
 	if (!argc)
 	{
 		error = ErrorCode::MIRU_SHADER_COMPILER_NO_ARGS;
-		MIRU_SHADER_COMPILER_RETURN(error, "No arguements passed to MIRU_SHADER_COMPILER.");
+		MIRU_SHADER_COMPILER_RETURN(error, "No arguments passed to MIRU_SHADER_COMPILER.");
 	}
 
 	//Application Header, Help documentation and Debug

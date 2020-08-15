@@ -151,31 +151,29 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		uint32_t numDescriptors_CBV_SRV_UAV = 0;
 		uint32_t numDescriptors_RTV = 0;
 		uint32_t numDescriptors_DSV = 0;
-		uint32_t binding = 0;
 		for (auto& descriptorSetLayoutBinding : descriptorSetLayouts->GetCreateInfo().descriptorSetLayoutBinding)
 		{
 			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER)
+			{
 				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
+			}
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
 				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
 				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
 			}
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
+			{
 				numDescriptors_RTV += descriptorSetLayoutBinding.descriptorCount;
+			}
 			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
+			{
 				numDescriptors_DSV += descriptorSetLayoutBinding.descriptorCount;
+			}
 			else
 				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
-
-			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER
-				|| descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
-			{
-				uint32_t currentBinding = descriptorSetLayoutBinding.binding;
-				m_SamplerBindings[index][currentBinding] = binding;
-				binding += descriptorSetLayoutBinding.descriptorCount;
-			}
 		}
+
 		m_DescriptorHeaps.push_back({});
 		m_DescriptorHeapDescs.push_back({});
 
@@ -220,29 +218,53 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 			D3D12SetName(m_DescriptorHeaps[index][3], (descriptorPoolCI.debugName + " : HEAP_TYPE_DSV");
 		}
 
-		for (uint32_t binding = 0; binding < numDescriptors_CBV_SRV_UAV; binding++)
+		uint32_t binding_Sampler = 0;
+		uint32_t binding_CBV_SRV_UAV = 0;
+		uint32_t binding_RTV = 0;
+		uint32_t binding_DSV = 0;
+		for (auto& descriptorSetLayoutBinding : descriptorSetLayouts->GetCreateInfo().descriptorSetLayoutBinding)
 		{
-			m_DescCPUHandles[index][binding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].ptr =
-				m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]->GetCPUDescriptorHandleForHeapStart().ptr
-				+ binding * cbv_srv_uav_DescriptorSize;
-		}
-		for (uint32_t binding = 0; binding < numDescriptors_Sampler; binding++)
-		{
-			m_DescCPUHandles[index][binding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].ptr =
-				m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER]->GetCPUDescriptorHandleForHeapStart().ptr
-				+ binding * samplerDescriptorSize;
-		}
-		for (uint32_t binding = 0; binding < numDescriptors_RTV; binding++)
-		{
-			m_DescCPUHandles[index][binding][D3D12_DESCRIPTOR_HEAP_TYPE_RTV].ptr =
-				m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_RTV]->GetCPUDescriptorHandleForHeapStart().ptr
-				+ binding * rtvDescriptorSize;
-		}
-		for (uint32_t binding = 0; binding < numDescriptors_DSV; binding++)
-		{
-			m_DescCPUHandles[index][binding][D3D12_DESCRIPTOR_HEAP_TYPE_DSV].ptr =
-				m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_DSV]->GetCPUDescriptorHandleForHeapStart().ptr
-				+ binding * dsvDescriptorSize;
+			uint32_t descBinding = descriptorSetLayoutBinding.binding;
+			if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::SAMPLER)
+			{
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_Sampler * samplerDescriptorSize;
+				binding_Sampler++;
+			}
+			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
+			{
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_CBV_SRV_UAV * cbv_srv_uav_DescriptorSize;
+				binding_CBV_SRV_UAV++;
+
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_Sampler * samplerDescriptorSize;
+				binding_Sampler++;
+			}
+			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
+			{
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_RTV].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_RTV]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_RTV * rtvDescriptorSize;
+				binding_RTV++;
+			}
+			else if (descriptorSetLayoutBinding.type == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
+			{
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_DSV].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_DSV]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_DSV * dsvDescriptorSize;
+				binding_DSV++;
+			}
+			else
+			{
+				m_DescCPUHandles[index][descBinding][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].ptr =
+					m_DescriptorHeaps[index][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV]->GetCPUDescriptorHandleForHeapStart().ptr
+					+ binding_CBV_SRV_UAV * cbv_srv_uav_DescriptorSize;
+				binding_CBV_SRV_UAV++;
+			}
 		}
 		index++;
 	}
@@ -304,48 +326,56 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 	for (auto& descriptorImageInfo : descriptorImageInfos)
 	{
-		auto& usage = ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->GetCreateInfo().usage;
+		crossplatform::DescriptorType type = m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding[bindingIndex].type;
 
-		//RTV
-		if (usage == Image::UsageBit::COLOUR_ATTACHMENT_BIT)
+		//Image View
+		if (descriptorImageInfo.imageView)
 		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
-			m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
-				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDescHandle = descriptorWriteLocation;
-		}
-		//DSV
-		else if (usage == Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT)
-		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
-			m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
-				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDescHandle = descriptorWriteLocation;
-		}
-		//UAV
-		else if (usage == Image::UsageBit::STORAGE_BIT)
-		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-			m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
-				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDescHandle = descriptorWriteLocation;
-		}
-		//SRV
-		else
-		{
-			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-			m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
-				&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDesc, descriptorWriteLocation);
-			ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDescHandle = descriptorWriteLocation;
+			//RTV
+			if (type == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
+			{
+				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
+				m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDesc, descriptorWriteLocation);
+				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDescHandle = descriptorWriteLocation;
+			}
+			//DSV
+			if (type == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
+			{
+				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
+				m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDesc, descriptorWriteLocation);
+				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDescHandle = descriptorWriteLocation;
+			}
+			//UAV
+			if (type == crossplatform::DescriptorType::STORAGE_IMAGE || type == crossplatform::DescriptorType::STORAGE_TEXEL_BUFFER)
+			{
+				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
+				m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
+					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDesc, descriptorWriteLocation);
+				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDescHandle = descriptorWriteLocation;
+			}
+			//SRV
+			if(type == crossplatform::DescriptorType::SAMPLED_IMAGE || type == crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER
+				|| type == crossplatform::DescriptorType::INPUT_ATTACHMENT || type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
+			{
+				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
+				m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDesc, descriptorWriteLocation);
+				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDescHandle = descriptorWriteLocation;
+			}
 		}
 
 		//Sampler
 		if (descriptorImageInfo.sampler)
 		{
-			uint32_t samplerBinding = m_SamplerBindings[index][bindingIndex];
-			descriptorWriteLocation = m_DescCPUHandles[index][samplerBinding][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER];
-			m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfo.sampler)->m_SamplerDesc, descriptorWriteLocation);
-			ref_cast<Sampler>(descriptorImageInfo.sampler)->m_DescHandle = descriptorWriteLocation;
+			//SAMPLER
+			if (type == crossplatform::DescriptorType::SAMPLER)
+			{
+				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER];
+				m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfo.sampler)->m_SamplerDesc, descriptorWriteLocation);
+				ref_cast<Sampler>(descriptorImageInfo.sampler)->m_DescHandle = descriptorWriteLocation;
+			}
 		}
 	}
 }

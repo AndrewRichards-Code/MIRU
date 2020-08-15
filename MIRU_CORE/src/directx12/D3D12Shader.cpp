@@ -278,7 +278,7 @@ void Shader::D3D12ShaderReflection()
 		rbd.type = descType;
 		rbd.descriptorCount = bindingDesc.BindCount;
 		rbd.stage = get_shader_stage(stage);
-		m_RBDs[bindingDesc.Space].push_back(rbd);
+		m_RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
 	}
 
 	SAFE_RELEASE(shader_reflection);
