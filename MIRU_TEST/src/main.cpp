@@ -86,7 +86,7 @@ int main()
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindProc;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpszClassName = contextCI.applicationName;
+	wc.lpszClassName = contextCI.applicationName.c_str();
 	RegisterClass(&wc);
 
 	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
@@ -117,21 +117,21 @@ int main()
 	bool debug = false;
 	#endif
 	shaderCI.recompileArguments = {
-
 		debug ? "../MIRU_SHADER_COMPILER/exe/x64/Debug" : "../MIRU_SHADER_COMPILER/exe/x64/Release",
 		"res/shaders/basic.vert.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
-		nullptr,
+		"",
 		"6_4",
 		{},
 		true,
 		true,
-		nullptr,
-		nullptr,
-		nullptr,
+		"",
+		"",
+		"",
 		false,
-		false };
+		false 
+	};
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;

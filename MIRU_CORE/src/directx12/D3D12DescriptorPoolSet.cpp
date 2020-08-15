@@ -215,7 +215,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		if (numDescriptors_DSV > 0)
 		{
 			MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_DescriptorHeapDescs[index][3], IID_PPV_ARGS(&m_DescriptorHeaps[index][3])), "ERROR: D3D12: Failed to create DescriptorPool for HEAP_TYPE_DSV.");
-			D3D12SetName(m_DescriptorHeaps[index][3], (descriptorPoolCI.debugName + " : HEAP_TYPE_DSV");
+			D3D12SetName(m_DescriptorHeaps[index][3], descriptorPoolCI.debugName + " : HEAP_TYPE_DSV");
 		}
 
 		uint32_t binding_Sampler = 0;

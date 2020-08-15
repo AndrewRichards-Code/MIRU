@@ -37,7 +37,7 @@ void Shader::GetShaderByteCode()
 
 	//Check for valid shader source
 	std::string binFilepath;
-	if(m_CI.binaryFilepath)
+	if(!m_CI.binaryFilepath.empty())
 		binFilepath = std::string(m_CI.binaryFilepath);
 
 	if (binFilepath.empty() && m_CI.binaryCode.empty())
@@ -83,8 +83,8 @@ void Shader::Recompile()
 #endif
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (!m_CI.recompileArguments.hlslFilepath 
-		&& !m_CI.recompileArguments.mscDirectory
+	if (m_CI.recompileArguments.hlslFilepath.empty() 
+		&& m_CI.recompileArguments.mscDirectory.empty()
 		&& (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
 	{
 		MIRU_WARN(true, "WARN: CROSSPLATFORM: Invalid recompile arguments provided.");
@@ -102,30 +102,30 @@ void Shader::Recompile()
 	command += " -o:" + currentWorkingDir + m_CI.recompileArguments.outputDirectory;
 	for(auto& includeDir : m_CI.recompileArguments.includeDirectories)
 		command += " -i:" + currentWorkingDir + includeDir;
-	if(m_CI.recompileArguments.entryPoint)
-		command += " -e:" + std::string(m_CI.recompileArguments.entryPoint);
-	if(m_CI.recompileArguments.shaderModel)
-		command += " -t:" + std::string(m_CI.recompileArguments.shaderModel);
+	if(!m_CI.recompileArguments.entryPoint.empty())
+		command += " -e:" + m_CI.recompileArguments.entryPoint;
+	if(!m_CI.recompileArguments.shaderModel.empty())
+		command += " -t:" + m_CI.recompileArguments.shaderModel;
 	for (auto& macro : m_CI.recompileArguments.macros)
 		command += " -d:" + std::string(macro);
 	if (m_CI.recompileArguments.cso)
 		command += " -cso";
 	if (m_CI.recompileArguments.spv)
 		command += " -spv";
-	if (m_CI.recompileArguments.dxcLocation)
-		command += " -dxc:" + std::string(m_CI.recompileArguments.dxcLocation);
-	if (m_CI.recompileArguments.glslangLocation)
-		command += " -glslang:" + std::string(m_CI.recompileArguments.glslangLocation);
-	if (m_CI.recompileArguments.additioalArguments)
-		command += " -args:" + std::string(m_CI.recompileArguments.additioalArguments);
+	if (!m_CI.recompileArguments.dxcLocation.empty())
+		command += " -dxc:" + m_CI.recompileArguments.dxcLocation;
+	if (!m_CI.recompileArguments.glslangLocation.empty())
+		command += " -glslang:" + m_CI.recompileArguments.glslangLocation;
+	if (!m_CI.recompileArguments.additioalArguments.empty())
+		command += " -args:" + m_CI.recompileArguments.additioalArguments;
 	if (m_CI.recompileArguments.nologo)
 		command += " -nologo";
 	if (m_CI.recompileArguments.nooutput)
 		command += " -nooutput";
 
-	std::string mscLocation = currentWorkingDir + std::string(m_CI.recompileArguments.mscDirectory);
+	std::string mscLocation = currentWorkingDir + m_CI.recompileArguments.mscDirectory;
 
-	MIRU_PRINTF("%s", (std::string("MIRU_CORE: Recompiling shader: ") + currentWorkingDir + m_CI.recompileArguments.hlslFilepath + "\n").c_str());
+	MIRU_PRINTF("%s", ("MIRU_CORE: Recompiling shader: " + currentWorkingDir + m_CI.recompileArguments.hlslFilepath + "\n").c_str());
 	MIRU_PRINTF("%s", ("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
 	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
 	MIRU_PRINTF("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);

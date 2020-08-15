@@ -226,7 +226,7 @@ namespace miru
 
 		//Members
 	private:
-		const std::string& m_Name;
+		std::string m_Name;
 		bool m_Stopped = false;
 		std::chrono::time_point<std::chrono::steady_clock> m_StartTP, m_EndTP;
 
