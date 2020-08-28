@@ -205,7 +205,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<cro
 
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, const Ref<crossplatform::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -266,7 +266,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const
 		return;
 	}
 
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, {}, crossplatform::PipelineStageBit::NONE_BIT, {});
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, { crossplatform::PipelineStageBit::NONE_BIT }, {}, {});
 	
 	if (swapchain->GetCreateInfo().vSync)
 	{

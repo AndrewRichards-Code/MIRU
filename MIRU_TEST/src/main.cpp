@@ -280,7 +280,7 @@ int main()
 		
 		cmdCopyBuffer->End(0);
 	}
-	cmdCopyBuffer->Submit({ 0 }, {}, { transfer }, PipelineStageBit::TRANSFER_BIT, nullptr);
+	cmdCopyBuffer->Submit({ 0 }, {}, {}, { transfer }, nullptr);
 	{
 		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 		
@@ -299,7 +299,7 @@ int main()
 
 		cmdBuffer->End(2);
 	}
-	cmdBuffer->Submit({ 2 }, { transfer }, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
+	cmdBuffer->Submit({ 2 }, { transfer }, { PipelineStageBit::TRANSFER_BIT }, {}, nullptr);
 
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";

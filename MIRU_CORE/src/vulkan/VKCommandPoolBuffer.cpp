@@ -135,9 +135,14 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<cro
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<Ref<crossplatform::Semaphore>>& signals, crossplatform::PipelineStageBit pipelineStage, const Ref<crossplatform::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
+
+	if (waits.size() != waitDstPipelineStages.size())
+	{
+		MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait Semaphores and Wait Destination PipelineStages does not match.");
+	}
 
 	std::vector<VkCommandBuffer>submitCmdBuffers;
 	for (auto& index : cmdBufferIndices)
@@ -162,7 +167,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	m_CmdBufferSI.pNext = nullptr;
 	m_CmdBufferSI.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.size());
 	m_CmdBufferSI.pWaitSemaphores = vkWaits.data();
-	m_CmdBufferSI.pWaitDstStageMask = reinterpret_cast<VkPipelineStageFlags*>(&pipelineStage);
+	m_CmdBufferSI.pWaitDstStageMask = (VkPipelineStageFlags*)(waitDstPipelineStages.data());
 	m_CmdBufferSI.commandBufferCount = static_cast<uint32_t>(submitCmdBuffers.size());
 	m_CmdBufferSI.pCommandBuffers = submitCmdBuffers.data();
 	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
@@ -206,7 +211,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const
 
 	std::vector<Ref<crossplatform::Semaphore>> _acquires = { acquires[m_CurrentFrame] };
 	std::vector<Ref<crossplatform::Semaphore>> _submits = { submits[m_CurrentFrame] };
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, _acquires, _submits, crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, draws[m_CurrentFrame]);
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, _acquires, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, _submits, draws[m_CurrentFrame]);
 
 	VkPresentInfoKHR pi = {};
 	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
