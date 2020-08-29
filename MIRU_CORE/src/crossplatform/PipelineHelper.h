@@ -264,7 +264,6 @@ namespace crossplatform
 	};
 	enum class PipelineStageBit : uint32_t
 	{
-		NONE_BIT = 0x00000000,
 		TOP_OF_PIPE_BIT = 0x00000001,
 		DRAW_INDIRECT_BIT = 0x00000002,
 		VERTEX_INPUT_BIT = 0x00000004,

@@ -266,7 +266,7 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const
 		return;
 	}
 
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, { crossplatform::PipelineStageBit::NONE_BIT }, {}, {});
+	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, {}, {});
 	
 	if (swapchain->GetCreateInfo().vSync)
 	{
