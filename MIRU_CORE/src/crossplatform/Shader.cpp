@@ -92,9 +92,9 @@ void Shader::Recompile()
 	}
 
 	#ifndef __cpp_lib_filesystem
-	std::string currentWorkingDir = std::experimental::filesystem::current_path().string() + "/";
+	std::string currentWorkingDir = std::experimental::filesystem::current_path().string() + "\\";
 	#else
-	std::string currentWorkingDir = std::filesystem::current_path().string() + "/";
+	std::string currentWorkingDir = std::filesystem::current_path().string() + "\\";
 	#endif
 
 	std::string command = "MIRU_SHADER_COMPILER ";
@@ -116,8 +116,10 @@ void Shader::Recompile()
 		command += " -dxc:" + m_CI.recompileArguments.dxcLocation;
 	if (!m_CI.recompileArguments.glslangLocation.empty())
 		command += " -glslang:" + m_CI.recompileArguments.glslangLocation;
-	if (!m_CI.recompileArguments.additioalArguments.empty())
-		command += " -args:" + m_CI.recompileArguments.additioalArguments;
+	if (!m_CI.recompileArguments.dxcArguments.empty())
+		command += " -dxc_args:" + m_CI.recompileArguments.dxcArguments;
+	if (!m_CI.recompileArguments.glslangArguments.empty())
+		command += " -glslang_args:" + m_CI.recompileArguments.glslangArguments;
 	if (m_CI.recompileArguments.nologo)
 		command += " -nologo";
 	if (m_CI.recompileArguments.nooutput)

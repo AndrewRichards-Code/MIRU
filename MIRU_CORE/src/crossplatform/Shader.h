@@ -66,7 +66,8 @@ namespace crossplatform
 			bool						spv;				//Either cso or spv must be true
 			std::string					dxcLocation;		//Optional
 			std::string					glslangLocation;	//Optional
-			std::string					additioalArguments; //Optional. Example: ""\-Zi -Od"\".
+			std::string					dxcArguments;		//Optional. Example: ""\-Zi -Od"\".
+			std::string					glslangArguments;	//Optional. Example: ""\-Zi -Od"\".
 			bool						nologo;				//Optional
 			bool						nooutput;			//Optional
 		};
