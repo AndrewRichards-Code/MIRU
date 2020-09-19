@@ -144,39 +144,39 @@ namespace miru
 #define MIRU_ENUM_CLASS_BITWISE_OPERATORS
 #if defined(MIRU_ENUM_CLASS_BITWISE_OPERATORS)
 template<typename _Ty>
-_Ty operator|(_Ty lhs, _Ty rhs)
+constexpr _Ty operator|(_Ty lhs, _Ty rhs)
 {
 return static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs) | static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 }
 template<typename _Ty>
-_Ty operator&(_Ty lhs, _Ty rhs)
+constexpr _Ty operator&(_Ty lhs, _Ty rhs)
 {
 return static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs)& static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 }
 template<typename _Ty>
-_Ty operator^(_Ty lhs, _Ty rhs)
+constexpr _Ty operator^(_Ty lhs, _Ty rhs)
 {
 return static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs) ^ static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 }
 template<typename _Ty>
-_Ty operator~(_Ty rhs)
+constexpr _Ty operator~(_Ty rhs)
 {
 return static_cast<_Ty>(~static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 }
 template<typename _Ty>
-_Ty& operator|=(_Ty& lhs, _Ty rhs)
+constexpr _Ty& operator|=(_Ty& lhs, _Ty rhs)
 {
 lhs = static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs) | static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 return lhs; 
 }
 template<typename _Ty>
-_Ty& operator&=(_Ty& lhs, _Ty rhs)
+constexpr _Ty& operator&=(_Ty& lhs, _Ty rhs)
 {
 lhs = static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs)& static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 return lhs; 
 }
 template<typename _Ty>
-_Ty& operator^=(_Ty& lhs, _Ty rhs)
+constexpr _Ty& operator^=(_Ty& lhs, _Ty rhs)
 {
 lhs = static_cast<_Ty>(static_cast<typename std::underlying_type<_Ty>::type>(lhs) ^ static_cast<typename std::underlying_type<_Ty>::type>(rhs)); 
 return lhs; 
