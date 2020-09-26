@@ -250,15 +250,24 @@ void Shader::D3D12ShaderReflection()
 	{
 		D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
 		shader_reflection->GetResourceBindingDesc(i, &bindingDesc);
+		size_t structSize = 0;
+
+		crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+		if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+		{
+			_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
+			ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name);
+			shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
+			structSize = static_cast<size_t>(shaderBufferDesc.Size);
+		}
 
 		std::string name = bindingDesc.Name;
-		crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);;
-		if (name.find("_cis") != std::string::npos)
+		if (name.find("CIS") != std::string::npos)
 		{
 			bool found = false;
 			for (auto& cis : cis_list)
 			{
-				if (cis.compare(name.substr(0, name.find_first_of('_'))) == 0)
+				if (cis.compare(name.substr(0, name.find_last_of('_'))) == 0)
 				{
 					found = true;
 					break;
@@ -269,7 +278,7 @@ void Shader::D3D12ShaderReflection()
 				continue;
 			}
 			else
-				cis_list.push_back(name.substr(0, name.find_first_of('_')));
+				cis_list.push_back(name.substr(0, name.find_last_of('_')));
 			descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 		}
 
@@ -278,6 +287,8 @@ void Shader::D3D12ShaderReflection()
 		rbd.type = descType;
 		rbd.descriptorCount = bindingDesc.BindCount;
 		rbd.stage = get_shader_stage(stage);
+		rbd.name = name;
+		rbd.structSize = structSize;
 		m_RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
 	}
 

@@ -53,9 +53,9 @@
 #define MIRU_RW_IMAGE_2D_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
 #define MIRU_SAMPLER(set_num, bind_num, name) SamplerState name : register(s##bind_num, space##set_num)
 #endif
-//The name component of the image is defined as 'name_image_cis', and the name component of the sampler is defined as 'name_sampler_cis'.
-#define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_image_cis); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis)
-#define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_image_cis[count]); MIRU_SAMPLER(set_num, bind_num, name##_sampler_cis[count])
+//The name component of the image is defined as 'name_ImageCIS', and the name component of the sampler is defined as 'name_SamplerCIS'.
+#define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_ImageCIS); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS)
+#define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_ImageCIS[count]); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS[count])
 
 //Compute Shaders
 

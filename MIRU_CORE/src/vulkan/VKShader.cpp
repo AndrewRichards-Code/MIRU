@@ -223,18 +223,22 @@ void Shader::SpirvCrossReflection()
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
 			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
+			size_t structSize = 0;
+			
+			crossplatform::DescriptorType descType = descriptorType;
+			if(descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+				structSize = compiled_bin.get_declared_struct_size(type);
 
 			uint32_t set = compiled_bin.get_decoration(res.id, spv::DecorationDescriptorSet);
 			uint32_t binding = compiled_bin.get_decoration(res.id, spv::DecorationBinding);
 			uint32_t descCount = !type.array.empty() ? type.array[0] : 1;
 
-			crossplatform::DescriptorType descType = descriptorType;
-			if (res.name.find("_cis") != std::string::npos)
+			if (res.name.find("CIS") != std::string::npos)
 			{
 				bool found = false;
 				for (auto& cis : cis_list)
 				{
-					if (cis.compare(res.name.substr(0, res.name.find_first_of('_'))) == 0)
+					if (cis.compare(res.name.substr(0, res.name.find_last_of('_'))) == 0)
 					{
 						found = true;
 						break;
@@ -245,7 +249,7 @@ void Shader::SpirvCrossReflection()
 					continue;
 				}
 				else
-					cis_list.push_back(res.name.substr(0, res.name.find_first_of('_')));
+					cis_list.push_back(res.name.substr(0, res.name.find_last_of('_')));
 				descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
 
@@ -254,6 +258,8 @@ void Shader::SpirvCrossReflection()
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
 			rbd.stage = m_CI.stage;
+			rbd.name = res.name;
+			rbd.structSize = structSize;
 			m_RBDs[set][binding] = rbd;
 		}
 	};
