@@ -119,6 +119,16 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 			});
 	}
 
+	crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+	{
+		if (descriptorSetLayoutBinding.binding == bindingIndex)
+		{
+			descriptorType = descriptorSetLayoutBinding.type;
+			break;
+		}
+	}
+
 	VkWriteDescriptorSet wds;
 	wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	wds.pNext = nullptr;
@@ -126,7 +136,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	wds.dstBinding = bindingIndex;
 	wds.dstArrayElement = desriptorArrayIndex;
 	wds.descriptorCount = static_cast<uint32_t>(m_DescriptorBufferInfo[index][bindingIndex].size());
-	wds.descriptorType = static_cast<VkDescriptorType>(m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding[bindingIndex].type);
+	wds.descriptorType = static_cast<VkDescriptorType>(descriptorType);
 	wds.pImageInfo = nullptr;
 	wds.pBufferInfo = m_DescriptorBufferInfo[index][bindingIndex].data();
 	wds.pTexelBufferView = nullptr;
@@ -140,13 +150,23 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	for (auto& descriptorImageInfos : descriptorImageInfos)
+	for (auto& descriptorImageInfo : descriptorImageInfos)
 	{
 		m_DescriptorImageInfo[index][bindingIndex].push_back({
-			descriptorImageInfos.sampler ? ref_cast<Sampler>(descriptorImageInfos.sampler)->m_Sampler : VK_NULL_HANDLE,
-			descriptorImageInfos.imageView ? ref_cast<ImageView>(descriptorImageInfos.imageView)->m_ImageView : VK_NULL_HANDLE,
-			static_cast<VkImageLayout>(descriptorImageInfos.imageLayout)
+			descriptorImageInfo.sampler ? ref_cast<Sampler>(descriptorImageInfo.sampler)->m_Sampler : VK_NULL_HANDLE,
+			descriptorImageInfo.imageView ? ref_cast<ImageView>(descriptorImageInfo.imageView)->m_ImageView : VK_NULL_HANDLE,
+			static_cast<VkImageLayout>(descriptorImageInfo.imageLayout)
 			});
+	}
+
+	crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+	{
+		if (descriptorSetLayoutBinding.binding == bindingIndex)
+		{
+			descriptorType = descriptorSetLayoutBinding.type;
+			break;
+		}
 	}
 
 	VkWriteDescriptorSet wds;
@@ -156,7 +176,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	wds.dstBinding = bindingIndex;
 	wds.dstArrayElement = desriptorArrayIndex;
 	wds.descriptorCount = static_cast<uint32_t>(m_DescriptorImageInfo[index][bindingIndex].size());
-	wds.descriptorType = static_cast<VkDescriptorType>(m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding[bindingIndex].type);
+	wds.descriptorType = static_cast<VkDescriptorType>(descriptorType);
 	wds.pImageInfo = m_DescriptorImageInfo[index][bindingIndex].data();
 	wds.pBufferInfo = nullptr;
 	wds.pTexelBufferView = nullptr;

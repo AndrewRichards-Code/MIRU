@@ -551,10 +551,15 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	size_t i = 0;
 	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
 	{
+		if(m_RenderPassFramebuffer->GetCreateInfo().attachments.size() != m_RenderPassFramebufferAttachementLayouts.size())
+			m_RenderPassFramebufferAttachementLayouts.push_back(ref_cast<Image>(imageView->GetCreateInfo().pImage)->GetCreateInfo().layout);
+
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[i];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[i] = barrierCI.newLayout;
 		i++;
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
@@ -583,9 +588,11 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
 	{
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[i];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[i] = barrierCI.newLayout;
 		i++;
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
@@ -612,41 +619,51 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[input.attachmentIndex];
 		barrierCI.newLayout = input.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[input.attachmentIndex] = barrierCI.newLayout;
 	}
 	for (auto& colour : subpassDesc.colourAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex];
 		barrierCI.newLayout = colour.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex] = barrierCI.newLayout;
 	}
 	for (auto& resolve : subpassDesc.resolveAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex];
 		barrierCI.newLayout = resolve.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex] = barrierCI.newLayout;
 	}
 	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[depthStencil.attachmentIndex];
 		barrierCI.newLayout = depthStencil.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[depthStencil.attachmentIndex] = barrierCI.newLayout;
 	}
 	for (auto& preseverse : subpassDesc.preseverseAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
 		barrierCI.pImage = imageView->GetCreateInfo().pImage;
+		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[preseverse.attachmentIndex];
 		barrierCI.newLayout = preseverse.layout;
 		barrierCI.subresoureRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		m_RenderPassFramebufferAttachementLayouts[preseverse.attachmentIndex] = barrierCI.newLayout;
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
 

@@ -326,13 +326,21 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 
 	for (auto& descriptorImageInfo : descriptorImageInfos)
 	{
-		crossplatform::DescriptorType type = m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding[bindingIndex].type;
+		crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+		for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+		{
+			if (descriptorSetLayoutBinding.binding == bindingIndex)
+			{
+				descriptorType = descriptorSetLayoutBinding.type;
+				break;
+			}
+		}
 
 		//Image View
 		if (descriptorImageInfo.imageView)
 		{
 			//RTV
-			if (type == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
+			if (descriptorType == crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
 				m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
@@ -340,7 +348,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDescHandle = descriptorWriteLocation;
 			}
 			//DSV
-			if (type == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
+			if (descriptorType == crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
 				m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
@@ -348,7 +356,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDescHandle = descriptorWriteLocation;
 			}
 			//UAV
-			if (type == crossplatform::DescriptorType::STORAGE_IMAGE || type == crossplatform::DescriptorType::STORAGE_TEXEL_BUFFER)
+			if (descriptorType == crossplatform::DescriptorType::STORAGE_IMAGE || descriptorType == crossplatform::DescriptorType::STORAGE_TEXEL_BUFFER)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 				m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
@@ -356,8 +364,8 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDescHandle = descriptorWriteLocation;
 			}
 			//SRV
-			if(type == crossplatform::DescriptorType::SAMPLED_IMAGE || type == crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER
-				|| type == crossplatform::DescriptorType::INPUT_ATTACHMENT || type == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
+			if(descriptorType == crossplatform::DescriptorType::SAMPLED_IMAGE || descriptorType == crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER
+				|| descriptorType == crossplatform::DescriptorType::INPUT_ATTACHMENT || descriptorType == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 				m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
@@ -370,7 +378,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 		if (descriptorImageInfo.sampler)
 		{
 			//SAMPLER
-			if (type == crossplatform::DescriptorType::SAMPLER)
+			if (descriptorType == crossplatform::DescriptorType::SAMPLER || descriptorType == crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER];
 				m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfo.sampler)->m_SamplerDesc, descriptorWriteLocation);

@@ -38,6 +38,7 @@ void GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType deb
 	case debug::GraphicsDebugger::DebuggerType::NONE:
 	{
 		s_GraphicsDebugger = nullptr;
+		break;
 	}
 	case debug::GraphicsDebugger::DebuggerType::PIX:
 	{
@@ -45,10 +46,13 @@ void GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType deb
 			s_GraphicsDebugger = std::make_shared<debug::Pix>();
 		else
 			s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+		
+		break;
 	}
 	case debug::GraphicsDebugger::DebuggerType::RENDER_DOC:
 	{
 		s_GraphicsDebugger = std::make_shared<debug::RenderDoc>();
+		break;
 	}
 	}
 }

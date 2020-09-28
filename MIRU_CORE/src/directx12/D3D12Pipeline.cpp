@@ -62,7 +62,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		descriptorRanges.NumDescriptorRanges = static_cast<UINT>(m_DescriptorRanges.back().size());
 		descriptorRanges.pDescriptorRanges = m_DescriptorRanges.back().data();
-		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[3].NumDescriptors)
+		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER].NumDescriptors)
 		{
 			descriptorTableSampler.NumDescriptorRanges = 1;
 			descriptorTableSampler.pDescriptorRanges = &m_DescriptorRangesSampler.back();

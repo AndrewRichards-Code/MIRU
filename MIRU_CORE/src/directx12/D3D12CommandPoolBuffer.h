@@ -91,6 +91,7 @@ namespace d3d12
 		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_Sampler_DescriptorHeapDesc;
 
 		Ref<crossplatform::Framebuffer> m_RenderPassFramebuffer;
+		std::vector<crossplatform::Image::Layout> m_RenderPassFramebufferAttachementLayouts;
 		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;
 		uint32_t m_SubpassIndex = (uint32_t)-1;
 		bool m_Resettable = false;

@@ -162,20 +162,21 @@ int main(int argc, const char** argv)
 	{
 		CONSOLE_OUTPUT_GREEN;
 		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, dxc_args, dxc_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.");
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.\n\n");
+		CONSOLE_OUTPUT_WHITE;
 	}
 	if (spv)
 	{
 		CONSOLE_OUTPUT_RED;
 		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, glslang_args, glslang_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.");
+		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.\n\n");
+		CONSOLE_OUTPUT_WHITE;
 	}
-	CONSOLE_OUTPUT_WHITE;
 
 	if (pause)
 	{
 		system("PAUSE");
 	}
 	MIRU_SHADER_COMPILER_PRINTF("\n");
-	MIRU_SHADER_COMPILER_RETURN(error, "MIRU_SHADER_COMPILER returned an error.");
+	MIRU_SHADER_COMPILER_RETURN(error, "MIRU_SHADER_COMPILER returned an error.\n\n");
 }
