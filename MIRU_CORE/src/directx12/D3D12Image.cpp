@@ -354,7 +354,7 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 		case Image::Layout::UNKNOWN:
 			return D3D12_RESOURCE_STATE_COMMON;
 		case Image::Layout::GENERAL:
-			return D3D12_RESOURCE_STATE_GENERIC_READ;
+			return D3D12_RESOURCE_STATE_COMMON;
 		case Image::Layout::COLOUR_ATTACHMENT_OPTIMAL:
 			return D3D12_RESOURCE_STATE_RENDER_TARGET;
 		case Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
@@ -393,7 +393,6 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	ID3D12Resource* image = ref_cast<Image>(m_CI.pImage)->m_Image;
 
 	//RTV
-	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
 	{
 		m_RTVDesc.Format = resourceDesc.Format;
 
@@ -402,7 +401,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		case Image::Type::TYPE_1D:
 		{
 			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-			m_RTVDesc.Texture1D.MipSlice = i;
+			m_RTVDesc.Texture1D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_2D:
@@ -415,7 +414,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			else
 			{
 				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-				m_RTVDesc.Texture2D.MipSlice = i;
+				m_RTVDesc.Texture2D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 				m_RTVDesc.Texture2D.PlaneSlice = 0;
 				break;
 			}
@@ -425,7 +424,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
 			m_RTVDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
 			m_RTVDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
-			m_RTVDesc.Texture3D.MipSlice = i;
+			m_RTVDesc.Texture3D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
@@ -433,7 +432,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
 			m_RTVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
 			m_RTVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			m_RTVDesc.Texture1DArray.MipSlice = i;
+			m_RTVDesc.Texture1DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_CUBE:
@@ -452,7 +451,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
 				m_RTVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
 				m_RTVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-				m_RTVDesc.Texture2DArray.MipSlice = i;
+				m_RTVDesc.Texture2DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
 				m_RTVDesc.Texture2DArray.PlaneSlice = 0;
 				break;
 			}
@@ -463,63 +462,60 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	//DSV
 	if(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
 	{
-		for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
-		{
-			m_DSVDesc.Format = resourceDesc.Format;
-			m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+		m_DSVDesc.Format = resourceDesc.Format;
+		m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
-			switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		{
+		case Image::Type::TYPE_1D:
+		{
+			m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+			m_DSVDesc.Texture1D.MipSlice = m_CI.subresourceRange.baseMipLevel;
+			break;
+		}
+		case Image::Type::TYPE_2D:
+		{
+			if (resourceDesc.SampleDesc.Count > 1)
 			{
-			case Image::Type::TYPE_1D:
-			{
-				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
-				m_DSVDesc.Texture1D.MipSlice = i;
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 				break;
 			}
-			case Image::Type::TYPE_2D:
+			else
 			{
-				if (resourceDesc.SampleDesc.Count > 1)
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
-					break;
-				}
-				else
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-					m_DSVDesc.Texture2D.MipSlice = i;
-					break;
-				}
-			}
-			case Image::Type::TYPE_1D_ARRAY:
-			{
-				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
-				m_DSVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-				m_DSVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-				m_DSVDesc.Texture1DArray.MipSlice = i;
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+				m_DSVDesc.Texture2D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 				break;
 			}
-			case Image::Type::TYPE_3D:
-			case Image::Type::TYPE_CUBE:
-			case Image::Type::TYPE_CUBE_ARRAY:
-			case Image::Type::TYPE_2D_ARRAY:
+		}
+		case Image::Type::TYPE_1D_ARRAY:
+		{
+			m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+			m_DSVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+			m_DSVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+			m_DSVDesc.Texture1DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
+			break;
+		}
+		case Image::Type::TYPE_3D:
+		case Image::Type::TYPE_CUBE:
+		case Image::Type::TYPE_CUBE_ARRAY:
+		case Image::Type::TYPE_2D_ARRAY:
+		{
+			if (resourceDesc.SampleDesc.Count > 1)
 			{
-				if (resourceDesc.SampleDesc.Count > 1)
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
-					m_DSVDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-					m_DSVDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-					break;
-				}
-				else
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-					m_DSVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
-					m_DSVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-					m_DSVDesc.Texture2DArray.MipSlice = i;
-					break;
-				}
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
+				m_DSVDesc.Texture2DMSArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_DSVDesc.Texture2DMSArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				break;
 			}
+			else
+			{
+				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+				m_DSVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
+				m_DSVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
+				m_DSVDesc.Texture2DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
+				break;
 			}
+		}
 		}
 	}
 
@@ -615,7 +611,6 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	}
 
 	//UAV
-	for (uint32_t i = m_CI.subresourceRange.baseMipLevel; i < m_CI.subresourceRange.baseMipLevel + m_CI.subresourceRange.mipLevelCount; i++)
 	{
 		m_UAVDesc.Format = resourceDesc.Format;
 
@@ -624,13 +619,13 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		case Image::Type::TYPE_1D:
 		{
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
-			m_UAVDesc.Texture1D.MipSlice = i;
+			m_UAVDesc.Texture1D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_2D:
 		{
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			m_UAVDesc.Texture2D.MipSlice = i;
+			m_UAVDesc.Texture2D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			m_UAVDesc.Texture2D.PlaneSlice = 0;
 			break;
 		}
@@ -639,7 +634,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
 			m_UAVDesc.Texture3D.FirstWSlice = m_CI.subresourceRange.baseArrayLayer;
 			m_UAVDesc.Texture3D.WSize = m_CI.subresourceRange.arrayLayerCount;
-			m_UAVDesc.Texture3D.MipSlice = i;
+			m_UAVDesc.Texture3D.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_1D_ARRAY:
@@ -647,7 +642,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
 			m_UAVDesc.Texture1DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
 			m_UAVDesc.Texture1DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			m_UAVDesc.Texture1DArray.MipSlice = i;
+			m_UAVDesc.Texture1DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			break;
 		}
 		case Image::Type::TYPE_CUBE:
@@ -657,7 +652,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
 			m_UAVDesc.Texture2DArray.FirstArraySlice = m_CI.subresourceRange.baseArrayLayer;
 			m_UAVDesc.Texture2DArray.ArraySize = m_CI.subresourceRange.arrayLayerCount;
-			m_UAVDesc.Texture2DArray.MipSlice = i;
+			m_UAVDesc.Texture2DArray.MipSlice = m_CI.subresourceRange.baseMipLevel;
 			m_UAVDesc.Texture2DArray.PlaneSlice = 0;
 			break;
 		}

@@ -323,7 +323,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 
 	UINT descriptorCount = 0;
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
-		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
+		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 			descriptorCount++;
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
@@ -340,7 +340,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
-		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
+		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 		{
 			D3D12_RENDER_TARGET_VIEW_DESC m_RTVDesc = {};
 			m_RTVDesc.Format = resourceDesc.Format;
@@ -436,7 +436,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 
 	UINT descriptorCount = 0;
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
-		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
+		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 			descriptorCount++;
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
@@ -453,7 +453,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
-		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].mipLevelCount; i++)
+		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 		{
 			D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc;
 			m_DSVDesc.Format = resourceDesc.Format;
@@ -706,11 +706,27 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
+	{
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+	{
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
+	}
+	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING_NV)
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: PipelineType::RAY_TRACING_NV is not supported.")
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
+	}
 
 };
 

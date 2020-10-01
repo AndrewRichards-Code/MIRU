@@ -66,6 +66,6 @@
 //The ThreadID within the Group.
 #define MIRU_GROUP_THREAD_ID SV_GroupThreadID
 //The ThreadID within the whole Dispatch.
-#define MIRU_DISPATCH_THREAD_ID SV_GroupThreadID
+#define MIRU_DISPATCH_THREAD_ID SV_DispatchThreadID
 //The "flattened" index of the Thread within the Group
 #define MIRU_GROUP_INDEX SV_GroupIndex

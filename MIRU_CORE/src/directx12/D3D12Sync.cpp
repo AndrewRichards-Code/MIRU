@@ -152,8 +152,11 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
 
-		if(m_CI.newLayout == Image::Layout::GENERAL /*&& m_CI.dstAccess == Barrier::AccessBit::SHADER_WRITE_BIT*/) //Vulkan representation a UAV.
-			barrier.Transition.StateAfter = ToD3D12ResourceState(m_CI.dstAccess);
+		if (m_CI.oldLayout == Image::Layout::GENERAL && m_CI.srcAccess == (Barrier::AccessBit::SHADER_READ_BIT | Barrier::AccessBit::SHADER_WRITE_BIT)) //Vulkan representation a UAV.
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+		if(m_CI.newLayout == Image::Layout::GENERAL && m_CI.dstAccess == (Barrier::AccessBit::SHADER_READ_BIT | Barrier::AccessBit::SHADER_WRITE_BIT)) //Vulkan representation a UAV.
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		
 		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
 			return;
@@ -167,11 +170,10 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		}
 		else
 		{
-			m_Barriers.reserve(static_cast<size_t>(m_CI.subresoureRange.mipLevelCount - m_CI.subresoureRange.baseMipLevel) 
-				* static_cast<size_t>(m_CI.subresoureRange.arrayLayerCount - m_CI.subresoureRange.baseArrayLayer));
-			for (uint32_t i = m_CI.subresoureRange.baseArrayLayer; i < m_CI.subresoureRange.arrayLayerCount; i++)
+			m_Barriers.reserve(static_cast<size_t>(m_CI.subresoureRange.mipLevelCount) * static_cast<size_t>(m_CI.subresoureRange.arrayLayerCount));
+			for (uint32_t i = m_CI.subresoureRange.baseArrayLayer; i < m_CI.subresoureRange.baseArrayLayer + m_CI.subresoureRange.arrayLayerCount; i++)
 			{
-				for (uint32_t j = m_CI.subresoureRange.baseMipLevel; j < m_CI.subresoureRange.mipLevelCount; j++)
+				for (uint32_t j = m_CI.subresoureRange.baseMipLevel; j < m_CI.subresoureRange.baseMipLevel + m_CI.subresoureRange.mipLevelCount; j++)
 				{
 					barrier.Transition.Subresource = Image::D3D12CalculateSubresource(j, i, 0, m_CI.subresoureRange.mipLevelCount, m_CI.subresoureRange.arrayLayerCount);
 					m_Barriers.push_back(barrier);
