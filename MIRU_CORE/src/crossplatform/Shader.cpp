@@ -33,9 +33,6 @@ Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 
 void Shader::Recompile()
 {
-#if defined(__ANDROID__)
-	return;
-#endif
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	int returnCode = Call_MIRU_SHADER_COMPILER();
@@ -112,6 +109,11 @@ void Shader::GetShaderByteCode()
 
 int Shader::Call_MIRU_SHADER_COMPILER()
 {
+	#if defined(__ANDROID__)
+	MIRU_WARN(true, "WARN: CROSSPLATFORM: MIRU_SHADER_COMPILER is not available on Android. Use offline shader compliation.");
+	return 0;
+	#endif
+
 	if (m_CI.recompileArguments.hlslFilepath.empty()
 		&& m_CI.recompileArguments.mscDirectory.empty()
 		&& (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
