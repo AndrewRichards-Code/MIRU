@@ -80,7 +80,7 @@ int main(int argc, const char** argv)
 	}
 
 	//Get Filepath, Directories and others
-	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderModel, dxc_args, glslang_args;
+	std::string filepath, outputDir, entryPoint, dxc_path, glslang_path, shaderStage, shaderModel, dxc_args, glslang_args;
 	std::vector<std::string> includeDirs;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
@@ -91,50 +91,59 @@ int main(int argc, const char** argv)
 			tempFilepath.erase(0, tagSize);
 			filepath = tempFilepath;
 		}
-		if (tempFilepath.find("-o:") != std::string::npos || tempFilepath.find("-O:") != std::string::npos)
+		else if (tempFilepath.find("-o:") != std::string::npos || tempFilepath.find("-O:") != std::string::npos)
 		{
 			tempFilepath.erase(0, tagSize);
 			outputDir = tempFilepath;
 		}
-		if (tempFilepath.find("-i:") != std::string::npos || tempFilepath.find("-I:") != std::string::npos)
+		else if (tempFilepath.find("-i:") != std::string::npos || tempFilepath.find("-I:") != std::string::npos)
 		{
 			tempFilepath.erase(0, tagSize);
 			includeDirs.push_back(tempFilepath);
 		}
-		if (tempFilepath.find("-e:") != std::string::npos || tempFilepath.find("-E:") != std::string::npos)
+		else if (tempFilepath.find("-e:") != std::string::npos || tempFilepath.find("-E:") != std::string::npos)
 		{
 			tempFilepath.erase(0, tagSize);
 			entryPoint = tempFilepath;
 		}
-		if (tempFilepath.find("-t:") != std::string::npos || tempFilepath.find("-T:") != std::string::npos)
+		else if (tempFilepath.find("-s:") != std::string::npos || tempFilepath.find("-S:") != std::string::npos)
+		{
+			tempFilepath.erase(0, tagSize);
+			shaderStage = tempFilepath;
+		}
+		else if (tempFilepath.find("-t:") != std::string::npos || tempFilepath.find("-T:") != std::string::npos)
 		{
 			tempFilepath.erase(0, tagSize);
 			shaderModel = tempFilepath;
 		}
-		if (tempFilepath.find("-dxc:") != std::string::npos || tempFilepath.find("-DXC:") != std::string::npos)
+		else if (tempFilepath.find("-dxc:") != std::string::npos || tempFilepath.find("-DXC:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-DXC:").size());
 			dxc_path = tempFilepath;
 		}
-		if (tempFilepath.find("-glslang:") != std::string::npos || tempFilepath.find("-GLSLANG:") != std::string::npos)
+		else if (tempFilepath.find("-glslang:") != std::string::npos || tempFilepath.find("-GLSLANG:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-GLSLANG:").size());
 			glslang_path = tempFilepath;
 		}
-		if (tempFilepath.find("-dxc_args:") != std::string::npos || tempFilepath.find("-DXC_ARGS:") != std::string::npos)
+		else if (tempFilepath.find("-dxc_args:") != std::string::npos || tempFilepath.find("-DXC_ARGS:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-DXC_ARGS:").size());
 			dxc_args = tempFilepath;
 		}
-		if (tempFilepath.find("-glslang_args:") != std::string::npos || tempFilepath.find("-GLSLANG_ARGS:") != std::string::npos)
+		else if (tempFilepath.find("-glslang_args:") != std::string::npos || tempFilepath.find("-GLSLANG_ARGS:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-GLSLANG_ARGS:").size());
 			glslang_args = tempFilepath;
 		}
-		if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
+		else if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
 		{
 			dxc_args += tempFilepath + " ";
 			glslang_args += tempFilepath + " ";
+		}
+		else
+		{
+			continue;
 		}
 
 	}
@@ -150,7 +159,13 @@ int main(int argc, const char** argv)
 	}
 	if (entryPoint.empty())
 	{
-		entryPoint = "main";
+		error = ErrorCode::MIRU_SHADER_COMPILER_NO_SHADER_STAGE;
+		MIRU_SHADER_COMPILER_RETURN(error, "No shader stage has been passed to MIRU_SHADER_COMPILER.");
+	}
+	if (shaderStage.empty())
+	{
+		error = ErrorCode::MIRU_SHADER_COMPILER_NO_SHADER_STAGE;
+		MIRU_SHADER_COMPILER_RETURN(error, "No shader stage has been passed to MIRU_SHADER_COMPILER.");
 	}
 	if (shaderModel.empty())
 	{
@@ -161,14 +176,14 @@ int main(int argc, const char** argv)
 	if (cso)
 	{
 		CONSOLE_OUTPUT_GREEN;
-		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, dxc_args, dxc_path);
+		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderStage, shaderModel, dxc_args, dxc_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.\n\n");
 		CONSOLE_OUTPUT_WHITE;
 	}
 	if (spv)
 	{
 		CONSOLE_OUTPUT_RED;
-		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, glslang_args, glslang_path);
+		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, shaderStage, glslang_args, glslang_path);
 		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.\n\n");
 		CONSOLE_OUTPUT_WHITE;
 	}

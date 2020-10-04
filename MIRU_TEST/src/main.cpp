@@ -108,8 +108,8 @@ int main()
 	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stage = Shader::StageBit::VERTEX_BIT;
-	shaderCI.entryPoint = "main";
-	shaderCI.binaryFilepath = "res/bin/basic.vert.spv";
+	shaderCI.entryPoint = "vs_main";
+	shaderCI.binaryFilepath = "res/bin/basic_vert_vs_main.spv";
 	shaderCI.binaryCode = {};
 	#if _DEBUG
 	bool debug = true;
@@ -118,10 +118,11 @@ int main()
 	#endif
 	shaderCI.recompileArguments = {
 		debug ? "../MIRU_SHADER_COMPILER/exe/x64/Debug" : "../MIRU_SHADER_COMPILER/exe/x64/Release",
-		"res/shaders/basic.vert.hlsl",
+		"res/shaders/basic.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
-		"",
+		"vs_main",
+		"vert",
 		"6_4",
 		{},
 		true,
@@ -136,8 +137,10 @@ int main()
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stage = Shader::StageBit::PIXEL_BIT;
-	shaderCI.binaryFilepath = "res/bin/basic.frag.spv";
-	shaderCI.recompileArguments.hlslFilepath = "res/shaders/basic.frag.hlsl";
+	shaderCI.entryPoint = "ps_main";
+	shaderCI.binaryFilepath = "res/bin/basic_frag_ps_main.spv";
+	shaderCI.recompileArguments.entryPoint = "ps_main";
+	shaderCI.recompileArguments.shaderStage = "frag";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
@@ -326,6 +329,7 @@ int main()
 	imageViewCI.debugName = "MIRU logo ImageView";
 	imageViewCI.device = context->GetDevice();
 	imageViewCI.pImage = image;
+	imageViewCI.viewType = Image::Type::TYPE_CUBE;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
 
@@ -414,6 +418,7 @@ int main()
 	depthImageViewCI.debugName = "Depth ImageView";
 	depthImageViewCI.device = context->GetDevice();
 	depthImageViewCI.pImage = depthImage;
+	depthImageViewCI.viewType = Image::Type::TYPE_2D;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
 	Ref<ImageView> depthImageView = ImageView::Create(&depthImageViewCI);
 

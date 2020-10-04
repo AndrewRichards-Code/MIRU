@@ -174,6 +174,7 @@ namespace shader_compiler
 		const std::string& outputDirectory,
 		const std::vector<std::string>& includeDirectories,
 		const std::string& entryPoint = "main",
+		const std::string& shaderStage = "",
 		const std::string& additionCommandlineArgs = "",
 		const std::string& compiler_dir = "")
 	{
@@ -207,9 +208,9 @@ namespace shader_compiler
 		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
 		std::string absoluteSrcDir = filepath;
-		std::string absoluteDstDir = outputDirectory + filename + ".spv";
+		std::string absoluteDstDir = outputDirectory + filename + "_" + shaderStage + "_" + entryPoint + ".spv";
 
-		std::string command = "glslangValidator -e " + entryPoint + " -V " + absoluteSrcDir + " -o " + absoluteDstDir;
+		std::string command = "glslangValidator -e " + entryPoint + " -S " + shaderStage + " -V -D " + absoluteSrcDir + " -o " + absoluteDstDir;
 		for (auto& includeDirectory : includeDirectories)
 			command += " -I" + includeDirectory;
 		command += " -DMIRU_VULKAN " + additionCommandlineArgs;

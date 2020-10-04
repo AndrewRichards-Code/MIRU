@@ -14,7 +14,8 @@ The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and builds .cso or .spv 
 -f:, -F:[filepath]                    : Filepath to a .hlsl file to be compiled. This argument must be set.
 -o:, -O:[directory]                   : Directory for the output binaries. Default is the filepath directory.
 -i:, -I:[directory]                   : Include directory for compilation. Optional.
--e:, -E:                              : Define an entry point. Default is: main.
+-e:, -E:                              : Define an entry point. This argument must be set.
+-s:, -S:                              : Define the shader stage. This argument must be set.
 -t:, -T:                              : Define the shader model for Direct3D 12. Default is "6_0".
 -d, -D                                : Define a marco. MIRU_D3D12 for -cso and MIRU_VULKAN for -spv are already pre-defined.
 -dxc:, -DXC:[directory]               : Specify location of the dxc.exe. Optional.
@@ -24,7 +25,7 @@ The MIRU_SHADER_COMPILER takes .<shader_type>.hlsl file and builds .cso or .spv 
 -dxc_args:, -DXC_ARGS:["..."]         : Provide additional arguments directly to dxc. Enclose all arguments in double quotation marks e.g. "Zi -Od".
 -glslang_args:, -GLSLANG_ARGS:["..."] : Provide additional arguments directly to glslangValidator. Enclose all arguments in double quotation marks e.g. "-Zi -Od".
 
-Supported Shader Types <shader_type>:
+Supported Shader Stages:
 vert   for a vertex shader
 tesc   for a tessellation control shader
 tese   for a tessellation evaluation shader
@@ -39,7 +40,6 @@ rahit  for a ray any hit shader
 rchit  for a ray closest hit shader
 rmiss  for a ray miss shader
 rcall  for a ray callable shader
-conf   to provide a config file that replaces the default configuration
 )";
 }
 }

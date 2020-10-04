@@ -297,6 +297,7 @@ namespace crossplatform
 			std::string				debugName;
 			void*					device;
 			Ref<Image>				pImage;
+			Image::Type				viewType;
 			Image::SubresourceRange subresourceRange;
 		};
 

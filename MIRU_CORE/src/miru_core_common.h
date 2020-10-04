@@ -20,12 +20,7 @@
 #include <chrono>
 #include <assert.h>
 #include <cmath>
-
-#ifndef __cpp_lib_filesystem
-#include <experimental/filesystem>
-#else
 #include <filesystem>
-#endif
 
 //PLATORM SYSTEM
 #if defined(_WIN64)

@@ -134,7 +134,8 @@ namespace shader_compiler
 		const std::string& outputDirectory, 
 		const std::vector<std::string>& includeDirectories, 
 		const std::string& entryPoint = "main", 
-		const std::string& shaderModel = "6_O", 
+		const std::string& shaderStage = "", 
+		const std::string& shaderModel = "6_0", 
 		const std::string& additionCommandlineArgs = "", 
 		const std::string& compiler_dir = "")
 	{
@@ -156,17 +157,25 @@ namespace shader_compiler
 		std::string filename = filepath.substr(fileNamePos, hlslExtPos - fileNamePos);
 
 		std::string absoluteSrcDir = filepath;
-		std::string absoluteDstDir = outputDirectory + filename + ".cso";
+		std::string absoluteDstDir = outputDirectory + filename + "_" + shaderStage + "_" + entryPoint + ".cso";
 
 		std::string shaderType;
 		{
-			if (filepath.find(".vert") != std::string::npos) { shaderType = "vs_"; }
-			if (filepath.find(".tesc") != std::string::npos) { shaderType = "hs_"; }
-			if (filepath.find(".tese") != std::string::npos) { shaderType = "ds_"; }
-			if (filepath.find(".geom") != std::string::npos) { shaderType = "gs_"; }
-			if (filepath.find(".frag") != std::string::npos) { shaderType = "ps_"; }
-			if (filepath.find(".comp") != std::string::npos) { shaderType = "cs_"; }
-		}
+			if (shaderStage.find("vert") != std::string::npos) { shaderType = "vs_"; }
+			if (shaderStage.find("tesc") != std::string::npos) { shaderType = "hs_"; }
+			if (shaderStage.find("tese") != std::string::npos) { shaderType = "ds_"; }
+			if (shaderStage.find("geom") != std::string::npos) { shaderType = "gs_"; }
+			if (shaderStage.find("frag") != std::string::npos) { shaderType = "ps_"; }
+			if (shaderStage.find("comp") != std::string::npos) { shaderType = "cs_"; }
+			if (shaderStage.find("mesh") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("task") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rgen") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rint") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rahit") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rchit") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rmiss") != std::string::npos) { shaderType = "lib_"; }
+			if (shaderStage.find("rcall") != std::string::npos) { shaderType = "lib_"; }
+		}					
 		
 		std::string command = "dxc -T " + shaderType + shaderModel + " -E " + entryPoint + " " + absoluteSrcDir + " -Fo " + absoluteDstDir;
 		for (auto& includeDirectory : includeDirectories)

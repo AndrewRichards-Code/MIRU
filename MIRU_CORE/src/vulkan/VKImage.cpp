@@ -298,7 +298,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	m_ImageViewCI.pNext = nullptr;
 	m_ImageViewCI.flags = 0;
 	m_ImageViewCI.image = ref_cast<Image>(m_CI.pImage)->m_Image;
-	m_ImageViewCI.viewType = static_cast<VkImageViewType>(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type);
+	m_ImageViewCI.viewType = static_cast<VkImageViewType>(m_CI.viewType);
 	m_ImageViewCI.format = static_cast<VkFormat>(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format);
 	m_ImageViewCI.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	m_ImageViewCI.subresourceRange = {

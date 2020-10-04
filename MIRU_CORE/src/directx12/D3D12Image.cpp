@@ -396,7 +396,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	{
 		m_RTVDesc.Format = resourceDesc.Format;
 
-		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (m_CI.viewType)
 		{
 		case Image::Type::TYPE_1D:
 		{

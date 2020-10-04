@@ -66,19 +66,19 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 ### Windows x64:
 - Microsoft Visual Studio 2019
 - Toolset: v142 
-- Windows SDK: 10.0.18362
+- Windows SDK: 10.0.19041.0
 - ISO C++ 17
 
 ### Linux x64:
 - No project available to build.
 
 ### Android ARM64:
-- Android Studio 3.6.3
-- Android SDK Build-Tools: 29.0.3
+- Android Studio 4.0.1
+- Android SDK Build-Tools: 30.0.2
 - Android SDK Platform-Tools: 30.0.1
-- Android NDK: 20.1.5948944
-- Android Gradle Plugin Version: 3.6.3
-- Gradle Version: 5.6.4
+- Android NDK: 22 Beta / 21.3.6528147
+- Android Gradle Plugin Version: 4.0.1
+- Gradle Version: 6.1.1
 - Android CMake: 3.10.2.4988404
 - Android API: Minimum 24 - Target 28
 - ISO C++ 17 (-std=c++1z)

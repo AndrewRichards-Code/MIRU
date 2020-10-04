@@ -52,7 +52,8 @@ bool MemoryBlock::AddResource(crossplatform::Resource& resource)
 	bool found = false;
 	for (auto& memoryBlock : s_MemoryBlocks)
 	{
-		if (found = memoryBlock == get_this_shared_ptr())
+		found = (memoryBlock == get_this_shared_ptr());
+		if (found)
 			break;
 	}
 	if (!found)

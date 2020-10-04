@@ -61,7 +61,8 @@ namespace crossplatform
 			std::string					hlslFilepath;
 			std::string					outputDirectory;	//Optional
 			std::vector<std::string>	includeDirectories;	//Optional
-			std::string					entryPoint;			//Optional
+			std::string					entryPoint;			
+			std::string					shaderStage;			
 			std::string					shaderModel;		//Optional
 			std::vector<std::string>	macros;				//Optional
 			bool						cso;				//Either cso or spv must be true
@@ -100,6 +101,7 @@ namespace crossplatform
 
 	protected:
 		void GetShaderByteCode();
+		int Call_MIRU_SHADER_COMPILER();
 		virtual void Reconstruct() = 0;
 
 		//Members

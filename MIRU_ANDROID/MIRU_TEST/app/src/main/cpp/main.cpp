@@ -84,14 +84,14 @@ void android_main(struct android_app* app) {
     shaderCI.debugName = "VS_Basic";
     shaderCI.device = context->GetDevice();
     shaderCI.stage = Shader::StageBit::VERTEX_BIT;
-    shaderCI.entryPoint = "main";
+    shaderCI.entryPoint = "vs_main";
     shaderCI.binaryFilepath = nullptr;
-    shaderCI.binaryCode = load_file_bin("bin/basic.vert.spv", app);
+    shaderCI.binaryCode = load_file_bin("bin/basic_vert_vs_main.spv", app);
     shaderCI.recompileArguments = {0};
     Ref<Shader> vertexShader = Shader::Create(&shaderCI);
     shaderCI.debugName = "FS_Basic";
     shaderCI.stage = Shader::StageBit::FRAGMENT_BIT;
-    shaderCI.binaryCode = load_file_bin("bin/basic.frag.spv", app);
+    shaderCI.binaryCode = load_file_bin("bin/basic_frag_ps_main.spv", app);
     Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
     CommandPool::CreateInfo cmdPoolCI;
@@ -223,7 +223,7 @@ void android_main(struct android_app* app) {
 
         cmdBuffer->End(2);
     }
-    cmdBuffer->Submit({ 2 }, {}, {}, PipelineStageBit::TRANSFER_BIT, nullptr);
+    cmdBuffer->Submit({ 2 }, {}, { PipelineStageBit::TRANSFER_BIT }, {}, nullptr);
 
     ImageView::CreateInfo logoVICI;
     logoVICI.debugName = "LogoVI";
