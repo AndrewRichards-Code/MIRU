@@ -106,11 +106,11 @@ D3D12_RESOURCE_DIMENSION Image::ToD3D12ImageType(Image::Type type) const
 	case Image::Type::TYPE_CUBE:
 		return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	case Image::Type::TYPE_1D_ARRAY:
-		return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
 	case Image::Type::TYPE_2D_ARRAY:
 		return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	case Image::Type::TYPE_CUBE_ARRAY:
-		return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+		return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	default:
 		return D3D12_RESOURCE_DIMENSION_UNKNOWN;
 	}
@@ -600,6 +600,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		}
 		case Image::Type::TYPE_CUBE_ARRAY:
 		{
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
 			m_SRVDesc.TextureCubeArray.MostDetailedMip = m_CI.subresourceRange.baseMipLevel;
 			m_SRVDesc.TextureCubeArray.MipLevels = m_CI.subresourceRange.mipLevelCount;
 			m_SRVDesc.TextureCubeArray.First2DArrayFace = 0;
