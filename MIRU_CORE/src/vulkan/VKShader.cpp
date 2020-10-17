@@ -10,6 +10,7 @@ Shader::Shader(CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
+
 	GetShaderByteCode();
 
 	m_ShaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -28,7 +29,7 @@ Shader::Shader(CreateInfo* pCreateInfo)
 	m_ShaderStageCI.module = m_ShaderModule;
 	m_ShaderStageCI.pName = m_CI.entryPoint.c_str();
 	m_ShaderStageCI.pSpecializationInfo = nullptr;
-
+	
 	GetShaderResources();
 }
 
@@ -182,6 +183,7 @@ void Shader::SpirvCrossReflection()
 
 	if (stage == spv::ExecutionModel::ExecutionModelVertex)
 	{
+		m_VSIADs.clear();
 		for (auto& res : resources.stage_inputs)
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
@@ -198,6 +200,7 @@ void Shader::SpirvCrossReflection()
 	}
 	if (stage == spv::ExecutionModel::ExecutionModelFragment)
 	{
+		m_PSOADs.clear();
 		for (auto& res : resources.stage_outputs)
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
@@ -214,6 +217,12 @@ void Shader::SpirvCrossReflection()
 			m_PSOADs.push_back(fsoad);
 		}
 	}
+
+	for (auto& rbds : m_RBDs)
+	{
+		rbds.second.clear();
+	}
+	m_RBDs.clear();
 
 	std::vector<std::string> cis_list;
 	auto push_back_ResourceBindingDescription = 

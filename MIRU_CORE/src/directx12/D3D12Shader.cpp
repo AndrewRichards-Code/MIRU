@@ -186,6 +186,7 @@ void Shader::D3D12ShaderReflection()
 
 	if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
 	{
+		m_VSIADs.clear();
 		for (UINT i = 0; i < shaderDesc.InputParameters; i++)
 		{
 			D3D12_SIGNATURE_PARAMETER_DESC input_parameter;
@@ -205,6 +206,7 @@ void Shader::D3D12ShaderReflection()
 	{
 		for (UINT i = 0; i < shaderDesc.OutputParameters; i++)
 		{
+			m_PSOADs.clear();
 			D3D12_SIGNATURE_PARAMETER_DESC out_parameter;
 			shader_reflection->GetOutputParameterDesc(i, &out_parameter);
 
@@ -244,6 +246,12 @@ void Shader::D3D12ShaderReflection()
 		MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::crossplatform::DescriptorType.");
 		return static_cast<crossplatform::DescriptorType>(0);
 	};
+
+	for (auto& rbds : m_RBDs)
+	{
+		rbds.second.clear();
+	}
+	m_RBDs.clear();
 
 	std::vector<std::string> cis_list;
 	for (UINT i = 0; i < shaderDesc.BoundResources; i++)
