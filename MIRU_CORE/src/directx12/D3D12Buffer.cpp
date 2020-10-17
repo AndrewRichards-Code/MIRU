@@ -16,7 +16,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	size_t rowPitch = 0;
 	size_t rowPadding = 0;
 	size_t height = 0;
-	if ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL))
+	if ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_BIT) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL_BIT))
 	{
 		width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 	}
@@ -89,25 +89,25 @@ D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const
 
 	switch (usage)
 	{
-	case Buffer::UsageBit::TRANSFER_SRC:
+	case Buffer::UsageBit::TRANSFER_SRC_BIT:
 		return D3D12_RESOURCE_STATE_COPY_SOURCE;
-	case Buffer::UsageBit::TRANSFER_DST:
+	case Buffer::UsageBit::TRANSFER_DST_BIT:
 		return D3D12_RESOURCE_STATE_COPY_DEST;
-	case Buffer::UsageBit::UNIFORM_TEXEL:
+	case Buffer::UsageBit::UNIFORM_TEXEL_BIT:
 		return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	case Buffer::UsageBit::STORAGE_TEXEL:
+	case Buffer::UsageBit::STORAGE_TEXEL_BIT:
 		return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	case Buffer::UsageBit::UNIFORM:
+	case Buffer::UsageBit::UNIFORM_BIT:
 		return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	case Buffer::UsageBit::STORAGE:
+	case Buffer::UsageBit::STORAGE_BIT:
 		return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	case Buffer::UsageBit::INDEX:
+	case Buffer::UsageBit::INDEX_BIT:
 		return D3D12_RESOURCE_STATE_INDEX_BUFFER;
-	case Buffer::UsageBit::VERTEX:
+	case Buffer::UsageBit::VERTEX_BIT:
 		return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	case Buffer::UsageBit::INDIRECT:
+	case Buffer::UsageBit::INDIRECT_BIT:
 		return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-	case Buffer::UsageBit::TRANSFORM_FEEDBACK:
+	case Buffer::UsageBit::TRANSFORM_FEEDBACK_BIT:
 		return D3D12_RESOURCE_STATE_STREAM_OUT;
 	default:
 		return D3D12_RESOURCE_STATE_COMMON;

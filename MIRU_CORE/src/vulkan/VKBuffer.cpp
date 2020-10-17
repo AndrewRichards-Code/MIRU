@@ -59,25 +59,25 @@ VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)
 
 	switch (type)
 	{
-	case Buffer::UsageBit::TRANSFER_SRC:
+	case Buffer::UsageBit::TRANSFER_SRC_BIT:
 		return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	case Buffer::UsageBit::TRANSFER_DST:
+	case Buffer::UsageBit::TRANSFER_DST_BIT:
 		return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-	case Buffer::UsageBit::UNIFORM_TEXEL:
+	case Buffer::UsageBit::UNIFORM_TEXEL_BIT:
 		return VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
-	case Buffer::UsageBit::STORAGE_TEXEL:
+	case Buffer::UsageBit::STORAGE_TEXEL_BIT:
 		return VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
-	case Buffer::UsageBit::UNIFORM:
+	case Buffer::UsageBit::UNIFORM_BIT:
 		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	case Buffer::UsageBit::STORAGE:
+	case Buffer::UsageBit::STORAGE_BIT:
 		return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	case Buffer::UsageBit::INDEX:
+	case Buffer::UsageBit::INDEX_BIT:
 		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-	case Buffer::UsageBit::VERTEX:
+	case Buffer::UsageBit::VERTEX_BIT:
 		return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	case Buffer::UsageBit::INDIRECT:
+	case Buffer::UsageBit::INDIRECT_BIT:
 		return VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-	case Buffer::UsageBit::TRANSFORM_FEEDBACK:
+	case Buffer::UsageBit::TRANSFORM_FEEDBACK_BIT:
 		return VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
 	default:
 		return 0;
@@ -99,8 +99,8 @@ BufferView::BufferView(CreateInfo* pCreateInfo)
 	m_BufferViewCI.offset = m_CI.offset;
 	m_BufferViewCI.range = m_CI.size;
 
-	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL
-		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL) // These are the only valid usage to create a VkBufferView proper.
+	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL_BIT
+		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL_BIT) // These are the only valid usage to create a VkBufferView proper.
 	{
 		MIRU_ASSERT(vkCreateBufferView(m_Device, &m_BufferViewCI, nullptr, &m_BufferView), "ERROR: VULKAN: Failed to create BufferView.");
 	}
@@ -110,8 +110,8 @@ BufferView::~BufferView()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL
-		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL) // These are the only valid usage to create a VkBufferView proper.
+	if (m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL_BIT
+		|| m_CI.pBuffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL_BIT) // These are the only valid usage to create a VkBufferView proper.
 	{
 		vkDestroyBufferView(m_Device, m_BufferView, nullptr);
 	}

@@ -1,7 +1,7 @@
 //Vertex Inputs / Fragment or Pixel Outputs
 #if defined MIRU_VULKAN
 #define MIRU_LOCATION(loc_num, type, name, semantic) [[vk::location(loc_num)]] type name : semantic
-#define MIRU_LOCATION_INDEX(loc_num, idx_num, type, name, semantic) [[vk::location(loc_num), vk::index(idx_num)]] type name : semantic
+#define MIRU_LOCATION_INDEX(loc_num, idx_num, type, name, semantic) [[vk::location(loc_num)]][[vk::index(idx_num)]] type name : semantic
 #else
 #define MIRU_LOCATION(loc_num, type, name, semantic) type name : semantic
 #define MIRU_LOCATION_INDEX(loc_num, idx_num, type, name, semantic) type name : semantic
@@ -52,6 +52,20 @@
 #define MIRU_RW_IMAGE_1D_ARRAY(set_num, bind_num, type, name) RWTexture1DArray<type> name : register(u##bind_num, space##set_num)
 #define MIRU_RW_IMAGE_2D_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
 #define MIRU_SAMPLER(set_num, bind_num, name) SamplerState name : register(s##bind_num, space##set_num)
+#endif
+
+//MIRU_RW_IMAGE_CUBE/_ARRAY
+#if defined MIRU_VULKAN
+#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]][[spv::dim_cube]][[spv::arrayed(0)]] RWTexture2DArray<type> name;
+#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]][[spv::dim_cube]] RWTexture2DArray<type> name;
+#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y); output.z = 6;
+#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
+#else
+#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
+#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
+
 #endif
 //The name component of the image is defined as 'name_ImageCIS', and the name component of the sampler is defined as 'name_SamplerCIS'.
 #define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_ImageCIS); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS)
