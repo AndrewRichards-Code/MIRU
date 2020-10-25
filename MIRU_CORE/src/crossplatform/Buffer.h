@@ -14,7 +14,7 @@ namespace crossplatform
 		{
 			uint32_t width;
 			uint32_t height;
-			uint32_t channels;
+			uint32_t pixelSize;
 		};
 		struct Copy
 		{
@@ -43,7 +43,7 @@ namespace crossplatform
 			ImageDimension		imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for a image.
 			size_t				size;
 			void*				data;
-			Ref<MemoryBlock>	pMemoryBlock;
+			Ref<Allocator>		pAllocator;
 		};
 
 		//Methods
@@ -51,12 +51,12 @@ namespace crossplatform
 		static Ref<Buffer> Create(CreateInfo* pCreateInfo);
 		virtual ~Buffer() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
-		const Resource& GetResource() { return m_Resource; }
+		const Allocation& GetAllocation() { return m_Allocation; }
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-		Resource m_Resource;
+		Allocation m_Allocation;
 	};
 
 	class BufferView

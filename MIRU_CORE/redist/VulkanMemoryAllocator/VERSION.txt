@@ -1,0 +1,2 @@
+VulkanMemoryAllocatorRelease 2020/10/25 
+Redistribution - No Modifications.

@@ -27,25 +27,26 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ImageCI.pQueueFamilyIndices = nullptr;
 	m_ImageCI.initialLayout = static_cast<VkImageLayout>(m_CI.layout);
 
-	MIRU_ASSERT(vkCreateImage(m_Device, &m_ImageCI, nullptr, &m_Image), "ERROR: VULKAN: Failed to create Image.");
+	m_VmaACI.flags = 0;
+	m_VmaACI.usage = VMA_MEMORY_USAGE_UNKNOWN;
+	m_VmaACI.requiredFlags = static_cast<VkMemoryPropertyFlags>(m_CI.pAllocator->GetCreateInfo().properties);
+	m_VmaACI.preferredFlags = 0;
+	m_VmaACI.memoryTypeBits = 0;
+	m_VmaACI.pool = VK_NULL_HANDLE;
+	m_VmaACI.pUserData = nullptr;
+
+	MIRU_ASSERT(vmaCreateImage(m_CI.pAllocator->GetVmaAllocator(), &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
 	VKSetName<VkImage>(m_Device, (uint64_t)m_Image, m_CI.debugName);
 
-	vkGetImageMemoryRequirements(m_Device, m_Image, &m_MemoryRequirements);
+	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)&m_VmaAllocation;
+	m_Allocation.width = 0;
+	m_Allocation.height = 0;
+	m_Allocation.rowPitch = 0;
+	m_Allocation.rowPadding = 0;
 
-	m_Resource.device = &m_Device;
-	m_Resource.type = crossplatform::Resource::Type::IMAGE;
-	m_Resource.resource = (uint64_t)m_Image;	
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
-	m_Resource.size = m_MemoryRequirements.size;
-	m_Resource.alignment = m_MemoryRequirements.alignment;
-
-	if (m_CI.pMemoryBlock)
+	if (m_CI.data)
 	{
-		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: VULKAN: Unable to add the Image to a MemoryBlock.");
-		if (m_Resource.newMemoryBlock)
-			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
-
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -55,10 +56,7 @@ Image::~Image()
 
 	if (!m_SwapchainImage)
 	{
-		vkDestroyImage(m_Device, m_Image, nullptr);
-
-		if (m_CI.pMemoryBlock)
-			m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+		vmaDestroyImage(m_CI.pAllocator->GetVmaAllocator(), m_Image, m_VmaAllocation);
 	}
 }
 

@@ -66,13 +66,13 @@ int main()
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	//GraphicsAPI::LoadGraphicsDebugger();
+	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Context::CreateInfo contextCI;
-	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 11 : 1;
-	contextCI.api_version_minor = 1;
+	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 12 : 1;
+	contextCI.api_version_minor = GraphicsAPI::IsD3D12() ?  1 : 2;
 	contextCI.applicationName = "MIRU_TEST";
 	contextCI.instanceLayers = { "VK_LAYER_KHRONOS_validation" };
 	contextCI.instanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
@@ -166,15 +166,15 @@ int main()
 	cmdCopyBufferCI.allocateNewCommandPoolPerBuffer = false;
 	Ref<CommandBuffer> cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
-	MemoryBlock::CreateInfo mbCI;
-	mbCI.debugName = "CPU_MB_0";
-	mbCI.pContext = context;
-	mbCI.blockSize = MemoryBlock::BlockSize::BLOCK_SIZE_64MB;
-	mbCI.properties = MemoryBlock::PropertiesBit::HOST_VISIBLE_BIT | MemoryBlock::PropertiesBit::HOST_COHERENT_BIT;
-	Ref<MemoryBlock> cpu_mb_0 = MemoryBlock::Create(&mbCI);
-	mbCI.debugName = "GPU_MB_0";
-	mbCI.properties = MemoryBlock::PropertiesBit::DEVICE_LOCAL_BIT ;
-	Ref<MemoryBlock> gpu_mb_0 = MemoryBlock::Create(&mbCI);
+	Allocator::CreateInfo allocCI;
+	allocCI.debugName = "CPU_ALLOC_0";
+	allocCI.pContext = context;
+	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
+	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
+	Ref<Allocator> cpu_alloc_0 = Allocator::Create(&allocCI);
+	allocCI.debugName = "GPU_ALLOC_0";
+	allocCI.properties = Allocator::PropertiesBit::DEVICE_LOCAL_BIT;
+	Ref<Allocator> gpu_alloc_0 = Allocator::Create(&allocCI);
 
 	float vertices[32] =
 	{
@@ -207,11 +207,11 @@ int main()
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
-	verticesBufferCI.pMemoryBlock = cpu_mb_0;
+	verticesBufferCI.pAllocator = cpu_alloc_0;
 	Ref<Buffer> c_vb = Buffer::Create(&verticesBufferCI);
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
 	verticesBufferCI.data = nullptr;
-	verticesBufferCI.pMemoryBlock = gpu_mb_0;
+	verticesBufferCI.pAllocator = gpu_alloc_0;
 	Ref<Buffer> g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
@@ -220,11 +220,11 @@ int main()
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
-	indicesBufferCI.pMemoryBlock = cpu_mb_0;
+	indicesBufferCI.pAllocator = cpu_alloc_0;
 	Ref<Buffer> c_ib = Buffer::Create(&indicesBufferCI);
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
 	indicesBufferCI.data = nullptr;
-	indicesBufferCI.pMemoryBlock = gpu_mb_0;
+	indicesBufferCI.pAllocator = gpu_alloc_0;
 	Ref<Buffer> g_ib = Buffer::Create(&indicesBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
@@ -233,7 +233,7 @@ int main()
 	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	imageBufferCI.size = img_width * img_height * 4;
 	imageBufferCI.data = imageData;
-	imageBufferCI.pMemoryBlock = cpu_mb_0;
+	imageBufferCI.pAllocator = cpu_alloc_0;
 	Ref<Buffer> c_imageBuffer = Buffer::Create(&imageBufferCI);
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "MIRU logo Image";
@@ -250,7 +250,7 @@ int main()
 	imageCI.layout = Image::Layout::UNKNOWN;
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
-	imageCI.pMemoryBlock = gpu_mb_0;
+	imageCI.pAllocator = gpu_alloc_0;
 	Ref<Image> image = Image::Create(&imageCI);
 
 	Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
@@ -367,14 +367,14 @@ int main()
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = 2 * sizeof(mat4);
 	ubCI.data = ubData;
-	ubCI.pMemoryBlock = cpu_mb_0;
+	ubCI.pAllocator = cpu_alloc_0;
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(mat4);
 	ubCI.data = &modl[0][0];
-	ubCI.pMemoryBlock = cpu_mb_0;
+	ubCI.pAllocator = cpu_alloc_0;
 	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewCamCI;
@@ -411,7 +411,7 @@ int main()
 	depthCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
-	depthCI.pMemoryBlock = gpu_mb_0;
+	depthCI.pAllocator = gpu_alloc_0;
 	Ref<Image> depthImage = Image::Create(&depthCI);
 	
 	ImageView::CreateInfo depthImageViewCI;
@@ -577,7 +577,6 @@ int main()
 
 			depthCI.width = width;
 			depthCI.height = height;
-			depthImage->GetCreateInfo().pMemoryBlock->RemoveResource(depthImage->GetResource().id);
 			depthImage = Image::Create(&depthCI);
 			depthImageViewCI.pImage = depthImage;
 			depthImageView = ImageView::Create(&depthImageViewCI);
@@ -648,8 +647,8 @@ int main()
 			memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
 			memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
-			cpu_mb_0->SubmitData(ub1->GetResource(), 2 * sizeof(mat4), ubData);
-			cpu_mb_0->SubmitData(ub2->GetResource(), sizeof(mat4), (void*)&modl[0][0]);
+			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 2 * sizeof(mat4), ubData);
+			cpu_alloc_0->SubmitData(ub2->GetAllocation(), sizeof(mat4), (void*)&modl[0][0]);
 		}
 		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
 		frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;

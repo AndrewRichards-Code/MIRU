@@ -5,126 +5,100 @@
 using namespace miru;
 using namespace d3d12;
 
-MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
+Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
 	m_Device = reinterpret_cast<ID3D12Device*>(m_CI.pContext->GetDevice());
 
-	m_HeapDesc.SizeInBytes = static_cast<UINT64>(m_CI.blockSize);
-	m_HeapDesc.Properties = GetHeapProperties(m_CI.properties);
-	m_HeapDesc.Alignment = 0;
-	m_HeapDesc.Flags = D3D12_HEAP_FLAG_NONE;
 
-	MIRU_ASSERT(m_Device->CreateHeap(&m_HeapDesc, IID_PPV_ARGS(&m_MemoryHeap)), "ERROR: D3D12: Failed to create Heap.");
-	D3D12SetName(m_MemoryHeap, m_CI.debugName);
+	m_AllocatorDesc.Flags = D3D12MA::ALLOCATOR_FLAG_NONE;
+	m_AllocatorDesc.pDevice = m_Device;
+	m_AllocatorDesc.PreferredBlockSize = static_cast<UINT64>(m_CI.blockSize);
+	m_AllocatorDesc.pAllocationCallbacks = nullptr;
+	m_AllocatorDesc.pAdapter = dynamic_cast<IDXGIAdapter*>(ref_cast<Context>(m_CI.pContext)->m_PhysicalDevices.m_Adapters[0]);
+
+	MIRU_ASSERT(D3D12MA::CreateAllocator(&m_AllocatorDesc, &m_Allocator), "ERROR: D3D12: Failed to create Allocator.");
+	//D3D12SetName(m_MemoryHeap, m_CI.debugName);
 }
 
-MemoryBlock::~MemoryBlock()
+Allocator::~Allocator()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_D3D12_SAFE_RELEASE(m_MemoryHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_Allocator);
 }
 
-bool MemoryBlock::AddResource(crossplatform::Resource& resource)
+void* Allocator::GetNativeAllocator()
+{
+	return reinterpret_cast<void*>(m_Allocator);
+}
+
+void Allocator::SubmitData(const crossplatform::Allocation& allocation, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	bool found = false;
-	for (auto& memoryBlock : s_MemoryBlocks)
+
+	if (allocation.nativeAllocation && size > 0  && data)
 	{
-		if (found = memoryBlock == get_this_shared_ptr())
-			break;
-	}
-	if (!found)
-	{
-		s_MemoryBlocks.push_back(get_this_shared_ptr());
-		s_AllocatedResources[get_this_shared_ptr()];
-	}
+		ID3D12Resource* d3d12Resource = allocation.GetD3D12MAAllocaton()->GetResource();
 
-	if (m_Device != reinterpret_cast<ID3D12Device*>(resource.device))
-		return false;
-
-	if (!ResourceBackable(resource) && !resource.newMemoryBlock)
-	{
-		MIRU_ASSERT((resource.size > (size_t)m_CI.blockSize), "ERROR: D3D12: Resource is larger than the MemoryBlock::BlockSize.");
-
-		resource.newMemoryBlock = true;
-		return Create(&m_CI)->AddResource(resource);
-	}
-
-	resource.memoryBlock = (uint64_t)m_MemoryHeap;
-	resource.id = GenerateURID();
-	s_AllocatedResources[get_this_shared_ptr()][resource.id] = resource;
-	CalculateOffsets();
-	resource = s_AllocatedResources[get_this_shared_ptr()][resource.id];
-
-	return true;
-}
-
-void MemoryBlock::RemoveResource(uint64_t id)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	s_AllocatedResources[get_this_shared_ptr()].erase(id);
-}
-
-void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	bool copyByRow = resource.rowPitch && resource.rowPadding && resource.height;
-
-	D3D12_RANGE readRange = { 0, 0}; //We never intend to read from the resource;
-	if (m_HeapDesc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD && data)
-	{
-		ID3D12Resource* d3d12Resource = (ID3D12Resource*)(void*)(resource.resource);
-		void* mappedData;
-		MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
-		
-		if (copyByRow)
+		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
+		if (uploadHeap)
 		{
-			size_t rowWidth = resource.rowPitch - resource.rowPadding;
-			std::vector<char> paddingData(resource.rowPadding, 0);
-			char* _mappedData = (char*)mappedData;
-			char* _data = (char*)data;
+			void* mappedData;
+			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
+			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
-			for (size_t i = 0; i < resource.height; i++)
+			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
+			if (copyByRow)
 			{
-				memcpy(_mappedData, _data, rowWidth);
-				_mappedData += rowWidth;
-				_data += rowWidth;
-				memcpy(_mappedData, paddingData.data(), resource.rowPadding);
-				_mappedData += resource.rowPadding;
-			}
-		}
-		else
-		{
-			memcpy(mappedData, data, size);
-		}
+				size_t rowWidth = allocation.rowPitch - allocation.rowPadding;
+				std::vector<char> paddingData(allocation.rowPadding, 0);
+				char* _mappedData = (char*)mappedData;
+				char* _data = (char*)data;
 
-		d3d12Resource->Unmap(0, nullptr);
+				for (size_t i = 0; i < allocation.height; i++)
+				{
+					memcpy(_mappedData, _data, rowWidth);
+					_mappedData += rowWidth;
+					_data += rowWidth;
+					memcpy(_mappedData, paddingData.data(), allocation.rowPadding);
+					_mappedData += allocation.rowPadding;
+				}
+			}
+			else
+			{
+				memcpy(mappedData, data, size);
+			}
+
+			d3d12Resource->Unmap(0, nullptr);
+		}
 	}
 }
 
-void MemoryBlock::AccessData(const crossplatform::Resource& resource, size_t size, void* data)
+void Allocator::AccessData(const crossplatform::Allocation& allocation, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
-	if (m_HeapDesc.Properties.Type == D3D12_HEAP_TYPE_UPLOAD && data)
+	if (allocation.nativeAllocation && size > 0 && data)
 	{
-		ID3D12Resource* d3d12Resource = (ID3D12Resource*)(void*)(resource.resource);
-		void* mappedData;
-		MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
-		memcpy(data, mappedData, size);
-		d3d12Resource->Unmap(0, nullptr);
+		ID3D12Resource* d3d12Resource = allocation.GetD3D12MAAllocaton()->GetResource();
+
+		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
+		if (uploadHeap)
+		{
+			void* mappedData;
+			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
+			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
+			memcpy(data, mappedData, size);
+			d3d12Resource->Unmap(0, nullptr);
+		}
 	}
 }
 
-D3D12_HEAP_PROPERTIES MemoryBlock::GetHeapProperties(crossplatform::MemoryBlock::PropertiesBit properties)
+D3D12_HEAP_PROPERTIES Allocator::GetHeapProperties()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

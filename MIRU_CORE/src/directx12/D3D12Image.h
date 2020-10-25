@@ -30,7 +30,9 @@ namespace d3d12
 		ID3D12Resource* m_Image;
 		D3D12_RESOURCE_DESC m_ResourceDesc;
 		D3D12_RESOURCE_STATES m_InitialResourceState; 
-		D3D12_RESOURCE_ALLOCATION_INFO m_AllocationInfo;
+
+		D3D12MA::Allocation* m_D3D12MAllocation;
+		D3D12MA::ALLOCATION_DESC m_D3D12MAllocationDesc;
 	};
 
 	class ImageView final : public crossplatform::ImageView

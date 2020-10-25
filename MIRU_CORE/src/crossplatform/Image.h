@@ -270,7 +270,7 @@ namespace crossplatform
 			Layout				layout;
 			size_t				size;
 			void*				data;
-			Ref<MemoryBlock>	pMemoryBlock;
+			Ref<Allocator>		pAllocator;
 		};
 
 		//Methods
@@ -278,13 +278,13 @@ namespace crossplatform
 		static Ref<Image> Create(CreateInfo* pCreateInfo);
 		virtual ~Image() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
-		const Resource& GetResource() { return m_Resource; }
+		const Allocation& GetAllocation() { return m_Allocation; }
 		friend Swapchain;
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-		Resource m_Resource;
+		Allocation m_Allocation;
 		bool m_SwapchainImage = false;
 	};
 

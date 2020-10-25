@@ -12,25 +12,27 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	size_t width = m_CI.size;
-	size_t rowPitch = 0;
-	size_t rowPadding = 0;
-	size_t height = 0;
+	
+	m_Allocation.width = m_CI.size;
+	m_Allocation.height = 0;
+	m_Allocation.rowPitch = 0;
+	m_Allocation.rowPadding = 0;
+
 	if ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_BIT) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL_BIT))
 	{
-		width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+		m_Allocation.width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 	}
 	else if (m_CI.imageDimension.width % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
 	{
-		rowPitch = ((m_CI.imageDimension.width * m_CI.imageDimension.channels) + (D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1)) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
-		rowPadding = rowPitch - (m_CI.imageDimension.width * m_CI.imageDimension.channels);
-		width = rowPitch * m_CI.imageDimension.height;
-		height = m_CI.imageDimension.height;
+		m_Allocation.rowPitch = ((m_CI.imageDimension.width * m_CI.imageDimension.pixelSize) + (D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1)) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
+		m_Allocation.rowPadding = m_Allocation.rowPitch - (m_CI.imageDimension.width * m_CI.imageDimension.pixelSize);
+		m_Allocation.width = m_Allocation.rowPitch * m_CI.imageDimension.height;
+		m_Allocation.height = m_CI.imageDimension.height;
 	}
 
 	m_ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
 	m_ResourceDesc.Alignment = 0;
-	m_ResourceDesc.Width = width;									//Alias for bufferSize
+	m_ResourceDesc.Width = m_Allocation.width;						//Alias for bufferSize
 	m_ResourceDesc.Height = 1;
 	m_ResourceDesc.DepthOrArraySize = 1;
 	m_ResourceDesc.MipLevels = 1;
@@ -40,36 +42,25 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;				//How the resource is to be used
 	D3D12_CLEAR_VALUE* clear = nullptr;
 
-	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
+	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.pAllocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 		m_InitialResourceState = ToD3D12BufferType(m_CI.usage);
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
 		m_InitialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
-	m_AllocationInfo = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
+	m_D3D12MAllocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;
+	m_D3D12MAllocationDesc.HeapType = heapType;
+	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
+	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	m_Resource.device = m_Device;
-	m_Resource.type = crossplatform::Resource::Type::BUFFER;
-	m_Resource.resource = (uint64_t)m_Buffer; // This buffer handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
-	m_Resource.size = m_AllocationInfo.SizeInBytes;
-	m_Resource.alignment = m_AllocationInfo.Alignment;
-	m_Resource.rowPitch = rowPitch;
-	m_Resource.rowPadding = rowPadding;
-	m_Resource.height = height;
+	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
+	D3D12SetName(m_Buffer, m_CI.debugName);
+	
+	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)m_D3D12MAllocation;
 
-	if (m_CI.pMemoryBlock)
+	if (m_CI.data)
 	{
-		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: D3D12: Unable to add the Buffer to a MemoryBlock.");
-		if (m_Resource.newMemoryBlock)
-			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
-
-		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_InitialResourceState, clear, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to place Buffer.");
-		D3D12SetName(m_Buffer, m_CI.debugName);
-
-		m_Resource.resource = (uint64_t)m_Buffer;
-		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock).at(m_Resource.id).resource = (uint64_t)m_Buffer;
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -77,10 +68,8 @@ Buffer::~Buffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	MIRU_D3D12_SAFE_RELEASE(m_D3D12MAllocation);
 	MIRU_D3D12_SAFE_RELEASE(m_Buffer);
-	
-	if (m_CI.pMemoryBlock)
-		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
 }
 
 D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const

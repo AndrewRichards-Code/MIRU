@@ -5,12 +5,7 @@
 using namespace miru;
 using namespace vulkan;
 
-VkPhysicalDeviceProperties MemoryBlock::s_PhysicalDeviceProperties = {};
-VkPhysicalDeviceMemoryProperties MemoryBlock::s_PhysicalDeviceMemoryProperties = {};
-uint32_t MemoryBlock::s_MaxAllocations = 0;
-uint32_t MemoryBlock::s_CurrentAllocations = 0;
-
-MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
+Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -18,150 +13,82 @@ MemoryBlock::MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo)
 	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
 	const Ref<vulkan::Context>& context = ref_cast<vulkan::Context>(m_CI.pContext);
 
-	s_PhysicalDeviceProperties = context->m_PhysicalDevices.m_PhysicalDeviceProperties[0];
-	s_PhysicalDeviceMemoryProperties = context->m_PhysicalDevices.m_PhysicalDeviceMemoryProperties[0];
-	s_MaxAllocations = s_PhysicalDeviceProperties.limits.maxMemoryAllocationCount;
+	m_AI.flags = 0;
+	m_AI.physicalDevice = context->m_PhysicalDevices.m_PhysicalDevices[0];
+	m_AI.device = m_Device;
+	m_AI.preferredLargeHeapBlockSize = static_cast<VkDeviceSize>(m_CI.blockSize);
+	m_AI.pAllocationCallbacks = nullptr;
+	m_AI.pDeviceMemoryCallbacks = nullptr;
+	m_AI.frameInUseCount = 0;
+	m_AI.pHeapSizeLimit = nullptr;
+	m_AI.pVulkanFunctions = nullptr;
+	m_AI.pRecordSettings = nullptr;
+	m_AI.instance = context->m_Instance;
+	m_AI.vulkanApiVersion = 0; // context->m_AI.apiVersion;
 	
-	if (s_CurrentAllocations + 1 > s_MaxAllocations)
-	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Exceeded maximum allocation.");
-	}
-	else
-		s_CurrentAllocations++;
-
-	m_AI.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	m_AI.pNext = nullptr;
-	m_AI.allocationSize = static_cast<VkDeviceSize>(m_CI.blockSize);
-	m_AI.memoryTypeIndex = GetMemoryTypeIndex(static_cast<VkMemoryPropertyFlags>(m_CI.properties));
-
-	MIRU_ASSERT(vkAllocateMemory(m_Device, &m_AI, nullptr, &m_DeviceMemory), "ERROR: VULKAN: Failed to allocate Memory.");
-	VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);
+	MIRU_ASSERT(vmaCreateAllocator(&m_AI, &m_Allocator), "ERROR: VULKAN: Failed to create Allocator.");
+	//VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);
 }
 
-MemoryBlock::~MemoryBlock()
+Allocator::~Allocator()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	vkFreeMemory(m_Device, m_DeviceMemory, nullptr);
+	vmaDestroyAllocator(m_Allocator);
 }
 
-bool MemoryBlock::AddResource(crossplatform::Resource& resource)
+void* Allocator::GetNativeAllocator()
+{
+	return reinterpret_cast<void*>(&m_Allocator);
+}
+
+void Allocator::SubmitData(const crossplatform::Allocation& allocation, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	bool found = false;
-	for (auto& memoryBlock : s_MemoryBlocks)
+	if (allocation.nativeAllocation && size > 0 && data)
 	{
-		found = (memoryBlock == get_this_shared_ptr());
-		if (found)
-			break;
-	}
-	if (!found)
-	{
-		s_MemoryBlocks.push_back(get_this_shared_ptr());
-		s_AllocatedResources[get_this_shared_ptr()];
-	}
+		const VmaAllocation& vmaAllocation = allocation.GetVmaAllocation();
 
-	if (m_Device != *reinterpret_cast<VkDevice*>(resource.device))
-		return false;
-
-	if (!ResourceBackable(resource) && !resource.newMemoryBlock)
-	{
-		MIRU_ASSERT((resource.size > (size_t)m_CI.blockSize), "ERROR: VULKAN: Resource is larger than the MemoryBlock::BlockSize.");
-
-		resource.newMemoryBlock = true;
-		return Create(&m_CI)->AddResource(resource);
-	}
-	
-	//TODO Re-enable this. Issue with GetMemoryPropertyFlag()
-	/*if (m_MemoryTypeIndex != GetMemoryTypeIndex(GetMemoryPropertyFlag(resource.type, resource.usage)))
-		return false;*/
-
-	resource.memoryBlock = (uint64_t)m_DeviceMemory;
-	resource.id = GenerateURID();
-	s_AllocatedResources[get_this_shared_ptr()][resource.id] = resource;
-	CalculateOffsets();
-	resource = s_AllocatedResources[get_this_shared_ptr()][resource.id];
-
-	if (resource.type == crossplatform::Resource::Type::BUFFER)
-		MIRU_ASSERT(vkBindBufferMemory(m_Device, (VkBuffer)resource.resource, m_DeviceMemory, resource.offset), "ERROR: VULKAN: Failed to bind Buffer.");
-	if (resource.type == crossplatform::Resource::Type::IMAGE)
-		MIRU_ASSERT(vkBindImageMemory(m_Device, (VkImage)resource.resource, m_DeviceMemory, resource.offset), "ERROR: VULKAN: Failed to bind Image.");
-
-	return true;
-}
-
-void MemoryBlock::RemoveResource(uint64_t id)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	s_AllocatedResources[get_this_shared_ptr()].erase(id);
-}
-
-void MemoryBlock::SubmitData(const crossplatform::Resource& resource, size_t size, void* data)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	if (data)
-	{
 		bool hostVisible = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 		bool hostCoherent = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 		if (hostVisible)
 		{
 			void* mappedData;
-			MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
-			memcpy(mappedData, data, resource.size);
+			MIRU_ASSERT(vmaMapMemory(m_Allocator, vmaAllocation, &mappedData), "ERROR: VULKAN: Can not map resource.");
+			memcpy(mappedData, data, size);
 			if (!hostCoherent)
-			{
-				//Must align the size: https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples
-				const VkDeviceSize& nonCoherentAtomSize = s_PhysicalDeviceProperties.limits.nonCoherentAtomSize;
-				VkDeviceSize alignedSize = (static_cast<VkDeviceSize>(resource.size - 1)) - 
-					((static_cast<VkDeviceSize>(resource.size - 1)) % nonCoherentAtomSize) + nonCoherentAtomSize;
-				
-				VkMappedMemoryRange range;
-				range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-				range.pNext = nullptr;
-				range.memory = m_DeviceMemory;
-				range.offset = resource.offset;
-				range.size = alignedSize;
-				vkFlushMappedMemoryRanges(m_Device, 1, &range);
-			}
-			vkUnmapMemory(m_Device, m_DeviceMemory);
+				vmaFlushAllocation(m_Allocator, vmaAllocation, 0, VK_WHOLE_SIZE);
+
+			vmaUnmapMemory(m_Allocator, vmaAllocation);
 		}
 	}
 }
 
-void MemoryBlock::AccessData(const crossplatform::Resource& resource, size_t size, void* data)
+void Allocator::AccessData(const crossplatform::Allocation& allocation, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	bool hostVisible = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-	bool hostCoherent = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	if (hostVisible)
+	if (allocation.nativeAllocation && size > 0 && data)
 	{
-		void* mappedData;
-		MIRU_ASSERT(vkMapMemory(m_Device, m_DeviceMemory, resource.offset, resource.size, 0, &mappedData), "ERROR: VULKAN: Can not map resource.");
-		if (!hostCoherent)
+		const VmaAllocation& vmaAllocation = allocation.GetVmaAllocation();
+		
+		bool hostVisible = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+		bool hostCoherent = static_cast<VkMemoryPropertyFlags>(m_CI.properties) & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		if (hostVisible)
 		{
-			//Must align the size: https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples
-			const VkDeviceSize& nonCoherentAtomSize = s_PhysicalDeviceProperties.limits.nonCoherentAtomSize;
-			VkDeviceSize alignedSize = (static_cast<VkDeviceSize>(resource.size - 1)) -
-				((static_cast<VkDeviceSize>(resource.size - 1)) % nonCoherentAtomSize) + nonCoherentAtomSize;
-
-			VkMappedMemoryRange range;
-			range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-			range.pNext = nullptr;
-			range.memory = m_DeviceMemory;
-			range.offset = resource.offset;
-			range.size = alignedSize;
-			vkInvalidateMappedMemoryRanges(m_Device, 1, &range);
+			void* mappedData;
+			MIRU_ASSERT(vmaMapMemory(m_Allocator, vmaAllocation, &mappedData), "ERROR: VULKAN: Can not map resource.");
+			if (!hostCoherent)
+				vmaInvalidateAllocation(m_Allocator, vmaAllocation, 0, VK_WHOLE_SIZE);
+			
+			memcpy(data, mappedData, size);
+			vmaUnmapMemory(m_Allocator, vmaAllocation);
 		}
-		memcpy(data, mappedData, resource.size);
-		vkUnmapMemory(m_Device, m_DeviceMemory);
 	}
 }
 
-VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage)
+/*VkMemoryPropertyFlags Allocator::GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -204,7 +131,7 @@ VkMemoryPropertyFlags MemoryBlock::GetMemoryPropertyFlag(crossplatform::Resource
 		return flags;
 }
 
-uint32_t MemoryBlock::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
+uint32_t Allocator::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -222,7 +149,7 @@ uint32_t MemoryBlock::GetMemoryTypeIndex(VkMemoryPropertyFlags properties)
 }
 
 //Unused but very useful!
-uint32_t MemoryBlock::GetQueueFamilyIndex(VkQueueFlagBits queueType)
+uint32_t Allocator::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -248,4 +175,4 @@ uint32_t MemoryBlock::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 		i++;
 	}
 	return 0;
-}
+}*/

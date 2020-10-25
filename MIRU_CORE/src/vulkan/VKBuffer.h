@@ -21,7 +21,10 @@ namespace vulkan
 
 		VkBuffer m_Buffer;
 		VkBufferCreateInfo m_BufferCI = {};
-		VkMemoryRequirements m_MemoryRequirements;
+		
+		VmaAllocation m_VmaAllocation;
+		VmaAllocationCreateInfo m_VmaACI;
+		VmaAllocationInfo m_VmaAI;
 	};
 
 	class BufferView final : public crossplatform::BufferView

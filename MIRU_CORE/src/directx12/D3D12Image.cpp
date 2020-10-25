@@ -44,33 +44,29 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 		clear.DepthStencil = { 0.0f, 0 };
 	}
 
-	D3D12_HEAP_TYPE heapType = ref_cast<MemoryBlock>(m_CI.pMemoryBlock)->m_HeapDesc.Properties.Type;
+	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.pAllocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 		m_InitialResourceState = ToD3D12ImageLayout(m_CI.layout);
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
 		m_InitialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
-	m_AllocationInfo = m_Device->GetResourceAllocationInfo(0, 1, &m_ResourceDesc);
+	m_D3D12MAllocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;
+	m_D3D12MAllocationDesc.HeapType = heapType;
+	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
+	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	m_Resource.device = m_Device;
-	m_Resource.type = crossplatform::Resource::Type::IMAGE;
-	m_Resource.resource = (uint64_t)m_Image; // This image handle is invalid, it's assigned after the ID3D12Device::CreatePlacedResource()
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
-	m_Resource.size = m_AllocationInfo.SizeInBytes;
-	m_Resource.alignment = m_AllocationInfo.Alignment;
+	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
+	D3D12SetName(m_Image, m_CI.debugName);
 
-	if (m_CI.pMemoryBlock)
+	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)m_D3D12MAllocation;
+	m_Allocation.width = 0;
+	m_Allocation.height = 0;
+	m_Allocation.rowPitch = 0;
+	m_Allocation.rowPadding = 0;
+
+	if (m_CI.data)
 	{
-		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: D3D12: Unable to add the Image to a MemoryBlock.");
-		if (m_Resource.newMemoryBlock)
-			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
-
-		MIRU_ASSERT(m_Device->CreatePlacedResource((ID3D12Heap*)m_Resource.memoryBlock, m_Resource.offset, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
-		D3D12SetName(m_Image, m_CI.debugName);
-
-		m_Resource.resource = (uint64_t)m_Image;
-		m_CI.pMemoryBlock->GetAllocatedResources().at(m_CI.pMemoryBlock).at(m_Resource.id).resource = (uint64_t)m_Image;
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -80,10 +76,8 @@ Image::~Image()
 
 	if (!m_SwapchainImage)
 	{
+		MIRU_D3D12_SAFE_RELEASE(m_D3D12MAllocation);
 		MIRU_D3D12_SAFE_RELEASE(m_Image);
-
-		if (m_CI.pMemoryBlock)
-			m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
 	}
 }
 

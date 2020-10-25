@@ -23,7 +23,10 @@ namespace vulkan
 
 		VkImage m_Image;
 		VkImageCreateInfo m_ImageCI = {};
-		VkMemoryRequirements m_MemoryRequirements;
+
+		VmaAllocation m_VmaAllocation;
+		VmaAllocationCreateInfo m_VmaACI;
+		VmaAllocationInfo m_VmaAI;
 	};
 
 	class ImageView final : public crossplatform::ImageView

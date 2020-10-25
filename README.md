@@ -11,7 +11,7 @@ This repository is under active development and is not currently intended for co
 ## Features:
 - Crossplatform support with x64 and Android samples.
 - Crossplatform implementation of low level primitives such as Buffers, Images, CommandBuffers/Lists, Pipelines etc.
-- Built-in linear allocator for MemoryBlocks with automatic allocation and binding upon resource creation.
+- Built-in Allocator using D3D12MemoryAllocator/VulkanMemoryAllocator for automatic allocation and binding upon resource creation.
 - CPU Heap Allocator tracking and CPU Profiler.
 - Render Passes with Subpasses for both D3D12 and Vulkan.
 - Shader 'compiler' that builds DXIL and SPIR-V shader binaries from .hlsl source.
@@ -30,7 +30,6 @@ This repository is under active development and is not currently intended for co
 - Fill/Update Buffer commands.
 - Queries for GPU timing.
 - Mipmap generation, likely offline with compute shaders.
-- Improvements to linear memory allocators.
 - Arrays of Descriptors register/binding number conflict.
 - Multi GPU support.
 - Pipeline Caching?

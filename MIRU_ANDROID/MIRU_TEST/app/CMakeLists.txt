@@ -87,6 +87,7 @@ set( src_debug_cpp
         )
 
 set( src_vulkan_h
+        ${MIRU_SOLUTION_DIR}/MIRU_CORE/redist/VulkanMemoryAllocator/src/vk_mem_alloc.h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKAllocator.h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKBuffer.h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKCommandPoolBuffer.h
@@ -100,6 +101,7 @@ set( src_vulkan_h
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKSync.h
         )
 set( src_vulkan_cpp
+        ${MIRU_SOLUTION_DIR}/MIRU_CORE/redist/VulkanMemoryAllocator/src/vk_mem_alloc.cpp
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKAllocator.cpp
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKBuffer.cpp
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src/vulkan/VKContext.cpp

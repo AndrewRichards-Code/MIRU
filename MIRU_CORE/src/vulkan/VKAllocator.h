@@ -6,33 +6,29 @@ namespace miru
 {
 namespace vulkan
 {
-	class MemoryBlock : public crossplatform::MemoryBlock
+	class Allocator : public crossplatform::Allocator
 	{
 		//Methods
 	public:
-		MemoryBlock(MemoryBlock::CreateInfo* pCreateInfo);
-		~MemoryBlock();
-		bool AddResource(crossplatform::Resource& resource) override;
-		void RemoveResource(uint64_t id) override;
-		void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) override;
-		void AccessData(const crossplatform::Resource& resource, size_t size, void* data) override;
+		Allocator(Allocator::CreateInfo* pCreateInfo);
+		~Allocator();
+
+		void* GetNativeAllocator() override;
+
+		void SubmitData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
+		void AccessData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
 
 	private:
-		VkMemoryPropertyFlags GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage);
+		/*VkMemoryPropertyFlags GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage);
 		uint32_t GetMemoryTypeIndex(VkMemoryPropertyFlags properties);
-		uint32_t GetQueueFamilyIndex(VkQueueFlagBits queueType);
+		uint32_t GetQueueFamilyIndex(VkQueueFlagBits queueType);*/
 
 		//Members
 	private:
 		VkDevice m_Device;
 
-		VkDeviceMemory m_DeviceMemory;
-		VkMemoryAllocateInfo m_AI;
-
-		static VkPhysicalDeviceProperties s_PhysicalDeviceProperties;
-		static VkPhysicalDeviceMemoryProperties s_PhysicalDeviceMemoryProperties;
-		static uint32_t s_MaxAllocations;
-		static uint32_t s_CurrentAllocations;
+		VmaAllocator m_Allocator;
+		VmaAllocatorCreateInfo m_AI;
 	};
 }
 }

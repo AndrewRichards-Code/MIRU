@@ -57,7 +57,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	swapchainImageCI.layout = Image::Layout::UNKNOWN;
 	swapchainImageCI.size = 0;
 	swapchainImageCI.data = nullptr;
-	swapchainImageCI.pMemoryBlock = nullptr;
+	swapchainImageCI.pAllocator = nullptr;
 
 	ImageView::CreateInfo swapchainImageViewCI;
 	swapchainImageViewCI.debugName = "SwapchainImageViewCI";

@@ -5,33 +5,24 @@ namespace miru
 {
 namespace crossplatform
 {
+	typedef void* NativeAllocation;
+	typedef void* NativeAllocator;
+	
 	class Context;
 
-	struct Resource
+	struct Allocation
 	{
-		enum class Type : uint32_t
-		{
-			BUFFER,
-			IMAGE
-		};
+		NativeAllocation	nativeAllocation;
+		size_t				width;
+		size_t				height;
+		size_t				rowPitch;
+		size_t				rowPadding;
 
-		void*		device;
-		Type		type;
-		uint64_t	resource;
-		uint32_t	usage;
-		size_t		size;
-		size_t		alignment;
-		size_t		rowPitch;
-		size_t		rowPadding;
-		size_t		height;
-
-		size_t		offset = 0;
-		uint64_t	memoryBlock = 0;
-		uint64_t	id = 0;
-		bool		newMemoryBlock = false;
+		inline const D3D12MA::Allocation* GetD3D12MAAllocaton() const  { return reinterpret_cast<D3D12MA::Allocation*>(nativeAllocation); }
+		inline const VmaAllocation& GetVmaAllocation() const { return *reinterpret_cast<VmaAllocation*>(nativeAllocation); }
 	};
 
-	class MemoryBlock : public std::enable_shared_from_this<MemoryBlock>
+	class Allocator
 	{
 		//enums/structs
 	public:
@@ -66,33 +57,22 @@ namespace crossplatform
 
 		//Methods
 	public:
-		static Ref<MemoryBlock> Create(MemoryBlock::CreateInfo* pCreateInfo);
-		virtual ~MemoryBlock() = default;
+		static Ref<Allocator> Create(Allocator::CreateInfo* pCreateInfo);
+		virtual ~Allocator() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
-		virtual bool AddResource(Resource& resource) = 0;
-		virtual void RemoveResource(uint64_t id) = 0;
-		virtual void SubmitData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
-		virtual void AccessData(const crossplatform::Resource& resource, size_t size, void* data) = 0;
+		virtual NativeAllocator GetNativeAllocator() = 0;
 
-		static inline std::vector<Ref<MemoryBlock>>& GetMemoryBlocks() { return s_MemoryBlocks; }
-		static inline std::map<Ref<MemoryBlock>, std::map<uint64_t, Resource>>& GetAllocatedResources() { return s_AllocatedResources; }
+		virtual void SubmitData(const Allocation& allocation, size_t size, void* data) = 0;
+		virtual void AccessData(const Allocation& allocation, size_t size, void* data) = 0;
 
-	protected:
-		void CalculateOffsets();
-		bool ResourceBackable(Resource& resource);
-		static inline const uint64_t GenerateURID() { return (ruid_src++); }
-		inline Ref<crossplatform::MemoryBlock> get_this_shared_ptr() { return shared_from_this(); }
+		inline D3D12MA::Allocator* GetD3D12MAAllocator() { return reinterpret_cast<D3D12MA::Allocator*>(GetNativeAllocator()); }
+		inline VmaAllocator GetVmaAllocator() { return *reinterpret_cast<VmaAllocator*>(GetNativeAllocator()); }
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-		
-		static std::vector<Ref<MemoryBlock>> s_MemoryBlocks;
-		static std::map<Ref<MemoryBlock>, std::map<uint64_t, Resource>> s_AllocatedResources;
 
-	private:
-		static uint64_t ruid_src;
 	};
 }
 }

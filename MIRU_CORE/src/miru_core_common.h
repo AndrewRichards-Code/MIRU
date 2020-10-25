@@ -82,7 +82,6 @@
 #pragma comment(lib, "vulkan-1.lib")
 
 //VulkanMemoryAllocator
-#define VMA_IMPLEMENTATION
 #include "VulkanMemoryAllocator/src/vk_mem_alloc.h"
 
 //Spirv-cross Header and Library

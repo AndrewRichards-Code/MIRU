@@ -21,25 +21,26 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_BufferCI.queueFamilyIndexCount = 0;
 	m_BufferCI.pQueueFamilyIndices = nullptr;
 
-	MIRU_ASSERT(vkCreateBuffer(m_Device, &m_BufferCI, nullptr, &m_Buffer), "ERROR: VULKAN: Failed to create Buffer.");
+	m_VmaACI.flags = 0;
+	m_VmaACI.usage = VMA_MEMORY_USAGE_UNKNOWN;
+	m_VmaACI.requiredFlags = static_cast<VkMemoryPropertyFlags>(m_CI.pAllocator->GetCreateInfo().properties);
+	m_VmaACI.preferredFlags = 0;
+	m_VmaACI.memoryTypeBits = 0;
+	m_VmaACI.pool = VK_NULL_HANDLE;
+	m_VmaACI.pUserData = nullptr;
+
+	MIRU_ASSERT(vmaCreateBuffer(m_CI.pAllocator->GetVmaAllocator(), &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
 	VKSetName<VkBuffer>(m_Device, (uint64_t)m_Buffer, m_CI.debugName);
 
-	vkGetBufferMemoryRequirements(m_Device, m_Buffer, &m_MemoryRequirements);
+	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)&m_VmaAllocation;
+	m_Allocation.width = 0;
+	m_Allocation.height = 0;
+	m_Allocation.rowPitch = 0;
+	m_Allocation.rowPadding = 0;
 
-	m_Resource.device = &m_Device;
-	m_Resource.type = crossplatform::Resource::Type::BUFFER;
-	m_Resource.resource = (uint64_t)m_Buffer;
-	m_Resource.usage = static_cast<uint32_t>(m_CI.usage);
-	m_Resource.size = m_MemoryRequirements.size;
-	m_Resource.alignment = m_MemoryRequirements.alignment;
-	
-	if (m_CI.pMemoryBlock)
+	if (m_CI.data)
 	{
-		MIRU_ASSERT(!m_CI.pMemoryBlock->AddResource(m_Resource), "ERROR: VULKAN: Unable to add the Buffer to a MemoryBlock.");
-		if (m_Resource.newMemoryBlock)
-			m_CI.pMemoryBlock = crossplatform::MemoryBlock::GetMemoryBlocks().back();
-
-		m_CI.pMemoryBlock->SubmitData(m_Resource, m_CI.size, m_CI.data);
+		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -47,10 +48,7 @@ Buffer::~Buffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	vkDestroyBuffer(m_Device, m_Buffer, nullptr);
-	
-	if (m_CI.pMemoryBlock)
-		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
+	vmaDestroyBuffer(m_CI.pAllocator->GetVmaAllocator(), m_Buffer, m_VmaAllocation);
 }
 
 VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)
