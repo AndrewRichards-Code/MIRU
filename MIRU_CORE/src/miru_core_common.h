@@ -59,12 +59,15 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+//D3D12MemoryAllocator
+#include "D3D12MemoryAllocator/src/D3D12MemAlloc.h"
+
 //DXC Header and Library
 #include <d3d12shader.h>
 #include <dxcapi.h>
 //#pragma comment(lib, "dxc/lib/x64/dxcompiler.lib")
 
-#define SAFE_RELEASE(x) if(x) { x->Release(); x = nullptr; }
+#define MIRU_D3D12_SAFE_RELEASE(x) if(x) { x->Release(); x = nullptr; }
 
 #endif
 
@@ -77,6 +80,10 @@
 //Header and Library
 #include "vulkan/vulkan.h"
 #pragma comment(lib, "vulkan-1.lib")
+
+//VulkanMemoryAllocator
+#define VMA_IMPLEMENTATION
+#include "VulkanMemoryAllocator/src/vk_mem_alloc.h"
 
 //Spirv-cross Header and Library
 #include "spirv_cross/Include/spirv_cross.hpp"

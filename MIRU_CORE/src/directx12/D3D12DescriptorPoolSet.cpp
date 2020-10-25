@@ -277,10 +277,10 @@ DescriptorSet::~DescriptorSet()
 
 	for (auto& descriptorHeap : m_DescriptorHeaps)
 	{
-		SAFE_RELEASE(descriptorHeap[0]);
-		SAFE_RELEASE(descriptorHeap[1]);
-		SAFE_RELEASE(descriptorHeap[2]);
-		SAFE_RELEASE(descriptorHeap[3]);
+		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[0]);
+		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[1]);
+		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[2]);
+		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[3]);
 	}
 }
 

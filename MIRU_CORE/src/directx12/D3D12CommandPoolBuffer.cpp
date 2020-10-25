@@ -29,7 +29,7 @@ CommandPool::~CommandPool()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_CmdPool);
+	MIRU_D3D12_SAFE_RELEASE(m_CmdPool);
 }
 
 void CommandPool::Trim()
@@ -132,14 +132,14 @@ CommandBuffer::~CommandBuffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap);
-	SAFE_RELEASE(m_CmdBuffer_Sampler_DescriptorHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_CmdBuffer_Sampler_DescriptorHeap);
 
 	for (auto& cmdBuffer : m_CmdBuffers)
-		SAFE_RELEASE(cmdBuffer);
+		MIRU_D3D12_SAFE_RELEASE(cmdBuffer);
 
 	for (auto& cmdPool : m_CmdPools)
-		SAFE_RELEASE(cmdPool);
+		MIRU_D3D12_SAFE_RELEASE(cmdPool);
 }
 
 void CommandBuffer::Begin(uint32_t index, UsageBit usage)
@@ -428,7 +428,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 	}
 
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
-	SAFE_RELEASE(heap);
+	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
@@ -527,7 +527,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, shrink_uint32_t_to_uint8_t(clear.stencil), 0, nullptr);
-	SAFE_RELEASE(heap);
+	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
 void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 

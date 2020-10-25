@@ -80,7 +80,7 @@ Image::~Image()
 
 	if (!m_SwapchainImage)
 	{
-		SAFE_RELEASE(m_Image);
+		MIRU_D3D12_SAFE_RELEASE(m_Image);
 
 		if (m_CI.pMemoryBlock)
 			m_CI.pMemoryBlock->RemoveResource(m_Resource.id);

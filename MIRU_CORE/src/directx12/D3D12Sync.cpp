@@ -24,7 +24,7 @@ Fence::~Fence()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_Fence);
+	MIRU_D3D12_SAFE_RELEASE(m_Fence);
 }
 
 void Fence::Reset()
@@ -89,7 +89,7 @@ Semaphore::~Semaphore()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_Semaphore);
+	MIRU_D3D12_SAFE_RELEASE(m_Semaphore);
 }
 
 //Event - Split Barrier

@@ -294,10 +294,10 @@ Pipeline::~Pipeline()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_Pipeline);
-	SAFE_RELEASE(m_RootSignature);
-	SAFE_RELEASE(m_SerializedRootSignature);
-	SAFE_RELEASE(m_SerializedRootSignatureError);
+	MIRU_D3D12_SAFE_RELEASE(m_Pipeline);
+	MIRU_D3D12_SAFE_RELEASE(m_RootSignature);
+	MIRU_D3D12_SAFE_RELEASE(m_SerializedRootSignature);
+	MIRU_D3D12_SAFE_RELEASE(m_SerializedRootSignatureError);
 }
 
 DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)

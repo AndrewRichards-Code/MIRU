@@ -89,14 +89,14 @@ Context::~Context()
 	m_Device->QueryInterface(&debugDevice);
 
 	for (auto& queue : m_Queues)
-		SAFE_RELEASE(queue);
+		MIRU_D3D12_SAFE_RELEASE(queue);
 
-	SAFE_RELEASE(m_Device);
+	MIRU_D3D12_SAFE_RELEASE(m_Device);
 
 	for (auto& adapter : m_PhysicalDevices.m_Adapters)
-		SAFE_RELEASE(adapter);
+		MIRU_D3D12_SAFE_RELEASE(adapter);
 
-	SAFE_RELEASE(m_Factory);
+	MIRU_D3D12_SAFE_RELEASE(m_Factory);
 
 	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_IGNORE_INTERNAL);
 	debugDevice->Release();

@@ -300,8 +300,8 @@ void Shader::D3D12ShaderReflection()
 		m_RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
 	}
 
-	SAFE_RELEASE(shader_reflection);
-	SAFE_RELEASE(dxc_container_reflection);
-	SAFE_RELEASE(dxc_shader_bin);
-	SAFE_RELEASE(dxc_library);
+	MIRU_D3D12_SAFE_RELEASE(shader_reflection);
+	MIRU_D3D12_SAFE_RELEASE(dxc_container_reflection);
+	MIRU_D3D12_SAFE_RELEASE(dxc_shader_bin);
+	MIRU_D3D12_SAFE_RELEASE(dxc_library);
 }

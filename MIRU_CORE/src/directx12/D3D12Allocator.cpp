@@ -25,7 +25,7 @@ MemoryBlock::~MemoryBlock()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_MemoryHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_MemoryHeap);
 }
 
 bool MemoryBlock::AddResource(crossplatform::Resource& resource)

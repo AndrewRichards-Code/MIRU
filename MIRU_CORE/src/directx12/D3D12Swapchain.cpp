@@ -68,10 +68,10 @@ Swapchain::~Swapchain()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	for (auto& swapchainRTV : m_SwapchainRTVs)
-		SAFE_RELEASE(swapchainRTV);
+		MIRU_D3D12_SAFE_RELEASE(swapchainRTV);
 
-	SAFE_RELEASE(m_SwapchainRTVDescHeap);
-	SAFE_RELEASE(m_Swapchain);
+	MIRU_D3D12_SAFE_RELEASE(m_SwapchainRTVDescHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_Swapchain);
 }
 
 void Swapchain::Resize(uint32_t width, uint32_t height)
@@ -85,9 +85,9 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	//Resize Buffers and release old resources
 	for (auto& swapchainRTV : m_SwapchainRTVs)
-		SAFE_RELEASE(swapchainRTV);
+		MIRU_D3D12_SAFE_RELEASE(swapchainRTV);
 
-	SAFE_RELEASE(m_SwapchainRTVDescHeap);
+	MIRU_D3D12_SAFE_RELEASE(m_SwapchainRTVDescHeap);
 	m_SwapchainRTVs.clear();
 	m_SwapchainRTV_CPU_Desc_Handles.clear();
 

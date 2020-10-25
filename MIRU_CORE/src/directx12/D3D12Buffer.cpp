@@ -77,7 +77,7 @@ Buffer::~Buffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SAFE_RELEASE(m_Buffer);
+	MIRU_D3D12_SAFE_RELEASE(m_Buffer);
 	
 	if (m_CI.pMemoryBlock)
 		m_CI.pMemoryBlock->RemoveResource(m_Resource.id);
