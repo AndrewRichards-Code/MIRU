@@ -16,6 +16,12 @@ namespace crossplatform
 	{
 		//enums/structs
 	public:
+		enum class QueueType : uint32_t
+		{
+			GRAPHICS,
+			COMPUTE,
+			TRANSFER,
+		};
 		enum class FlagBit : uint32_t
 		{
 			TRANSIENT_BIT				= 0x00000001,
@@ -27,7 +33,7 @@ namespace crossplatform
 			std::string		debugName;
 			Ref<Context>	pContext;
 			FlagBit			flags;
-			uint32_t		queueFamilyIndex;
+			QueueType		queueType;
 		};
 		//Methods
 	public:
