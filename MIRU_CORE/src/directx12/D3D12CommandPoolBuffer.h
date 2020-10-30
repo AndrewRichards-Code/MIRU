@@ -63,7 +63,12 @@ namespace d3d12
 		void CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Image>& dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) override;
 		void CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions) override;
 		void CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions) override;
+
+		void ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions) override;
 		
+	private:
+		void ResolvePreviousSubpassAttachments(uint32_t index);
+
 		//Members
 	public:
 		ID3D12Device* m_Device;

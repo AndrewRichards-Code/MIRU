@@ -97,7 +97,7 @@ namespace crossplatform
 		};
 		enum class AccessBit : uint32_t
 		{
-			NONE = 0x00000000,
+			NONE_BIT = 0x00000000,
 			INDIRECT_COMMAND_READ_BIT = 0x00000001,
 			INDEX_READ_BIT = 0x00000002,
 			VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,

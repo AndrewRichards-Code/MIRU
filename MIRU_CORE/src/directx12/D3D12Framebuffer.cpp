@@ -90,28 +90,27 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorPool = crossplatform::DescriptorPool::Create(&m_FramebufferDescriptorPoolCI);
 
 	std::vector<DescriptorSetLayout::Binding> framebufferDescriptorBindings;
-	UINT rtvBinding = 0;
-	UINT dsvBinding = 0;
-	UINT srvBinding = 0;
+	UINT binding = 0;
+	
 	for (auto& imageView : m_ImageView_RTV_DSV_SRVs)
 	{
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			framebufferDescriptorBindings.push_back({ rtvBinding , crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
-			rtvBinding++;
+			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			binding++;
 		}
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			framebufferDescriptorBindings.push_back({ dsvBinding , crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
-			dsvBinding++;
+			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			binding++;
 		}
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			framebufferDescriptorBindings.push_back({ srvBinding , crossplatform::DescriptorType::SAMPLED_IMAGE, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
-			srvBinding++;
+			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::SAMPLED_IMAGE, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			binding++;
 		}
 	}
 
@@ -125,31 +124,29 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
 	m_FramebufferDescriptorSet = crossplatform::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
 
-	rtvBinding = 0;
-	dsvBinding = 0;
-	srvBinding = 0;
+	binding = 0;
 	for (auto& imageView : m_ImageView_RTV_DSV_SRVs)
 	{
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			m_FramebufferDescriptorSet->AddImage(0, rtvBinding, { {nullptr, imageView.imageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL} });
+			m_FramebufferDescriptorSet->AddImage(0, binding, { {nullptr, imageView.imageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL} });
 			imageView.HasRTV = true;
-			rtvBinding++;
+			binding++;
 		}
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			m_FramebufferDescriptorSet->AddImage(0, dsvBinding, { {nullptr, imageView.imageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL} });
+			m_FramebufferDescriptorSet->AddImage(0, binding, { {nullptr, imageView.imageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL} });
 			imageView.HasDSV = true;
-			dsvBinding++;
+			binding++;
 		}
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			m_FramebufferDescriptorSet->AddImage(0, srvBinding, { {nullptr, imageView.imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL} });
+			m_FramebufferDescriptorSet->AddImage(0, binding, { {nullptr, imageView.imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL} });
 			imageView.HasSRV = true;
-			srvBinding++;
+			binding++;
 		}
 	}
 

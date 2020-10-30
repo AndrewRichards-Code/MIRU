@@ -66,7 +66,7 @@ int main()
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -263,7 +263,7 @@ int main()
 
 		Barrier::CreateInfo bCI;
 		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE;
+		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
 		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
@@ -396,6 +396,32 @@ int main()
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
+	Image::CreateInfo colourCI;
+	colourCI.debugName = "Colour Image MSAA";
+	colourCI.device = context->GetDevice();
+	colourCI.type = Image::Type::TYPE_2D;;
+	colourCI.format = swapchain->m_SwapchainImages[0]->GetCreateInfo().format;
+	colourCI.width = width;
+	colourCI.height = height;
+	colourCI.depth = 1;
+	colourCI.mipLevels = 1;
+	colourCI.arrayLayers = 1;
+	colourCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_8_BIT;
+	colourCI.usage = Image::UsageBit::COLOUR_ATTACHMENT_BIT;
+	colourCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
+	colourCI.size = 0;
+	colourCI.data = nullptr;
+	colourCI.pAllocator = gpu_alloc_0;
+	Ref<Image> colourImage = Image::Create(&colourCI);
+
+	ImageView::CreateInfo colourImageViewCI;
+	colourImageViewCI.debugName = "Colour ImageView";
+	colourImageViewCI.device = context->GetDevice();
+	colourImageViewCI.pImage = colourImage;
+	colourImageViewCI.viewType = Image::Type::TYPE_2D;
+	colourImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+	Ref<ImageView> colourImageView = ImageView::Create(&colourImageViewCI);
+
 	Image::CreateInfo depthCI;
 	depthCI.debugName = "Depth Image";
 	depthCI.device = context->GetDevice();
@@ -406,7 +432,7 @@ int main()
 	depthCI.depth = 1;
 	depthCI.mipLevels = 1;
 	depthCI.arrayLayers = 1;
-	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_8_BIT;
 	depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
 	depthCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
@@ -454,26 +480,35 @@ int main()
 	renderPassCI.device = context->GetDevice();
 	renderPassCI.attachments = {
 		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
-		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+		Image::SampleCountBit::SAMPLE_COUNT_8_BIT,
 		RenderPass::AttachmentLoadOp::CLEAR,
 		RenderPass::AttachmentStoreOp::STORE,
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		GraphicsAPI::IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
-		Image::Layout::PRESENT_SRC
+		Image::Layout::COLOUR_ATTACHMENT_OPTIMAL
 		},
 		{depthImage->GetCreateInfo().format,
-		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+		Image::SampleCountBit::SAMPLE_COUNT_8_BIT,
 		RenderPass::AttachmentLoadOp::CLEAR,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		Image::Layout::UNKNOWN,
 		Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+		},
+		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,
+		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
+		RenderPass::AttachmentLoadOp::DONT_CARE,
+		RenderPass::AttachmentStoreOp::STORE,
+		RenderPass::AttachmentLoadOp::DONT_CARE,
+		RenderPass::AttachmentStoreOp::DONT_CARE,
+		Image::Layout::UNKNOWN,
+		Image::Layout::PRESENT_SRC
 		}
 	};
 	renderPassCI.subpassDescriptions = {
-		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
+		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {{2, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} }
 	};
 	renderPassCI.subpassDependencies = {
 		{MIRU_SUBPASS_EXTERNAL, 0,
@@ -494,7 +529,7 @@ int main()
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::BACK_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
-	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, false, false };
+	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_8_BIT, false, 1.0f, false, false };
 	pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
 	pCI.colourBlendState.logicOpEnable = false;
 	pCI.colourBlendState.logicOp = LogicOp::COPY;
@@ -514,7 +549,7 @@ int main()
 	framebufferCI_0.debugName = "Framebuffer0";
 	framebufferCI_0.device = context->GetDevice();
 	framebufferCI_0.renderPass = renderPass;
-	framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
+	framebufferCI_0.attachments = { colourImageView, depthImageView, swapchain->m_SwapchainImageViews[0] };
 	framebufferCI_0.width = width;
 	framebufferCI_0.height = height;
 	framebufferCI_0.layers = 1;
@@ -522,7 +557,7 @@ int main()
 	framebufferCI_1.debugName = "Framebuffer1";
 	framebufferCI_1.device = context->GetDevice();
 	framebufferCI_1.renderPass = renderPass;
-	framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1], depthImageView };
+	framebufferCI_1.attachments = { colourImageView, depthImageView, swapchain->m_SwapchainImageViews[1] };
 	framebufferCI_1.width = width;
 	framebufferCI_1.height = height;
 	framebufferCI_1.layers = 1;
@@ -575,18 +610,24 @@ int main()
 			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 			pipeline = Pipeline::Create(&pCI);
 
+			colourCI.width = width;
+			colourCI.height = height;
+			colourImage = Image::Create(&colourCI);
+			colourImageViewCI.pImage = colourImage;
+			colourImageView = ImageView::Create(&colourImageViewCI);
+
 			depthCI.width = width;
 			depthCI.height = height;
 			depthImage = Image::Create(&depthCI);
 			depthImageViewCI.pImage = depthImage;
 			depthImageView = ImageView::Create(&depthImageViewCI);
 
-			framebufferCI_0.attachments = { swapchain->m_SwapchainImageViews[0], depthImageView };
+			framebufferCI_0.attachments = { colourImageView, depthImageView, swapchain->m_SwapchainImageViews[0] };
 			framebufferCI_0.width = width;
 			framebufferCI_0.height = height;
 			framebuffer0 = Framebuffer::Create(&framebufferCI_0);
 
-			framebufferCI_1.attachments = { swapchain->m_SwapchainImageViews[1], depthImageView };
+			framebufferCI_1.attachments = { colourImageView, depthImageView, swapchain->m_SwapchainImageViews[1] };
 			framebufferCI_1.width = width;
 			framebufferCI_1.height = height;
 			framebuffer1 = Framebuffer::Create(&framebufferCI_1);

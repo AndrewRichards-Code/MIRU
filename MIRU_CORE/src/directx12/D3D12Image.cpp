@@ -30,7 +30,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	D3D12_CLEAR_VALUE clear = {};
 	bool useClear = false;
 
-	if (useClear = m_ResourceDesc.Flags == D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	if (useClear = m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
 	{
 		clear.Format = m_ResourceDesc.Format;
 		clear.Color[0] = 0.0f;
@@ -38,7 +38,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 		clear.Color[2] = 0.0f;
 		clear.Color[3] = 0.0f;
 	}
-	if (useClear = m_ResourceDesc.Flags == D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	if (useClear = m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 	{
 		clear.Format = m_ResourceDesc.Format;
 		clear.DepthStencil = { 0.0f, 0 };
@@ -371,6 +371,10 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 			return D3D12_RESOURCE_STATE_PRESENT;
 		case Image::Layout::SHARED_PRESENT:
 			return D3D12_RESOURCE_STATE_PRESENT;
+		case Image::Layout::D3D12_RESOLVE_SOURCE:
+			return D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+		case Image::Layout::D3D12_RESOLVE_DEST:
+			return D3D12_RESOURCE_STATE_RESOLVE_DEST;
 		default:
 			return D3D12_RESOURCE_STATE_COMMON;
 	}

@@ -564,3 +564,25 @@ void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<cr
 
 	vkCmdCopyImageToBuffer(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
+
+void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkImageResolve> vkImageResolve;
+	vkImageResolve.reserve(resolveRegions.size());
+	for (auto& resolveRegion : resolveRegions)
+	{
+		VkImageResolve ir;
+		ir.srcSubresource = { static_cast<VkImageAspectFlags>(resolveRegion.srcSubresource.aspectMask), resolveRegion.srcSubresource.mipLevel, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+		ir.srcOffset = { resolveRegion.srcOffset.x, resolveRegion.srcOffset.y, resolveRegion.srcOffset.z };
+		ir.dstSubresource = { static_cast<VkImageAspectFlags>(resolveRegion.dstSubresource.aspectMask), resolveRegion.dstSubresource.mipLevel, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+		ir.dstOffset = { resolveRegion.dstOffset.x, resolveRegion.dstOffset.y, resolveRegion.dstOffset.z };
+		ir.extent = { resolveRegion.extent.width, resolveRegion.extent.height, resolveRegion.extent.depth };
+		vkImageResolve.push_back(ir);
+	}
+
+	vkCmdResolveImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), 
+		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageResolve.size()), vkImageResolve.data());
+}

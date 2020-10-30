@@ -574,6 +574,9 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 
 	CHECK_VALID_INDEX_RETURN(index);
 
+	//Resolve any attachments from the previous subpass
+	ResolvePreviousSubpassAttachments(index);
+
 	//Transition resources to be end render pass.
 	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
 	m_SubpassIndex = (uint32_t)-1;
@@ -603,6 +606,10 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+
+	//Resolve any attachments from the previous subpass
+	ResolvePreviousSubpassAttachments(index);
+
 	m_SubpassIndex++;
 	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
 	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
@@ -964,5 +971,123 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::I
 			src.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}
+	}
+}
+
+void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	Barrier::CreateInfo bCI;
+	for (auto& resolveRegion : resolveRegions)
+	{
+		bCI.type = Barrier::Type::IMAGE;
+		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+		bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
+		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.pImage = srcImage;
+		bCI.oldLayout = srcImageLayout;
+		bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+		bCI.subresoureRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+		Ref<crossplatform::Barrier> preResolveBarrierSrc = Barrier::Create(&bCI);
+		bCI.pImage = dstImage;
+		bCI.oldLayout = dstImageLayout;
+		bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
+		bCI.subresoureRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+		Ref<crossplatform::Barrier> preResolveBarrierDst = Barrier::Create(&bCI);
+		PipelineBarrier(index, crossplatform::PipelineStageBit::FRAGMENT_SHADER_BIT, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
+
+		D3D12_RECT srcRect = {};
+		srcRect.left = static_cast<UINT>(resolveRegion.srcOffset.x);
+		srcRect.top = static_cast<UINT>(resolveRegion.srcOffset.y);
+		srcRect.right = static_cast<UINT>(resolveRegion.extent.width);
+		srcRect.bottom = static_cast<UINT>(resolveRegion.extent.height);
+
+		bool formatCheck = srcImage->GetCreateInfo().format == dstImage->GetCreateInfo().format;
+		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+		if (formatCheck)
+		{
+			format = ref_cast<Image>(srcImage)->m_ResourceDesc.Format;
+		}
+		else
+		{
+			MIRU_ASSERT(true, "ERROR: D3D12: Source and Destination formats for resolve images must match.");
+		}
+
+		bool arrayCheck = resolveRegion.srcSubresource.arrayLayerCount == resolveRegion.dstSubresource.arrayLayerCount;
+		if (arrayCheck)
+		{
+			for (uint32_t i = 0; i < resolveRegion.srcSubresource.arrayLayerCount; i++)
+			{
+				UINT dstSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.dstSubresource.mipLevel, i + resolveRegion.srcSubresource.baseArrayLayer, 0, dstImage->GetCreateInfo().arrayLayers, resolveRegion.dstSubresource.arrayLayerCount);
+				UINT srcSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.srcSubresource.mipLevel, i + resolveRegion.dstSubresource.baseArrayLayer, 0, srcImage->GetCreateInfo().arrayLayers, resolveRegion.srcSubresource.arrayLayerCount);
+
+				reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->ResolveSubresourceRegion(
+					ref_cast<Image>(dstImage)->m_Image, dstSubresoucre, static_cast<UINT>(resolveRegion.dstOffset.x), static_cast<UINT>(resolveRegion.dstOffset.y),
+					ref_cast<Image>(srcImage)->m_Image, srcSubresoucre, &srcRect, format, D3D12_RESOLVE_MODE_AVERAGE);
+			}
+		}
+		else
+		{
+			MIRU_ASSERT(true, "ERROR: D3D12: Source and Destination arrayLayerCount for resolve image subresources must match.");
+		}
+
+		bCI.pImage = srcImage;
+		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+		bCI.newLayout = srcImageLayout;
+		bCI.subresoureRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+		Ref<crossplatform::Barrier> postResolveBarrierSrc = Barrier::Create(&bCI);
+		bCI.pImage = dstImage;
+		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
+		bCI.newLayout = dstImageLayout;
+		bCI.subresoureRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+		Ref<crossplatform::Barrier> postResolveBarrierDst = Barrier::Create(&bCI);
+		PipelineBarrier(index, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
+	}
+}
+
+void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	if (m_SubpassIndex == MIRU_SUBPASS_EXTERNAL)
+		return;
+	
+	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
+	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = m_RenderPassFramebuffer->GetCreateInfo().attachments;
+	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
+
+	if (subpassDesc.resolveAttachments.empty())
+		return;
+
+	if (subpassDesc.colourAttachments.size() < subpassDesc.resolveAttachments.size())
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: More resolve attachment provide than colour attachements.");
+	}
+
+	for (size_t i = 0; i < subpassDesc.resolveAttachments.size(); i++)
+	{
+		const crossplatform::RenderPass::AttachmentReference& colour = subpassDesc.colourAttachments[i];
+		const crossplatform::RenderPass::AttachmentReference& resolve = subpassDesc.resolveAttachments[i];
+
+		const Ref<crossplatform::Image>& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().pImage;
+		const Ref<crossplatform::Image>& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().pImage;
+		const crossplatform::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
+		const crossplatform::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
+
+		Image::Resolve resolveRegion;
+		resolveRegion.srcSubresource = {crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers};
+		resolveRegion.srcOffset = { 0, 0, 0 };
+		resolveRegion.dstSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
+		resolveRegion.dstOffset = { 0, 0, 0 };
+		resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth};
+
+		ResolveImage(index, colourImage, m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex], resolveImage, m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex], { resolveRegion });
 	}
 }

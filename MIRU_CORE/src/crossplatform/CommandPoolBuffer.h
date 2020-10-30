@@ -110,8 +110,7 @@ namespace crossplatform
 		virtual void CopyBufferToImage(uint32_t index, const Ref<Buffer>& srcBuffer, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
 		virtual void CopyImageToBuffer(uint32_t index, const Ref<Image>& srcImage, const Ref<Buffer>& dstBuffer, Image::Layout srcImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
 
-		/*virtual void BlitImage(uint32_t index) = 0;
-		virtual void ResolveImage(uint32_t index) = 0;*/
+		virtual void ResolveImage(uint32_t index, const Ref<Image>& srcImage, Image::Layout srcImageLayout, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Resolve>& resolveRegions) = 0;
 
 	protected:
 		inline bool CheckValidIndex(uint32_t index) { return (index < m_CI.commandBufferCount); }

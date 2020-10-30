@@ -193,6 +193,9 @@ namespace crossplatform
 			DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL = 1000117001,
 			PRESENT_SRC = 1000001002,
 			SHARED_PRESENT = 1000111000,
+			
+			D3D12_RESOLVE_SOURCE = 1001000001,
+			D3D12_RESOLVE_DEST = 1001000002
 		};
 		enum class AspectBit : uint32_t
 		{
@@ -227,6 +230,7 @@ namespace crossplatform
 			Offset3D			dstOffset;
 			Extent3D			extent;
 		};
+		typedef Copy Resolve;
 		struct BufferImageCopy 
 		{
 			uint64_t			bufferOffset;
