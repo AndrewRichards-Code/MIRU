@@ -14,12 +14,12 @@ using namespace d3d12;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
-	m_Queue(ref_cast<Context>(pCreateInfo->pContext)->m_Queues[pCreateInfo->queueFamilyIndex])
+	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
+	m_Queue = ref_cast<Context>(pCreateInfo->pContext)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
 
 	MIRU_ASSERT(m_Device->CreateCommandAllocator(m_Queue->GetDesc().Type, IID_PPV_ARGS(&m_CmdPool)), "ERROR: D3D12: Failed to create CommandPool.");
 	D3D12SetName(m_CmdPool, m_CI.debugName);
@@ -45,6 +45,24 @@ void CommandPool::Reset(bool releaseResources)
 
 	MIRU_ASSERT(m_CmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
 }
+
+uint32_t CommandPool::GetCommandQueueIndex(const CommandPool::QueueType& type)
+{
+	uint32_t index = 0;
+	for (auto& queueDesc : ref_cast<Context>(m_CI.pContext)->m_QueueDescs)
+	{
+		D3D12_COMMAND_LIST_TYPE flags = queueDesc.Type;
+		if (flags == D3D12_COMMAND_LIST_TYPE_DIRECT && type == QueueType::GRAPHICS)
+			return index;
+		if (flags == D3D12_COMMAND_LIST_TYPE_COMPUTE && type == QueueType::COMPUTE)
+			return index;
+		if (flags == D3D12_COMMAND_LIST_TYPE_COPY && type == QueueType::TRANSFER)
+			return index;
+
+		index++;
+	}
+	return 0; //Default Command Queue Index
+};
 
 //CmdBuffer
 CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)

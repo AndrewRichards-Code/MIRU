@@ -24,7 +24,7 @@ CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 	m_CmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	m_CmdPoolCI.pNext = nullptr;
 	m_CmdPoolCI.flags = static_cast<VkCommandPoolCreateFlags>(m_CI.flags);
-	m_CmdPoolCI.queueFamilyIndex = m_CI.queueFamilyIndex;
+	m_CmdPoolCI.queueFamilyIndex = GetQueueFamilyIndex(m_CI.queueType);
 
 	MIRU_ASSERT(vkCreateCommandPool(m_Device, &m_CmdPoolCI, nullptr, &m_CmdPool), "ERROR: VULKAN: Failed to create CommandPool.");
 	VKSetName<VkCommandPool>(m_Device, (uint64_t)m_CmdPool, m_CI.debugName);
@@ -50,6 +50,35 @@ void CommandPool::Reset(bool releaseResources)
 
 	MIRU_ASSERT(vkResetCommandPool(m_Device, m_CmdPool, releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandPool.");
 }
+
+uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
+{
+	uint32_t index = 0;
+	for (auto& queueFamilyProperty : ref_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties)
+	{
+		VkQueueFlags flags = queueFamilyProperty.queueFlags;
+		if ((flags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT
+			&& type == QueueType::GRAPHICS)
+		{
+			return index;
+		}
+		if ((flags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT
+			&& (flags & VK_QUEUE_GRAPHICS_BIT) != VK_QUEUE_GRAPHICS_BIT
+			&& type == QueueType::COMPUTE)
+		{
+			return index;
+		}
+		if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT
+			&& (flags & VK_QUEUE_COMPUTE_BIT) != VK_QUEUE_COMPUTE_BIT
+			&& (flags & VK_QUEUE_GRAPHICS_BIT) != VK_QUEUE_GRAPHICS_BIT
+			&& type == QueueType::TRANSFER)
+		{
+			return index;
+		}
+		index++;
+	}
+	return 0; //Default Queue Family Index
+};
 
 //CmdBuffer
 CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
@@ -161,7 +190,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
 
 	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
-	VkQueue queue = context->m_Queues[m_CI.pCommandPool->GetCreateInfo().queueFamilyIndex][0];
+	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	m_CmdBufferSI.pNext = nullptr;
@@ -190,9 +220,10 @@ void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const
 		MIRU_ASSERT(true, "ERROR: VULKAN: SwapchainImageCount and number of synchronisation objects does not match.");
 	}
 	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
+	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
 
 	VkDevice& vkDevice = context->m_Device;
-	VkQueue& vkQueue = context->m_Queues[m_CI.pCommandPool->GetCreateInfo().queueFamilyIndex][0];
+	VkQueue vkQueue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 	VkSwapchainKHR& vkSwapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
 
 	draws[m_CurrentFrame]->Wait();

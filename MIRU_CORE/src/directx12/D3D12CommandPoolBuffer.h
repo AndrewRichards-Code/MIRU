@@ -15,6 +15,8 @@ namespace d3d12
 		void Trim() override;
 		void Reset(bool releaseResources) override;
 
+		uint32_t GetCommandQueueIndex(const CommandPool::QueueType& type);
+
 		//Members
 	public:
 		ID3D12Device* m_Device;

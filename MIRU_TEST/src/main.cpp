@@ -63,8 +63,8 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
@@ -147,9 +147,9 @@ int main()
 	cmdPoolCI.debugName = "CmdPool";
 	cmdPoolCI.pContext = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
-	cmdPoolCI.queueFamilyIndex = 0;
+	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	Ref<CommandPool> cmdPool = CommandPool::Create(&cmdPoolCI);
-	cmdPoolCI.queueFamilyIndex = 2;
+	cmdPoolCI.queueType = CommandPool::QueueType::TRANSFER;
 	Ref<CommandPool> cmdCopyPool = CommandPool::Create(&cmdPoolCI);
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;

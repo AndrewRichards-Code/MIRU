@@ -15,6 +15,8 @@ namespace vulkan
 		void Trim() override;
 		void Reset(bool releaseResources) override;
 
+		uint32_t GetQueueFamilyIndex(const CommandPool::QueueType& type);
+
 		//Members
 	public:
 		VkDevice& m_Device;
