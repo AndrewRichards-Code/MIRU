@@ -949,12 +949,12 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::B
 		UINT NumRows;
 		UINT64 RowSizesInBytes;
 		UINT64 RequiredSize;
-		m_Device->GetCopyableFootprints(&dst.pResource->GetDesc(), 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
+		m_Device->GetCopyableFootprints(&dstResDesc, 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		src.PlacedFootprint = Layout;
 
 		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < (region.imageSubresource.arrayLayerCount + region.imageSubresource.baseArrayLayer); i++)
 		{
-			const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
 			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}
@@ -980,12 +980,12 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::I
 		UINT NumRows;
 		UINT64 RowSizesInBytes;
 		UINT64 RequiredSize;
-		m_Device->GetCopyableFootprints(&src.pResource->GetDesc(), 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
+		const D3D12_RESOURCE_DESC& srcResDesc = src.pResource->GetDesc();
+		m_Device->GetCopyableFootprints(&srcResDesc, 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		dst.PlacedFootprint = Layout;
 
 		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
 		{
-			const D3D12_RESOURCE_DESC& srcResDesc = src.pResource->GetDesc();
 			src.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}

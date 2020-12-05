@@ -92,7 +92,7 @@ void Shader::GetShaderByteCode()
 		int returnCode = Call_MIRU_SHADER_COMPILER();
 		if (returnCode != 0)
 		{
-			MIRU_WARN(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
+			MIRU_ASSERT(returnCode, "ERROR: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
 		}
 	}
 

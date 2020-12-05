@@ -141,5 +141,4 @@ void Context::DeviceWaitIdle()
 		fence->~Fence();
 		fence = nullptr;
 	}
-
 }

@@ -56,17 +56,17 @@
 
 //MIRU_RW_IMAGE_CUBE/_ARRAY
 #if defined MIRU_VULKAN
-#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]][[spv::dim_cube]][[spv::arrayed(0)]] RWTexture2DArray<type> name;
-#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]][[spv::dim_cube]] RWTexture2DArray<type> name;
-#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y); output.z = 6;
-#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
+#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name##_RWTextureCube;
+#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name##_RWTextureCubeArray;
+#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image##_RWTextureCube.GetDimensions(output.x, output.y, output.z); output.z = 6;
+#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image##_RWTextureCubeArray.GetDimensions(output.x, output.y, output.z);
 #else
-#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name : register(u##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
-#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image.GetDimensions(output.x, output.y, output.z);
-
+#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) RWTexture2DArray<type> name##_RWTextureCube : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name##_RWTextureCubeArray : register(u##bind_num, space##set_num)
+#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image##_RWTextureCube.GetDimensions(output.x, output.y, output.z); output.z = 6;
+#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image##_RWTextureCubeArray.GetDimensions(output.x, output.y, output.z);
 #endif
+
 //The name component of the image is defined as 'name_ImageCIS', and the name component of the sampler is defined as 'name_SamplerCIS'.
 #define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_ImageCIS); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS)
 #define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_ImageCIS[count]); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS[count])
