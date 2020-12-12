@@ -152,12 +152,6 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
 
-		if (m_CI.oldLayout == Image::Layout::GENERAL && m_CI.srcAccess == (Barrier::AccessBit::SHADER_READ_BIT | Barrier::AccessBit::SHADER_WRITE_BIT)) //Vulkan representation a UAV.
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-
-		if(m_CI.newLayout == Image::Layout::GENERAL && m_CI.dstAccess == (Barrier::AccessBit::SHADER_READ_BIT | Barrier::AccessBit::SHADER_WRITE_BIT)) //Vulkan representation a UAV.
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		
 		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
 			return;
 

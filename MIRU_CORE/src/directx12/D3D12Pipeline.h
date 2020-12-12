@@ -40,7 +40,7 @@ namespace d3d12
 		D3D12_ROOT_SIGNATURE_DESC m_RootSignatureDesc;
 		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
 		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRanges;
-		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRangesSampler;
+		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRangesSampler;
 
 		ID3D12PipelineState* m_Pipeline;
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_GPSD = {};
