@@ -467,7 +467,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		m_DSVDesc.Format = resourceDesc.Format;
 		m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 
-		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (m_CI.viewType)
 		{
 		case Image::Type::TYPE_1D:
 		{
@@ -526,7 +526,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		m_SRVDesc.Format = resourceDesc.Format;
 		m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (m_CI.viewType)
 		{
 		case Image::Type::TYPE_1D:
 		{
@@ -617,7 +617,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	{
 		m_UAVDesc.Format = resourceDesc.Format;
 
-		switch (ref_cast<Image>(m_CI.pImage)->GetCreateInfo().type)
+		switch (m_CI.viewType)
 		{
 		case Image::Type::TYPE_1D:
 		{
