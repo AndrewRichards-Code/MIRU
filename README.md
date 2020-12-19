@@ -25,11 +25,10 @@ This repository is under active development and is not currently intended for co
 - D3D12 Root Constants/Vulkan Push constants.
 - Vulkan dynamic states and their implementation in D3D12.
 - Clear render pass attachments command as an adjunct to load/store operations.
-- Render pass input attachment and multisampled attachment resolve; especially for D3D12.
+- Render pass input attachment for D3D12.
 - D3D12 Subpasses conformance.
 - Fill/Update Buffer commands.
 - Queries for GPU timing.
-- Mipmap generation, likely offline with compute shaders.
 - Arrays of Descriptors register/binding number conflict.
 - Multi GPU support.
 - Pipeline Caching?
