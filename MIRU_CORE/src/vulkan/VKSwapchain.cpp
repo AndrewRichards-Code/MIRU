@@ -185,6 +185,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	//Create new swapchain
 	m_SwapchainCI.imageExtent = { width, height };
+	m_Extent = m_SwapchainCI.imageExtent;
 
 	MIRU_ASSERT(vkCreateSwapchainKHR(m_Device, &m_SwapchainCI, nullptr, &m_Swapchain), "ERROR: VULKAN: Failed to create Swapchain");
 	VKSetName<VkSurfaceKHR>(m_Device, (uint64_t)m_Surface, m_CI.debugName);
