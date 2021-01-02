@@ -919,12 +919,12 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& s
 		srcbox.bottom = static_cast<UINT>(copyRegion.extent.height);
 		srcbox.back = static_cast<UINT>(copyRegion.extent.depth);
 
-		for (uint32_t i = copyRegion.dstSubresource.baseArrayLayer; i < copyRegion.dstSubresource.arrayLayerCount; i++)
+		for (uint32_t i = 0; i < copyRegion.dstSubresource.arrayLayerCount; i++)
 		{
 			const D3D12_RESOURCE_DESC& dstResDesc = dst.pResource->GetDesc();
 			const D3D12_RESOURCE_DESC& srcResDesc = src.pResource->GetDesc();
-			dst.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.dstSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
-			src.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.srcSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
+			dst.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.dstSubresource.mipLevel, i + copyRegion.dstSubresource.baseArrayLayer, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
+			src.SubresourceIndex = Image::D3D12CalculateSubresource(copyRegion.srcSubresource.mipLevel, i + copyRegion.srcSubresource.baseArrayLayer, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, copyRegion.dstOffset.x, copyRegion.dstOffset.y, copyRegion.dstOffset.z, &src, &srcbox);
 		}
 	}
@@ -953,9 +953,9 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::B
 		m_Device->GetCopyableFootprints(&dstResDesc, 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		src.PlacedFootprint = Layout;
 
-		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < (region.imageSubresource.arrayLayerCount + region.imageSubresource.baseArrayLayer); i++)
+		for (uint32_t i = 0; i < region.imageSubresource.baseArrayLayer; i++)
 		{
-			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
+			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i + region.imageSubresource.arrayLayerCount, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}
 	}	
@@ -984,9 +984,9 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::I
 		m_Device->GetCopyableFootprints(&srcResDesc, 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		dst.PlacedFootprint = Layout;
 
-		for (uint32_t i = region.imageSubresource.baseArrayLayer; i < region.imageSubresource.arrayLayerCount; i++)
+		for (uint32_t i = 0; i < region.imageSubresource.arrayLayerCount; i++)
 		{
-			src.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
+			src.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i + region.imageSubresource.baseArrayLayer, 0, srcResDesc.MipLevels, srcResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}
 	}
@@ -1040,8 +1040,8 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		{
 			for (uint32_t i = 0; i < resolveRegion.srcSubresource.arrayLayerCount; i++)
 			{
-				UINT dstSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.dstSubresource.mipLevel, i + resolveRegion.srcSubresource.baseArrayLayer, 0, dstImage->GetCreateInfo().arrayLayers, resolveRegion.dstSubresource.arrayLayerCount);
-				UINT srcSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.srcSubresource.mipLevel, i + resolveRegion.dstSubresource.baseArrayLayer, 0, srcImage->GetCreateInfo().arrayLayers, resolveRegion.srcSubresource.arrayLayerCount);
+				UINT dstSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.dstSubresource.mipLevel, i + resolveRegion.srcSubresource.baseArrayLayer, 0, dstImage->GetCreateInfo().mipLevels, dstImage->GetCreateInfo().arrayLayers);
+				UINT srcSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.srcSubresource.mipLevel, i + resolveRegion.dstSubresource.baseArrayLayer, 0, srcImage->GetCreateInfo().mipLevels, srcImage->GetCreateInfo().arrayLayers);
 
 				reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->ResolveSubresourceRegion(
 					ref_cast<Image>(dstImage)->m_Image, dstSubresoucre, static_cast<UINT>(resolveRegion.dstOffset.x), static_cast<UINT>(resolveRegion.dstOffset.y),

@@ -11,7 +11,6 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-
 	
 	m_Allocation.width = m_CI.size;
 	m_Allocation.height = 0;

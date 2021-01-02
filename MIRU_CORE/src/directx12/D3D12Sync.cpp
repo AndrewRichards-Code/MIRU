@@ -165,11 +165,11 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		else
 		{
 			m_Barriers.reserve(static_cast<size_t>(m_CI.subresoureRange.mipLevelCount) * static_cast<size_t>(m_CI.subresoureRange.arrayLayerCount));
-			for (uint32_t i = m_CI.subresoureRange.baseArrayLayer; i < m_CI.subresoureRange.baseArrayLayer + m_CI.subresoureRange.arrayLayerCount; i++)
+			for (uint32_t i = 0; i < m_CI.subresoureRange.arrayLayerCount; i++)
 			{
-				for (uint32_t j = m_CI.subresoureRange.baseMipLevel; j < m_CI.subresoureRange.baseMipLevel + m_CI.subresoureRange.mipLevelCount; j++)
+				for (uint32_t j = 0; j < m_CI.subresoureRange.mipLevelCount; j++)
 				{
-					barrier.Transition.Subresource = Image::D3D12CalculateSubresource(j, i, 0, m_CI.subresoureRange.mipLevelCount, m_CI.subresoureRange.arrayLayerCount);
+					barrier.Transition.Subresource = Image::D3D12CalculateSubresource(j + m_CI.subresoureRange.baseMipLevel, i + m_CI.subresoureRange.baseArrayLayer, 0, resDesc.MipLevels, resDesc.DepthOrArraySize);
 					m_Barriers.push_back(barrier);
 				}
 			}
