@@ -953,9 +953,9 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::B
 		m_Device->GetCopyableFootprints(&dstResDesc, 0, 1, region.bufferOffset, &Layout, &NumRows, &RowSizesInBytes, &RequiredSize);
 		src.PlacedFootprint = Layout;
 
-		for (uint32_t i = 0; i < region.imageSubresource.baseArrayLayer; i++)
+		for (uint32_t i = 0; i < region.imageSubresource.arrayLayerCount; i++)
 		{
-			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i + region.imageSubresource.arrayLayerCount, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
+			dst.SubresourceIndex = Image::D3D12CalculateSubresource(region.imageSubresource.mipLevel, i + region.imageSubresource.baseArrayLayer, 0, dstResDesc.MipLevels, dstResDesc.DepthOrArraySize);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->CopyTextureRegion(&dst, region.imageOffset.x, region.imageOffset.y, region.imageOffset.z, &src, nullptr);
 		}
 	}	
