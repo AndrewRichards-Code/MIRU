@@ -20,7 +20,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 #if defined(_DEBUG)
 	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
 	m_Debug->EnableDebugLayer();
-	#if !defined(MIRU_XBOX_ONE_UWP)
+	#if !defined(MIRU_WIN64_UWP)
 	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
 	#endif
 #endif
