@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Sync.h"
 
 #include "D3D12Buffer.h"
@@ -247,3 +248,4 @@ D3D12_RESOURCE_STATES Barrier::ToD3D12ResourceState(Barrier::AccessBit access)
 			return D3D12_RESOURCE_STATE_COMMON | D3D12_RESOURCE_STATE_PRESENT;
 	};
 }
+#endif

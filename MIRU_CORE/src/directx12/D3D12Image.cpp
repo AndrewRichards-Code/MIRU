@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Image.h"
 #include "D3D12Allocator.h"
 
@@ -713,3 +714,4 @@ D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, MipmapMo
 
 	return static_cast<D3D12_FILTER>(res);
 }
+#endif

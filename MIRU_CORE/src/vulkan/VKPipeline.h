@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "miru_core_common.h"
 #include "crossplatform/Pipeline.h"
 
@@ -49,3 +50,4 @@ namespace vulkan
 	};
 }
 }
+#endif

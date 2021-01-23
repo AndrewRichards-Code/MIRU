@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12CommandPoolBuffer.h"
 #include "D3D12Context.h"
 #include "D3D12Swapchain.h"
@@ -1109,3 +1110,4 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 		ResolveImage(index, colourImage, m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex], resolveImage, m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex], { resolveRegion });
 	}
 }
+#endif

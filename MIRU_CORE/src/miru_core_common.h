@@ -40,15 +40,21 @@
 #endif
 
 //GRAPHICS API
+#if !defined(MIRU_D3D12) && !defined(MIRU_VULKAN)
+
 #if defined(_WIN64)
 #define MIRU_D3D12
+#if !defined(MIRU_WIN64_UWP)
 #define MIRU_VULKAN
+#endif
 #elif defined(__APPLE__)
 #define MIRU_METAL //Use Metal?
 #elif defined(__linux__) && !defined(__ANDROID__)
 #define MIRU_VULKAN
 #elif defined (__ANDROID__) && (__ANDROID_API__ >= 24)
 #define MIRU_VULKAN
+#endif
+
 #endif
 
 //D3D12

@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "crossplatform/Buffer.h"
 
 namespace miru
@@ -43,3 +44,4 @@ namespace vulkan
 	};
 }
 }
+#endif

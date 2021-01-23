@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "crossplatform/DescriptorPoolSet.h"
 #include "crossplatform/Buffer.h"
 
@@ -63,3 +64,4 @@ namespace vulkan
 	};
 }
 }
+#endif

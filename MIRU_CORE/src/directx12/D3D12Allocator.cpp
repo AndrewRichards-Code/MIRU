@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Allocator.h"
 #include "D3D12Context.h"
 
@@ -115,3 +116,4 @@ D3D12_HEAP_PROPERTIES Allocator::GetHeapProperties()
 
 	return result;
 }
+#endif

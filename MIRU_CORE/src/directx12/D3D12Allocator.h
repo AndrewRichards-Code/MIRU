@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_D3D12)
 #include "miru_core_common.h"
 #include "crossplatform/Allocator.h"
 
@@ -6,7 +7,7 @@ namespace miru
 {
 namespace d3d12
 {
-	class Allocator : public crossplatform::Allocator
+	class Allocator final : public crossplatform::Allocator
 	{
 		//Methods
 	public:
@@ -30,3 +31,4 @@ namespace d3d12
 	};
 }
 }
+#endif

@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Shader.h"
 
 using namespace miru;
@@ -67,8 +68,12 @@ void Shader::D3D12ShaderReflection()
 	//Load dxcompiler.dll
 	if (!s_HModeuleDXCompiler)
 	{
+		#if defined(MIRU_WIN64_UWP)
+		s_HModeuleDXCompiler = LoadPackagedLibrary(L"dxcompiler.dll", 0);
+		#else
 		s_DXCompilerFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxcompiler.dll";
 		s_HModeuleDXCompiler = LoadLibraryA(s_DXCompilerFullpath.generic_string().c_str());
+		#endif
 		if (!s_HModeuleDXCompiler)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXCompilerFullpath.generic_string() + "'.";
@@ -92,6 +97,8 @@ void Shader::D3D12ShaderReflection()
 	uint32_t partIndex;
 	uint32_t dxil_kind = 0x4c495844; //MAKEFOURCC('D', 'X', 'I', 'L')
 	dxc_container_reflection->FindFirstPartKind(dxil_kind, &partIndex);
+	if (partIndex != 4)
+		return;
 
 	ID3D12ShaderReflection* shader_reflection;
 	dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection));
@@ -305,3 +312,4 @@ void Shader::D3D12ShaderReflection()
 	MIRU_D3D12_SAFE_RELEASE(dxc_shader_bin);
 	MIRU_D3D12_SAFE_RELEASE(dxc_library);
 }
+#endif

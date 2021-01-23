@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Swapchain.h"
 #include "D3D12Context.h"
 
@@ -29,7 +30,11 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SwapchainDesc.Flags = m_CI.vSync == false ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 	IDXGISwapChain1* swapchain;
+	#if defined(MIRU_WIN64_UWP)
+	MIRU_ASSERT(m_Factory->CreateSwapChainForCoreWindow(cmdQueue, reinterpret_cast<IUnknown*>(m_CI.pWindow), &m_SwapchainDesc, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
+	#else
 	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
+	#endif
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
 	D3D12SetName(m_Swapchain, m_CI.debugName);
 	MIRU_ASSERT(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
@@ -121,3 +126,4 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height, static_cast<uint32_t>(m_Format));
 	m_Resized = true;
 }
+#endif

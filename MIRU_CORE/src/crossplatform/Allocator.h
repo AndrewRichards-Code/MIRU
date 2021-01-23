@@ -18,8 +18,12 @@ namespace crossplatform
 		size_t				rowPitch;
 		size_t				rowPadding;
 
+		#if defined(MIRU_D3D12)
 		inline const D3D12MA::Allocation* GetD3D12MAAllocaton() const  { return reinterpret_cast<D3D12MA::Allocation*>(nativeAllocation); }
+		#endif
+		#if defined(MIRU_VULKAN)
 		inline const VmaAllocation& GetVmaAllocation() const { return *reinterpret_cast<VmaAllocation*>(nativeAllocation); }
+		#endif
 	};
 
 	class Allocator
@@ -66,8 +70,12 @@ namespace crossplatform
 		virtual void SubmitData(const Allocation& allocation, size_t size, void* data) = 0;
 		virtual void AccessData(const Allocation& allocation, size_t size, void* data) = 0;
 
+		#if defined(MIRU_D3D12)
 		inline D3D12MA::Allocator* GetD3D12MAAllocator() { return reinterpret_cast<D3D12MA::Allocator*>(GetNativeAllocator()); }
-		inline VmaAllocator GetVmaAllocator() { return *reinterpret_cast<VmaAllocator*>(GetNativeAllocator()); }
+		#endif
+		#if defined(MIRU_VULKAN)
+		inline VmaAllocator GetVmaAllocator() { return *reinterpret_cast<VmaAllocator*>(GetNativeAllocator()); };
+		#endif
 
 		//Members
 	protected:

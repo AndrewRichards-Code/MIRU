@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "crossplatform/CommandPoolBuffer.h"
 
 namespace miru
@@ -82,3 +83,4 @@ namespace vulkan
 	};
 }
 }
+#endif

@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_D3D12)
 #include "crossplatform/Context.h"
 
 namespace miru
@@ -36,6 +37,7 @@ namespace d3d12
 	public:
 		//Debug
 		ID3D12Debug* m_Debug;
+		ID3D12InfoQueue* m_InfoQueue;
 
 		//Factory
 		IDXGIFactory4* m_Factory;
@@ -56,3 +58,4 @@ namespace d3d12
 	};
 }
 }
+#endif

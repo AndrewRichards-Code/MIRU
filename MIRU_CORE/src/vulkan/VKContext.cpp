@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKContext.h"
 
 using namespace miru;
@@ -248,3 +249,4 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevices[i], &m_PhysicalDeviceMemoryProperties[i]);
 	}
 }
+#endif

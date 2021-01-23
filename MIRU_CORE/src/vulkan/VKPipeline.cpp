@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKPipeline.h"
 #include "VKDescriptorPoolSet.h"
 #include "VKShader.h"
@@ -384,3 +385,4 @@ VkFormat Pipeline::ToVkFormat(crossplatform::VertexType type)
 		return VK_FORMAT_UNDEFINED;
 	}
 }
+#endif

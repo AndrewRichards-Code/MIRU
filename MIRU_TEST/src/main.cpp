@@ -123,7 +123,7 @@ int main()
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
 		"vs_main",
 		"vert",
-		"6_4",
+		"5_1",
 		{},
 		true,
 		true,

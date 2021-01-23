@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKDescriptorPoolSet.h"
 #include "VKBuffer.h"
 #include "VKImage.h"
@@ -190,3 +191,4 @@ void DescriptorSet::Update()
 
 	vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(m_WriteDescriptorSets.size()), m_WriteDescriptorSets.data(), 0, nullptr);
 }
+#endif

@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKImage.h"
 
 using namespace miru;
@@ -355,3 +356,4 @@ Sampler::~Sampler()
 
 	vkDestroySampler(m_Device, m_Sampler, nullptr);
 }
+#endif

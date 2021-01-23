@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_D3D12)
 #include "crossplatform/Framebuffer.h"
 #include "crossplatform/DescriptorPoolSet.h"
 
@@ -37,3 +38,4 @@ namespace d3d12
 	};
 }
 }
+#endif

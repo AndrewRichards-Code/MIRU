@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Buffer.h"
 #include "D3D12Allocator.h"
 
@@ -161,3 +162,4 @@ BufferView::~BufferView()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
+#endif

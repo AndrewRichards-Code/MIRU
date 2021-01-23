@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKCommandPoolBuffer.h"
 
 #include "VKContext.h"
@@ -617,3 +618,4 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 	vkCmdResolveImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), 
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageResolve.size()), vkImageResolve.data());
 }
+#endif
