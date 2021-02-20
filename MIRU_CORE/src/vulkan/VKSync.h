@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "crossplatform/Sync.h"
 
 namespace miru
@@ -73,3 +74,4 @@ namespace vulkan
 	};
 }
 }
+#endif

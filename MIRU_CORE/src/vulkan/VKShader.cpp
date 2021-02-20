@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKShader.h"
 
 using namespace miru;
@@ -284,3 +285,4 @@ void Shader::SpirvCrossReflection()
 	push_back_ResourceBindingDescription(resources.separate_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
 	push_back_ResourceBindingDescription(resources.separate_samplers, crossplatform::DescriptorType::SAMPLER);
 }
+#endif

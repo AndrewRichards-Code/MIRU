@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "miru_core_common.h"
 #include "crossplatform/Allocator.h"
 
@@ -6,7 +7,7 @@ namespace miru
 {
 namespace vulkan
 {
-	class Allocator : public crossplatform::Allocator
+	class Allocator final : public crossplatform::Allocator
 	{
 		//Methods
 	public:
@@ -32,3 +33,4 @@ namespace vulkan
 	};
 }
 }
+#endif

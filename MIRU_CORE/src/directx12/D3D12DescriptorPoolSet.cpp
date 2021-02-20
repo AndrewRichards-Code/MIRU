@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
@@ -393,4 +394,4 @@ void DescriptorSet::Update()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 }
-
+#endif

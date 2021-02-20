@@ -35,6 +35,7 @@ void Shader::Recompile()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	#if !defined(MIRU_WIN64_UWP)
 	int returnCode = Call_MIRU_SHADER_COMPILER();
 	if (returnCode != 0)
 	{
@@ -44,6 +45,7 @@ void Shader::Recompile()
 	{
 		Reconstruct();
 	}
+	#endif
 }
 
 void Shader::GetShaderByteCode()
@@ -81,6 +83,7 @@ void Shader::GetShaderByteCode()
 	binFilepath = binFilepath.replace(binFilepath.find_last_of('.'), 4, shaderBinaryFileExtension);
 
 	//Check shader exist and the binary is upto date.
+	#if !defined(MIRU_WIN64_UWP)
 	bool buildShader = true;
 	if (std::filesystem::exists(std::filesystem::path(binFilepath)) && std::filesystem::exists(std::filesystem::path(m_CI.recompileArguments.hlslFilepath)))
 	{
@@ -95,6 +98,7 @@ void Shader::GetShaderByteCode()
 			MIRU_ASSERT(returnCode, "ERROR: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
 		}
 	}
+	#endif
 
 	std::ifstream stream(binFilepath, std::ios::ate | std::ios::binary);
 	if (!stream.is_open())

@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_VULKAN)
 #include "crossplatform/Shader.h"
 
 namespace miru
@@ -28,3 +29,4 @@ namespace vulkan
 	};
 }
 }
+#endif

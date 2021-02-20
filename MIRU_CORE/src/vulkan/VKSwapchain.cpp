@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKSwapchain.h"
 #include "VKContext.h"
 
@@ -226,3 +227,4 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 	m_Resized = true;
 }
+#endif

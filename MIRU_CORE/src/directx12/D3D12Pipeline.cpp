@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Shader.h"
@@ -466,3 +467,4 @@ D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(crossplatform::LogicOp logic)
 		return D3D12_LOGIC_OP_SET;
 	}
 }
+#endif

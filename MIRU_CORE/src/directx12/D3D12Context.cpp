@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_D3D12)
 #include "D3D12Context.h"
 #include "D3D12Sync.h"
 
@@ -19,7 +20,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 #if defined(_DEBUG)
 	MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
 	m_Debug->EnableDebugLayer();
+	#if !defined(MIRU_WIN64_UWP)
 	reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
+	#endif
 #endif
 
 	//Create Factory
@@ -35,8 +38,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-		s_DXILFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxil.dll";
+#if defined(MIRU_WIN64_UWP)
+		s_HModeuleDXIL = LoadPackagedLibrary(L"dxil.dll", 0);
+#else
+		s_DXILFullpath = std::string(PROJECT_DIR) + "redist\\dxc\\lib\\x64\\dxil.dll";
 		s_HModeuleDXIL = LoadLibraryA(s_DXILFullpath.generic_string().c_str());
+#endif
 		if (!s_HModeuleDXIL)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
@@ -44,16 +51,49 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 	s_RefCount++;
-	
-	//Create Device
+
+	//Check provide feature level
 	uint32_t featureLevel = D3D_FEATURE_LEVEL_11_0;
 	if (m_CI.api_version_major == 12)
 		featureLevel += 0x1000;
 	if (m_CI.api_version_minor == 1)
 		featureLevel += 0x0100;
 
+	D3D_FEATURE_LEVEL featureLevels[4] = { D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
+	HRESULT res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, __uuidof(ID3D12Device), nullptr);
+	if (res != S_OK)
+	{
+		for (size_t i = 0; i < 4; i++)
+		{
+			featureLevel = featureLevels[i];
+			res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, __uuidof(ID3D12Device), nullptr);
+			if (res == S_FALSE)
+				break;
+			else
+				continue;
+		}
+	}
+
+	//Create Device
 	MIRU_ASSERT(D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device."); //We only use the first PhysicalDevice
 	D3D12SetName(m_Device, m_CI.deviceDebugName);
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featLevels = { _countof(featureLevels), featureLevels, D3D_FEATURE_LEVEL_11_0 };
+	HRESULT hr = m_Device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
+
+	//Create Info Queue
+	m_Device->QueryInterface(IID_PPV_ARGS(&m_InfoQueue));
+	if (m_InfoQueue)
+	{
+		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+
+		D3D12_MESSAGE_ID filteredMessageIDs[2] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE };
+		D3D12_INFO_QUEUE_FILTER filter = {};
+		filter.DenyList.pIDList = filteredMessageIDs;
+		filter.DenyList.NumIDs = _countof(filteredMessageIDs);
+		m_InfoQueue->AddStorageFilterEntries(&filter);
+	}
 
 	//Create Queues
 	m_QueueDescs.resize(3);
@@ -100,7 +140,6 @@ Context::~Context()
 
 	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_IGNORE_INTERNAL);
 	debugDevice->Release();
-
 }
 
 Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)
@@ -142,3 +181,4 @@ void Context::DeviceWaitIdle()
 		fence = nullptr;
 	}
 }
+#endif

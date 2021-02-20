@@ -1,4 +1,5 @@
 #pragma once
+#if defined(MIRU_D3D12)
 #include "miru_core_common.h"
 #include "crossplatform/Pipeline.h"
 
@@ -53,3 +54,4 @@ namespace d3d12
 	};
 }
 }
+#endif

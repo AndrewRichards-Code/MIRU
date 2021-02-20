@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKFramebuffer.h"
 #include "VKPipeline.h"
 #include "VKImage.h"
@@ -38,3 +39,4 @@ Framebuffer::~Framebuffer()
 
 	vkDestroyFramebuffer(m_Device, m_Framebuffer, nullptr);
 }
+#endif

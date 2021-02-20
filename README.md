@@ -52,10 +52,13 @@ This repository is under active development and is not currently intended for co
 Contains the core functionality of the Low level Graphics API wrapper. Provide path to VulkanSDK; Build as static library; Dynamic Runtime Linking (MD).
 
 ### MIRU_SHADER_COMPILER: 
-A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using glslangValidator and DXC. Provide paths to glslangValidator and DXC; Build as executable; Dynamic Runtime Linking (MD).
+A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using glslangValidator and DXC/FXC. Provide paths to glslangValidator and DXC/FXC; Build as executable; Dynamic Runtime Linking (MD).
 
 ### MIRU_TEST: 
 Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD).
+
+### MIRU_TEST_UWP:
+A UWP version of the MIRU_TEST project. MIRU_CORE should be built with the define MIRU_WIN64_UWP. Build as executable; Dynamic Runtime Linking (MD). - WIP
 
 ### MIRU_ANDRIOD/MIRU_TEST:
 An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded as native activity, and libMIRU_CORE.a;
@@ -66,6 +69,7 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Toolset: v142 
 - Windows SDK: 10.0.19041.0
 - ISO C++ 17
+- Microsoft.Windows.CppWinRT NuGet package (For MIRU_TEST_UWP only)
 
 ### Linux x64:
 - No project available to build.

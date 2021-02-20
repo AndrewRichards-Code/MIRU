@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKSync.h"
 
 #include "VKBuffer.h"
@@ -199,3 +200,4 @@ Barrier::~Barrier()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 }
+#endif

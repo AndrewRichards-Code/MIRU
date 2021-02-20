@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKBuffer.h"
 #include "crossplatform/Allocator.h"
 
@@ -114,3 +115,4 @@ BufferView::~BufferView()
 		vkDestroyBufferView(m_Device, m_BufferView, nullptr);
 	}
 }
+#endif

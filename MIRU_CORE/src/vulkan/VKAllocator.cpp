@@ -1,4 +1,5 @@
 #include "miru_core_common.h"
+#if defined(MIRU_VULKAN)
 #include "VKAllocator.h"
 #include "VKContext.h"
 
@@ -176,3 +177,4 @@ uint32_t Allocator::GetQueueFamilyIndex(VkQueueFlagBits queueType)
 	}
 	return 0;
 }*/
+#endif
