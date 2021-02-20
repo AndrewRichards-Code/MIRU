@@ -510,6 +510,14 @@ void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t in
 	vkCmdDrawIndexed(m_CmdBuffers[index], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
+void CommandBuffer::Draw(uint32_t index, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDraw(m_CmdBuffers[index], vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
 void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

@@ -301,6 +301,39 @@ Pipeline::~Pipeline()
 	MIRU_D3D12_SAFE_RELEASE(m_SerializedRootSignatureError);
 }
 
+D3D12_PRIMITIVE_TOPOLOGY Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	switch(topology)
+	{
+	case crossplatform::PrimitiveTopology::POINT_LIST:
+		return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	case crossplatform::PrimitiveTopology::LINE_LIST:
+		return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+	case crossplatform::PrimitiveTopology::LINE_STRIP:
+		return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+	case crossplatform::PrimitiveTopology::TRIANGLE_LIST:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	case crossplatform::PrimitiveTopology::TRIANGLE_STRIP:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+	case crossplatform::PrimitiveTopology::TRIANGLE_FAN:
+		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	case crossplatform::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
+		return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
+	case crossplatform::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
+		return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
+	case crossplatform::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
+	case crossplatform::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
+		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
+	case crossplatform::PrimitiveTopology::PATCH_LIST:
+		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	default:
+		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	}
+}
+
 DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

@@ -25,6 +25,8 @@ namespace d3d12
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
+		static D3D12_PRIMITIVE_TOPOLOGY ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology);
+
 	private:
 		DXGI_FORMAT ToDXGI_FORMAT(crossplatform::VertexType type);
 		D3D12_BLEND ToD3D12_BLEND(crossplatform::BlendFactor blend);
