@@ -1,4 +1,5 @@
 #pragma once
+#include "crossplatform/AccelerationStructure.h"
 #include "crossplatform/Allocator.h"
 #include "crossplatform/Buffer.h"
 #include "crossplatform/CommandPoolBuffer.h"

@@ -3,6 +3,7 @@
 
 #include "Pipeline.h"
 #include "Buffer.h"
+#include "AccelerationStructure.h"
 
 namespace miru
 {
@@ -111,6 +112,8 @@ namespace crossplatform
 		virtual void Draw(uint32_t index, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) = 0;
 
 		virtual void Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
+
+		virtual void BuildAccelerationStructure(uint32_t index, const std::vector<Ref<AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
 
 		virtual void CopyBuffer(uint32_t index, const Ref<Buffer>& srcBuffer, const Ref<Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
 		virtual void CopyImage(uint32_t index, const Ref<Image>& srcImage, const Ref<Image>& dstImage, const std::vector<Image::Copy>& copyRegions) = 0;

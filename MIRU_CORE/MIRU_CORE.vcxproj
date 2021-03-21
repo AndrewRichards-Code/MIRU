@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -106,6 +106,7 @@
   <ItemGroup>
     <ClInclude Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.h" />
     <ClInclude Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.h" />
+    <ClInclude Include="src\crossplatform\AccelerationStructure.h" />
     <ClInclude Include="src\crossplatform\Allocator.h" />
     <ClInclude Include="src\crossplatform\Buffer.h" />
     <ClInclude Include="src\crossplatform\CommandPoolBuffer.h" />
@@ -122,6 +123,7 @@
     <ClInclude Include="src\debug\GraphicsDebugger.h" />
     <ClInclude Include="src\debug\Pix.h" />
     <ClInclude Include="src\debug\RenderDoc.h" />
+    <ClInclude Include="src\directx12\D3D12AccelerationStructure.h" />
     <ClInclude Include="src\directx12\D3D12Allocator.h" />
     <ClInclude Include="src\directx12\D3D12Buffer.h" />
     <ClInclude Include="src\directx12\D3D12CommandPoolBuffer.h" />
@@ -133,6 +135,7 @@
     <ClInclude Include="src\directx12\D3D12Shader.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
     <ClInclude Include="src\directx12\D3D12Sync.h" />
+    <ClInclude Include="src\vulkan\VKAccelerationStructure.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
     <ClInclude Include="src\vulkan\VKBuffer.h" />
     <ClInclude Include="src\vulkan\VKCommandPoolBuffer.h" />
@@ -150,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
     <ClCompile Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.cpp" />
+    <ClCompile Include="src\crossplatform\AccelerationStructure.cpp" />
     <ClCompile Include="src\crossplatform\Allocator.cpp" />
     <ClCompile Include="src\crossplatform\Buffer.cpp" />
     <ClCompile Include="src\crossplatform\CommandPoolBuffer.cpp" />
@@ -164,6 +168,7 @@
     <ClCompile Include="src\crossplatform\Swapchain.cpp" />
     <ClCompile Include="src\debug\Pix.cpp" />
     <ClCompile Include="src\debug\RenderDoc.cpp" />
+    <ClCompile Include="src\directx12\D3D12AccelerationStructure.cpp" />
     <ClCompile Include="src\directx12\D3D12Allocator.cpp" />
     <ClCompile Include="src\directx12\D3D12Buffer.cpp" />
     <ClCompile Include="src\directx12\D3D12CommandPoolBuffer.cpp" />
@@ -175,6 +180,7 @@
     <ClCompile Include="src\directx12\D3D12Shader.cpp" />
     <ClCompile Include="src\directx12\D3D12Swapchain.cpp" />
     <ClCompile Include="src\directx12\D3D12Sync.cpp" />
+    <ClCompile Include="src\vulkan\VKAccelerationStructure.cpp" />
     <ClCompile Include="src\vulkan\VKAllocator.cpp" />
     <ClCompile Include="src\vulkan\VKBuffer.cpp" />
     <ClCompile Include="src\vulkan\VKCommandPoolBuffer.cpp" />

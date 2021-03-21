@@ -63,10 +63,10 @@ void WindowUpdate()
 
 int main()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
+	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -77,7 +77,9 @@ int main()
 	contextCI.instanceLayers = { "VK_LAYER_KHRONOS_validation" };
 	contextCI.instanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
 	contextCI.deviceLayers = { "VK_LAYER_KHRONOS_validation" };
-	contextCI.deviceExtensions = { "VK_KHR_swapchain" };
+	contextCI.deviceExtensions = { "VK_KHR_swapchain", 
+		"VK_KHR_acceleration_structure", "VK_KHR_ray_tracing_pipeline", 
+		"VK_KHR_deferred_host_operations" };
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
 
@@ -204,7 +206,7 @@ int main()
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";
 	verticesBufferCI.device = context->GetDevice();
-	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
+	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.pAllocator = cpu_alloc_0;
@@ -217,7 +219,7 @@ int main()
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices Buffer";
 	indicesBufferCI.device = context->GetDevice();
-	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
+	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
 	indicesBufferCI.pAllocator = cpu_alloc_0;
@@ -252,6 +254,61 @@ int main()
 	imageCI.data = nullptr;
 	imageCI.pAllocator = gpu_alloc_0;
 	Ref<Image> image = Image::Create(&imageCI);
+
+	mat4 proj = identity<mat4>();
+	mat4 view = identity<mat4>();
+	mat4 modl = identity<mat4>();
+
+	float ubData[2 * sizeof(mat4)];
+	memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
+	memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
+
+	Buffer::CreateInfo ubCI;
+	ubCI.debugName = "Camera UB";
+	ubCI.device = context->GetDevice();
+	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
+	ubCI.size = 2 * sizeof(mat4);
+	ubCI.data = ubData;
+	ubCI.pAllocator = cpu_alloc_0;
+	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
+
+	ubCI.debugName = "Model UB";
+	ubCI.device = context->GetDevice();
+	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
+	ubCI.size = sizeof(mat4);
+	ubCI.data = &modl[0][0];
+	ubCI.pAllocator = cpu_alloc_0;
+	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
+
+#if 1
+	AccelerationStructureBuildInfo::BuildGeometryInfo asbiGBI;
+	asbiGBI.device = context->GetDevice();
+	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::BOTTOM_LEVEL;
+	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
+	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
+	asbiGBI.srcAccelerationStructure = nullptr;
+	asbiGBI.dstAccelerationStructure = nullptr;
+	asbiGBI.geometries = {
+		{
+			AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES,
+			{
+				VertexType::VEC4,
+				GetBufferDeviceAddress(context->GetDevice(), c_vb),
+				static_cast<uint64_t>(4 * sizeof(float)),
+				_countof(vertices) / 4,
+				IndexType::UINT32,
+				GetBufferDeviceAddress(context->GetDevice(), c_ib),
+				_countof(indices),
+				GetBufferDeviceAddress(context->GetDevice(), ub2)
+			},
+			AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT
+		}
+	};
+	asbiGBI.scratchData = MIRU_NULL_DEVICE_OR_HOST_ADDRESS;
+	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
+	asbiGBI.maxPrimitiveCounts = _countof(indices) / 3;
+	Ref<AccelerationStructureBuildInfo> asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+#endif
 
 	Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
 	Ref<Semaphore> transfer = Semaphore::Create(&transSemaphoreCI);
@@ -333,6 +390,26 @@ int main()
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
 
+	BufferView::CreateInfo ubViewCamCI;
+	ubViewCamCI.debugName = "Camera UBView";
+	ubViewCamCI.device = context->GetDevice();
+	ubViewCamCI.type = BufferView::Type::UNIFORM;
+	ubViewCamCI.pBuffer = ub1;
+	ubViewCamCI.offset = 0;
+	ubViewCamCI.size = 2 * sizeof(mat4);
+	ubViewCamCI.stride = 0;
+	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
+
+	BufferView::CreateInfo ubViewMdlCI;
+	ubViewMdlCI.debugName = "Model UBView";
+	ubViewMdlCI.device = context->GetDevice();
+	ubViewMdlCI.type = BufferView::Type::UNIFORM;
+	ubViewMdlCI.pBuffer = ub2;
+	ubViewMdlCI.offset = 0;
+	ubViewMdlCI.size = sizeof(mat4);
+	ubViewMdlCI.stride = 0;
+	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
+
 	Sampler::CreateInfo samplerCI;
 	samplerCI.debugName = "Default Sampler";
 	samplerCI.device = context->GetDevice();
@@ -352,49 +429,6 @@ int main()
 	samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
 	samplerCI.unnormalisedCoordinates = false;
 	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
-
-	mat4 proj = identity<mat4>();
-	mat4 view = identity<mat4>();
-	mat4 modl = identity<mat4>();
-	
-	float ubData[2 * sizeof(mat4)];
-	memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
-	memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
-
-	Buffer::CreateInfo ubCI;
-	ubCI.debugName = "Camera UB";
-	ubCI.device = context->GetDevice();
-	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
-	ubCI.size = 2 * sizeof(mat4);
-	ubCI.data = ubData;
-	ubCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
-	ubCI.debugName = "Model UB";
-	ubCI.device = context->GetDevice();
-	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
-	ubCI.size = sizeof(mat4);
-	ubCI.data = &modl[0][0];
-	ubCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
-
-	BufferView::CreateInfo ubViewCamCI;
-	ubViewCamCI.debugName = "Camera UBView";
-	ubViewCamCI.device = context->GetDevice();
-	ubViewCamCI.type = BufferView::Type::UNIFORM;
-	ubViewCamCI.pBuffer = ub1;
-	ubViewCamCI.offset = 0;
-	ubViewCamCI.size = 2 * sizeof(mat4);
-	ubViewCamCI.stride = 0;
-	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
-	BufferView::CreateInfo ubViewMdlCI;
-	ubViewMdlCI.debugName = "Model UBView";
-	ubViewMdlCI.device = context->GetDevice();
-	ubViewMdlCI.type = BufferView::Type::UNIFORM;
-	ubViewMdlCI.pBuffer = ub2;
-	ubViewMdlCI.offset = 0;
-	ubViewMdlCI.size = sizeof(mat4);
-	ubViewMdlCI.stride = 0;
-	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
 	Image::CreateInfo colourCI;
 	colourCI.debugName = "Colour Image MSAA";

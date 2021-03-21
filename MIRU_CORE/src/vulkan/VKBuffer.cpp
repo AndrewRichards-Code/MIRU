@@ -52,37 +52,6 @@ Buffer::~Buffer()
 	vmaDestroyBuffer(m_CI.pAllocator->GetVmaAllocator(), m_Buffer, m_VmaAllocation);
 }
 
-VkBufferUsageFlags Buffer::ToVKBufferType(Buffer::UsageBit type)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	switch (type)
-	{
-	case Buffer::UsageBit::TRANSFER_SRC_BIT:
-		return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	case Buffer::UsageBit::TRANSFER_DST_BIT:
-		return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-	case Buffer::UsageBit::UNIFORM_TEXEL_BIT:
-		return VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
-	case Buffer::UsageBit::STORAGE_TEXEL_BIT:
-		return VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
-	case Buffer::UsageBit::UNIFORM_BIT:
-		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	case Buffer::UsageBit::STORAGE_BIT:
-		return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	case Buffer::UsageBit::INDEX_BIT:
-		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-	case Buffer::UsageBit::VERTEX_BIT:
-		return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	case Buffer::UsageBit::INDIRECT_BIT:
-		return VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-	case Buffer::UsageBit::TRANSFORM_FEEDBACK_BIT:
-		return VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
-	default:
-		return 0;
-	}
-}
-
 BufferView::BufferView(CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
 {

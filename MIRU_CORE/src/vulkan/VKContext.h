@@ -17,7 +17,17 @@ namespace vulkan
 			std::vector<VkPhysicalDeviceProperties> m_PhysicalDeviceProperties;
 			std::vector<VkPhysicalDeviceMemoryProperties> m_PhysicalDeviceMemoryProperties;
 
-			PhysicalDevices(const VkInstance& instance);
+			#if defined(VK_VERSION_1_1)
+			std::vector<VkPhysicalDeviceFeatures2> m_PhysicalDeviceFeatures2;
+			#endif
+			#if defined(VK_VERSION_1_2)
+			std::vector<VkPhysicalDeviceVulkan12Features> m_PhysicalDeviceVulkan12Features;
+			#endif
+			#if defined(VK_KHR_ray_tracing_pipeline)
+			std::vector<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> m_PhysicalDeviceRayTracingPipelineFeatures;
+			#endif
+
+			PhysicalDevices(const VkInstance& instance, uint32_t apiVersion);
 
 			PhysicalDevices() {};
 			PhysicalDevices(const PhysicalDevices& physicalDevice) 
@@ -26,6 +36,16 @@ namespace vulkan
 				m_PhysicalDeviceFeatures = physicalDevice.m_PhysicalDeviceFeatures;
 				m_PhysicalDeviceProperties = physicalDevice.m_PhysicalDeviceProperties;
 				m_PhysicalDeviceMemoryProperties = physicalDevice.m_PhysicalDeviceMemoryProperties;
+
+				#if defined(VK_VERSION_1_1)
+				m_PhysicalDeviceFeatures2 = physicalDevice.m_PhysicalDeviceFeatures2;
+				#endif
+				#if defined(VK_VERSION_1_2)
+				m_PhysicalDeviceVulkan12Features = physicalDevice.m_PhysicalDeviceVulkan12Features;
+				#endif
+				#if defined(VK_KHR_ray_tracing_pipeline)
+				m_PhysicalDeviceRayTracingPipelineFeatures = physicalDevice.m_PhysicalDeviceRayTracingPipelineFeatures;
+				#endif
 			};
 		};
 
@@ -37,6 +57,7 @@ namespace vulkan
 		void* GetDevice() override { return &m_Device; }
 		void DeviceWaitIdle() override { vkDeviceWaitIdle(m_Device); };
 
+		bool IsActive(std::vector<const char*> list, const char* name);
 
 		//Members
 	public:

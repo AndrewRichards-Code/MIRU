@@ -10,6 +10,7 @@
 #include "VKPipeline.h"
 #include "VKFramebuffer.h"
 #include "VKDescriptorPoolSet.h"
+#include "VKAccelerationStructure.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -525,6 +526,26 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdDispatch(m_CmdBuffers[index], groupCountX, groupCountY, groupCountZ);
+}
+
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<crossplatform::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<crossplatform::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfos;
+	vkBuildGeometryInfos.reserve(buildGeometryInfos.size());
+	for (size_t i = 0; i < buildGeometryInfos.size(); i++)
+	{
+		VkAccelerationStructureBuildGeometryInfoKHR asbgi = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfos[i])->m_ASBGI;
+		if (asbgi.geometryCount == buildRangeInfos[i].size())
+		{
+			MIRU_ASSERT(true, "ERROR: VULKAN: Size mismatch between VkAccelerationStructureBuildGeometryInfoKHR::geometryCount and buildRangeInfos[i].size().");
+		}
+		vkBuildGeometryInfos.push_back(asbgi);
+	}
+
+	vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfos.size()), vkBuildGeometryInfos.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(buildRangeInfos.data()));
 }
 
 void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)

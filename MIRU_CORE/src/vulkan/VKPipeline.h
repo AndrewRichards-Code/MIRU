@@ -34,8 +34,7 @@ namespace vulkan
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
-	private:
-		VkFormat ToVkFormat(crossplatform::VertexType type);
+		static VkFormat ToVkFormat(crossplatform::VertexType type);
 
 		//Members
 	public:

@@ -13,8 +13,12 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
 	const Ref<vulkan::Context>& context = ref_cast<vulkan::Context>(m_CI.pContext);
+	
+	bool buffer_device_address = false;
+	buffer_device_address |= context->IsActive(context->m_ActiveDeviceExtensions, "VK_KHR_buffer_device_address");
+	buffer_device_address |= (context->m_AI.apiVersion >= VK_API_VERSION_1_2);
 
-	m_AI.flags = 0;
+	m_AI.flags = buffer_device_address ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
 	m_AI.physicalDevice = context->m_PhysicalDevices.m_PhysicalDevices[0];
 	m_AI.device = m_Device;
 	m_AI.preferredLargeHeapBlockSize = static_cast<VkDeviceSize>(m_CI.blockSize);

@@ -109,12 +109,31 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkCreateInstance(&m_InstanceCI, nullptr, &m_Instance), "ERROR: VULKAN: Failed to create Instance.");
 
 	//PhysicalDevice
-	m_PhysicalDevices = PhysicalDevices(m_Instance);
-
-	//Devices
+	m_PhysicalDevices = PhysicalDevices(m_Instance, apiVersion);
 	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PhysicalDevices[0]; //We only use the first PhysicalDevice
+
+	//PhysicalDeviceFeatures
 	VkPhysicalDeviceFeatures physicalDeviceFeatures = m_PhysicalDevices.m_PhysicalDeviceFeatures[0];
 
+	void* deviceCI_pNext = nullptr;
+#if defined(VK_KHR_ray_tracing_pipeline)
+	if (apiVersion >= VK_API_VERSION_1_1)
+	{
+		deviceCI_pNext = &(m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0]);
+
+#if defined(VK_VERSION_1_2)
+		if (apiVersion >= VK_API_VERSION_1_2)
+		{
+			VkPhysicalDeviceVulkan12Features& physicalDeviceVulkan12Features = m_PhysicalDevices.m_PhysicalDeviceVulkan12Features[0];
+			physicalDeviceVulkan12Features.pNext = &(m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0]);
+			deviceCI_pNext = &physicalDeviceVulkan12Features;
+		}
+#endif
+
+	}
+#endif
+
+	//Device
 	uint32_t queueFamilyPropertiesCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyPropertiesCount, nullptr);
 	m_QueueFamilyProperties.resize(queueFamilyPropertiesCount);
@@ -168,7 +187,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	}
 
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	m_DeviceCI.pNext = nullptr;
+	m_DeviceCI.pNext = deviceCI_pNext;
 	m_DeviceCI.flags = 0;
 	m_DeviceCI.queueCreateInfoCount = static_cast<uint32_t>(m_DeviceQueueCIs.size());
 	m_DeviceCI.pQueueCreateInfos = m_DeviceQueueCIs.data();
@@ -180,11 +199,37 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
-	vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT");
+	//Load Extension PFN
+	#define _STR(str) #str
+	#define MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(ext) if(IsActive(m_ActiveInstanceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Instance); }
+	#define MIRU_VULKAN_LOAD_DEVICE_EXTENSION(ext) if(IsActive(m_ActiveDeviceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Device); }
+
+#if defined(VK_KHR_acceleration_structure)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_acceleration_structure);
+#endif
+
+#if defined(VK_KHR_buffer_device_address)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_buffer_device_address);
+#endif
+
+#if defined(VK_KHR_deferred_host_operations)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_deferred_host_operations);
+#endif
+
+#if defined(VK_KHR_ray_tracing_pipeline)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_ray_tracing_pipeline);
+#endif
+	
+#if defined(VK_EXT_debug_utils)
+	MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(EXT_debug_utils);
+#endif
+
+	//Set Names
 	//VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
 	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName));
 	VKSetName<VkDevice>(m_Device, (uint64_t)m_Device, m_CI.deviceDebugName);
 	
+	//Device Queues
 	for (size_t i = 0; i < m_DeviceQueueCIs.size(); i++)
 	{
 		std::vector<VkQueue>localQueues;
@@ -217,7 +262,21 @@ Context::~Context()
 	vkDestroyInstance(m_Instance, nullptr);
 }
 
-Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
+bool Context::IsActive(std::vector<const char*> list, const char* name)
+{
+	bool found = false;
+	for (auto& item : list)
+	{
+		if (strcmp(name, item) == 0)
+		{
+			found = true;
+			break;
+		}
+	}
+	return found;
+}
+
+Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t apiVersion)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -242,11 +301,51 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 	m_PhysicalDeviceFeatures.resize(m_PhysicalDevices.size());
 	m_PhysicalDeviceProperties.resize(m_PhysicalDevices.size());
 	m_PhysicalDeviceMemoryProperties.resize(m_PhysicalDevices.size());
+	
+	#if defined(VK_VERSION_1_1)
+	m_PhysicalDeviceFeatures2.resize(m_PhysicalDevices.size());
+	#endif
+	#if defined(VK_VERSION_1_2)
+	m_PhysicalDeviceVulkan12Features.resize(m_PhysicalDevices.size());
+	#endif
+	#if defined(VK_KHR_ray_tracing_pipeline)
+	m_PhysicalDeviceRayTracingPipelineFeatures.resize(m_PhysicalDevices.size());
+	#endif
+
 	for (size_t i = 0; i < m_PhysicalDevices.size(); i++)
 	{
 		vkGetPhysicalDeviceFeatures(m_PhysicalDevices[i], &m_PhysicalDeviceFeatures[i]);
 		vkGetPhysicalDeviceProperties(m_PhysicalDevices[i], &m_PhysicalDeviceProperties[i]);
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevices[i], &m_PhysicalDeviceMemoryProperties[i]);
+		
+		#if defined(VK_KHR_ray_tracing_pipeline)
+		m_PhysicalDeviceRayTracingPipelineFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+		m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = nullptr;
+		#endif
+
+		#if defined(VK_VERSION_1_2)
+		m_PhysicalDeviceVulkan12Features[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+			#if defined(VK_KHR_ray_tracing_pipeline)
+			m_PhysicalDeviceVulkan12Features[i].pNext = &m_PhysicalDeviceRayTracingPipelineFeatures[i];
+			#else		
+			m_PhysicalDeviceVulkan12Features[i].pNext = nullptr;
+			#endif
+		#endif
+
+		#if defined(VK_VERSION_1_1)
+		m_PhysicalDeviceFeatures2[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			#if defined(VK_VERSION_1_2)
+			m_PhysicalDeviceFeatures2[i].pNext = &m_PhysicalDeviceVulkan12Features[i];
+			#else	
+			m_PhysicalDeviceFeatures2[i].pNext = nullptr
+			#endif
+		#endif
+		
+		if (apiVersion >= VK_API_VERSION_1_2)
+		{
+			vkGetPhysicalDeviceFeatures2(m_PhysicalDevices[i], &m_PhysicalDeviceFeatures2[i]);
+		}
 	}
 }
+
 #endif

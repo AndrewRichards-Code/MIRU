@@ -9,6 +9,7 @@
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Framebuffer.h"
+#include "D3D12AccelerationStructure.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -745,9 +746,9 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
 	}
-	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING_NV)
+	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: PipelineType::RAY_TRACING_NV is not supported.")
+		MIRU_ASSERT(true, "ERROR: D3D12: PipelineType::RAY_TRACING is not supported.")
 	}
 	else
 	{
@@ -893,6 +894,21 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<crossplatform::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<crossplatform::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	for (auto& buildGeometryInfo : buildGeometryInfos)
+	{
+		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
+		desc.DestAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(buildGeometryInfo->GetBuildGeometryInfo().dstAccelerationStructure->GetBufferDeviceAddress());
+		desc.Inputs = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfo)->m_BRASI;
+		desc.SourceAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(buildGeometryInfo->GetBuildGeometryInfo().srcAccelerationStructure->GetBufferDeviceAddress());
+		desc.ScratchAccelerationStructureData = buildGeometryInfo->GetBuildGeometryInfo().scratchData.deviceAddress;
+		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+	}
+}
 
 void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 
 {
