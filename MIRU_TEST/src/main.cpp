@@ -63,8 +63,8 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
@@ -308,6 +308,45 @@ int main()
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
 	asbiGBI.maxPrimitiveCounts = _countof(indices) / 3;
 	Ref<AccelerationStructureBuildInfo> asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+
+	Buffer::CreateInfo asBufferCI;
+	asBufferCI.debugName = "BLASBuffer";
+	asBufferCI.device = context->GetDevice();
+	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	asBufferCI.size = asbi->GetBuildSizesInfo().accelerationStructureSize;
+	asBufferCI.data = nullptr;
+	asBufferCI.pAllocator = gpu_alloc_0;
+	Ref<Buffer> asBuffer = Buffer::Create(&asBufferCI);
+
+	Buffer::CreateInfo scratchBufferCI;
+	scratchBufferCI.debugName = "ScratchBuffer";
+	scratchBufferCI.device = context->GetDevice();
+	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	scratchBufferCI.size = asbi->GetBuildSizesInfo().buildScratchSize;
+	scratchBufferCI.data = nullptr;
+	scratchBufferCI.pAllocator = gpu_alloc_0;
+	Ref<Buffer> scratchBuffer = Buffer::Create(&scratchBufferCI);
+
+	AccelerationStructure::CreateInfo asCI;
+	asCI.debugName = "BLAS";
+	asCI.device = context->GetDevice();
+	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
+	asCI.buffer = asBuffer;
+	asCI.offset = 0;
+	asCI.size = asBufferCI.size;
+	asCI.type = AccelerationStructure::Type::BOTTOM_LEVEL;
+	asCI.deviceAddress = MIRU_NULL_DEVICE_ADDRESS;
+	Ref<AccelerationStructure> blas = AccelerationStructure::Create(&asCI);
+
+	asbiGBI.dstAccelerationStructure = blas;
+	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer);
+	asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+
+	AccelerationStructureBuildInfo::BuildRangeInfo bri;
+	bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
+	bri.primitiveOffset = 0;
+	bri.firstVertex = 0;
+	bri.transformOffset = 0;
 #endif
 
 	Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
@@ -357,6 +396,8 @@ int main()
 		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
+
+		cmdBuffer->BuildAccelerationStructure(2, { asbi }, { { bri } });
 
 		cmdBuffer->End(2);
 	}

@@ -17,8 +17,9 @@ namespace crossplatform
 		DeviceAddress	deviceAddress;
 		const void*		hostAddress;
 	};
+	#define MIRU_NULL_DEVICE_ADDRESS  0
 	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS { 0 }
-	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS_CONST MIRU_NULL_DEVICE_OR_HOST_ADDRESS)
+	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS_CONST MIRU_NULL_DEVICE_OR_HOST_ADDRESS
 
 	struct TransformMatrix
 	{
@@ -180,13 +181,15 @@ namespace crossplatform
 			BOTTOM_LEVEL,
 			GENERIC,
 		};
+		enum class FlagBit : uint32_t
+		{
+			NONE_BIT = 0x00000000,
+			DEVICE_ADDRESS_CAPTURE_REPLAY_BIT = 0x00000001
+		};
 		
 		struct CreateInfo
 		{
-			enum class FlagBit : uint32_t
-			{
-				DEVICE_ADDRESS_CAPTURE_REPLAY_BIT = 0x00000001
-			};
+			
 
 			std::string			debugName;
 			void*				device;

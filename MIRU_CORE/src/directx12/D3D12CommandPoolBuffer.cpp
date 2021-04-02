@@ -901,11 +901,14 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	CHECK_VALID_INDEX_RETURN(index);
 	for (auto& buildGeometryInfo : buildGeometryInfos)
 	{
+		const AccelerationStructureBuildInfo::BuildGeometryInfo& bgi = buildGeometryInfo->GetBuildGeometryInfo();
+
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.DestAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(buildGeometryInfo->GetBuildGeometryInfo().dstAccelerationStructure->GetBufferDeviceAddress());
+		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.dstAccelerationStructure->GetBufferDeviceAddress()) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.Inputs = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfo)->m_BRASI;
-		desc.SourceAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(buildGeometryInfo->GetBuildGeometryInfo().srcAccelerationStructure->GetBufferDeviceAddress());
-		desc.ScratchAccelerationStructureData = buildGeometryInfo->GetBuildGeometryInfo().scratchData.deviceAddress;
+		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.srcAccelerationStructure->GetBufferDeviceAddress()) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.ScratchAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.scratchData.deviceAddress);
+		
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
 	}
 }

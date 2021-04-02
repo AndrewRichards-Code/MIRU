@@ -124,6 +124,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 #if defined(VK_VERSION_1_2)
 		if (apiVersion >= VK_API_VERSION_1_2)
 		{
+			VkPhysicalDeviceRayTracingPipelineFeaturesKHR& physicalDeviceRayTracingPipelineFeatures = m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0];
+			physicalDeviceRayTracingPipelineFeatures.pNext = &(m_PhysicalDevices.m_PhysicalDeviceAccelerationStructureFeatures[0]);
+
 			VkPhysicalDeviceVulkan12Features& physicalDeviceVulkan12Features = m_PhysicalDevices.m_PhysicalDeviceVulkan12Features[0];
 			physicalDeviceVulkan12Features.pNext = &(m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0]);
 			deviceCI_pNext = &physicalDeviceVulkan12Features;
@@ -304,12 +307,18 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 	
 	#if defined(VK_VERSION_1_1)
 	m_PhysicalDeviceFeatures2.resize(m_PhysicalDevices.size());
+	m_PhysicalDeviceProperties2.resize(m_PhysicalDevices.size());
 	#endif
 	#if defined(VK_VERSION_1_2)
 	m_PhysicalDeviceVulkan12Features.resize(m_PhysicalDevices.size());
 	#endif
+	#if defined(VK_KHR_acceleration_structure)
+	m_PhysicalDeviceAccelerationStructureFeatures.resize(m_PhysicalDevices.size());
+	m_PhysicalDeviceAccelerationStructureProperties.resize(m_PhysicalDevices.size());
+	#endif
 	#if defined(VK_KHR_ray_tracing_pipeline)
 	m_PhysicalDeviceRayTracingPipelineFeatures.resize(m_PhysicalDevices.size());
+	m_PhysicalDeviceRayTracingPipelineProperties.resize(m_PhysicalDevices.size());
 	#endif
 
 	for (size_t i = 0; i < m_PhysicalDevices.size(); i++)
@@ -318,9 +327,19 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 		vkGetPhysicalDeviceProperties(m_PhysicalDevices[i], &m_PhysicalDeviceProperties[i]);
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevices[i], &m_PhysicalDeviceMemoryProperties[i]);
 		
+		//Features2
+		#if defined(VK_KHR_acceleration_structure)
+		m_PhysicalDeviceAccelerationStructureFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+		m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = nullptr;
+		#endif
+
 		#if defined(VK_KHR_ray_tracing_pipeline)
 		m_PhysicalDeviceRayTracingPipelineFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-		m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = nullptr;
+			#if defined(VK_KHR_acceleration_structure)
+			m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = &m_PhysicalDeviceAccelerationStructureFeatures[i];
+			#else		
+			m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = nullptr;
+			#endif
 		#endif
 
 		#if defined(VK_VERSION_1_2)
@@ -344,6 +363,35 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 		if (apiVersion >= VK_API_VERSION_1_2)
 		{
 			vkGetPhysicalDeviceFeatures2(m_PhysicalDevices[i], &m_PhysicalDeviceFeatures2[i]);
+		}
+
+		//Properties2
+		#if defined(VK_KHR_acceleration_structure)
+		m_PhysicalDeviceAccelerationStructureProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
+		m_PhysicalDeviceAccelerationStructureProperties[i].pNext = nullptr;
+		#endif
+
+		#if defined(VK_KHR_ray_tracing_pipeline)
+		m_PhysicalDeviceRayTracingPipelineProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+			#if defined(VK_KHR_acceleration_structure)
+			m_PhysicalDeviceRayTracingPipelineProperties[i].pNext = &m_PhysicalDeviceAccelerationStructureProperties[i];
+			#else		
+			m_PhysicalDeviceRayTracingPipelineProperties[i].pNext = nullptr;
+			#endif
+		#endif
+
+		#if defined(VK_VERSION_1_1)
+			m_PhysicalDeviceProperties2[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+			#if defined(VK_VERSION_1_2)
+			m_PhysicalDeviceProperties2[i].pNext = &m_PhysicalDeviceRayTracingPipelineProperties[i];
+			#else	
+			m_PhysicalDeviceProperties2[i].pNext = nullptr
+			#endif
+		#endif
+
+		if (apiVersion >= VK_API_VERSION_1_2)
+		{
+			vkGetPhysicalDeviceProperties2(m_PhysicalDevices[i], &m_PhysicalDeviceProperties2[i]);
 		}
 	}
 }

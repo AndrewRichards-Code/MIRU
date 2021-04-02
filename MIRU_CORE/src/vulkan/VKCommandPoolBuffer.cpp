@@ -538,7 +538,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	for (size_t i = 0; i < buildGeometryInfos.size(); i++)
 	{
 		VkAccelerationStructureBuildGeometryInfoKHR asbgi = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfos[i])->m_ASBGI;
-		if (asbgi.geometryCount == buildRangeInfos[i].size())
+		if (asbgi.geometryCount != buildRangeInfos[i].size())
 		{
 			MIRU_ASSERT(true, "ERROR: VULKAN: Size mismatch between VkAccelerationStructureBuildGeometryInfoKHR::geometryCount and buildRangeInfos[i].size().");
 		}

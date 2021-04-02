@@ -14,8 +14,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 
 	m_BGI = *pBuildGeometryInfo;
 
-	std::vector<VkAccelerationStructureGeometryKHR> vkGeometries;
-	vkGeometries.reserve(m_BGI.geometries.size());
+	m_Geometries.reserve(m_BGI.geometries.size());
 	for (const auto& geometry : m_BGI.geometries)
 	{
 		VkAccelerationStructureGeometryKHR vkGeometry;
@@ -69,7 +68,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 		}
 		}
 		vkGeometry.flags = static_cast<VkGeometryFlagsKHR>(geometry.flags);
-		vkGeometries.push_back(vkGeometry);
+		m_Geometries.push_back(vkGeometry);
 	}
 
 	m_ASBGI.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
@@ -79,8 +78,8 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	m_ASBGI.mode = static_cast<VkBuildAccelerationStructureModeKHR>(m_BGI.mode);
 	m_ASBGI.srcAccelerationStructure = m_BGI.srcAccelerationStructure ? ref_cast<AccelerationStructure>(m_BGI.srcAccelerationStructure)->m_AS : VK_NULL_HANDLE;
 	m_ASBGI.dstAccelerationStructure = m_BGI.dstAccelerationStructure ? ref_cast<AccelerationStructure>(m_BGI.dstAccelerationStructure)->m_AS : VK_NULL_HANDLE;
-	m_ASBGI.geometryCount = static_cast<uint32_t>(vkGeometries.size());
-	m_ASBGI.pGeometries = vkGeometries.data();
+	m_ASBGI.geometryCount = static_cast<uint32_t>(m_Geometries.size());
+	m_ASBGI.pGeometries = m_Geometries.data();
 	m_ASBGI.ppGeometries = nullptr;
 	m_ASBGI.scratchData = *(reinterpret_cast<VkDeviceOrHostAddressKHR*>(&m_BGI.scratchData));
 

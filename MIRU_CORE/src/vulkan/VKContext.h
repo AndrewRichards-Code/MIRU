@@ -19,12 +19,18 @@ namespace vulkan
 
 			#if defined(VK_VERSION_1_1)
 			std::vector<VkPhysicalDeviceFeatures2> m_PhysicalDeviceFeatures2;
+			std::vector<VkPhysicalDeviceProperties2> m_PhysicalDeviceProperties2;
 			#endif
 			#if defined(VK_VERSION_1_2)
 			std::vector<VkPhysicalDeviceVulkan12Features> m_PhysicalDeviceVulkan12Features;
 			#endif
+			#if defined(VK_KHR_acceleration_structure)
+			std::vector<VkPhysicalDeviceAccelerationStructureFeaturesKHR> m_PhysicalDeviceAccelerationStructureFeatures;
+			std::vector<VkPhysicalDeviceAccelerationStructurePropertiesKHR> m_PhysicalDeviceAccelerationStructureProperties;
+			#endif
 			#if defined(VK_KHR_ray_tracing_pipeline)
 			std::vector<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> m_PhysicalDeviceRayTracingPipelineFeatures;
+			std::vector<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> m_PhysicalDeviceRayTracingPipelineProperties;
 			#endif
 
 			PhysicalDevices(const VkInstance& instance, uint32_t apiVersion);
@@ -39,12 +45,18 @@ namespace vulkan
 
 				#if defined(VK_VERSION_1_1)
 				m_PhysicalDeviceFeatures2 = physicalDevice.m_PhysicalDeviceFeatures2;
+				m_PhysicalDeviceProperties2 = physicalDevice.m_PhysicalDeviceProperties2;
 				#endif
 				#if defined(VK_VERSION_1_2)
 				m_PhysicalDeviceVulkan12Features = physicalDevice.m_PhysicalDeviceVulkan12Features;
 				#endif
 				#if defined(VK_KHR_ray_tracing_pipeline)
+				m_PhysicalDeviceAccelerationStructureFeatures = physicalDevice.m_PhysicalDeviceAccelerationStructureFeatures;
+				m_PhysicalDeviceAccelerationStructureProperties = physicalDevice.m_PhysicalDeviceAccelerationStructureProperties;
+				#endif
+				#if defined(VK_KHR_ray_tracing_pipeline)
 				m_PhysicalDeviceRayTracingPipelineFeatures = physicalDevice.m_PhysicalDeviceRayTracingPipelineFeatures;
+				m_PhysicalDeviceRayTracingPipelineProperties = physicalDevice.m_PhysicalDeviceRayTracingPipelineProperties;
 				#endif
 			};
 		};

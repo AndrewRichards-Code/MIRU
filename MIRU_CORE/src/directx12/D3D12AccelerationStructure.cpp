@@ -17,8 +17,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	D3D12_GPU_VIRTUAL_ADDRESS instanceDescs = 0;
 	D3D12_ELEMENTS_LAYOUT instanceDescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
-	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> d3d12Geometries;
-	d3d12Geometries.reserve(m_BGI.geometries.size());
+	m_Geometries.reserve(m_BGI.geometries.size());
 	for (const auto& geometry : m_BGI.geometries)
 	{
 		D3D12_RAYTRACING_GEOMETRY_DESC d3d12Geometry;
@@ -63,7 +62,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 			break;
 		}
 		}
-		d3d12Geometries.push_back(d3d12Geometry);
+		m_Geometries.push_back(d3d12Geometry);
 		
 		//We only deal with one InstanceDesc
 		if (geometry.type == BuildGeometryInfo::Geometry::Type::INSTANCES)
@@ -73,11 +72,11 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	m_BRASI.Type = static_cast<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE>(m_BGI.type);
 	m_BRASI.Flags = static_cast<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS>(m_BGI.flags);
 	m_BRASI.Flags |= (m_BGI.mode == BuildGeometryInfo::Mode::UPDATE ? D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE : D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE);
-	if (!d3d12Geometries.empty())
+	if (!m_Geometries.empty())
 	{
-		m_BRASI.NumDescs = static_cast<uint32_t>(d3d12Geometries.size());
+		m_BRASI.NumDescs = static_cast<uint32_t>(m_Geometries.size());
 		m_BRASI.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-		m_BRASI.pGeometryDescs = d3d12Geometries.data();
+		m_BRASI.pGeometryDescs = m_Geometries.data();
 	}
 	else
 	{

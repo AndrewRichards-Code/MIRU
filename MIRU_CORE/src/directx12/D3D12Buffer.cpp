@@ -44,7 +44,10 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.pAllocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
+	{
 		m_InitialResourceState = ToD3D12BufferType(m_CI.usage);
+		m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
 		m_InitialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 
@@ -76,43 +79,58 @@ D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	switch (usage)
+	//General cases
+	D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON;
+	for (uint32_t i = 0; i < sizeof(uint32_t) * 8; i++)
 	{
-	case Buffer::UsageBit::TRANSFER_SRC_BIT:
-		return D3D12_RESOURCE_STATE_COPY_SOURCE;
-	case Buffer::UsageBit::TRANSFER_DST_BIT:
-		return D3D12_RESOURCE_STATE_COPY_DEST;
-	case Buffer::UsageBit::UNIFORM_TEXEL_BIT:
-		return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	case Buffer::UsageBit::STORAGE_TEXEL_BIT:
-		return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	case Buffer::UsageBit::UNIFORM_BIT:
-		return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	case Buffer::UsageBit::STORAGE_BIT:
-		return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	case Buffer::UsageBit::INDEX_BIT:
-		return D3D12_RESOURCE_STATE_INDEX_BUFFER;
-	case Buffer::UsageBit::VERTEX_BIT:
-		return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	case Buffer::UsageBit::INDIRECT_BIT:
-		return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-	case Buffer::UsageBit::CONDITIONAL_RENDERING_BIT:
-		return D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
-	case Buffer::UsageBit::SHADER_BINDING_TABLE_BIT:
-		return D3D12_RESOURCE_STATE_GENERIC_READ;
-	case Buffer::UsageBit::TRANSFORM_FEEDBACK_BIT:
-		return D3D12_RESOURCE_STATE_STREAM_OUT;
-	case Buffer::UsageBit::TRANSFORM_FEEDBACK_COUNTER_BIT:
-		return D3D12_RESOURCE_STATE_STREAM_OUT;
-	case Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT:
-		return D3D12_RESOURCE_STATE_GENERIC_READ;
-	case Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT:
-		return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-	case Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT:
-		return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-	default:
-		return D3D12_RESOURCE_STATE_COMMON;
+		Buffer::UsageBit _usage = usage & static_cast<Buffer::UsageBit>(1 << i);
+
+		switch (_usage)
+		{
+		case Buffer::UsageBit::TRANSFER_SRC_BIT:
+			state |= D3D12_RESOURCE_STATE_COPY_SOURCE; break;
+		case Buffer::UsageBit::TRANSFER_DST_BIT:
+			state |= D3D12_RESOURCE_STATE_COPY_DEST; break;
+		case Buffer::UsageBit::UNIFORM_TEXEL_BIT:
+			state |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; break;
+		case Buffer::UsageBit::STORAGE_TEXEL_BIT:
+			state |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS; break;
+		case Buffer::UsageBit::UNIFORM_BIT:
+			state |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER; break;
+		case Buffer::UsageBit::STORAGE_BIT:
+			state |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS; break;
+		case Buffer::UsageBit::INDEX_BIT:
+			state |= D3D12_RESOURCE_STATE_INDEX_BUFFER; break;
+		case Buffer::UsageBit::VERTEX_BIT:
+			state |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER; break;
+		case Buffer::UsageBit::INDIRECT_BIT:
+			state |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT; break;
+		case Buffer::UsageBit::CONDITIONAL_RENDERING_BIT:
+			state |= D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE; break;
+		case Buffer::UsageBit::SHADER_BINDING_TABLE_BIT:
+			state |= D3D12_RESOURCE_STATE_GENERIC_READ; break;
+		case Buffer::UsageBit::TRANSFORM_FEEDBACK_BIT:
+			state |= D3D12_RESOURCE_STATE_STREAM_OUT; break;
+		case Buffer::UsageBit::TRANSFORM_FEEDBACK_COUNTER_BIT:
+			state |= D3D12_RESOURCE_STATE_STREAM_OUT; break;
+		case Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT:
+			state |= D3D12_RESOURCE_STATE_COMMON; break;
+		case Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT:
+			state |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE; break;
+		case Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT:
+			state |= D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE; break;
+		default:
+			state |= D3D12_RESOURCE_STATE_COMMON; break;
+		}
 	}
+
+	//Special cases
+	if (state == (D3D12_RESOURCE_STATE_COPY_DEST | D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER))
+		state = D3D12_RESOURCE_STATE_COMMON;
+	if (state == (D3D12_RESOURCE_STATE_COPY_DEST | D3D12_RESOURCE_STATE_INDEX_BUFFER))
+		state = D3D12_RESOURCE_STATE_COMMON;
+
+	return state;
 }
 
 BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
