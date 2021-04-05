@@ -748,7 +748,8 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 	}
 	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: PipelineType::RAY_TRACING is not supported.")
+		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetPipelineState1(ref_cast<Pipeline>(pipeline)->m_RayTracingPipeline);
+		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
 	}
 	else
 	{
@@ -911,6 +912,39 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
 	}
+}
+
+void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pMissShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pHitShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_DISPATCH_RAYS_DESC desc;
+
+	if (pRaygenShaderBindingTable)
+		desc.RayGenerationShaderRecord = { pRaygenShaderBindingTable->deviceAddress, pRaygenShaderBindingTable->size };
+	else
+		desc.RayGenerationShaderRecord = { 0, 0 };
+
+	if (pMissShaderBindingTable)
+		desc.MissShaderTable = { pMissShaderBindingTable->deviceAddress, pMissShaderBindingTable->size, pMissShaderBindingTable->stride };
+	else
+		desc.MissShaderTable = { 0, 0, 0 };
+
+	if(pHitShaderBindingTable)
+		desc.HitGroupTable = { pHitShaderBindingTable->deviceAddress, pHitShaderBindingTable->size, pHitShaderBindingTable->stride };
+	else
+		desc.HitGroupTable = { 0, 0, 0 };
+
+	if(pCallableShaderBindingTable)
+		desc.CallableShaderTable = { pCallableShaderBindingTable->deviceAddress, pCallableShaderBindingTable->size, pCallableShaderBindingTable->stride };
+	else
+		desc.CallableShaderTable = { 0, 0, 0 };
+
+	desc.Width = static_cast<UINT>(width);
+	desc.Height = static_cast<UINT>(height);
+	desc.Depth = static_cast<UINT>(depth);
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->DispatchRays(&desc);
 }
 
 void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 

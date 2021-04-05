@@ -21,11 +21,18 @@ namespace crossplatform
 	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS { 0 }
 	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS_CONST MIRU_NULL_DEVICE_OR_HOST_ADDRESS
 
+	struct StridedDeviceAddressRegion
+	{
+		DeviceAddress	deviceAddress;
+		uint64_t		stride;
+		uint64_t		size;
+	};
+
 	struct TransformMatrix
 	{
-		float    matrix[3][4];
+		float matrix[3][4];
 	};
-		struct AabbData
+	struct AabbData
 	{
 		float minX;
 		float minY;
@@ -46,11 +53,11 @@ namespace crossplatform
 		};
 
 		TransformMatrix	transform;
-		uint32_t        instanceCustomIndex : 24;
-		uint32_t        mask : 8;
-		uint32_t        instanceShaderBindingTableRecordOffset : 24;
+		uint32_t		instanceCustomIndex : 24;
+		uint32_t		mask : 8;
+		uint32_t		instanceShaderBindingTableRecordOffset : 24;
 		FlagBit			flags : 8;
-		DeviceAddress   accelerationStructureReference;
+		DeviceAddress	accelerationStructureReference;
 	};
 
 	class AccelerationStructure;
@@ -151,10 +158,10 @@ namespace crossplatform
 		};
 		struct BuildRangeInfo
 		{
-			uint32_t    primitiveCount;
-			uint32_t    primitiveOffset;
-			uint32_t    firstVertex;
-			uint32_t    transformOffset;
+			uint32_t primitiveCount;
+			uint32_t primitiveOffset;
+			uint32_t firstVertex;
+			uint32_t transformOffset;
 		};
 
 		//Methods

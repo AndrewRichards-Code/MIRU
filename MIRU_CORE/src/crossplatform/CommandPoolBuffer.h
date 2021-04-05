@@ -114,6 +114,7 @@ namespace crossplatform
 		virtual void Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
 		virtual void BuildAccelerationStructure(uint32_t index, const std::vector<Ref<AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
+		virtual void TraceRays(uint32_t index, const StridedDeviceAddressRegion* pRaygenShaderBindingTable, const StridedDeviceAddressRegion* pMissShaderBindingTable, const StridedDeviceAddressRegion* pHitShaderBindingTable, const StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
 
 		virtual void CopyBuffer(uint32_t index, const Ref<Buffer>& srcBuffer, const Ref<Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
 		virtual void CopyImage(uint32_t index, const Ref<Image>& srcImage, const Ref<Image>& dstImage, const std::vector<Image::Copy>& copyRegions) = 0;

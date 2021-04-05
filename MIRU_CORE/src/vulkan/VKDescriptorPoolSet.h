@@ -48,6 +48,7 @@ namespace vulkan
 
 		void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
+		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void Update() override;
 
 		//Members
@@ -61,6 +62,9 @@ namespace vulkan
 		std::vector<VkWriteDescriptorSet> m_WriteDescriptorSets;
 		std::map<uint32_t, std::map<uint32_t, std::vector<VkDescriptorBufferInfo>>> m_DescriptorBufferInfo;
 		std::map<uint32_t, std::map<uint32_t, std::vector<VkDescriptorImageInfo>>> m_DescriptorImageInfo;
+
+		std::map<uint32_t, std::map<uint32_t, std::vector<VkAccelerationStructureKHR>>> m_AccelerationStructures;
+		std::map<uint32_t, std::map<uint32_t, VkWriteDescriptorSetAccelerationStructureKHR>> m_WriteDescriptorSetAccelerationStructure;
 	};
 }
 }

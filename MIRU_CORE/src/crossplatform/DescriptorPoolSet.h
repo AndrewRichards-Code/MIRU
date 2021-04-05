@@ -8,6 +8,7 @@ namespace miru
 namespace crossplatform
 {
 	class BufferView;
+	class AccelerationStructure;
 
 	enum class DescriptorType : uint32_t
 	{
@@ -111,6 +112,7 @@ namespace crossplatform
 
 		virtual void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		virtual void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
+		virtual void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) = 0;
 		virtual void Update() = 0;
 
 	protected:

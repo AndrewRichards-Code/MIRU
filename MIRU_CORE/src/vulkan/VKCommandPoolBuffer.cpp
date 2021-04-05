@@ -548,6 +548,18 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfos.size()), vkBuildGeometryInfos.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(buildRangeInfos.data()));
 }
 
+void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pMissShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pHitShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	const VkStridedDeviceAddressRegionKHR* raygenSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pRaygenShaderBindingTable);
+	const VkStridedDeviceAddressRegionKHR* missSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pMissShaderBindingTable);
+	const VkStridedDeviceAddressRegionKHR* hitSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pHitShaderBindingTable);
+	const VkStridedDeviceAddressRegionKHR* callableSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pCallableShaderBindingTable);
+	vkCmdTraceRaysKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, width, height, depth);
+}
+
 void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -584,7 +596,7 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& s
 		ref_cast<Image>(dstImage)->m_Image, ref_cast<Image>(dstImage)->m_ImageCI.initialLayout, static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
 
-void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -605,7 +617,7 @@ void miru::vulkan::CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<cr
 	vkCmdCopyBufferToImage(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void miru::vulkan::CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

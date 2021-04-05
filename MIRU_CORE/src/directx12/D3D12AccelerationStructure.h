@@ -32,6 +32,10 @@ namespace d3d12
 		//Members
 	public:
 		ID3D12Device* m_Device;
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE m_SRVDescHandle = {};
 	};
 }
 }

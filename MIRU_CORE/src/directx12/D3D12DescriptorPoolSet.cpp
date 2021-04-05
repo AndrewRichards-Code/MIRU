@@ -3,6 +3,7 @@
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
+#include "D3D12AccelerationStructure.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -392,6 +393,37 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 				m_Device->CreateSampler(&ref_cast<Sampler>(descriptorImageInfo.sampler)->m_SamplerDesc, descriptorWriteLocation);
 				ref_cast<Sampler>(descriptorImageInfo.sampler)->m_DescHandle = descriptorWriteLocation;
 			}
+		}
+	}
+}
+
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE descriptorWriteLocation;
+
+	for (auto& accelerationStructure : accelerationStructures)
+	{
+		crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+		for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+		{
+			if (descriptorSetLayoutBinding.binding == bindingIndex)
+			{
+				descriptorType = descriptorSetLayoutBinding.type;
+				break;
+			}
+		}
+
+		//SRV
+		if (descriptorType == crossplatform::DescriptorType::ACCELERATION_STRUCTURE)
+		{	
+			//When creating descriptor heap based acceleration structure SRVs, the resource parameter must be NULL, as the memory location comes as a GPUVA from the view description.
+			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
+			m_Device->CreateShaderResourceView(nullptr, &(ref_cast<AccelerationStructure>(accelerationStructure)->m_SRVDesc), descriptorWriteLocation);
+			ref_cast<AccelerationStructure>(accelerationStructure)->m_SRVDescHandle = descriptorWriteLocation;
 		}
 	}
 }

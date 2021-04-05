@@ -3,6 +3,7 @@
 #include "VKDescriptorPoolSet.h"
 #include "VKBuffer.h"
 #include "VKImage.h"
+#include "VKAccelerationStructure.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -183,6 +184,36 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	wds.pTexelBufferView = nullptr;
 
 	m_WriteDescriptorSets.push_back(wds);
+}
+
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	for (auto& accelerationStructure : accelerationStructures)
+	{
+		m_AccelerationStructures[index][bindingIndex].push_back(ref_cast<AccelerationStructure>(accelerationStructure)->m_AS);
+	}
+
+	VkWriteDescriptorSetAccelerationStructureKHR& wdsas = m_WriteDescriptorSetAccelerationStructure[index][bindingIndex];
+	wdsas.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+	wdsas.pNext = nullptr;
+	wdsas.accelerationStructureCount = static_cast<uint32_t>(m_AccelerationStructures.size());
+	wdsas.pAccelerationStructures = m_AccelerationStructures[index][bindingIndex].data();
+
+	VkWriteDescriptorSet wds;
+	wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	wds.pNext = &(m_WriteDescriptorSetAccelerationStructure[index][bindingIndex]);
+	wds.dstSet = m_DescriptorSets[index];
+	wds.dstBinding = bindingIndex;
+	wds.dstArrayElement = desriptorArrayIndex;
+	wds.descriptorCount = m_WriteDescriptorSetAccelerationStructure[index][bindingIndex].accelerationStructureCount;
+	wds.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+	wds.pImageInfo = nullptr;
+	wds.pBufferInfo = nullptr;
+	wds.pTexelBufferView = nullptr;
 }
 
 void DescriptorSet::Update()

@@ -106,6 +106,11 @@ AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* 
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
+
+	m_SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+	m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	m_SRVDesc.RaytracingAccelerationStructure.Location = GetBufferDeviceAddress();
 }
 
 AccelerationStructure::~AccelerationStructure() 
