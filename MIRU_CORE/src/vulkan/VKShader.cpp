@@ -6,31 +6,13 @@ using namespace miru;
 using namespace vulkan;
 
 Shader::Shader(CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device)), m_ShaderModule(VK_NULL_HANDLE)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
 
-	GetShaderByteCode();
-
-	m_ShaderModuleCI.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	m_ShaderModuleCI.pNext = nullptr;
-	m_ShaderModuleCI.flags = 0;
-	m_ShaderModuleCI.codeSize = static_cast<uint32_t>(m_ShaderBinary.size());
-	m_ShaderModuleCI.pCode = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
-
-	MIRU_ASSERT(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
-	VKSetName<VkShaderModule>(m_Device, (uint64_t)m_ShaderModule, m_CI.debugName);
-	
-	m_ShaderStageCI.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	m_ShaderStageCI.pNext = nullptr;
-	m_ShaderStageCI.flags = 0;
-	m_ShaderStageCI.stage = static_cast<VkShaderStageFlagBits>(m_CI.stage);
-	m_ShaderStageCI.module = m_ShaderModule;
-	m_ShaderStageCI.pName = m_CI.entryPoint.c_str();
-	m_ShaderStageCI.pSpecializationInfo = nullptr;
-	
+	Reconstruct();
 	GetShaderResources();
 }
 
@@ -45,7 +27,8 @@ void Shader::Reconstruct()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	vkDestroyShaderModule(m_Device, m_ShaderModule, nullptr);
+	if(m_ShaderModule != VK_NULL_HANDLE)
+		vkDestroyShaderModule(m_Device, m_ShaderModule, nullptr);
 
 	GetShaderByteCode();
 
@@ -58,13 +41,22 @@ void Shader::Reconstruct()
 	MIRU_ASSERT(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
 	VKSetName<VkShaderModule>(m_Device, (uint64_t)m_ShaderModule, m_CI.debugName);
 
-	m_ShaderStageCI.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	m_ShaderStageCI.pNext = nullptr;
-	m_ShaderStageCI.flags = 0;
-	m_ShaderStageCI.stage = static_cast<VkShaderStageFlagBits>(m_CI.stage);
-	m_ShaderStageCI.module = m_ShaderModule;
-	m_ShaderStageCI.pName = m_CI.entryPoint.c_str();
-	m_ShaderStageCI.pSpecializationInfo = nullptr;
+	for (const auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
+	{
+		const StageBit& stage = stageAndEntryPoint.first;
+		const std::string& entryPoint = stageAndEntryPoint.second;
+
+		VkPipelineShaderStageCreateInfo shaderStageCI;
+		shaderStageCI.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		shaderStageCI.pNext = nullptr;
+		shaderStageCI.flags = 0;
+		shaderStageCI.stage = static_cast<VkShaderStageFlagBits>(stage);
+		shaderStageCI.module = m_ShaderModule;
+		shaderStageCI.pName = entryPoint.c_str();
+		shaderStageCI.pSpecializationInfo = nullptr;
+
+		m_ShaderStageCIs.push_back(shaderStageCI);
+	}
 }
 
 #include "crossplatform/DescriptorPoolSet.h"
@@ -84,8 +76,12 @@ void Shader::SpirvCrossReflection()
 	spirv_cross::ShaderResources resources = compiled_bin.get_shader_resources();
 
 	spv::ExecutionModel stage = compiled_bin.get_execution_model();
-	if ((uint32_t)stage != (uint32_t)log2((double)m_CI.stage)) // Convert Bitfield to uint32_t
-		MIRU_ASSERT(true, "ERROR: VULKAN: The SPIR-V source file doesn't match the specified stage.");
+	/*if ((uint32_t)stage != (uint32_t)log2((double)m_CI.stage)) // Convert Bitfield to uint32_t
+		MIRU_ASSERT(true, "ERROR: VULKAN: The SPIR-V source file doesn't match the specified stage.");*/
+
+	StageBit stageBit = StageBit(0);
+	for (auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
+		stageBit |= stageAndEntryPoint.first;
 
 	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType = 
 		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> crossplatform::VertexType
@@ -134,8 +130,8 @@ void Shader::SpirvCrossReflection()
 			break;
 		case spirv_cross::SPIRType::BaseType::Sampler:
 			break;
-		//case spirv_cross::SPIRType::BaseType::AccelerationStructureNV:
-		//	break;
+		case spirv_cross::SPIRType::BaseType::AccelerationStructure:
+			break;
 		case spirv_cross::SPIRType::BaseType::ControlPointArray:
 			break;
 		case spirv_cross::SPIRType::BaseType::Char:
@@ -267,7 +263,7 @@ void Shader::SpirvCrossReflection()
 			rbd.binding = binding;
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
-			rbd.stage = m_CI.stage;
+			rbd.stage = stageBit;
 			rbd.name = res.name;
 			rbd.structSize = structSize;
 			m_RBDs[set][binding] = rbd;
@@ -280,7 +276,7 @@ void Shader::SpirvCrossReflection()
 	push_back_ResourceBindingDescription(resources.storage_images, crossplatform::DescriptorType::STORAGE_IMAGE);
 	push_back_ResourceBindingDescription(resources.sampled_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
 	//push_back_ResourceBindingDescription(resources.atomic_counters, crossplatform::DescriptorType);
-	//push_back_ResourceBindingDescription(resources.acceleration_structures, crossplatform::DescriptorType);
+	push_back_ResourceBindingDescription(resources.acceleration_structures, crossplatform::DescriptorType::ACCELERATION_STRUCTURE);
 	//push_back_ResourceBindingDescription(resources.push_constant_buffers, crossplatform::DescriptorType);
 	push_back_ResourceBindingDescription(resources.separate_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
 	push_back_ResourceBindingDescription(resources.separate_samplers, crossplatform::DescriptorType::SAMPLER);

@@ -149,6 +149,21 @@ namespace crossplatform
 		{
 			std::vector<DynamicState> dynamicStates;
 		};
+		#define MIRU_SHADER_UNUSED (~0U)
+		struct ShaderGroupInfo
+		{
+			ShaderGroupType type;				//If GENERAL, specify only a generalShader. If TRIANGLES_HIT_GROUP, specify a closestHitShader and/or an anyHitShader. If PROCEDURAL_HIT_GROUP, specify a closestHitShader and/or an anyHitShader and an intersectionShader must be specified.
+			uint32_t		generalShader;		//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for either a Raygen, Miss or Callable shader.
+			uint32_t		anyHitShader;		//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Any Hit shader.
+			uint32_t		closestHitShader;	//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Closest Hit shader.
+			uint32_t		intersectionShader;	//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Intersection Shader.
+		};
+		struct RayTracingInfo
+		{
+			uint32_t maxRecursionDepth;
+			uint32_t maxPayloadSize;
+			uint32_t maxHitAttributeSize;
+		};
 		struct PipelineLayout
 		{
 			std::vector<Ref<DescriptorSetLayout>> descriptorSetLayouts;
@@ -156,22 +171,24 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			std::string					debugName;
-			void*						device;
-			PipelineType				type;
-			std::vector<Ref<Shader>>	shaders;			//One shader only for compute.
-			VertexInputState			vertexInputState;	//Graphics only.
-			InputAssemblyState			inputAssemblyState;	//Graphics only.
-			TessellationState			tessellationState;	//Graphics only.
-			ViewportState				viewportState;		//Graphics only.
-			RasterisationState			rasterisationState;	//Graphics only.
-			MultisampleState			multisampleState;	//Graphics only.
-			DepthStencilState			depthStencilState;	//Graphics only.
-			ColourBlendState			colourBlendState;	//Graphics only.
-			DynamicStates				dynamicStates;		//Graphics only.
-			PipelineLayout				layout;				//Both.
-			Ref<RenderPass>				renderPass;			//Graphics only.
-			uint32_t					subpassIndex;		//Graphics only.
+			std::string						debugName;
+			void*							device;
+			PipelineType					type;
+			std::vector<Ref<Shader>>		shaders;			//One shader only for compute; multiple for Graphics and Ray Tracing.
+			VertexInputState				vertexInputState;	//Graphics only.
+			InputAssemblyState				inputAssemblyState;	//Graphics only.
+			TessellationState				tessellationState;	//Graphics only.
+			ViewportState					viewportState;		//Graphics only.
+			RasterisationState				rasterisationState;	//Graphics only.
+			MultisampleState				multisampleState;	//Graphics only.
+			DepthStencilState				depthStencilState;	//Graphics only.
+			ColourBlendState				colourBlendState;	//Graphics only.
+			DynamicStates					dynamicStates;		//Graphics and Ray Tracing only.
+			std::vector<ShaderGroupInfo>	shaderGroupInfos;	//Ray Tracing only.
+			RayTracingInfo					rayTracingInfo;		//Ray Tracing only.
+			PipelineLayout					layout;				//All.
+			Ref<RenderPass>					renderPass;			//Graphics only.
+			uint32_t						subpassIndex;		//Graphics only.
 		};
 
 		//Methods

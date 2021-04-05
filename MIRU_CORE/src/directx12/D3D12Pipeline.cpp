@@ -118,7 +118,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//ShaderStages
 		for (auto& shader : m_CI.shaders)
 		{
-			switch (shader->GetCreateInfo().stage)
+			switch (shader->GetCreateInfo().stageAndEntryPoints[0].first)
 			{
 			case Shader::StageBit::VERTEX_BIT:
 				m_GPSD.VS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
@@ -288,8 +288,111 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(m_Device->CreateComputePipelineState(&m_CPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
+	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	{
+		auto to_wstring = [](const std::string& string) -> std::wstring
+		{
+			wchar_t* wstr = new wchar_t[string.size() + 1];
+			mbstowcs_s(nullptr, wstr, string.size() + 1, string.c_str(), string.size() + 1);
+			std::wstring result(wstr);
+			delete[] wstr;
+			return result;
+		};
+
+		//Fill out DXIL Library and Exports
+		std::vector<std::wstring> w_ExportNames;
+		std::vector<D3D12_DXIL_LIBRARY_DESC> dxilLibDescs;
+		std::vector<D3D12_EXPORT_DESC> exportDescs;
+		dxilLibDescs.reserve(m_CI.shaders.size());
+		for(auto& shader : m_CI.shaders)
+		{
+			UINT exportCount = 0;
+			for (auto& stageAndEntryPoint : shader->GetCreateInfo().stageAndEntryPoints)
+			{
+				D3D12_EXPORT_DESC exportDesc;
+				w_ExportNames.push_back(to_wstring(stageAndEntryPoint.second));;
+				exportDesc.Name = w_ExportNames.back().c_str();
+				exportDesc.ExportToRename = nullptr;
+				exportDesc.Flags = D3D12_EXPORT_FLAG_NONE;
+				exportDescs.push_back(exportDesc);
+				exportCount++;
+			}
+			
+			D3D12_DXIL_LIBRARY_DESC dxilLibDesc;
+			dxilLibDesc.DXILLibrary = ref_cast<Shader>(shader)->m_ShaderByteCode;
+			dxilLibDesc.NumExports = exportCount;
+			dxilLibDesc.pExports = &exportDescs[exportDescs.size() - static_cast<size_t>(exportCount)];
+			dxilLibDescs.push_back(dxilLibDesc);
+			D3D12_STATE_SUBOBJECT dxilLibrary;
+			dxilLibrary.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
+			dxilLibrary.pDesc = &dxilLibDescs.back();
+			m_RayTracingPipelineSubDesc.push_back(dxilLibrary);
+		}
+
+		//Fill out HitGroups
+		std::vector<std::wstring> w_HitGroupNames;
+		std::vector<D3D12_HIT_GROUP_DESC> hitGroupDescs;
+		UINT hitGroupCount = 0;
+		for (auto& shaderGroupInfo : m_CI.shaderGroupInfos)
+		{
+			if (shaderGroupInfo.type > crossplatform::ShaderGroupType::GENERAL)
+			{
+				D3D12_HIT_GROUP_DESC hitGroupDesc;
+				w_HitGroupNames.push_back(L"HitGroup_" + std::to_wstring(hitGroupCount));
+				hitGroupDesc.HitGroupExport = w_HitGroupNames.back().c_str();
+				hitGroupDesc.Type = static_cast<D3D12_HIT_GROUP_TYPE>(uint32_t(shaderGroupInfo.type) - 1);
+				hitGroupDesc.AnyHitShaderImport = nullptr;
+				hitGroupDesc.ClosestHitShaderImport = nullptr;
+				hitGroupDesc.IntersectionShaderImport = nullptr;
+				if (shaderGroupInfo.anyHitShader != MIRU_SHADER_UNUSED)
+					hitGroupDesc.AnyHitShaderImport = exportDescs[shaderGroupInfo.anyHitShader].Name;
+				if (shaderGroupInfo.closestHitShader != MIRU_SHADER_UNUSED)
+					hitGroupDesc.ClosestHitShaderImport = exportDescs[shaderGroupInfo.closestHitShader].Name;
+				if (shaderGroupInfo.intersectionShader != MIRU_SHADER_UNUSED)
+					hitGroupDesc.IntersectionShaderImport = exportDescs[shaderGroupInfo.intersectionShader].Name;
+				hitGroupDescs.push_back(hitGroupDesc);
+				hitGroupCount++;
+
+				D3D12_STATE_SUBOBJECT hitGroup;
+				hitGroup.Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
+				hitGroup.pDesc = &hitGroupDescs.back();
+				m_RayTracingPipelineSubDesc.push_back(hitGroup);
+			}
+		}
+
+		//Fill out GlobalRootSignature
+		D3D12_STATE_SUBOBJECT globalRootSignature;
+		globalRootSignature.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
+		globalRootSignature.pDesc = &m_RootSignature;
+		m_RayTracingPipelineSubDesc.push_back(globalRootSignature);
+
+		//Fill out ShaderConfig
+		D3D12_RAYTRACING_SHADER_CONFIG shaderConfig;
+		shaderConfig.MaxPayloadSizeInBytes = m_CI.rayTracingInfo.maxPayloadSize;
+		shaderConfig.MaxAttributeSizeInBytes = m_CI.rayTracingInfo.maxHitAttributeSize;
+		D3D12_STATE_SUBOBJECT shaderConfigSubObject;
+		shaderConfigSubObject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG;
+		shaderConfigSubObject.pDesc = &shaderConfig;
+		m_RayTracingPipelineSubDesc.push_back(shaderConfigSubObject);
+
+		//Fill out PipelineConfig
+		D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig;
+		pipelineConfig.MaxTraceRecursionDepth = m_CI.rayTracingInfo.maxRecursionDepth;
+		D3D12_STATE_SUBOBJECT pipelineConfigSubObject;
+		pipelineConfigSubObject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;
+		pipelineConfigSubObject.pDesc = &pipelineConfig;
+		m_RayTracingPipelineSubDesc.push_back(pipelineConfigSubObject);
+		
+		//Fill out StateObject
+		m_RayTracingPipelineDesc.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE;
+		m_RayTracingPipelineDesc.NumSubobjects = static_cast<UINT>(m_RayTracingPipelineSubDesc.size());
+		m_RayTracingPipelineDesc.pSubobjects = m_RayTracingPipelineSubDesc.data();
+
+		MIRU_ASSERT(reinterpret_cast<ID3D12Device5*>(m_Device)->CreateStateObject(&m_RayTracingPipelineDesc, IID_PPV_ARGS(&m_RayTracingPipeline)), "ERROR: D3D12: Failed to create Ray Tracing Pipeline.");
+		D3D12SetName(m_RayTracingPipeline, m_CI.debugName + " : Ray Tracing Pipeline");
+	}
 	else
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");
+		MIRU_ASSERT(true, "ERROR: D3D12: Unknown pipeline type.");
 }
 
 Pipeline::~Pipeline()

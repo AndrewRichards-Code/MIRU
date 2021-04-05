@@ -135,8 +135,6 @@ int Shader::Call_MIRU_SHADER_COMPILER()
 		command += " -i:" + currentWorkingDir + includeDir;
 	if (!m_CI.recompileArguments.entryPoint.empty())
 		command += " -e:" + m_CI.recompileArguments.entryPoint;
-	if (!m_CI.recompileArguments.shaderStage.empty())
-		command += " -s:" + m_CI.recompileArguments.shaderStage;
 	if (!m_CI.recompileArguments.shaderModel.empty())
 		command += " -t:" + m_CI.recompileArguments.shaderModel;
 	for (auto& macro : m_CI.recompileArguments.macros)
@@ -147,12 +145,8 @@ int Shader::Call_MIRU_SHADER_COMPILER()
 		command += " -spv";
 	if (!m_CI.recompileArguments.dxcLocation.empty())
 		command += " -dxc:" + m_CI.recompileArguments.dxcLocation;
-	if (!m_CI.recompileArguments.glslangLocation.empty())
-		command += " -glslang:" + m_CI.recompileArguments.glslangLocation;
 	if (!m_CI.recompileArguments.dxcArguments.empty())
 		command += " -dxc_args:" + m_CI.recompileArguments.dxcArguments;
-	if (!m_CI.recompileArguments.glslangArguments.empty())
-		command += " -glslang_args:" + m_CI.recompileArguments.glslangArguments;
 	if (m_CI.recompileArguments.nologo)
 		command += " -nologo";
 	if (m_CI.recompileArguments.nooutput)

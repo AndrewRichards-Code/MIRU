@@ -43,6 +43,7 @@ namespace vulkan
 		VkPipeline m_Pipeline;
 		VkGraphicsPipelineCreateInfo m_GPCI = {};
 		VkComputePipelineCreateInfo m_CPCI = {};
+		VkRayTracingPipelineCreateInfoKHR m_RTPCI = {};
 
 		VkPipelineLayout m_PipelineLayout;
 		VkPipelineLayoutCreateInfo m_PLCI;

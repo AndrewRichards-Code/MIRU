@@ -49,6 +49,10 @@ namespace d3d12
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_GPSD = {};
 		D3D12_COMPUTE_PIPELINE_STATE_DESC m_CPSD = {};
 
+		ID3D12StateObject* m_RayTracingPipeline;
+		D3D12_STATE_OBJECT_DESC m_RayTracingPipelineDesc;
+		std::vector<D3D12_STATE_SUBOBJECT> m_RayTracingPipelineSubDesc;
+
 		std::vector<D3D12_VIEWPORT> m_Viewports;
 		std::vector<D3D12_RECT> m_Scissors;
 	};

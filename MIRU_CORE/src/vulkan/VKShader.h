@@ -25,7 +25,7 @@ namespace vulkan
 		VkShaderModule m_ShaderModule;
 		VkShaderModuleCreateInfo m_ShaderModuleCI;
 
-		VkPipelineShaderStageCreateInfo m_ShaderStageCI;
+		std::vector<VkPipelineShaderStageCreateInfo> m_ShaderStageCIs;
 	};
 }
 }

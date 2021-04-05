@@ -255,6 +255,13 @@ namespace crossplatform
 		uint32_t			size;
 	};
 
+	enum class ShaderGroupType : uint32_t
+	{
+		GENERAL = 0,
+		TRIANGLES_HIT_GROUP = 1,
+		PROCEDURAL_HIT_GROUP = 2,
+	};
+
 	//Other
 
 	enum class PipelineType : uint32_t
@@ -296,6 +303,7 @@ namespace crossplatform
 	};
 
 	//Rendering Locality
+
 	enum class DependencyBit : uint32_t
 	{
 		NONE_BIT = 0x00000000,
@@ -305,6 +313,7 @@ namespace crossplatform
 	};
 
 	//Index Type
+
 	enum class IndexType : uint32_t
 	{
 		UINT16 = 0,

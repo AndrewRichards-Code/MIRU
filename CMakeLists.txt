@@ -30,7 +30,8 @@ target_compile_features(MIRU_SHADER_COMPILER PUBLIC cxx_std_17)
 
 #MIRU_CORE
 set( src_crossplatform_h
-	MIRU_CORE/src/crossplatform/Allocator.h
+    MIRU_CORE/src/AccelerationStructure.h
+    MIRU_CORE/src/crossplatform/Allocator.h
     MIRU_CORE/src/crossplatform/Buffer.h
     MIRU_CORE/src/crossplatform/CommandPoolBuffer.h
     MIRU_CORE/src/crossplatform/Context.h
@@ -45,6 +46,7 @@ set( src_crossplatform_h
     MIRU_CORE/src/crossplatform/Sync.h
 )
 set( src_crossplatform_cpp
+    MIRU_CORE/src/AccelerationStructure.cpp
     MIRU_CORE/src/crossplatform/Allocator.cpp
     MIRU_CORE/src/crossplatform/Buffer.cpp
     MIRU_CORE/src/crossplatform/CommandPoolBuffer.cpp
@@ -71,6 +73,7 @@ set( src_debug_cpp
 
 set( src_directx12_h
     MIRU_CORE/redist/D3D12MemoryAllocator/src/D3D12MemAlloc.h
+    MIRU_CORE/src/directx12/D3D12AccelerationStructure.h
     MIRU_CORE/src/directx12/D3D12Allocator.h
     MIRU_CORE/src/directx12/D3D12Buffer.h
     MIRU_CORE/src/directx12/D3D12CommandPoolBuffer.h
@@ -85,6 +88,7 @@ set( src_directx12_h
 )
 set( src_directx12_cpp
     MIRU_CORE/redist/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
+    MIRU_CORE/src/directx12/D3D12AccelerationStructure.cpp
     MIRU_CORE/src/directx12/D3D12Allocator.cpp
     MIRU_CORE/src/directx12/D3D12Buffer.cpp
     MIRU_CORE/src/directx12/D3D12Context.cpp
@@ -99,6 +103,7 @@ set( src_directx12_cpp
 )
 set( src_vulkan_h
     MIRU_CORE/redist/VulkanMemoryAllocator/src/vk_mem_alloc.h
+    MIRU_CORE/src/vulkan/VKAccelerationStructure.h
     MIRU_CORE/src/vulkan/VKAllocator.h
     MIRU_CORE/src/vulkan/VKBuffer.h
     MIRU_CORE/src/vulkan/VKCommandPoolBuffer.h
@@ -113,6 +118,7 @@ set( src_vulkan_h
 )
 set( src_vulkan_cpp
     MIRU_CORE/redist/VulkanMemoryAllocator/src/vk_mem_alloc.cpp
+    MIRU_CORE/src/vulkan/VKAccelerationStructure.cpp
     MIRU_CORE/src/vulkan/VKAllocator.cpp
     MIRU_CORE/src/vulkan/VKBuffer.cpp
     MIRU_CORE/src/vulkan/VKContext.cpp

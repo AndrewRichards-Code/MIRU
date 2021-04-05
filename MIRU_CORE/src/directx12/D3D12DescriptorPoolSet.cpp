@@ -99,6 +99,13 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			continue;
 		}
+		case crossplatform::DescriptorType::ACCELERATION_STRUCTURE:
+		{
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
 		default:
 		{
 			countSRV += descriptorSetLayoutBinding.descriptorCount;

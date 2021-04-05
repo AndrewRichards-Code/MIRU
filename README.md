@@ -19,6 +19,7 @@ This repository is under active development and is not currently intended for co
 - Shader reflection with dxcompiler for D3D12 and spirv-cross for Vulkan.
 - Built-in support for graphics debuggers.
 - Assign debug names to low level primitives.
+- Ray Tracing support via DXR for D3D12 and via VK_KHR_acceleration_structure/VK_KHR_ray_tracing_pipeline for Vulkan.
 
 ## Known issues and features to test/implement:
 - Draw/Dispatch commands using indirect buffers.
@@ -52,7 +53,7 @@ This repository is under active development and is not currently intended for co
 Contains the core functionality of the Low level Graphics API wrapper. Provide path to VulkanSDK; Build as static library; Dynamic Runtime Linking (MD).
 
 ### MIRU_SHADER_COMPILER: 
-A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using glslangValidator and DXC/FXC. Provide paths to glslangValidator and DXC/FXC; Build as executable; Dynamic Runtime Linking (MD).
+A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using DXC/FXC. Provide paths to DXC/FXC; Build as executable; Dynamic Runtime Linking (MD).
 
 ### MIRU_TEST: 
 Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD).

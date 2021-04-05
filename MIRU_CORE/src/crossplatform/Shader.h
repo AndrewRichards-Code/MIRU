@@ -61,36 +61,32 @@ namespace crossplatform
 
 		//See MSCDocumentation.h for correct usage.
 		//All filepaths and directories must be relative to the current working directory.
-		//All locations must be full paths i.e. dxc and glslangValidator.
+		//All locations must be full paths i.e. dxc.
 		struct RecompileArguments
 		{
 			std::string					mscDirectory;
 			std::string					hlslFilepath;
 			std::string					outputDirectory;	//Optional
 			std::vector<std::string>	includeDirectories;	//Optional
-			std::string					entryPoint;			
-			std::string					shaderStage;			
+			std::string					entryPoint;			//Required for non lib shaders.
 			std::string					shaderModel;		//Optional
 			std::vector<std::string>	macros;				//Optional
 			bool						cso;				//Either cso or spv must be true
 			bool						spv;				//Either cso or spv must be true
-			std::string					dxcLocation;		//Optional
-			std::string					glslangLocation;	//Optional
 			std::string					dxcArguments;		//Optional. Example: ""\-Zi -Od"\".
-			std::string					glslangArguments;	//Optional. Example: ""\-Zi -Od"\".
+			std::string					dxcLocation;		//Optional
 			bool						nologo;				//Optional
 			bool						nooutput;			//Optional
 		};
 
 		struct CreateInfo
 		{
-			std::string			debugName;
-			void*				device;
-			StageBit			stage;
-			std::string			entryPoint;
-			std::string			binaryFilepath;
-			std::vector<char>	binaryCode;
-			RecompileArguments	recompileArguments;
+			std::string										debugName;
+			void*											device;
+			std::vector<std::pair<StageBit, std::string>>	stageAndEntryPoints;
+			std::string										binaryFilepath;
+			std::vector<char>								binaryCode;
+			RecompileArguments								recompileArguments;
 		};
 
 		//Methods

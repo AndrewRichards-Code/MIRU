@@ -67,18 +67,18 @@ int main()
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
-	
+
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Context::CreateInfo contextCI;
 	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 12 : 1;
-	contextCI.api_version_minor = GraphicsAPI::IsD3D12() ?  1 : 2;
+	contextCI.api_version_minor = GraphicsAPI::IsD3D12() ? 1 : 2;
 	contextCI.applicationName = "MIRU_TEST";
 	contextCI.instanceLayers = { "VK_LAYER_KHRONOS_validation" };
 	contextCI.instanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
 	contextCI.deviceLayers = { "VK_LAYER_KHRONOS_validation" };
-	contextCI.deviceExtensions = { "VK_KHR_swapchain", 
-		"VK_KHR_acceleration_structure", "VK_KHR_ray_tracing_pipeline", 
+	contextCI.deviceExtensions = { "VK_KHR_swapchain",
+		"VK_KHR_acceleration_structure", "VK_KHR_ray_tracing_pipeline",
 		"VK_KHR_deferred_host_operations" };
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
@@ -109,9 +109,8 @@ int main()
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
-	shaderCI.stage = Shader::StageBit::VERTEX_BIT;
-	shaderCI.entryPoint = "vs_main";
-	shaderCI.binaryFilepath = "res/bin/basic_vert_vs_main.spv";
+	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
+	shaderCI.binaryFilepath = "res/bin/basic_vs_5_1_vs_main.spv";
 	shaderCI.binaryCode = {};
 	#if _DEBUG
 	bool debug = true;
@@ -124,13 +123,10 @@ int main()
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
 		"vs_main",
-		"vert",
-		"5_1",
+		"vs_5_1",
 		{},
 		true,
 		true,
-		"",
-		"",
 		"",
 		"",
 		false,
@@ -138,12 +134,22 @@ int main()
 	};
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
-	shaderCI.stage = Shader::StageBit::PIXEL_BIT;
-	shaderCI.entryPoint = "ps_main";
-	shaderCI.binaryFilepath = "res/bin/basic_frag_ps_main.spv";
+	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
+	shaderCI.binaryFilepath = "res/bin/basic_ps_5_1_ps_main.spv";
 	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderStage = "frag";
+	shaderCI.recompileArguments.shaderModel = "ps_5_1";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
+	shaderCI.debugName = "RayTracing: Library Shader Module";
+	shaderCI.stageAndEntryPoints = { 
+		{ Shader::StageBit::RAYGEN_BIT, "ray_generation_main"},
+		{ Shader::StageBit::ANY_HIT_BIT, "any_hit_main"},
+		{ Shader::StageBit::CLOSEST_HIT_BIT, "closest_hit_main"},
+		{ Shader::StageBit::MISS_BIT, "miss_main"},
+	};
+	shaderCI.binaryFilepath = "res/bin/RayTracing_lib_6_3.spv";
+	shaderCI.recompileArguments.entryPoint = "";
+	shaderCI.recompileArguments.shaderModel = "lib_6_3";
+	Ref<Shader> raytracingShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
@@ -619,6 +625,39 @@ int main()
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
 	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
+
+	setLayoutCI.debugName = "RayTracing: DescSetLayout1";
+	setLayoutCI.device = context->GetDevice();
+	setLayoutCI.descriptorSetLayoutBinding = { 
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }, 
+		{1, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT } };
+	Ref<DescriptorSetLayout> setLayout1RT = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.debugName = "RayTracing: DescSetLayout2";
+	setLayoutCI.descriptorSetLayoutBinding = {
+		{0, DescriptorType::STORAGE_IMAGE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{1, DescriptorType::ACCELERATION_STRUCTURE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }
+	};
+	Ref<DescriptorSetLayout> setLayout2RT = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.debugName = "RayTracing: DescSetLayout3";
+	setLayoutCI.descriptorSetLayoutBinding = {
+		{0, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }
+	};
+	Ref<DescriptorSetLayout> setLayout3RT = DescriptorSetLayout::Create(&setLayoutCI);
+
+	Pipeline::CreateInfo raytracingPipelineCI;
+	raytracingPipelineCI.debugName = "Ray Tracing Pipeline";
+	raytracingPipelineCI.device = context->GetDevice();
+	raytracingPipelineCI.type = PipelineType::RAY_TRACING;
+	raytracingPipelineCI.shaders = { raytracingShader };
+	raytracingPipelineCI.dynamicStates = {};
+	raytracingPipelineCI.shaderGroupInfos = {
+		{ ShaderGroupType::GENERAL, 0, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
+		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED },
+		{ ShaderGroupType::GENERAL, 3, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
+	};
+	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8 };
+	raytracingPipelineCI.layout = { {setLayout1RT, setLayout2RT, setLayout3RT}, {} };
+	Ref<Pipeline> raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
 
 	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
 	framebufferCI_0.debugName = "Framebuffer0";

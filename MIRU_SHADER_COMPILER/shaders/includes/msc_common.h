@@ -83,3 +83,10 @@
 #define MIRU_DISPATCH_THREAD_ID SV_DispatchThreadID
 //The "flattened" index of the Thread within the Group
 #define MIRU_GROUP_INDEX SV_GroupIndex
+
+//Ray Tracing Shaders
+#if defined MIRU_VULKAN
+#define MIRU_RAYTRACING_ACCELERATION_STRUCTURE(set_num, bind_num, name) [[vk::binding(bind_num, set_num)]] RaytracingAccelerationStructure name
+#else
+#define MIRU_RAYTRACING_ACCELERATION_STRUCTURE(set_num, bind_num, name) RaytracingAccelerationStructure name : register(t##bind_num, space##set_num)
+#endif

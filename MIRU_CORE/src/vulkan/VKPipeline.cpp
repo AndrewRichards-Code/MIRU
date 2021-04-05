@@ -136,7 +136,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
 		vkShaderStages.reserve(m_CI.shaders.size());
 		for (auto& shader : m_CI.shaders)
-			vkShaderStages.push_back(ref_cast<Shader>(shader)->m_ShaderStageCI);
+			vkShaderStages.push_back(ref_cast<Shader>(shader)->m_ShaderStageCIs[0]);
 
 		//VertexInput
 		std::vector<VkVertexInputBindingDescription> vkVertexInputBindingDescriptions;
@@ -293,7 +293,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		vkDynamicState.dynamicStateCount = static_cast<uint32_t>(vkDynamicStates.size());
 		vkDynamicState.pDynamicStates = vkDynamicStates.data();
 
-
 		//Fill Vulkan structure
 		m_GPCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		m_GPCI.pNext = nullptr;
@@ -323,7 +322,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPCI.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 		m_CPCI.pNext = nullptr;
 		m_CPCI.flags = 0;
-		m_CPCI.stage = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderStageCI;
+		m_CPCI.stage = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderStageCIs[0];
 		m_CPCI.layout = m_PipelineLayout;
 		m_CPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_CPCI.basePipelineIndex = -1;
@@ -331,6 +330,73 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
 		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
+	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	{
+		//ShaderStages
+		std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
+		for (auto& shader : m_CI.shaders)
+		{
+			for (const auto& vkShaderStage : ref_cast<Shader>(shader)->m_ShaderStageCIs)
+			{
+				vkShaderStages.push_back(vkShaderStage);
+			}
+		}
+
+		//LibraryInterface
+		VkRayTracingPipelineInterfaceCreateInfoKHR vkInterfaceInfo;
+		vkInterfaceInfo.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_INTERFACE_CREATE_INFO_KHR;
+		vkInterfaceInfo.pNext = nullptr;
+		vkInterfaceInfo.maxPipelineRayPayloadSize = m_CI.rayTracingInfo.maxPayloadSize;
+		vkInterfaceInfo.maxPipelineRayHitAttributeSize = m_CI.rayTracingInfo.maxHitAttributeSize;
+
+		//ShaderGroupInfo
+		std::vector<VkRayTracingShaderGroupCreateInfoKHR> vkShaderGroupInfos;
+		vkShaderGroupInfos.reserve(m_CI.shaderGroupInfos.size());
+		for (auto& shaderGroupInfo : m_CI.shaderGroupInfos)
+		{
+			VkRayTracingShaderGroupCreateInfoKHR vkShaderGroupInfo;
+			vkShaderGroupInfo.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+			vkShaderGroupInfo.pNext = nullptr;
+			vkShaderGroupInfo.type = static_cast<VkRayTracingShaderGroupTypeKHR>(shaderGroupInfo.type);
+			vkShaderGroupInfo.generalShader = shaderGroupInfo.generalShader;
+			vkShaderGroupInfo.closestHitShader = shaderGroupInfo.closestHitShader;
+			vkShaderGroupInfo.anyHitShader = shaderGroupInfo.anyHitShader;
+			vkShaderGroupInfo.intersectionShader = shaderGroupInfo.intersectionShader;
+			vkShaderGroupInfo.pShaderGroupCaptureReplayHandle = nullptr;
+			vkShaderGroupInfos.push_back(vkShaderGroupInfo);
+		}
+
+		//Dynamic
+		std::vector<VkDynamicState> vkDynamicStates;
+		vkDynamicStates.reserve(m_CI.dynamicStates.dynamicStates.size());
+		for (auto& dynamicState : m_CI.dynamicStates.dynamicStates)
+			vkDynamicStates.push_back(static_cast<VkDynamicState>(dynamicState));
+
+		VkPipelineDynamicStateCreateInfo vkDynamicState;
+		vkDynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		vkDynamicState.pNext = nullptr;
+		vkDynamicState.flags = 0;
+		vkDynamicState.dynamicStateCount = static_cast<uint32_t>(vkDynamicStates.size());
+		vkDynamicState.pDynamicStates = vkDynamicStates.data();
+
+		//Fill Vulkan structure
+		m_RTPCI.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
+		m_RTPCI.pNext = nullptr;
+		m_RTPCI.flags = 0;
+		m_RTPCI.stageCount = static_cast<uint32_t>(vkShaderStages.size());
+		m_RTPCI.pStages = vkShaderStages.data();
+		m_RTPCI.groupCount = static_cast<uint32_t>(vkShaderGroupInfos.size());
+		m_RTPCI.pGroups = vkShaderGroupInfos.data();
+		m_RTPCI.maxPipelineRayRecursionDepth = m_CI.rayTracingInfo.maxRecursionDepth;
+		m_RTPCI.pLibraryInfo = nullptr;
+		m_RTPCI.pLibraryInterface;
+		m_RTPCI.pDynamicState = &vkDynamicState;
+		m_RTPCI.layout = m_PipelineLayout;
+		m_RTPCI.basePipelineHandle = VK_NULL_HANDLE;
+		m_RTPCI.basePipelineIndex = -1;
+		MIRU_ASSERT(vkCreateRayTracingPipelinesKHR(m_Device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &m_RTPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Ray Tracing Pipeline.");
+		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
+	}	
 	else
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");
 }
