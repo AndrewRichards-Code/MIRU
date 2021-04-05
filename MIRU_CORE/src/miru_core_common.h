@@ -203,6 +203,7 @@ namespace miru
 		inline PFN_vkCmdTraceRaysIndirectKHR vkCmdTraceRaysIndirectKHR;
 		inline PFN_vkGetRayTracingShaderGroupStackSizeKHR vkGetRayTracingShaderGroupStackSizeKHR;
 		inline PFN_vkCmdSetRayTracingPipelineStackSizeKHR vkCmdSetRayTracingPipelineStackSizeKHR;
+		inline PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
 
 		inline bool LoadPFN_VK_KHR_ray_tracing_pipeline(VkDevice& device)
 		{
@@ -212,6 +213,7 @@ namespace miru
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdTraceRaysIndirectKHR);
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkGetRayTracingShaderGroupStackSizeKHR);
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdSetRayTracingPipelineStackSizeKHR);
+			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkGetRayTracingShaderGroupHandlesKHR);
 
 			return true;
 		}

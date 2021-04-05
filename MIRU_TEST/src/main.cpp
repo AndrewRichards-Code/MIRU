@@ -655,7 +655,7 @@ int main()
 		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED },
 		{ ShaderGroupType::GENERAL, 3, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
 	};
-	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8 };
+	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8, cpu_alloc_0 };
 	raytracingPipelineCI.layout = { {setLayout1RT, setLayout2RT, setLayout3RT}, {} };
 	Ref<Pipeline> raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
 

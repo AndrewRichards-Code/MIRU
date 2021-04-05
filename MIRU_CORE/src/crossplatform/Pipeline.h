@@ -160,9 +160,10 @@ namespace crossplatform
 		};
 		struct RayTracingInfo
 		{
-			uint32_t maxRecursionDepth;
-			uint32_t maxPayloadSize;
-			uint32_t maxHitAttributeSize;
+			uint32_t		maxRecursionDepth;
+			uint32_t		maxPayloadSize;
+			uint32_t		maxHitAttributeSize;
+			Ref<Allocator>	pAllocator;			//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
 		struct PipelineLayout
 		{
@@ -200,6 +201,8 @@ namespace crossplatform
 		//Members
 	protected:
 		CreateInfo m_CI = {};
+
+		Ref<Buffer> m_SBTs[4];
 	};
 }
 }
