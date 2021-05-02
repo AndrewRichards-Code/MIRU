@@ -736,7 +736,7 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 	if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
-		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
@@ -744,12 +744,12 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
-		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 	}
 	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetPipelineState1(ref_cast<Pipeline>(pipeline)->m_RayTracingPipeline);
-		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_RootSignature);
+		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 	}
 	else
 	{
@@ -841,9 +841,9 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	size_t SamplerDescriptorHeapHandleIndex = 0;
 
 	size_t i = 0;
-	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_RootParameters)
+	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters)
 	{
-		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_RootParameters[i].DescriptorTable;
+		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters[i].DescriptorTable;
 		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
 	
 		if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
@@ -865,7 +865,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
 
 		i++;
-		if (i >= ref_cast<Pipeline>(pipeline)->m_RootParameters.size())
+		if (i >= ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters.size())
 			break;
 		
 	}
