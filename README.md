@@ -63,13 +63,14 @@ A UWP version of the MIRU_TEST project. MIRU_CORE should be built with the defin
 ### MIRU_ANDRIOD/MIRU_TEST:
 An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded as native activity, and libMIRU_CORE.a;
 
-## Build Tools with Visual Studio:
+## Build Tools with Visual Studio and CMake:
 ### Windows x64:
 - Microsoft Visual Studio 2019
 - Toolset: v142 
 - Windows SDK: 10.0.19041.0
 - ISO C++ 17
 - Microsoft.Windows.CppWinRT NuGet package (For MIRU_TEST_UWP only)
+- CMake Minimun Versionn 3.20
 
 ### Linux x64:
 - No project available to build.
@@ -85,6 +86,3 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Android API: Minimum 24 - Target 28
 - ISO C++ 17 (-std=c++1z)
 
-## Build Tools with CMake:
-### Window x64 (Generator Visual Studio 2019 Win64):
-- CMake Minimun Versionn 3.17

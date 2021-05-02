@@ -117,7 +117,7 @@ int main()
 	bool debug = false;
 	#endif
 	shaderCI.recompileArguments = {
-		debug ? "../MIRU_SHADER_COMPILER/exe/x64/Debug" : "../MIRU_SHADER_COMPILER/exe/x64/Release",
+		debug ? "../build/bin/x64/Debug" : "../build/bin/x64/Release",
 		"res/shaders/basic.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
