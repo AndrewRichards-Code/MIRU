@@ -157,6 +157,9 @@ Utility Options:
 Warning Options:
   -W[no-]<warning> Enable/Disable the specified warning*/
 
+#define str(s) #s
+#define xstr(s) str(s)
+
 namespace miru
 {
 namespace shader_compiler
@@ -173,7 +176,7 @@ namespace shader_compiler
 		const std::string& compiler_dir)
 	{
 		//Find Get DXC Directory
-		std::string dxcLocation = "C:/Program Files (x86)/Windows Kits/10/bin/" + std::string(WIN_TARGET_PLATFORM_VERSION) + "/x64";
+		std::string dxcLocation = "C:/Program Files (x86)/Windows Kits/10/bin/" + std::string(xstr(WIN_TARGET_PLATFORM_VERSION)) + "/x64";
 
 		if (!compiler_dir.empty())
 			dxcLocation = compiler_dir;

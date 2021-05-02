@@ -640,7 +640,7 @@ int main()
 	Ref<DescriptorSetLayout> setLayout2RT = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "RayTracing: DescSetLayout3";
 	setLayoutCI.descriptorSetLayoutBinding = {
-		{0, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }
+		{0, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::CLOSEST_HIT_BIT }
 	};
 	Ref<DescriptorSetLayout> setLayout3RT = DescriptorSetLayout::Create(&setLayoutCI);
 
@@ -652,11 +652,11 @@ int main()
 	raytracingPipelineCI.dynamicStates = {};
 	raytracingPipelineCI.shaderGroupInfos = {
 		{ ShaderGroupType::GENERAL, 0, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
-		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED },
+		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED, { {setLayout3RT}, {} }, 2 },
 		{ ShaderGroupType::GENERAL, 3, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
 	};
 	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8, cpu_alloc_0 };
-	raytracingPipelineCI.layout = { {setLayout1RT, setLayout2RT, setLayout3RT}, {} };
+	raytracingPipelineCI.layout = { {setLayout1RT, setLayout2RT}, {} };
 	Ref<Pipeline> raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
 
 	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;

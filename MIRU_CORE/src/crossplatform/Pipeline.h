@@ -149,14 +149,22 @@ namespace crossplatform
 		{
 			std::vector<DynamicState> dynamicStates;
 		};
+		struct PipelineLayout
+		{
+			std::vector<Ref<DescriptorSetLayout>> descriptorSetLayouts;
+			std::vector<PushConstantRange>		  pushConstantRanges;
+		};
+
 		#define MIRU_SHADER_UNUSED (~0U)
 		struct ShaderGroupInfo
 		{
-			ShaderGroupType type;				//If GENERAL, specify only a generalShader. If TRIANGLES_HIT_GROUP, specify a closestHitShader and/or an anyHitShader. If PROCEDURAL_HIT_GROUP, specify a closestHitShader and/or an anyHitShader and an intersectionShader must be specified.
-			uint32_t		generalShader;		//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for either a Raygen, Miss or Callable shader.
-			uint32_t		anyHitShader;		//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Any Hit shader.
-			uint32_t		closestHitShader;	//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Closest Hit shader.
-			uint32_t		intersectionShader;	//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Intersection Shader.
+			ShaderGroupType type;								//If GENERAL, specify only a generalShader. If TRIANGLES_HIT_GROUP, specify a closestHitShader and/or an anyHitShader. If PROCEDURAL_HIT_GROUP, specify a closestHitShader and/or an anyHitShader and an intersectionShader must be specified.
+			uint32_t		generalShader;						//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for either a Raygen, Miss or Callable shader.
+			uint32_t		anyHitShader;						//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Any Hit shader.
+			uint32_t		closestHitShader;					//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Closest Hit shader.
+			uint32_t		intersectionShader;					//Index into a contiguous array cross of all CreateInfo::shaders::stageAndEntryPoints for the Intersection Shader.
+			PipelineLayout	layout;								//Needed for D3D12 DXR Local Root Signatures.
+			uint32_t		layoutDescriptorSetNumOffset = 0;	//Needed for D3D12 DXR Local Root Signatures.
 		};
 		struct RayTracingInfo
 		{
@@ -165,11 +173,7 @@ namespace crossplatform
 			uint32_t		maxHitAttributeSize;
 			Ref<Allocator>	pAllocator;			//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
-		struct PipelineLayout
-		{
-			std::vector<Ref<DescriptorSetLayout>> descriptorSetLayouts;
-			std::vector<PushConstantRange>		  pushConstantRanges;
-		};
+		
 		struct CreateInfo
 		{
 			std::string						debugName;

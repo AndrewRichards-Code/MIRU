@@ -329,6 +329,12 @@ namespace miru
 			b += ((0x0F & (a >> i * 4)) / 0xF) << i;
 		return b;
 	};
+
+	auto alignedSize = [](uint32_t value, uint32_t alignment) -> uint32_t 
+	{ 
+		return (value + alignment - 1) & ~(alignment - 1); 
+	};
+
 }
 
 //MIRU Enum Class Bitwise Operators Templates

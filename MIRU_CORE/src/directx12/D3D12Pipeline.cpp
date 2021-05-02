@@ -31,88 +31,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	m_RootParameters.clear();
-	
-	D3D12_ROOT_DESCRIPTOR_TABLE descriptorRanges;
-	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTableSampler;
-
-	UINT set = 0;
-	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
-	{
-		descriptorRanges = {};
-		descriptorTableSampler = {};
-		m_DescriptorRanges.push_back({});
-		m_DescriptorRangesSampler.push_back({});
-		
-		for (size_t i = 0; i < 4; i++)
-		{
-			D3D12_DESCRIPTOR_RANGE descRange = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[i];
-			if (descRange.NumDescriptors > 0)
-			{
-				descRange.RegisterSpace = set;
-				if (descRange.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
-					m_DescriptorRangesSampler.back().push_back(descRange);
-				else
-					m_DescriptorRanges.back().push_back(descRange);
-			}
-		}
-
-		std::sort(m_DescriptorRanges.back().begin(), m_DescriptorRanges.back().end(),
-			[](const D3D12_DESCRIPTOR_RANGE& a, const D3D12_DESCRIPTOR_RANGE& b)
-			{
-				return a.BaseShaderRegister < b.BaseShaderRegister;
-			});
-
-		descriptorRanges.NumDescriptorRanges = static_cast<UINT>(m_DescriptorRanges.back().size());
-		descriptorRanges.pDescriptorRanges = m_DescriptorRanges.back().data();
-		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER].NumDescriptors)
-		{
-			descriptorTableSampler.NumDescriptorRanges = static_cast<UINT>(m_DescriptorRangesSampler.back().size());;
-			descriptorTableSampler.pDescriptorRanges = m_DescriptorRangesSampler.back().data();
-		}
-
-		D3D12_ROOT_PARAMETER rootParameter;
-		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameter.DescriptorTable = descriptorRanges;
-		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		m_RootParameters.push_back(rootParameter);
-
-		if (descriptorTableSampler.pDescriptorRanges)
-		{
-			rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			rootParameter.DescriptorTable = descriptorTableSampler;
-			rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-			m_RootParameters.push_back(rootParameter);
-		}
-
-		set++;
-	}
-	for (auto& pushConstantRange : m_CI.layout.pushConstantRanges)
-	{
-		//TODO: Review this.
-		D3D12_ROOT_PARAMETER rootParameter;
-		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootParameter.Constants.ShaderRegister = 0;
-		rootParameter.Constants.RegisterSpace = 0;
-		rootParameter.Constants.Num32BitValues = pushConstantRange.size;
-		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		m_RootParameters.push_back(rootParameter);
-	}
-	m_RootSignatureDesc.NumParameters = static_cast<UINT>(m_RootParameters.size());
-	m_RootSignatureDesc.pParameters = m_RootParameters.data();
-	m_RootSignatureDesc.NumStaticSamplers = 0;
-	m_RootSignatureDesc.pStaticSamplers = nullptr;
-	m_RootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	
-	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
-	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
-	
-	HRESULT res = D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError);
-	if (m_SerializedRootSignatureError)
-		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)m_SerializedRootSignatureError->GetBufferPointer());
-	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
-	MIRU_ASSERT(m_Device->CreateRootSignature(0, m_SerializedRootSignature->GetBufferPointer(), m_SerializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
+	m_GlobalRootSignature = CreateRootSignature(m_CI.layout);
 
 	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
 	{
@@ -269,7 +188,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_GPSD.DepthStencilState = {};
 
 		//Fill D3D12 structure
-		m_GPSD.pRootSignature = m_RootSignature;
+		m_GPSD.pRootSignature = m_GlobalRootSignature.rootSignature;
 		m_GPSD.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 		m_GPSD.NodeMask = 0;
 		m_GPSD.CachedPSO = {};
@@ -280,7 +199,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
 	{
-		m_CPSD.pRootSignature = m_RootSignature;
+		m_CPSD.pRootSignature = m_GlobalRootSignature.rootSignature;
 		m_CPSD.CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
 		m_CPSD.NodeMask = 0;
 		m_CPSD.CachedPSO = {};
@@ -300,11 +219,22 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			return result;
 		};
 
+		size_t totalShaderCount = 0;
+		for (auto& shader : m_CI.shaders)
+			for (auto& stageAndEntryPoint : shader->GetCreateInfo().stageAndEntryPoints)
+				totalShaderCount++;
+
+		//Resevere enough D3D12_STATE_SUBOBJECTs
+		m_RayTracingPipelineSubDesc.reserve(m_CI.shaders.size() + 3 * m_CI.shaderGroupInfos.size() + size_t(3));
+
 		//Fill out DXIL Library and Exports
-		std::vector < std::pair < crossplatform::Shader::StageBit, std::wstring>> w_ExportStagesAndNames;
 		std::vector<D3D12_DXIL_LIBRARY_DESC> dxilLibDescs;
 		std::vector<D3D12_EXPORT_DESC> exportDescs;
+		std::vector<std::pair<crossplatform::Shader::StageBit, std::wstring>> w_ExportStagesAndNames;
 		dxilLibDescs.reserve(m_CI.shaders.size());
+		exportDescs.reserve(totalShaderCount);
+		w_ExportStagesAndNames.reserve(totalShaderCount);
+
 		for(auto& shader : m_CI.shaders)
 		{
 			UINT exportCount = 0;
@@ -333,6 +263,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Fill out HitGroups
 		std::vector<std::wstring> w_HitGroupNames;
 		std::vector<D3D12_HIT_GROUP_DESC> hitGroupDescs;
+		std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> subobjectToExportAssociations;
+		w_HitGroupNames.reserve(m_CI.shaderGroupInfos.size());
+		hitGroupDescs.reserve(m_CI.shaderGroupInfos.size());
+		subobjectToExportAssociations.reserve(m_CI.shaderGroupInfos.size());
+		m_LocalRootSignatures.reserve(m_CI.shaderGroupInfos.size());
 		UINT hitGroupCount = 0;
 		for (auto& shaderGroupInfo : m_CI.shaderGroupInfos)
 		{
@@ -359,12 +294,40 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				hitGroup.pDesc = &hitGroupDescs.back();
 				m_RayTracingPipelineSubDesc.push_back(hitGroup);
 			}
+
+			//Deal with any ShaderGroup Parameters
+			if (shaderGroupInfo.layout.descriptorSetLayouts.size()
+				|| shaderGroupInfo.layout.pushConstantRanges.size())
+			{
+				m_LocalRootSignatures.emplace_back(std::move(CreateRootSignature(shaderGroupInfo.layout, shaderGroupInfo.layoutDescriptorSetNumOffset, true)));
+
+				//Fill out LocalRootSignature
+				D3D12_STATE_SUBOBJECT localRootSignature;
+				localRootSignature.Type = D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
+				localRootSignature.pDesc = &m_LocalRootSignatures.back();
+				m_RayTracingPipelineSubDesc.push_back(localRootSignature);
+
+				//Fill out SubobjectsToExportsAssociation
+				D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION subobjectToExportAssociation;
+				subobjectToExportAssociation.pSubobjectToAssociate = &m_RayTracingPipelineSubDesc.back();
+				subobjectToExportAssociation.NumExports = 1;
+				if (shaderGroupInfo.type > crossplatform::ShaderGroupType::GENERAL)
+					subobjectToExportAssociation.pExports = &(hitGroupDescs.back().HitGroupExport);
+				else
+					subobjectToExportAssociation.pExports = &(exportDescs[shaderGroupInfo.generalShader].Name);
+				subobjectToExportAssociations.push_back(subobjectToExportAssociation);
+
+				D3D12_STATE_SUBOBJECT subobjectToExportAssociationSubObject;
+				subobjectToExportAssociationSubObject.Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
+				subobjectToExportAssociationSubObject.pDesc = &subobjectToExportAssociations.back();
+				m_RayTracingPipelineSubDesc.push_back(subobjectToExportAssociationSubObject);
+			}
 		}
 
 		//Fill out GlobalRootSignature
 		D3D12_STATE_SUBOBJECT globalRootSignature;
 		globalRootSignature.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
-		globalRootSignature.pDesc = &m_RootSignature;
+		globalRootSignature.pDesc = &m_GlobalRootSignature.rootSignature;
 		m_RayTracingPipelineSubDesc.push_back(globalRootSignature);
 
 		//Fill out ShaderConfig
@@ -416,8 +379,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			shaderIdentifiers[2].push_back(m_RayTracingPipelineProperties->GetShaderIdentifier(hitGroupName.c_str()));
 
 		//ShaderHandleSize
-		auto alignedSize = [](uint32_t value, uint32_t alignment) -> uint32_t { return (value + alignment - 1) & ~(alignment - 1); };
-
 		const size_t handleSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 		const size_t handleSizeAligned = alignedSize(handleSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 		
@@ -475,9 +436,16 @@ Pipeline::~Pipeline()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	MIRU_D3D12_SAFE_RELEASE(m_Pipeline);
-	MIRU_D3D12_SAFE_RELEASE(m_RootSignature);
-	MIRU_D3D12_SAFE_RELEASE(m_SerializedRootSignature);
-	MIRU_D3D12_SAFE_RELEASE(m_SerializedRootSignatureError);
+	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.rootSignature);
+	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.serializedRootSignature);
+	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.serializedRootSignatureError);
+
+	for (auto& localRootSignature : m_LocalRootSignatures)
+	{
+		MIRU_D3D12_SAFE_RELEASE(localRootSignature.rootSignature);
+		MIRU_D3D12_SAFE_RELEASE(localRootSignature.serializedRootSignature);
+		MIRU_D3D12_SAFE_RELEASE(localRootSignature.serializedRootSignatureError);
+	}
 }
 
 D3D12_PRIMITIVE_TOPOLOGY Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology)
@@ -644,5 +612,96 @@ D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(crossplatform::LogicOp logic)
 	case crossplatform::LogicOp::SET:
 		return D3D12_LOGIC_OP_SET;
 	}
+}
+
+Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipeline::PipelineLayout layout, uint32_t setNumOffset, bool localRootSignature)
+{
+	RootSignature result;
+	result.rootParameters.clear();
+
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptoTableSRV_UAV_CBV;
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTableSampler;
+
+	UINT set = 0;
+	set += setNumOffset;
+	for (auto& descriptorSetLayout : layout.descriptorSetLayouts)
+	{
+		descriptoTableSRV_UAV_CBV = {};
+		descriptorTableSampler = {};
+		result.descriptorRangesSRV_UAV_CBV.push_back({});
+		result.descriptorRangesSampler.push_back({});
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			D3D12_DESCRIPTOR_RANGE descRange = ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[i];
+			if (descRange.NumDescriptors > 0)
+			{
+				descRange.RegisterSpace = set;
+				if (descRange.RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+					result.descriptorRangesSampler.back().push_back(descRange);
+				else
+					result.descriptorRangesSRV_UAV_CBV.back().push_back(descRange);
+			}
+		}
+
+		std::sort(result.descriptorRangesSRV_UAV_CBV.back().begin(), result.descriptorRangesSRV_UAV_CBV.back().end(),
+			[](const D3D12_DESCRIPTOR_RANGE& a, const D3D12_DESCRIPTOR_RANGE& b)
+			{
+				return a.BaseShaderRegister < b.BaseShaderRegister;
+			});
+
+		descriptoTableSRV_UAV_CBV.NumDescriptorRanges = static_cast<UINT>(result.descriptorRangesSRV_UAV_CBV.back().size());
+		descriptoTableSRV_UAV_CBV.pDescriptorRanges = result.descriptorRangesSRV_UAV_CBV.back().data();
+		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER].NumDescriptors)
+		{
+			descriptorTableSampler.NumDescriptorRanges = static_cast<UINT>(result.descriptorRangesSampler.back().size());;
+			descriptorTableSampler.pDescriptorRanges = result.descriptorRangesSampler.back().data();
+		}
+
+		D3D12_ROOT_PARAMETER rootParameter;
+		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParameter.DescriptorTable = descriptoTableSRV_UAV_CBV;
+		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		result.rootParameters.push_back(rootParameter);
+		if (descriptorTableSampler.pDescriptorRanges)
+		{
+			rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParameter.DescriptorTable = descriptorTableSampler;
+			rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			result.rootParameters.push_back(rootParameter);
+		}
+
+		set++;
+	}
+
+	for (auto& pushConstantRange : m_CI.layout.pushConstantRanges)
+	{
+		//TODO: Review this.
+		D3D12_ROOT_PARAMETER rootParameter;
+		rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParameter.Constants.ShaderRegister = 0;
+		rootParameter.Constants.RegisterSpace = 0;
+		rootParameter.Constants.Num32BitValues = pushConstantRange.size;
+		rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		result.rootParameters.push_back(rootParameter);
+	}
+
+	result.rootSignatureDesc.NumParameters = static_cast<UINT>(result.rootParameters.size());
+	result.rootSignatureDesc.pParameters = result.rootParameters.data();
+	result.rootSignatureDesc.NumStaticSamplers = 0;
+	result.rootSignatureDesc.pStaticSamplers = nullptr;
+	result.rootSignatureDesc.Flags = localRootSignature ? D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE : D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
+	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
+
+	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &result.serializedRootSignature, &result.serializedRootSignatureError);
+	if (result.serializedRootSignatureError)
+		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)result.serializedRootSignatureError->GetBufferPointer());
+	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
+	MIRU_ASSERT(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
+
+	return std::move(result);
 }
 #endif

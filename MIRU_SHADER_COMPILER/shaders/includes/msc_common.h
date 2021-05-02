@@ -87,6 +87,9 @@
 //Ray Tracing Shaders
 #if defined MIRU_VULKAN
 #define MIRU_RAYTRACING_ACCELERATION_STRUCTURE(set_num, bind_num, name) [[vk::binding(bind_num, set_num)]] RaytracingAccelerationStructure name
+#define MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl) [[vk::shader_record_ext]] parameter_decl
 #else
 #define MIRU_RAYTRACING_ACCELERATION_STRUCTURE(set_num, bind_num, name) RaytracingAccelerationStructure name : register(t##bind_num, space##set_num)
+#define MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl) parameter_decl
 #endif
+#define MIRU_SHADER_RECORD(parameter_decl) MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl)

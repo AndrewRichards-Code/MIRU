@@ -21,6 +21,19 @@ namespace d3d12
 
 	class Pipeline final : public crossplatform::Pipeline
 	{
+		//enums/structs
+	private:
+		struct RootSignature
+		{
+			ID3D12RootSignature*								rootSignature = nullptr;
+			ID3DBlob*											serializedRootSignature = nullptr;
+			ID3DBlob*											serializedRootSignatureError = nullptr;
+			D3D12_ROOT_SIGNATURE_DESC							rootSignatureDesc;
+			std::vector<D3D12_ROOT_PARAMETER>					rootParameters;
+			std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>>	descriptorRangesSRV_UAV_CBV;
+			std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>>	descriptorRangesSampler;
+		};
+
 		//Methods
 	public:
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
@@ -32,18 +45,14 @@ namespace d3d12
 	private:
 		D3D12_BLEND ToD3D12_BLEND(crossplatform::BlendFactor blend);
 		D3D12_LOGIC_OP ToD3D12_LOGIC_OP(crossplatform::LogicOp logic);
+
+		RootSignature CreateRootSignature(const crossplatform::Pipeline::PipelineLayout layout, uint32_t setNumOffset = 0, bool localRootSignature = false);
 		
 		//Members
 	public:
 		ID3D12Device* m_Device;
 
-		ID3D12RootSignature* m_RootSignature;
-		ID3DBlob* m_SerializedRootSignature = nullptr;
-		ID3DBlob* m_SerializedRootSignatureError = nullptr;
-		D3D12_ROOT_SIGNATURE_DESC m_RootSignatureDesc;
-		std::vector<D3D12_ROOT_PARAMETER> m_RootParameters;
-		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRanges;
-		std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> m_DescriptorRangesSampler;
+		RootSignature m_GlobalRootSignature;
 
 		ID3D12PipelineState* m_Pipeline;
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_GPSD = {};
@@ -52,6 +61,7 @@ namespace d3d12
 		ID3D12StateObject* m_RayTracingPipeline;
 		D3D12_STATE_OBJECT_DESC m_RayTracingPipelineDesc;
 		std::vector<D3D12_STATE_SUBOBJECT> m_RayTracingPipelineSubDesc;
+		std::vector<RootSignature> m_LocalRootSignatures;
 
 		std::vector<D3D12_VIEWPORT> m_Viewports;
 		std::vector<D3D12_RECT> m_Scissors;

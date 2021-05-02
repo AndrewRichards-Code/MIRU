@@ -405,8 +405,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleSize;
 		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleAlignment;
 		
-		auto alignedSize = [](uint32_t value, uint32_t alignment) -> uint32_t { return (value + alignment - 1) & ~(alignment - 1); };
-
 		const uint32_t handleSize = vkHandleSize;
 		const uint32_t handleSizeAligned = alignedSize(vkHandleSize, vkHandleSizeAligned);
 		const size_t sbtSize = static_cast<size_t>(m_RTPCI.groupCount * handleSizeAligned);

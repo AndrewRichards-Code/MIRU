@@ -4,11 +4,11 @@
 #include "ErrorCodes.h"
 
 //Spirv-cross Header and Library
-#include "../../MIRU_CORE/redist/spirv_cross/Include/spirv_cross.hpp"
+#include "spirv_cross/Include/spirv_cross.hpp"
 #if defined(_DEBUG)
-#pragma comment(lib, "../MIRU_CORE/redist/spirv_cross/lib/x64/spirv-cross-cored.lib")
+#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
 #else
-#pragma comment(lib, "../MIRU_CORE/redist/spirv_cross/lib/x64/spirv-cross-core.lib")
+#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-core.lib")
 #endif
 
 namespace miru

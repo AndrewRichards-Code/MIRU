@@ -2,7 +2,7 @@
 
 MIRU_RW_IMAGE_2D(1, 0, float4, output);
 MIRU_RAYTRACING_ACCELERATION_STRUCTURE(1, 1, accelStruct);
-MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_2D, 2, 0, float4, _texture);
+MIRU_SHADER_RECORD(MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_2D, 2, 0, float4, LRS_texture));
 
 struct SceneConstants
 {
@@ -60,25 +60,22 @@ void ray_generation_main()
 
 }
 
-//Any-Hit
 [shader("anyhit")]
 void any_hit_main(inout Payload payload, in BuiltInTriangleIntersectionAttributes  attr)
 {
     payload.colour = float4(1.0, 0.0, 0.0, 1.0);
 }
 
-//Closest-Hit
 [shader("closesthit")]
 void closest_hit_main(inout Payload payload, in BuiltInTriangleIntersectionAttributes  attr)
 {
     payload.colour = float4(0.0, 1.0, 0.0, 1.0);
-	payload.colour = _texture_ImageCIS.SampleLevel(_texture_SamplerCIS, float2(0.5, 0.5), 0);
+	payload.colour = LRS_texture_ImageCIS.SampleLevel(LRS_texture_SamplerCIS, float2(0.5, 0.5), 0);
 }
 
-//Miss
 [shader("miss")]
 void miss_main(inout Payload payload)
 {
-	payload.colour = _texture_ImageCIS.SampleLevel(_texture_SamplerCIS, float2(0.5, 0.5), 0); //float4(0.0, 0.0, 0.0, 1.0);
+	payload.colour = float4(0.0, 0.0, 0.0, 1.0);
 
 }
