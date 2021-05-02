@@ -88,4 +88,5 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 
 ## Build Tools with CMake:
 ### Window x64 (Generator Visual Studio 2019 Win64):
-- CMake Minimun Versionn 3.17
+- CMake Minimun Versionn 3.20
+
