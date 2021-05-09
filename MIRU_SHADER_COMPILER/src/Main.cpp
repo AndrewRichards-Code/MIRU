@@ -24,6 +24,7 @@ using namespace shader_compiler;
 int main(int argc, const char** argv)
 {
 	ErrorCode error = ErrorCode::MIRU_SHADER_COMPILER_OK;
+	arc::Log::SetErrorCodeToString(ErrorCodeStr);
 
 	CONSOLE_OUTPUT_WHITE;
 
@@ -50,7 +51,7 @@ int main(int argc, const char** argv)
 			output = false;
 	}
 	if (logo)
-		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2020 Andrew Richards.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2021 Andrew Richards.\n\n");
 	if (help)
 	{
 		MIRU_SHADER_COMPILER_PRINTF(help_doucumentation);

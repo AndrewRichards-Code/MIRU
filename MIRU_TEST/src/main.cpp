@@ -846,7 +846,7 @@ int main()
 
 			proj = Mat4::Perspective(3.14159/2.0, float(width)/float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
-				proj.k *= -1;
+				proj.f *= -1;
 			modl = Mat4::Translation({ 0.0f, 0.0f, -1.5f })
 				//* translate(mat4(1.0f), { float(var_x)/10.0f, float(var_y)/10.0f, float(var_z)/10.0f})
 				* Mat4::Rotation((var_x * 5.0f) * 3.14159/180.0, { 0, 1, 0 })

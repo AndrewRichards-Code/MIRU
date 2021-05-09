@@ -38,12 +38,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-#if defined(MIRU_WIN64_UWP)
-		s_HModeuleDXIL = LoadPackagedLibrary(L"dxil.dll", 0);
-#else
-		s_DXILFullpath = std::string(PROJECT_DIR) + "redist\\dxc\\lib\\x64\\dxil.dll";
-		s_HModeuleDXIL = LoadLibraryA(s_DXILFullpath.generic_string().c_str());
-#endif
+		s_DXILFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxil.dll";
+		s_HModeuleDXIL = arc::DynamicLibrary::Load(s_DXILFullpath.generic_string());
 		if (!s_HModeuleDXIL)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
@@ -77,9 +73,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Create Device
 	MIRU_ASSERT(D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device."); //We only use the first PhysicalDevice
 	D3D12SetName(m_Device, m_CI.deviceDebugName);
-
-	D3D12_FEATURE_DATA_FEATURE_LEVELS featLevels = { _countof(featureLevels), featureLevels, D3D_FEATURE_LEVEL_11_0 };
-	HRESULT hr = m_Device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
 
 	//Create Info Queue
 	m_Device->QueryInterface(IID_PPV_ARGS(&m_InfoQueue));

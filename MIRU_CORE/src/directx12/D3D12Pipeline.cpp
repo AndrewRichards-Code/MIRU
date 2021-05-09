@@ -104,10 +104,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_RootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
-	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
+	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	MIRU_ASSERT(m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(rootSignatureData)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
 	
-	HRESULT res = D3D12SerializeRootSignature(&m_RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &m_SerializedRootSignature, &m_SerializedRootSignatureError);
+	HRESULT res = D3D12SerializeRootSignature(&m_RootSignatureDesc, rootSignatureData.HighestVersion, &m_SerializedRootSignature, &m_SerializedRootSignatureError);
 	if (m_SerializedRootSignatureError)
 		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)m_SerializedRootSignatureError->GetBufferPointer());
 	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");

@@ -36,7 +36,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	#endif
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
-	D3D12SetName(m_Swapchain, m_CI.debugName);
+	//D3D12SetName(m_Swapchain, m_CI.debugName);
 	MIRU_ASSERT(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
 	m_Format = m_SwapchainDesc.Format;
 

@@ -27,7 +27,7 @@ namespace d3d12
 
 	private:
 		//DXCompiler Library
-		static HMODULE s_HModeuleDXCompiler;
+		static arc::DynamicLibrary::LibraryHandle s_HModeuleDXCompiler;
 		static std::filesystem::path s_DXCompilerFullpath;
 		static uint32_t s_RefCount;
 	};

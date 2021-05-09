@@ -57,7 +57,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(SolutionDir)MIRU_CORE\dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -83,7 +83,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(SolutionDir)MIRU_CORE\dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -104,6 +104,18 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="dep\ARC\src\ConsoleOutputColours.h" />
+    <ClInclude Include="dep\ARC\src\DATE\date.h" />
+    <ClInclude Include="dep\ARC\src\DebugMacros.h" />
+    <ClInclude Include="dep\ARC\src\DynamicLibrary.h" />
+    <ClInclude Include="dep\ARC\src\EnumClassBitwiseOperators.h" />
+    <ClInclude Include="dep\ARC\src\ExportAttributes.h" />
+    <ClInclude Include="dep\ARC\src\FileLoader.h" />
+    <ClInclude Include="dep\ARC\src\FileSystemHelpers.h" />
+    <ClInclude Include="dep\ARC\src\Log.h" />
+    <ClInclude Include="dep\ARC\src\ScopeAndRef.h" />
+    <ClInclude Include="dep\ARC\src\StringConversion.h" />
+    <ClInclude Include="dep\ARC\src\WindowsErrorHandling.h" />
     <ClInclude Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.h" />
     <ClInclude Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.h" />
     <ClInclude Include="src\crossplatform\Allocator.h" />
@@ -133,6 +145,8 @@
     <ClInclude Include="src\directx12\D3D12Shader.h" />
     <ClInclude Include="src\directx12\D3D12Swapchain.h" />
     <ClInclude Include="src\directx12\D3D12Sync.h" />
+    <ClInclude Include="src\directx12\D3D12_Include.h" />
+    <ClInclude Include="src\directx12\D3D12_SetName.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
     <ClInclude Include="src\vulkan\VKBuffer.h" />
     <ClInclude Include="src\vulkan\VKCommandPoolBuffer.h" />
@@ -146,6 +160,8 @@
     <ClInclude Include="src\vulkan\VKSync.h" />
     <ClInclude Include="src\miru_core.h" />
     <ClInclude Include="src\miru_core_common.h" />
+    <ClInclude Include="src\vulkan\VK_Include.h" />
+    <ClInclude Include="src\vulkan\VK_SetName.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
