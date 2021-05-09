@@ -5,7 +5,7 @@
 using namespace miru;
 using namespace d3d12;
 
-HMODULE Shader::s_HModeuleDXCompiler;
+arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDXCompiler;
 std::filesystem::path Shader::s_DXCompilerFullpath;
 uint32_t Shader::s_RefCount = 0;
 
@@ -16,7 +16,7 @@ Shader::Shader(CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	m_ShaderModelData.HighestShaderModel = D3D_SHADER_MODEL_6_5;
+	m_ShaderModelData.HighestShaderModel = D3D_SHADER_MODEL_6_6;
 	MIRU_WARN(m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &m_ShaderModelData, sizeof(m_ShaderModelData)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_SHADER_MODEL");
 
 	Reconstruct();
@@ -30,7 +30,7 @@ Shader::~Shader()
 	s_RefCount--;
 	if (!s_RefCount)
 	{
-		if (!FreeLibrary(s_HModeuleDXCompiler))
+		if (!arc::DynamicLibrary::Unload(s_HModeuleDXCompiler))
 		{
 			std::string error_str = "WARN: D3D12: Unable to free '" + s_DXCompilerFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
@@ -65,12 +65,8 @@ void Shader::D3D12ShaderReflection()
 	//Load dxcompiler.dll
 	if (!s_HModeuleDXCompiler)
 	{
-		#if defined(MIRU_WIN64_UWP)
-		s_HModeuleDXCompiler = LoadPackagedLibrary(L"dxcompiler.dll", 0);
-		#else
 		s_DXCompilerFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxcompiler.dll";
-		s_HModeuleDXCompiler = LoadLibraryA(s_DXCompilerFullpath.generic_string().c_str());
-		#endif
+		s_HModeuleDXCompiler = arc::DynamicLibrary::Load(s_DXCompilerFullpath.generic_string());
 		if (!s_HModeuleDXCompiler)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXCompilerFullpath.generic_string() + "'.";
@@ -81,7 +77,7 @@ void Shader::D3D12ShaderReflection()
 	s_RefCount++;
 
 	IDxcLibrary* dxc_library;
-	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)::GetProcAddress(s_HModeuleDXCompiler, "DxcCreateInstance");
+	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)arc::DynamicLibrary::LoadFunction(s_HModeuleDXCompiler, "DxcCreateInstance");
 	DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library));
 
 	IDxcBlobEncoding* dxc_shader_bin;

@@ -210,21 +210,12 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
 	{
-		auto to_wstring = [](const std::string& string) -> std::wstring
-		{
-			wchar_t* wstr = new wchar_t[string.size() + 1];
-			mbstowcs_s(nullptr, wstr, string.size() + 1, string.c_str(), string.size() + 1);
-			std::wstring result(wstr);
-			delete[] wstr;
-			return result;
-		};
-
 		size_t totalShaderCount = 0;
 		for (auto& shader : m_CI.shaders)
 			for (auto& stageAndEntryPoint : shader->GetCreateInfo().stageAndEntryPoints)
 				totalShaderCount++;
 
-		//Resevere enough D3D12_STATE_SUBOBJECTs
+		//Resevere enough D3D12_STATE_SUBOBJECTs: All Library shader + (HitGroup + LocalRootSignature + ExportsAssociation) + (GlobalRootSignature + ShaderConfig + PipelineConfig)
 		m_RayTracingPipelineSubDesc.reserve(m_CI.shaders.size() + 3 * m_CI.shaderGroupInfos.size() + size_t(3));
 
 		//Fill out DXIL Library and Exports
@@ -241,7 +232,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			for (auto& stageAndEntryPoint : shader->GetCreateInfo().stageAndEntryPoints)
 			{
 				D3D12_EXPORT_DESC exportDesc;
-				w_ExportStagesAndNames.push_back({ stageAndEntryPoint.first, to_wstring(stageAndEntryPoint.second) });
+				w_ExportStagesAndNames.push_back({ stageAndEntryPoint.first, arc::ToWString(stageAndEntryPoint.second) });
 				exportDesc.Name = w_ExportStagesAndNames.back().second.c_str();
 				exportDesc.ExportToRename = nullptr;
 				exportDesc.Flags = D3D12_EXPORT_FLAG_NONE;
@@ -693,10 +684,10 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipel
 	result.rootSignatureDesc.Flags = localRootSignature ? D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE : D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
-	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(D3D12_FEATURE_DATA_ROOT_SIGNATURE));
+	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	MIRU_ASSERT(m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(rootSignatureData)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
 
-	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &result.serializedRootSignature, &result.serializedRootSignatureError);
+	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, rootSignatureData.HighestVersion, &result.serializedRootSignature, &result.serializedRootSignatureError);
 	if (result.serializedRootSignatureError)
 		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)result.serializedRootSignatureError->GetBufferPointer());
 	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");

@@ -1,0 +1,3 @@
+[submodule "MIRU_CORE/dep/ARC"]
+	path = MIRU_CORE/dep/ARC
+	url = https://github.com/AndrewRichards-Code/ARC.git

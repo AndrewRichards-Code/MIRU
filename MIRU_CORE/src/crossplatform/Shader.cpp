@@ -6,6 +6,9 @@
 #include "vulkan/VKShader.h"
 #endif
 
+#include "ARC/src/FileSystemHelpers.h"
+#include "ARC/src/FileLoader.h"
+
 using namespace miru;
 using namespace crossplatform;
 
@@ -85,9 +88,9 @@ void Shader::GetShaderByteCode()
 	//Check shader exist and the binary is upto date.
 	#if !defined(MIRU_WIN64_UWP)
 	bool buildShader = true;
-	if (std::filesystem::exists(std::filesystem::path(binFilepath)) && std::filesystem::exists(std::filesystem::path(m_CI.recompileArguments.hlslFilepath)))
+	if (arc::FileExist(binFilepath) && arc::FileExist(m_CI.recompileArguments.hlslFilepath))
 	{
-		buildShader = std::filesystem::last_write_time(std::filesystem::path(binFilepath)) < std::filesystem::last_write_time(std::filesystem::path(m_CI.recompileArguments.hlslFilepath));
+		buildShader = arc::FileLastWriteTime(binFilepath) < arc::FileLastWriteTime(m_CI.recompileArguments.hlslFilepath);
 	}
 
 	if (buildShader)
@@ -100,15 +103,8 @@ void Shader::GetShaderByteCode()
 	}
 	#endif
 
-	std::ifstream stream(binFilepath, std::ios::ate | std::ios::binary);
-	if (!stream.is_open())
-	{
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unable to read shader binary file.");
-	}
-	m_ShaderBinary.resize(static_cast<size_t>(stream.tellg()));
-	stream.seekg(0);
-	stream.read(m_ShaderBinary.data(), static_cast<std::streamsize>(m_ShaderBinary.size()));
-	stream.close();
+	m_ShaderBinary = arc::ReadBinaryFile(binFilepath);
+	MIRU_ASSERT(m_ShaderBinary.empty(), "ERROR: CROSSPLATFORM: Unable to read shader binary file.");
 }
 
 int Shader::Call_MIRU_SHADER_COMPILER()
