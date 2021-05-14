@@ -23,8 +23,9 @@ using namespace shader_compiler;
 
 int main(int argc, const char** argv)
 {
+	MIRU_SHDAER_COMPILER_SET_ERROR_CODE_TO_STRING_FUNCTION;
+	
 	ErrorCode error = ErrorCode::MIRU_SHADER_COMPILER_OK;
-	arc::Log::SetErrorCodeToString(ErrorCodeStr);
 
 	CONSOLE_OUTPUT_WHITE;
 

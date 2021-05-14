@@ -166,10 +166,16 @@ namespace miru
 #include "ARC/src/Log.h"
 #define MIRU_PRINTF ARC_PRINTF
 
-//Triggered if x != 0
-#define MIRU_ASSERT(x, y) if((x) != 0) { ARC_FATAL(static_cast<uint64_t>(x), "%s\n", y); ARC_ASSERT(false); }
+inline arc::Log MiruCoreLog("MIRU_CORE");
+#ifdef ARC_LOG_INSTANCE
+#undef ARC_LOG_INSTANCE
+#define ARC_LOG_INSTANCE MiruCoreLog
+#endif
 
-#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<uint64_t>(x), "%s\n", y) }
-#define MIRU_ERROR(x, y) if((x) != 0) { ARC_ERROR(static_cast<uint64_t>(x), "%s\n", y) }
-#define MIRU_WARN(x, y) if((x) != 0) { ARC_WARN(static_cast<uint64_t>(x), "%s\n", y) }
-#define MIRU_INFO(x, y) if((x) != 0) { ARC_INFO(static_cast<uint64_t>(x), "%s\n", y) }
+//Triggered if x != 0
+#define MIRU_ASSERT(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); }
+
+#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); }
+#define MIRU_ERROR(x, y) if((x) != 0) { ARC_ERROR(static_cast<int64_t>(x), "%s", y); }
+#define MIRU_WARN(x, y) if((x) != 0) { ARC_WARN(static_cast<int64_t>(x), "%s", y); }
+#define MIRU_INFO(x, y) if((x) != 0) { ARC_INFO(static_cast<int64_t>(x), "%s", y); }

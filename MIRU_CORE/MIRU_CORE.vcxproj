@@ -57,7 +57,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(SolutionDir)MIRU_CORE\dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -83,7 +83,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(SolutionDir)MIRU_CORE\dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>

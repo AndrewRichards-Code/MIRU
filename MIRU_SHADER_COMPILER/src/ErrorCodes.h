@@ -21,7 +21,7 @@ namespace shader_compiler
 		MIRU_SHADER_COMPILER_SPV_ERROR
 	};
 
-	inline std::string ErrorCodeStr(uint64_t code)
+	static std::string ErrorCodeToString(int64_t code)
 	{
 		switch ((ErrorCode)code)
 		{
@@ -55,5 +55,12 @@ namespace shader_compiler
 #define MIRU_SHADER_COMPILER_PRINTF(fmt, ...) if(output) { ARC_PRINTF(fmt, __VA_ARGS__); }
 
 //Log error code
-#define MIRU_SHADER_COMPILER_RETURN(x, y) {if(x != miru::shader_compiler::ErrorCode::MIRU_SHADER_COMPILER_OK) { ARC_FATAL((uint64_t)(x), "%s\n", y); ARC_ASSERT(false); } return static_cast<int>(x); } 
-#define MIRU_SHADER_COMPILER_ERROR_CODE(x, y) {if(x != miru::shader_compiler::ErrorCode::MIRU_SHADER_COMPILER_OK) { ARC_FATAL((uint64_t)(x), "%s\n", y) ARC_ASSERT(false); } } 
+inline arc::Log MiruShaderCompilerLog("MIRU_SHADER_COMPILER");
+#ifdef ARC_LOG_INSTANCE
+#undef ARC_LOG_INSTANCE
+#define ARC_LOG_INSTANCE MiruShaderCompilerLog
+#endif
+#define MIRU_SHDAER_COMPILER_SET_ERROR_CODE_TO_STRING_FUNCTION MiruShaderCompilerLog.SetErrorCodeToStringFunction(ErrorCodeToString)
+
+#define MIRU_SHADER_COMPILER_RETURN(x, y) if((x) != miru::shader_compiler::ErrorCode::MIRU_SHADER_COMPILER_OK) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); } return static_cast<int>(x)
+#define MIRU_SHADER_COMPILER_ERROR_CODE(x, y) if((x) != miru::shader_compiler::ErrorCode::MIRU_SHADER_COMPILER_OK) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); }
