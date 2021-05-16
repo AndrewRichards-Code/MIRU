@@ -707,7 +707,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	for (auto& attachment : subpassDesc.colourAttachments)
 	{
 		attachId = attachment.attachmentIndex;
-		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp > RenderPass::AttachmentLoadOp::LOAD)
+		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, m_RenderPassClearValues[attachId].colour.float32, 0, nullptr);
 	}
 	if (!subpassDesc.depthStencilAttachment.empty())
@@ -716,9 +716,9 @@ void CommandBuffer::NextSubpass(uint32_t index)
 		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasDSV)
 		{
 			D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
-			if (renderpassAttachments[attachId].loadOp > RenderPass::AttachmentLoadOp::LOAD)
+			if (renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 				flags |= D3D12_CLEAR_FLAG_DEPTH;
-			if (renderpassAttachments[attachId].stencilLoadOp > RenderPass::AttachmentLoadOp::LOAD)
+			if (renderpassAttachments[attachId].stencilLoadOp == RenderPass::AttachmentLoadOp::CLEAR)
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
 
 			if(flags)

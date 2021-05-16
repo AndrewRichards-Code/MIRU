@@ -20,10 +20,14 @@ namespace debug
 	public:
 
 	private:
-		//Pix Library
-		static arc::DynamicLibrary::LibraryHandle s_PixHandle;
-		static std::filesystem::path s_PixFullpath;
-		static uint32_t s_RefCount;
+		//Pix Libraries
+		static arc::DynamicLibrary::LibraryHandle s_WinPixEventRuntimeHandle;
+		static std::filesystem::path s_WinPixEventRuntimeFullpath;
+		static uint32_t s_WinPixEventRuntimeRefCount;
+
+		static arc::DynamicLibrary::LibraryHandle s_WinPixGpuCapturerHandle;
+		static std::filesystem::path s_WinPixGpuCapturerFullpath;
+		static uint32_t s_WinPixGpuCapturerRefCount;
 	};
 }
 }
