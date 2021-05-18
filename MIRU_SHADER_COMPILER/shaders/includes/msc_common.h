@@ -32,6 +32,8 @@
 #define MIRU_IMAGE_1D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1DArray<type> name 
 #define MIRU_IMAGE_2D_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2DArray<type> name 
 #define MIRU_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] TextureCubeArray<type> name 
+#define MIRU_IMAGE_2DMS(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2DMS<type> name 
+#define MIRU_IMAGE_2DMS_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture2DMSArray<type> name 
 #define MIRU_RW_IMAGE_1D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture1D<type> name 
 #define MIRU_RW_IMAGE_2D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2D<type> name 
 #define MIRU_RW_IMAGE_3D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture3D<type> name 
@@ -46,6 +48,8 @@
 #define MIRU_IMAGE_1D_ARRAY(set_num, bind_num, type, name) Texture1DArray<type> name : register(t##bind_num, space##set_num)
 #define MIRU_IMAGE_2D_ARRAY(set_num, bind_num, type, name) Texture2DArray<type> name : register(t##bind_num, space##set_num)
 #define MIRU_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) TextureCubeArray<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_2DMS(set_num, bind_num, type, name) Texture2DMS<type> name : register(t##bind_num, space##set_num)
+#define MIRU_IMAGE_2DMS_ARRAY(set_num, bind_num, type, name) Texture2DMSArray<type> name : register(t##bind_num, space##set_num)
 #define MIRU_RW_IMAGE_1D(set_num, bind_num, type, name) RWTexture1D<type> name : register(u##bind_num, space##set_num)
 #define MIRU_RW_IMAGE_2D(set_num, bind_num, type, name) RWTexture2D<type> name : register(u##bind_num, space##set_num)
 #define MIRU_RW_IMAGE_3D(set_num, bind_num, type, name) RWTexture3D<type> name : register(u##bind_num, space##set_num)
@@ -54,22 +58,22 @@
 #define MIRU_SAMPLER(set_num, bind_num, name) SamplerState name : register(s##bind_num, space##set_num)
 #endif
 
-//MIRU_RW_IMAGE_CUBE/_ARRAY
-#if defined MIRU_VULKAN
-#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name##_RWTextureCube;
-#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] RWTexture2DArray<type> name##_RWTextureCubeArray;
-#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image##_RWTextureCube.GetDimensions(output.x, output.y, output.z); output.z = 6;
-#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image##_RWTextureCubeArray.GetDimensions(output.x, output.y, output.z);
-#else
-#define MIRU_RW_IMAGE_CUBE(set_num, bind_num, type, name) RWTexture2DArray<type> name##_RWTextureCube : register(u##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_CUBE_ARRAY(set_num, bind_num, type, name) RWTexture2DArray<type> name##_RWTextureCubeArray : register(u##bind_num, space##set_num)
-#define MIRU_RW_IMAGE_CUBE_GET_DIMENSIONS(image, output) image##_RWTextureCube.GetDimensions(output.x, output.y, output.z); output.z = 6;
-#define MIRU_RW_IMAGE_CUBE_ARRAY_GET_DIMENSIONS(image, output) image##_RWTextureCubeArray.GetDimensions(output.x, output.y, output.z);
-#endif
-
 //The name component of the image is defined as 'name_ImageCIS', and the name component of the sampler is defined as 'name_SamplerCIS'.
 #define MIRU_COMBINED_IMAGE_SAMPLER(image_type, set_num, bind_num, type, name) image_type(set_num, bind_num, type, name##_ImageCIS); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS)
 #define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_ImageCIS[count]); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS[count])
+
+//Subpass Input Attachments
+#if defined MIRU_VULKAN
+#define MIRU_SUBPASS_INPUT(set_num, bind_num, idx_num, type, name) [[vk::binding(bind_num, set_num)]][[vk::input_attachment_index(idx_num)]] SubpassInput<type> name
+#define MIRU_SUBPASS_INPUT_MS(set_num, bind_num, idx_num, type, name) [[vk::binding(bind_num, set_num)]][[vk::input_attachment_index(idx_num)]] SubpassInputMS<type> name
+#define MIRU_SUBPASS_LOAD(name, sv_pos) name.SubpassLoad()
+#define MIRU_SUBPASS_LOAD_MS(name, sv_pos, sampleIdx) name.SubpassLoad(sampleIdx)
+#else
+#define MIRU_SUBPASS_INPUT(set_num, bind_num, idx_num, type, name) MIRU_IMAGE_2D(set_num, bind_num, type, name)
+#define MIRU_SUBPASS_INPUT_MS(set_num, bind_num, idx_num, type, name) MIRU_IMAGE_2DMS(set_num, bind_num, type, name)
+#define MIRU_SUBPASS_LOAD(name, sv_pos) name.Load(int3(sv_pos.xy, 0))
+#define MIRU_SUBPASS_LOAD_MS(name, sv_pos, sampleIdx) name.Load(int2(sv_pos.xy), sampleIdx)
+#endif
 
 //Compute Shaders
 

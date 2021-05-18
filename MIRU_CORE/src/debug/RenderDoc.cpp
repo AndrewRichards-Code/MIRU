@@ -1,6 +1,10 @@
 #include "miru_core_common.h"
 #include "RenderDoc.h"
 
+#if defined(_WIN64)
+#include <ShlObj.h>
+#endif
+
 using namespace miru;
 using namespace debug;
 
@@ -14,13 +18,16 @@ RenderDoc::RenderDoc()
 	m_Debugger = DebuggerType::RENDER_DOC;
 	if (!s_RenderDocHandle)
 	{
-
 #if defined(_WIN64)
-		s_RenderDocFullpath = std::string(PROJECT_DIR) + "redist/renderdoc/lib/x64/renderdoc.dll";
+		LPWSTR programFilesPath;
+		SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, 0, &programFilesPath);
+		s_RenderDocFullpath = arc::ToString(programFilesPath);
+		s_RenderDocFullpath /= "RenderDoc";
+		s_RenderDocFullpath /= "renderdoc.dll";
 #elif defined(__ANDROID__)
 		s_RenderDocFullpath = "libVkLayer_GLES_RenderDoc.so"; 
 #endif
-		s_RenderDocHandle = arc::DynamicLibrary::Load(s_RenderDocFullpath.generic_string().c_str());
+		s_RenderDocHandle = arc::DynamicLibrary::Load(s_RenderDocFullpath.generic_string());
 		if (!s_RenderDocHandle)
 		{
 			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";

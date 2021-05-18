@@ -3,14 +3,6 @@
 #include <fstream>
 #include "ErrorCodes.h"
 
-//Spirv-cross Header and Library
-#include "spirv_cross/Include/spirv_cross.hpp"
-#if defined(_DEBUG)
-#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
-#else
-#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-core.lib")
-#endif
-
 namespace miru
 {
 namespace shader_compiler
@@ -79,51 +71,7 @@ namespace shader_compiler
 		{
 			return ErrorCode::MIRU_SHADER_COMPILER_SPV_ERROR;
 		}
-		else
-		{
-			//Deal with RWTexureCube
-			std::vector<char> shaderBinary;
-			std::fstream stream(absoluteDstDir, std::ios::in | std::ios::out | std::ios::ate | std::ios::binary);
-			if (stream.is_open())
-			{
-				//Read SPIR-V
-				shaderBinary.resize(static_cast<size_t>(stream.tellg()));
-				stream.seekg(0);
-				stream.read(shaderBinary.data(), static_cast<std::streamsize>(shaderBinary.size()));
-
-				//Modify SPIR-V
-				const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(shaderBinary.data());
-				size_t spv_bin_word_count = shaderBinary.size() / 4;
-				spirv_cross::Compiler compiled_bin(spv_bin, spv_bin_word_count);
-				spirv_cross::ShaderResources resources = compiled_bin.get_shader_resources();
-
-				for (auto& res : resources.storage_images)
-				{
-					if (res.name.find("_RWTextureCube") != std::string::npos)
-					{
-						uint32_t* _code = reinterpret_cast<uint32_t*>(shaderBinary.data()) + uint32_t(5);
-						while (_code < spv_bin + shaderBinary.size())
-						{
-							uint16_t opcode = uint16_t(_code[0] & spv::OpCodeMask);
-							uint16_t wordCount = uint16_t(_code[0] >> spv::WordCountShift);
-							if (opcode == spv::OpTypeImage && _code[1] == res.base_type_id)
-							{
-								_code[3] = spv::DimCube;
-								_code[5] = 0;
-								_code[7] = 2;
-								break;
-							}
-							_code += size_t(wordCount);
-						}
-					}
-				}
-
-				//Save SPIR-V
-				stream.seekp(0);
-				stream.write(shaderBinary.data(), static_cast<std::streamsize>(shaderBinary.size()));
-				stream.close();
-			}
-		}
+		
 		return ErrorCode::MIRU_SHADER_COMPILER_OK;
 	}
 

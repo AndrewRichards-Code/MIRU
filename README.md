@@ -26,7 +26,6 @@ This repository is under active development and is not currently intended for co
 - D3D12 Root Constants/Vulkan Push constants.
 - Vulkan dynamic states and their implementation in D3D12.
 - Clear render pass attachments command as an adjunct to load/store operations.
-- Render pass input attachment for D3D12.
 - D3D12 Subpasses conformance.
 - Fill/Update Buffer commands.
 - Queries for GPU timing.
@@ -40,7 +39,7 @@ This repository is under active development and is not currently intended for co
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix, RenderDoc
+- Graphics Debuggers: Pix 2104.20, RenderDoc v1.13
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
