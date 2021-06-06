@@ -39,6 +39,8 @@ namespace d3d12
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
+		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
+
 		static D3D12_PRIMITIVE_TOPOLOGY ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology);
 		static DXGI_FORMAT ToDXGI_FORMAT(crossplatform::VertexType type);
 
@@ -54,17 +56,19 @@ namespace d3d12
 
 		RootSignature m_GlobalRootSignature;
 
-		ID3D12PipelineState* m_Pipeline;
+		ID3D12PipelineState* m_Pipeline = nullptr;
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_GPSD = {};
 		D3D12_COMPUTE_PIPELINE_STATE_DESC m_CPSD = {};
 
-		ID3D12StateObject* m_RayTracingPipeline;
+		ID3D12StateObject* m_RayTracingPipeline = nullptr;
 		D3D12_STATE_OBJECT_DESC m_RayTracingPipelineDesc;
 		std::vector<D3D12_STATE_SUBOBJECT> m_RayTracingPipelineSubDesc;
 		std::vector<RootSignature> m_LocalRootSignatures;
 
 		std::vector<D3D12_VIEWPORT> m_Viewports;
 		std::vector<D3D12_RECT> m_Scissors;
+
+		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
 	};
 }
 }

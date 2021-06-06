@@ -83,9 +83,9 @@ namespace miru
 		return b;
 	};
 
-	auto alignedSize = [](uint32_t value, uint32_t alignment) -> uint32_t
+	auto alignedSize = [](uint32_t value, uint32_t alignment) -> size_t
 	{
-		return (value + alignment - 1) & ~(alignment - 1);
+		return static_cast<size_t>((value + alignment - 1) & ~(alignment - 1));
 	};
 }
 

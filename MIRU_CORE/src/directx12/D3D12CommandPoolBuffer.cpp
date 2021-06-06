@@ -859,10 +859,24 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 			CBV_SRV_UAV_DescriptorHeapHandleIndex++;
 		}
 
-		if (pipeline->GetCreateInfo().type ==  crossplatform::PipelineType::GRAPHICS)
+		if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
+		{
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+		}
 		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+		{
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+		}
+		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
+		{
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+		}
+		else
+		{
+			MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
+		}
+
+
 
 		i++;
 		if (i >= ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters.size())
@@ -905,12 +919,18 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		const AccelerationStructureBuildInfo::BuildGeometryInfo& bgi = buildGeometryInfo->GetBuildGeometryInfo();
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.dstAccelerationStructure->GetBufferDeviceAddress()) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.pCommandPool->GetCreateInfo().pContext->GetDevice(), bgi.dstAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.Inputs = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfo)->m_BRASI;
-		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.srcAccelerationStructure->GetBufferDeviceAddress()) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.pCommandPool->GetCreateInfo().pContext->GetDevice(), bgi.srcAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.ScratchAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.scratchData.deviceAddress);
 		
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
+
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.UAV.pResource = ref_cast<Buffer>(bgi.dstAccelerationStructure->GetCreateInfo().buffer)->m_Buffer;
+		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(1, &barrier);
 	}
 }
 
@@ -958,7 +978,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>&
 			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
 };
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Image>& dstImage, const std::vector<crossplatform::Image::Copy>& copyRegions) 
+void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

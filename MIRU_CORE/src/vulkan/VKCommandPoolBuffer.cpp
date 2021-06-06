@@ -533,8 +533,13 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfos;
-	vkBuildGeometryInfos.reserve(buildGeometryInfos.size());
+
+	//BLAS and TLAS must be built in seperate commands.
+	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfosBLAS;
+	std::vector<std::vector<VkAccelerationStructureBuildRangeInfoKHR>> vkBuildRangeInfosBLAS;
+	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfosTLAS;
+	std::vector<std::vector<VkAccelerationStructureBuildRangeInfoKHR>> vkBuildRangeInfosTLAS;
+
 	for (size_t i = 0; i < buildGeometryInfos.size(); i++)
 	{
 		VkAccelerationStructureBuildGeometryInfoKHR asbgi = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfos[i])->m_ASBGI;
@@ -542,10 +547,48 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		{
 			MIRU_ASSERT(true, "ERROR: VULKAN: Size mismatch between VkAccelerationStructureBuildGeometryInfoKHR::geometryCount and buildRangeInfos[i].size().");
 		}
-		vkBuildGeometryInfos.push_back(asbgi);
+		
+		if (asbgi.type == VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR)
+		{
+			vkBuildGeometryInfosBLAS.push_back(asbgi);
+			vkBuildRangeInfosBLAS.push_back({});
+			for (auto& bri : buildRangeInfos[i])
+				vkBuildRangeInfosBLAS.back().push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
+
+		}
+		else if (asbgi.type == VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR)
+		{
+			vkBuildGeometryInfosTLAS.push_back(asbgi);
+			vkBuildRangeInfosTLAS.push_back({});
+			for (auto& bri : buildRangeInfos[i])
+				vkBuildRangeInfosTLAS.back().push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
+		}
+		else
+		{
+			MIRU_ASSERT(true, "ERROR: VULKAN: VkAccelerationStructureTypeKHR is not VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR or VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR.");
+		}
 	}
 
-	vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfos.size()), vkBuildGeometryInfos.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(buildRangeInfos.data()));
+	if (!vkBuildGeometryInfosBLAS.empty())
+	{
+		VkMemoryBarrier barrier;
+		barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+		barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_SHADER_READ_BIT;
+		vkCmdPipelineBarrier(m_CmdBuffers[index], VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
+		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosBLAS.size()), vkBuildGeometryInfosBLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfosBLAS.data()));
+	}
+	if (!vkBuildGeometryInfosTLAS.empty())
+	{
+		VkMemoryBarrier barrier;
+		barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+		barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_SHADER_READ_BIT;
+		vkCmdPipelineBarrier(m_CmdBuffers[index], VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
+		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosTLAS.size()), vkBuildGeometryInfosTLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfosTLAS.data()));
+	}
 }
 
 void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pMissShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pHitShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
@@ -553,10 +596,15 @@ void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDevice
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	const VkStridedDeviceAddressRegionKHR* raygenSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pRaygenShaderBindingTable);
-	const VkStridedDeviceAddressRegionKHR* missSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pMissShaderBindingTable);
-	const VkStridedDeviceAddressRegionKHR* hitSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pHitShaderBindingTable);
-	const VkStridedDeviceAddressRegionKHR* callableSBT = reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pCallableShaderBindingTable);
+	VkStridedDeviceAddressRegionKHR emptySbtEntry;
+	emptySbtEntry.deviceAddress = 0;
+	emptySbtEntry.stride = 0;
+	emptySbtEntry.size = 0;
+
+	const VkStridedDeviceAddressRegionKHR* raygenSBT = pRaygenShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pRaygenShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* missSBT = pMissShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pMissShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* hitSBT = pHitShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pHitShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* callableSBT = pCallableShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pCallableShaderBindingTable) : &emptySbtEntry;
 	vkCmdTraceRaysKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, width, height, depth);
 }
 
@@ -574,7 +622,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>&
 	vkCmdCopyBuffer(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferCopy.size()), vkBufferCopy.data());
 }
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Image>& dstImage, const std::vector<Image::Copy>& copyRegions)
+void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -592,8 +640,8 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& s
 		vkImageCopy.push_back(ic);
 	}
 	
-	vkCmdCopyImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, ref_cast<Image>(srcImage)->m_ImageCI.initialLayout,
-		ref_cast<Image>(dstImage)->m_Image, ref_cast<Image>(dstImage)->m_ImageCI.initialLayout, static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
+	vkCmdCopyImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout),
+		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
 
 void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)

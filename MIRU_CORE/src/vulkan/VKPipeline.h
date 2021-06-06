@@ -34,6 +34,8 @@ namespace vulkan
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
+		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
+
 		static VkFormat ToVkFormat(crossplatform::VertexType type);
 
 		//Members
@@ -47,6 +49,8 @@ namespace vulkan
 
 		VkPipelineLayout m_PipelineLayout;
 		VkPipelineLayoutCreateInfo m_PLCI;
+
+		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
 	};
 }
 }

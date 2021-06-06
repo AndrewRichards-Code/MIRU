@@ -398,44 +398,42 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(vkCreateRayTracingPipelinesKHR(m_Device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &m_RTPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Ray Tracing Pipeline.");
 		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
-		//Build ShaderBindingTables
-
-		//Get ShaderHandleSize.
+		//Get ShaderHandles
 		const Ref<Context>& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.pAllocator->GetCreateInfo().pContext);
 		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleSize;
 		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleAlignment;
-		
-		const uint32_t handleSize = vkHandleSize;
-		const uint32_t handleSizeAligned = alignedSize(vkHandleSize, vkHandleSizeAligned);
-		const size_t sbtSize = static_cast<size_t>(m_RTPCI.groupCount * handleSizeAligned);
+
+		const uint32_t& handleSize = vkHandleSize;
+		const size_t handleSizeAligned = alignedSize(vkHandleSize, vkHandleSizeAligned);
+		const size_t shaderGroupHandleDataSize = static_cast<size_t>(m_RTPCI.groupCount * handleSizeAligned);
 
 		//Get ShaderGroupHandle - Handles should return in the order specific in VkRayTracingPipelineCreateInfoKHR::pStages.
-		std::vector<uint8_t> shaderGroupHandles(sbtSize);
-		MIRU_ASSERT(vkGetRayTracingShaderGroupHandlesKHR(m_Device, m_Pipeline, 0, m_RTPCI.groupCount, sbtSize, shaderGroupHandles.data()), "ERROR: VULKAN: Failed to get Ray Tracing Pipeline Shader Group Handles.");
-		
+		std::vector<uint8_t> shaderGroupHandles(shaderGroupHandleDataSize);
+		MIRU_ASSERT(vkGetRayTracingShaderGroupHandlesKHR(m_Device, m_Pipeline, 0, m_RTPCI.groupCount, shaderGroupHandleDataSize, shaderGroupHandles.data()), "ERROR: VULKAN: Failed to get Ray Tracing Pipeline Shader Group Handles.");
+
 		//We need to bundles the handles together by type.
 		//Get the indices per type.
 		size_t raygenCount = 0, missCount = 0, hitCount = 0, callableCount = 0;
-		std::vector<size_t> shaderGroupIndicesPerSBT[4];
+		std::map<crossplatform::ShaderGroupHandleType, std::vector<size_t>> shaderGroupIndicesPerType;
 		size_t idx = 0;
 		for (auto& shaderGroupInfo : vkShaderGroupInfos)
 		{
 			if (shaderGroupInfo.type == VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR)
 			{
-				VkShaderStageFlagBits vkStage = vkShaderStages[shaderGroupInfo.generalShader].stage;
+				const VkShaderStageFlagBits& vkStage = vkShaderStages[shaderGroupInfo.generalShader].stage;
 				if (vkStage == VK_SHADER_STAGE_RAYGEN_BIT_KHR && raygenCount == 0)
 				{
-					shaderGroupIndicesPerSBT[0].push_back(idx);
+					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::RAYGEN].push_back(idx);
 					raygenCount++;
 				}
 				else if (vkStage == VK_SHADER_STAGE_MISS_BIT_KHR)
 				{
-					shaderGroupIndicesPerSBT[1].push_back(idx);
+					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::MISS].push_back(idx);
 					missCount++;
 				}
 				else if (vkStage == VK_SHADER_STAGE_CALLABLE_BIT_KHR)
 				{
-					shaderGroupIndicesPerSBT[3].push_back(idx);
+					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::CALLABLE].push_back(idx);
 					callableCount++;
 				}
 				else
@@ -443,64 +441,45 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			}
 			else
 			{
-				shaderGroupIndicesPerSBT[2].push_back(idx);
+				shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::HIT_GROUP].push_back(idx);
 				hitCount++;
 			}
 			idx++;
 		}
 
 		//Allocate new memory for the handles to be copied into.
-		std::vector<uint8_t> shaderGroupHandlesPerSBT[4];
-		shaderGroupHandlesPerSBT[0].resize(raygenCount * static_cast<size_t>(handleSize));
-		shaderGroupHandlesPerSBT[1].resize(missCount * static_cast<size_t>(handleSize));
-		shaderGroupHandlesPerSBT[2].resize(hitCount * static_cast<size_t>(handleSize));
-		shaderGroupHandlesPerSBT[3].resize(callableCount * static_cast<size_t>(handleSize));
+		m_ShaderGroupHandles.reserve(idx);
 
 		//Copy Shader handles to the new memory in order.
-		for (size_t i = 0; i < _countof(shaderGroupHandlesPerSBT); i++)
+		for (size_t type = 0; type < 4; type++)
 		{
-			size_t j = 0;
-			for (size_t& shaderGroupIndex : shaderGroupIndicesPerSBT[i])
+			for (size_t& shaderGroupIndexPerType : shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType(type)])
 			{
-				auto CopyShaderRecord = [&](size_t SBT_idx, size_t SBT_shader_idx, size_t lookup_idx) ->void
-				{
-					size_t _handleSize = static_cast<size_t>(handleSize);
-					memcpy_s(shaderGroupHandlesPerSBT[SBT_idx].data() + (SBT_shader_idx * _handleSize), _handleSize,
-						&shaderGroupHandles[lookup_idx * _handleSize], _handleSize);
-				};
-				CopyShaderRecord(i, j, shaderGroupIndex);
-				j++;
-			}
-		}
-
-		//Build SBT buffers.
-		std::string debugNames[4] = {
-			m_CI.debugName + " : SBT - Raygen",
-			m_CI.debugName + " : SBT - Miss",
-			m_CI.debugName + " : SBT - Hit",
-			m_CI.debugName + " : SBT - Callable",
-		};
-		for (size_t i = 0; i < _countof(m_SBTs); i++)
-		{
-			if (shaderGroupHandlesPerSBT[i].empty())
-			{
-				m_SBTs[i] = nullptr;
-			}
-			else
-			{
-				crossplatform::Buffer::CreateInfo bufferCI;
-				bufferCI.debugName = debugNames[i];
-				bufferCI.device = m_CI.device;
-				bufferCI.usage = crossplatform::Buffer::UsageBit::SHADER_BINDING_TABLE_BIT | crossplatform::Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-				bufferCI.size = static_cast<uint32_t>(shaderGroupHandlesPerSBT[i].size());
-				bufferCI.data = shaderGroupHandlesPerSBT[i].data();
-				bufferCI.pAllocator = m_CI.rayTracingInfo.pAllocator;
-				m_SBTs[i] = crossplatform::Buffer::Create(&bufferCI);
+				m_ShaderGroupHandles.push_back({});
+				m_ShaderGroupHandles.back().first = crossplatform::ShaderGroupHandleType(type);
+				m_ShaderGroupHandles.back().second.resize(handleSize);
+				memcpy_s(m_ShaderGroupHandles.back().second.data(), handleSize,
+					&shaderGroupHandles[shaderGroupIndexPerType * handleSize], handleSize);
 			}
 		}
 	}	
 	else
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");
+}
+
+std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if(m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	{
+		return m_ShaderGroupHandles;
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: VULKAN: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
+	}
+	return std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>>();
 }
 
 Pipeline::~Pipeline()

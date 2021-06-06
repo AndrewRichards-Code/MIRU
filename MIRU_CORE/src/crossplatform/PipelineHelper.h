@@ -262,6 +262,14 @@ namespace crossplatform
 		PROCEDURAL_HIT_GROUP = 2,
 	};
 
+	enum class ShaderGroupHandleType : uint32_t
+	{
+		RAYGEN = 0,
+		MISS = 1,
+		HIT_GROUP = 2,
+		CALLABLE = 3
+	};
+
 	//Other
 
 	enum class PipelineType : uint32_t

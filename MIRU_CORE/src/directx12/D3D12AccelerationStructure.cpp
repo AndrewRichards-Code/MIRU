@@ -66,7 +66,10 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 		
 		//We only deal with one InstanceDesc
 		if (geometry.type == BuildGeometryInfo::Geometry::Type::INSTANCES)
+		{
+			m_Geometries.clear();
 			break;
+		}
 	}
 
 	m_BRASI.Type = static_cast<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE>(m_BGI.type);
@@ -110,7 +113,7 @@ AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* 
 	m_SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
 	m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
 	m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	m_SRVDesc.RaytracingAccelerationStructure.Location = GetBufferDeviceAddress();
+	m_SRVDesc.RaytracingAccelerationStructure.Location = GetBufferDeviceAddress(m_CI.device, m_CI.buffer);
 }
 
 AccelerationStructure::~AccelerationStructure() 

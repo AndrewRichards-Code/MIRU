@@ -10,5 +10,6 @@
 #include "crossplatform/Image.h"
 #include "crossplatform/Pipeline.h"
 #include "crossplatform/Shader.h"
+#include "crossplatform/ShaderBindingTable.h"
 #include "crossplatform/Swapchain.h"
 #include "crossplatform/Sync.h"

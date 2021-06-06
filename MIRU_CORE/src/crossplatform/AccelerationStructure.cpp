@@ -55,9 +55,30 @@ Ref<AccelerationStructure> AccelerationStructure::Create(AccelerationStructure::
 	}
 }
 
-DeviceAddress AccelerationStructure::GetBufferDeviceAddress()
+DeviceAddress miru::crossplatform::GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure)
 {
-	return crossplatform::GetBufferDeviceAddress(m_CI.device, m_CI.buffer);
+	switch (GraphicsAPI::GetAPI())
+	{
+	case GraphicsAPI::API::D3D12:
+		#if defined (MIRU_D3D12)
+		return ref_cast<d3d12::Buffer>(accelerationStructure->GetCreateInfo().buffer)->m_Buffer->GetGPUVirtualAddress();
+		#else	
+		return 0;
+		#endif
+	case GraphicsAPI::API::VULKAN:
+		#if defined (MIRU_VULKAN)
+		VkAccelerationStructureDeviceAddressInfoKHR info;
+		info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
+		info.pNext = nullptr;
+		info.accelerationStructure = ref_cast<vulkan::AccelerationStructure>(accelerationStructure)->m_AS;
+		return vkGetAccelerationStructureDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
+#else
+		return 0;
+#endif
+	case GraphicsAPI::API::UNKNOWN:
+	default:
+		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return 0;
+	}
 }
 
 DeviceAddress miru::crossplatform::GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer)

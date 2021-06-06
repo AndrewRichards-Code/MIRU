@@ -131,6 +131,7 @@
     <ClInclude Include="src\crossplatform\Pipeline.h" />
     <ClInclude Include="src\crossplatform\PipelineHelper.h" />
     <ClInclude Include="src\crossplatform\Shader.h" />
+    <ClInclude Include="src\crossplatform\ShaderBindingTable.h" />
     <ClInclude Include="src\crossplatform\Swapchain.h" />
     <ClInclude Include="src\crossplatform\Sync.h" />
     <ClInclude Include="src\debug\GraphicsDebugger.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="src\crossplatform\Image.cpp" />
     <ClCompile Include="src\crossplatform\Pipeline.cpp" />
     <ClCompile Include="src\crossplatform\Shader.cpp" />
+    <ClCompile Include="src\crossplatform\ShaderBindingTable.cpp" />
     <ClCompile Include="src\crossplatform\Sync.cpp" />
     <ClCompile Include="src\crossplatform\Swapchain.cpp" />
     <ClCompile Include="src\debug\Pix.cpp" />

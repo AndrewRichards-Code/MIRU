@@ -118,7 +118,7 @@ Context::~Context()
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
-	ID3D12DebugDevice* debugDevice;
+	ID3D12DebugDevice* debugDevice = nullptr;
 	m_Device->QueryInterface(&debugDevice);
 
 	for (auto& queue : m_Queues)
@@ -131,8 +131,11 @@ Context::~Context()
 
 	MIRU_D3D12_SAFE_RELEASE(m_Factory);
 
-	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_IGNORE_INTERNAL);
-	debugDevice->Release();
+	if (debugDevice)
+	{
+		debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_IGNORE_INTERNAL);
+		debugDevice->Release();
+	}
 }
 
 Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)

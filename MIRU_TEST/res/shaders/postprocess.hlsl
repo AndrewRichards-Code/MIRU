@@ -27,4 +27,3 @@ PS_OUT ps_main(PS_IN IN )
 	OUT.colour = pow(float4(values, values, values, colour.a), 2.2);
 	return OUT;
 }
-

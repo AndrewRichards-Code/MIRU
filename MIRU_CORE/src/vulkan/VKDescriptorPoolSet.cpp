@@ -214,6 +214,8 @@ void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingInd
 	wds.pImageInfo = nullptr;
 	wds.pBufferInfo = nullptr;
 	wds.pTexelBufferView = nullptr;
+
+	m_WriteDescriptorSets.push_back(wds);
 }
 
 void DescriptorSet::Update()

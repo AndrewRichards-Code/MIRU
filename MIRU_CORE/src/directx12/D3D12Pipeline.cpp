@@ -221,25 +221,25 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Fill out DXIL Library and Exports
 		std::vector<D3D12_DXIL_LIBRARY_DESC> dxilLibDescs;
 		std::vector<D3D12_EXPORT_DESC> exportDescs;
-		std::vector<std::pair<crossplatform::Shader::StageBit, std::wstring>> w_ExportStagesAndNames;
+		std::vector<std::pair<crossplatform::Shader::StageBit, std::wstring>> exportStagesAndNames;
 		dxilLibDescs.reserve(m_CI.shaders.size());
 		exportDescs.reserve(totalShaderCount);
-		w_ExportStagesAndNames.reserve(totalShaderCount);
+		exportStagesAndNames.reserve(totalShaderCount);
 
-		for(auto& shader : m_CI.shaders)
+		for (auto& shader : m_CI.shaders)
 		{
 			UINT exportCount = 0;
 			for (auto& stageAndEntryPoint : shader->GetCreateInfo().stageAndEntryPoints)
 			{
 				D3D12_EXPORT_DESC exportDesc;
-				w_ExportStagesAndNames.push_back({ stageAndEntryPoint.first, arc::ToWString(stageAndEntryPoint.second) });
-				exportDesc.Name = w_ExportStagesAndNames.back().second.c_str();
+				exportStagesAndNames.push_back({ stageAndEntryPoint.first, arc::ToWString(stageAndEntryPoint.second) });
+				exportDesc.Name = exportStagesAndNames.back().second.c_str();
 				exportDesc.ExportToRename = nullptr;
 				exportDesc.Flags = D3D12_EXPORT_FLAG_NONE;
 				exportDescs.push_back(exportDesc);
 				exportCount++;
 			}
-			
+
 			D3D12_DXIL_LIBRARY_DESC dxilLibDesc;
 			dxilLibDesc.DXILLibrary = ref_cast<Shader>(shader)->m_ShaderByteCode;
 			dxilLibDesc.NumExports = exportCount;
@@ -252,10 +252,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		}
 
 		//Fill out HitGroups
-		std::vector<std::wstring> w_HitGroupNames;
 		std::vector<D3D12_HIT_GROUP_DESC> hitGroupDescs;
 		std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> subobjectToExportAssociations;
-		w_HitGroupNames.reserve(m_CI.shaderGroupInfos.size());
+		std::vector<std::wstring> hitGroupNames;
+		hitGroupNames.reserve(m_CI.shaderGroupInfos.size());
 		hitGroupDescs.reserve(m_CI.shaderGroupInfos.size());
 		subobjectToExportAssociations.reserve(m_CI.shaderGroupInfos.size());
 		m_LocalRootSignatures.reserve(m_CI.shaderGroupInfos.size());
@@ -265,8 +265,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			if (shaderGroupInfo.type > crossplatform::ShaderGroupType::GENERAL)
 			{
 				D3D12_HIT_GROUP_DESC hitGroupDesc;
-				w_HitGroupNames.push_back(L"HitGroup_" + std::to_wstring(hitGroupCount));
-				hitGroupDesc.HitGroupExport = w_HitGroupNames.back().c_str();
+				hitGroupNames.push_back(L"HitGroup_" + std::to_wstring(hitGroupCount));
+				hitGroupDesc.HitGroupExport = hitGroupNames.back().c_str();
 				hitGroupDesc.Type = static_cast<D3D12_HIT_GROUP_TYPE>(uint32_t(shaderGroupInfo.type) - 1);
 				hitGroupDesc.AnyHitShaderImport = nullptr;
 				hitGroupDesc.ClosestHitShaderImport = nullptr;
@@ -337,7 +337,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		pipelineConfigSubObject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;
 		pipelineConfigSubObject.pDesc = &pipelineConfig;
 		m_RayTracingPipelineSubDesc.push_back(pipelineConfigSubObject);
-		
+
 		//Fill out StateObject
 		m_RayTracingPipelineDesc.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE;
 		m_RayTracingPipelineDesc.NumSubobjects = static_cast<UINT>(m_RayTracingPipelineSubDesc.size());
@@ -345,76 +345,46 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		MIRU_ASSERT(reinterpret_cast<ID3D12Device5*>(m_Device)->CreateStateObject(&m_RayTracingPipelineDesc, IID_PPV_ARGS(&m_RayTracingPipeline)), "ERROR: D3D12: Failed to create Ray Tracing Pipeline.");
 		D3D12SetName(m_RayTracingPipeline, m_CI.debugName + " : Ray Tracing Pipeline");
-	
-		//Build ShaderBindingTables
-		//Get ShaderGroupIdentifiers
-		ID3D12StateObjectProperties* m_RayTracingPipelineProperties = nullptr;
-		MIRU_ASSERT(m_RayTracingPipeline->QueryInterface(IID_PPV_ARGS(&m_RayTracingPipelineProperties)), "ERROR: D3D12: Failed to get Ray Tracing Pipeline Properties.");
-		
-		std::vector<void*> shaderIdentifiers[4];
-		for (auto& exportStageAndName : w_ExportStagesAndNames)
+
+		// Get ShaderGroupIdentifiers
+		ID3D12StateObjectProperties * rayTracingPipelineProperties = nullptr;
+		MIRU_ASSERT(m_RayTracingPipeline->QueryInterface(IID_PPV_ARGS(&rayTracingPipelineProperties)), "ERROR: D3D12: Failed to get Ray Tracing Pipeline Properties.");
+
+		std::map<crossplatform::ShaderGroupHandleType, std::vector<void*>>shaderIdentifiers;
+		for (auto& exportStageAndName : exportStagesAndNames)
 		{
 			crossplatform::Shader::StageBit stage = exportStageAndName.first;
 			std::wstring name = exportStageAndName.second;
 
 			if (stage == crossplatform::Shader::StageBit::RAYGEN_BIT)
-				shaderIdentifiers[0].push_back(m_RayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
+				shaderIdentifiers[crossplatform::ShaderGroupHandleType::RAYGEN].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
 			else if (stage == crossplatform::Shader::StageBit::MISS_BIT)
-				shaderIdentifiers[1].push_back(m_RayTracingPipelineProperties->GetShaderIdentifier(name .c_str()));
+				shaderIdentifiers[crossplatform::ShaderGroupHandleType::MISS].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
 			else if (stage == crossplatform::Shader::StageBit::CALLABLE_BIT)
-				shaderIdentifiers[3].push_back(m_RayTracingPipelineProperties->GetShaderIdentifier(name .c_str()));
+				shaderIdentifiers[crossplatform::ShaderGroupHandleType::CALLABLE].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
 			else
 				continue;
 		}
-		for (auto& hitGroupName : w_HitGroupNames)
-			shaderIdentifiers[2].push_back(m_RayTracingPipelineProperties->GetShaderIdentifier(hitGroupName.c_str()));
+		for (auto& hitGroupName : hitGroupNames)
+			shaderIdentifiers[crossplatform::ShaderGroupHandleType::HIT_GROUP].push_back(rayTracingPipelineProperties->GetShaderIdentifier(hitGroupName.c_str()));
 
 		//ShaderHandleSize
-		const size_t handleSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-		const size_t handleSizeAligned = alignedSize(handleSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
-		
+		const size_t& handleSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+		const size_t& handleSizeAligned = alignedSize(D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+
 		//Allocate new memory for the handles to be copied into.
-		std::vector<uint8_t> shaderGroupHandlesPerSBT[4];
-		shaderGroupHandlesPerSBT[0].resize(shaderIdentifiers[0].size() * handleSize);
-		shaderGroupHandlesPerSBT[1].resize(shaderIdentifiers[1].size() * handleSize);
-		shaderGroupHandlesPerSBT[2].resize(shaderIdentifiers[2].size() * handleSize);
-		shaderGroupHandlesPerSBT[3].resize(shaderIdentifiers[3].size() * handleSize);
+		m_ShaderGroupHandles.reserve(shaderIdentifiers.size());
 
 		//Copy Shader handles to the new memory in order.
-		for (size_t i = 0; i < _countof(shaderGroupHandlesPerSBT); i++)
+		for (size_t type = 0; type < 4; type++)
 		{
-			size_t j = 0;
-			for (auto& shaderIdentifier : shaderIdentifiers[i])
+			for (auto& shaderIdentifier : shaderIdentifiers[crossplatform::ShaderGroupHandleType(type)])
 			{
-				memcpy_s(shaderGroupHandlesPerSBT[i].data() + (j * handleSize), handleSize,
-						shaderIdentifier, handleSize);
-				j++;
-			}
-		}
-
-		//Build SBT buffers.
-		std::string debugNames[4] = {
-			m_CI.debugName + " : SBT - Raygen",
-			m_CI.debugName + " : SBT - Miss",
-			m_CI.debugName + " : SBT - Hit",
-			m_CI.debugName + " : SBT - Callable",
-		};
-		for (size_t i = 0; i < _countof(m_SBTs); i++)
-		{
-			if (shaderGroupHandlesPerSBT[i].empty())
-			{
-				m_SBTs[i] = nullptr;
-			}
-			else
-			{
-				crossplatform::Buffer::CreateInfo bufferCI;
-				bufferCI.debugName = debugNames[i];
-				bufferCI.device = m_CI.device;
-				bufferCI.usage = crossplatform::Buffer::UsageBit::SHADER_BINDING_TABLE_BIT | crossplatform::Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-				bufferCI.size = static_cast<uint32_t>(shaderGroupHandlesPerSBT[i].size());
-				bufferCI.data = shaderGroupHandlesPerSBT[i].data();
-				bufferCI.pAllocator = m_CI.rayTracingInfo.pAllocator;
-				m_SBTs[i] = crossplatform::Buffer::Create(&bufferCI);
+				m_ShaderGroupHandles.push_back({});
+				m_ShaderGroupHandles.back().first = crossplatform::ShaderGroupHandleType(type);
+				m_ShaderGroupHandles.back().second.resize(handleSize);
+				memcpy_s(m_ShaderGroupHandles.back().second.data(), handleSize,
+					shaderIdentifier, handleSize);
 			}
 		}
 	}
@@ -422,11 +392,27 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(true, "ERROR: D3D12: Unknown pipeline type.");
 }
 
+std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	{
+		return m_ShaderGroupHandles;
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
+	}
+	return std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>>();
+}
+
 Pipeline::~Pipeline()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	MIRU_D3D12_SAFE_RELEASE(m_Pipeline);
+	MIRU_D3D12_SAFE_RELEASE(m_RayTracingPipeline);
 	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.rootSignature);
 	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.serializedRootSignature);
 	MIRU_D3D12_SAFE_RELEASE(m_GlobalRootSignature.serializedRootSignatureError);
@@ -689,7 +675,9 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipel
 
 	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, rootSignatureData.HighestVersion, &result.serializedRootSignature, &result.serializedRootSignatureError);
 	if (result.serializedRootSignatureError)
+	{
 		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)result.serializedRootSignatureError->GetBufferPointer());
+	}
 	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
 	MIRU_ASSERT(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 

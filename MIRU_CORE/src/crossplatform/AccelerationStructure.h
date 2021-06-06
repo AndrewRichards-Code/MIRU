@@ -41,24 +41,23 @@ namespace crossplatform
 		float maxY;
 		float maxZ;
 	};
-	struct InstanceData
+	enum class InstanceDataFlagBit : uint32_t
 	{
-		enum class FlagBit : uint8_t
-		{
-			NONE_BIT = 0x00000000,
-			TRIANGLE_FACING_CULL_DISABLE_BIT = 0x00000001,
-			TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT = 0x00000002,
-			FORCE_OPAQUE_BIT = 0x00000004,
-			FORCE_NO_OPAQUE_BIT = 0x00000008,
-		};
-
-		TransformMatrix	transform;
-		uint32_t		instanceCustomIndex : 24;
-		uint32_t		mask : 8;
-		uint32_t		instanceShaderBindingTableRecordOffset : 24;
-		FlagBit			flags : 8;
-		DeviceAddress	accelerationStructureReference;
+		NONE_BIT = 0x00000000,
+		TRIANGLE_FACING_CULL_DISABLE_BIT = 0x00000001,
+		TRIANGLE_FRONT_COUNTERCLOCKWISE_BIT = 0x00000002,
+		FORCE_OPAQUE_BIT = 0x00000004,
+		FORCE_NO_OPAQUE_BIT = 0x00000008,
 	};
+	typedef struct InstanceData
+	{
+		TransformMatrix		transform;
+		uint32_t			instanceCustomIndex : 24;
+		uint32_t			mask : 8;
+		uint32_t			instanceShaderBindingTableRecordOffset : 24;
+		uint32_t			flags : 8;
+		DeviceAddress		accelerationStructureReference;
+	} InstanceData;
 
 	class AccelerationStructure;
 	class AccelerationStructureBuildInfo
@@ -196,8 +195,6 @@ namespace crossplatform
 		
 		struct CreateInfo
 		{
-			
-
 			std::string			debugName;
 			void*				device;
 			FlagBit				flags;
@@ -214,13 +211,12 @@ namespace crossplatform
 		virtual ~AccelerationStructure() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
-		DeviceAddress GetBufferDeviceAddress();
-
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 	};
 
+	DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure);
 	DeviceAddress GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer);
 }
 }

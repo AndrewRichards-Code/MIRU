@@ -6,6 +6,8 @@
 #undef far
 #undef near
 
+#define MIRU_TEST_RT 1
+
 using namespace miru;
 using namespace crossplatform;
 
@@ -236,7 +238,7 @@ int main()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -451,9 +453,9 @@ int main()
 	imageCI.pAllocator = gpu_alloc_0;
 	Ref<Image> image = Image::Create(&imageCI);
 
-	Mat4 proj = Mat4::Identity();
+	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 	Mat4 view = Mat4::Identity();
-	Mat4 modl = Mat4::Identity();
+	Mat4 modl = Mat4::Translation({ 0.0f, 0.0f, -1.5f });
 	
 	float ubData[2 * sizeof(Mat4)];
 	memcpy(ubData + 0 * 16, &proj.a, sizeof(Mat4));
@@ -469,7 +471,7 @@ int main()
 	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
-	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
+	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
 	ubCI.pAllocator = cpu_alloc_0;
@@ -494,8 +496,67 @@ int main()
 	ubViewMdlCI.size = sizeof(Mat4);
 	ubViewMdlCI.stride = 0;
 	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
+
+	struct Camera
+	{
+		Mat4 viewMatrix;
+		Vec3 position;
+		float aspectRatio;
+		Vec4 direction;
+	};
+	struct SceneConstants
+	{
+		Camera camera;
+		float TMin;
+		float TMax;
+	};
+	SceneConstants ubSceneConstantsData = { {view, {0, 0, 0}, float(width) / float(height), {0, 0, -1, 0}}, 0.001f, 1000.0f };
+	ubCI.debugName = "SceneConstants UB";
+	ubCI.device = context->GetDevice();
+	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
+	ubCI.size = sizeof(SceneConstants);
+	ubCI.data = &ubSceneConstantsData;
+	ubCI.pAllocator = cpu_alloc_0;
+	Ref<Buffer> ubSceneConstants = Buffer::Create(&ubCI);
+	BufferView::CreateInfo ubSceneConstantsCI;
+	ubSceneConstantsCI.debugName = "RTShaderConstants UBView";
+	ubSceneConstantsCI.device = context->GetDevice();
+	ubSceneConstantsCI.type = BufferView::Type::UNIFORM;
+	ubSceneConstantsCI.pBuffer = ubSceneConstants;
+	ubSceneConstantsCI.offset = 0;
+	ubSceneConstantsCI.size = sizeof(SceneConstants);
+	ubSceneConstantsCI.stride = 0;
+	Ref<BufferView> ubViewSceneConstants = BufferView::Create(&ubSceneConstantsCI);
+
+	Image::CreateInfo RT_RWImageCI;
+	RT_RWImageCI.debugName = "RT_RWImage";
+	RT_RWImageCI.device = context->GetDevice();
+	RT_RWImageCI.type = Image::Type::TYPE_2D;
+	RT_RWImageCI.format = swapchain->m_SwapchainImages[0]->GetCreateInfo().format;
+	RT_RWImageCI.width = width;
+	RT_RWImageCI.height = height;
+	RT_RWImageCI.depth = 1;
+	RT_RWImageCI.mipLevels = 1;
+	RT_RWImageCI.arrayLayers = 1;
+	RT_RWImageCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	RT_RWImageCI.usage = Image::UsageBit::STORAGE_BIT | Image::UsageBit::TRANSFER_SRC_BIT;
+	RT_RWImageCI.layout = Image::Layout::UNKNOWN;
+	RT_RWImageCI.size = width * height * 4;
+	RT_RWImageCI.data = nullptr;
+	RT_RWImageCI.pAllocator = gpu_alloc_0;
+	Ref<Image> RT_RWImage = Image::Create(&RT_RWImageCI);
+
+	ImageView::CreateInfo RT_RWImageViewCI;
+	RT_RWImageViewCI.debugName = "RT_RWImageView";
+	RT_RWImageViewCI.device = context->GetDevice();
+	RT_RWImageViewCI.pImage = RT_RWImage;
+	RT_RWImageViewCI.viewType = Image::Type::TYPE_2D;
+	RT_RWImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+	Ref<ImageView> RT_RWImageView = ImageView::Create(&RT_RWImageViewCI);
 	
+#if MIRU_TEST_RT
 	//Acceleration structure building
+	//BLAS
 	AccelerationStructureBuildInfo::BuildGeometryInfo asbiGBI;
 	asbiGBI.device = context->GetDevice();
 	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::BOTTOM_LEVEL;
@@ -503,11 +564,11 @@ int main()
 	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
 	asbiGBI.srcAccelerationStructure = nullptr;
 	asbiGBI.dstAccelerationStructure = nullptr;
-	asbiGBI.geometries = {
-		{
-			AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES,
-			{
-				VertexType::VEC4,
+	asbiGBI.geometries.clear();
+	asbiGBI.geometries.push_back({});
+	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES;
+	asbiGBI.geometries[0].triangles = {
+				VertexType::VEC3,
 				GetBufferDeviceAddress(context->GetDevice(), c_vb),
 				static_cast<uint64_t>(4 * sizeof(float)),
 				_countof(vertices) / 4,
@@ -515,38 +576,36 @@ int main()
 				GetBufferDeviceAddress(context->GetDevice(), c_ib),
 				_countof(indices),
 				GetBufferDeviceAddress(context->GetDevice(), ub2)
-			},
-			AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT
-		}
 	};
+	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
 	asbiGBI.scratchData = MIRU_NULL_DEVICE_OR_HOST_ADDRESS;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
 	asbiGBI.maxPrimitiveCounts = _countof(indices) / 3;
-	Ref<AccelerationStructureBuildInfo> asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	Ref<AccelerationStructureBuildInfo> blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	Buffer::CreateInfo asBufferCI;
 	asBufferCI.debugName = "BLASBuffer";
 	asBufferCI.device = context->GetDevice();
-	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-	asBufferCI.size = asbi->GetBuildSizesInfo().accelerationStructureSize;
+	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
+	asBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
 	asBufferCI.pAllocator = gpu_alloc_0;
-	Ref<Buffer> asBuffer = Buffer::Create(&asBufferCI);
+	Ref<Buffer> asBuffer_BLAS = Buffer::Create(&asBufferCI);
 
 	Buffer::CreateInfo scratchBufferCI;
-	scratchBufferCI.debugName = "ScratchBuffer";
+	scratchBufferCI.debugName = "BLASScratchBuffer";
 	scratchBufferCI.device = context->GetDevice();
 	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-	scratchBufferCI.size = asbi->GetBuildSizesInfo().buildScratchSize;
+	scratchBufferCI.size = blas_asbi->GetBuildSizesInfo().buildScratchSize;
 	scratchBufferCI.data = nullptr;
 	scratchBufferCI.pAllocator = gpu_alloc_0;
-	Ref<Buffer> scratchBuffer = Buffer::Create(&scratchBufferCI);
+	Ref<Buffer> scratchBuffer_BLAS = Buffer::Create(&scratchBufferCI);
 
 	AccelerationStructure::CreateInfo asCI;
 	asCI.debugName = "BLAS";
 	asCI.device = context->GetDevice();
 	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
-	asCI.buffer = asBuffer;
+	asCI.buffer = asBuffer_BLAS;
 	asCI.offset = 0;
 	asCI.size = asBufferCI.size;
 	asCI.type = AccelerationStructure::Type::BOTTOM_LEVEL;
@@ -554,17 +613,94 @@ int main()
 	Ref<AccelerationStructure> blas = AccelerationStructure::Create(&asCI);
 
 	asbiGBI.dstAccelerationStructure = blas;
-	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer);
-	asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer_BLAS);
+	blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
-	AccelerationStructureBuildInfo::BuildRangeInfo bri;
-	bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
-	bri.primitiveOffset = 0;
-	bri.firstVertex = 0;
-	bri.transformOffset = 0;
+	AccelerationStructureBuildInfo::BuildRangeInfo blas_bri;
+	blas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
+	blas_bri.primitiveOffset = 0;
+	blas_bri.firstVertex = 0;
+	blas_bri.transformOffset = 0;
 
-	Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
-	Ref<Semaphore> transfer = Semaphore::Create(&transSemaphoreCI);
+	//TLAS
+	InstanceData id;
+	id.transform = {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f };
+	id.instanceCustomIndex = 0;
+	id.mask = 0xFF;
+	id.instanceShaderBindingTableRecordOffset = 0;
+	id.flags = (uint32_t)InstanceDataFlagBit::NONE_BIT;
+	id.accelerationStructureReference = GetAccelerationStructureDeviceAddress(context->GetDevice(), blas);
+	
+	Buffer::CreateInfo idBufferCI;
+	idBufferCI.debugName = "TLASInstanceData";
+	idBufferCI.device = context->GetDevice();
+	idBufferCI.usage = Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
+	idBufferCI.size = sizeof(InstanceData);
+	idBufferCI.data = &id;
+	idBufferCI.pAllocator = cpu_alloc_0;
+	Ref<Buffer> idBuffer_TLAS = Buffer::Create(&idBufferCI);
+
+	asbiGBI.device = context->GetDevice();
+	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::TOP_LEVEL;
+	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
+	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
+	asbiGBI.srcAccelerationStructure = nullptr;
+	asbiGBI.dstAccelerationStructure = nullptr;
+	asbiGBI.geometries.clear();
+	asbiGBI.geometries.push_back({});
+	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::INSTANCES;
+	asbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(context->GetDevice(), idBuffer_TLAS) };
+	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
+	asbiGBI.scratchData = MIRU_NULL_DEVICE_OR_HOST_ADDRESS;
+	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
+	asbiGBI.maxPrimitiveCounts = 1;
+	Ref<AccelerationStructureBuildInfo> tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+
+	asBufferCI.debugName = "TLASBuffer";
+	asBufferCI.device = context->GetDevice();
+	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
+	asBufferCI.size = tlas_asbi->GetBuildSizesInfo().accelerationStructureSize;
+	asBufferCI.data = nullptr;
+	asBufferCI.pAllocator = gpu_alloc_0;
+	Ref<Buffer> asBuffer_TLAS = Buffer::Create(&asBufferCI);
+
+	scratchBufferCI.debugName = "TLASScratchBuffer";
+	scratchBufferCI.device = context->GetDevice();
+	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	scratchBufferCI.size = tlas_asbi->GetBuildSizesInfo().buildScratchSize;
+	scratchBufferCI.data = nullptr;
+	scratchBufferCI.pAllocator = gpu_alloc_0;
+	Ref<Buffer> scratchBuffer_TLAS = Buffer::Create(&scratchBufferCI);
+
+	asCI.debugName = "TLAS";
+	asCI.device = context->GetDevice();
+	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
+	asCI.buffer = asBuffer_TLAS;
+	asCI.offset = 0;
+	asCI.size = asBufferCI.size;
+	asCI.type = AccelerationStructure::Type::TOP_LEVEL;
+	asCI.deviceAddress = MIRU_NULL_DEVICE_ADDRESS;
+	Ref<AccelerationStructure> tlas = AccelerationStructure::Create(&asCI);
+
+	asbiGBI.dstAccelerationStructure = tlas;
+	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer_TLAS);
+	tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+
+	AccelerationStructureBuildInfo::BuildRangeInfo tlas_bri;
+	tlas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
+	tlas_bri.primitiveOffset = 0;
+	tlas_bri.firstVertex = 0;
+	tlas_bri.transformOffset = 0;
+#endif
+
+	//Transfer CmdBuffer
+	Fence::CreateInfo transferFenceCI = { "TransferFence", context->GetDevice(), false, UINT64_MAX };
+	Ref<Fence> transferFence = Fence::Create(&transferFenceCI);
+	Semaphore::CreateInfo transferSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
+	Ref<Semaphore> transferSemaphore = Semaphore::Create(&transferSemaphoreCI);
 	{
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 		
@@ -594,7 +730,7 @@ int main()
 		
 		cmdCopyBuffer->End(0);
 	}
-	cmdCopyBuffer->Submit({ 0 }, {}, {}, { transfer }, nullptr);
+	cmdCopyBuffer->Submit({ 0 }, {}, {}, { transferSemaphore }, nullptr);
 	{
 		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 		
@@ -611,12 +747,27 @@ int main()
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
-		cmdBuffer->BuildAccelerationStructure(2, { asbi }, { { bri } });
+		bCI.type = Barrier::Type::IMAGE;
+		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+		bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
+		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.pImage = RT_RWImage;
+		bCI.oldLayout = Image::Layout::UNKNOWN;
+		bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
+		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+		b = Barrier::Create(&bCI);
+		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
+
+#if MIRU_TEST_RT
+		cmdBuffer->BuildAccelerationStructure(2, { blas_asbi, tlas_asbi }, { { blas_bri }, { tlas_bri } });
+#endif
 
 		cmdBuffer->End(2);
 	}
-	cmdBuffer->Submit({ 2 }, { transfer }, { PipelineStageBit::TRANSFER_BIT }, {}, nullptr);
-
+	cmdBuffer->Submit({ 2 }, { transferSemaphore }, { PipelineStageBit::TRANSFER_BIT }, {}, transferFence);
+	transferFence->Wait();
+	
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";
 	vbViewCI.device = context->GetDevice();
@@ -882,24 +1033,30 @@ int main()
 	p1CI.subpassIndex = 1;
 	Ref<Pipeline> postProcessPipeline = Pipeline::Create(&p1CI);
 
+#if MIRU_TEST_RT
 	//Ray tracing descriptor sets and pipeline
+	descriptorPoolCI.debugName = "RayTracing: Descriptor Pool";
+	descriptorPoolCI.device = context->GetDevice();
+	descriptorPoolCI.poolSizes = { {DescriptorType::UNIFORM_BUFFER, 2}, {DescriptorType::STORAGE_IMAGE, 1}, {DescriptorType::ACCELERATION_STRUCTURE, 1} };
+	descriptorPoolCI.maxSets = 2;
+	Ref<DescriptorPool> descriptorPoolRT = DescriptorPool::Create(&descriptorPoolCI);
 	setLayoutCI.debugName = "RayTracing: DescSetLayout1";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { 
-		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }, 
-		{1, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT } };
+	setLayoutCI.descriptorSetLayoutBinding = {
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{1, DescriptorType::STORAGE_IMAGE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{2, DescriptorType::ACCELERATION_STRUCTURE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT } 
+	};
 	Ref<DescriptorSetLayout> setLayout1RT = DescriptorSetLayout::Create(&setLayoutCI);
-	setLayoutCI.debugName = "RayTracing: DescSetLayout2";
-	setLayoutCI.descriptorSetLayoutBinding = {
-		{0, DescriptorType::STORAGE_IMAGE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
-		{1, DescriptorType::ACCELERATION_STRUCTURE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }
-	};
-	Ref<DescriptorSetLayout> setLayout2RT = DescriptorSetLayout::Create(&setLayoutCI);
-	setLayoutCI.debugName = "RayTracing: DescSetLayout3";
-	setLayoutCI.descriptorSetLayoutBinding = {
-		{0, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::CLOSEST_HIT_BIT }
-	};
-	Ref<DescriptorSetLayout> setLayout3RT = DescriptorSetLayout::Create(&setLayoutCI);
+	DescriptorSet::CreateInfo descriptorSetRTCI;
+	descriptorSetRTCI.debugName = "RayTracing: DescSet1";
+	descriptorSetRTCI.pDescriptorPool = descriptorPoolRT;
+	descriptorSetRTCI.pDescriptorSetLayouts = { setLayout1RT};
+	Ref<DescriptorSet> descriptorSetRT_Global = DescriptorSet::Create(&descriptorSetRTCI);
+	descriptorSetRT_Global->AddBuffer(0, 0, { { ubViewSceneConstants } });
+	descriptorSetRT_Global->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
+	descriptorSetRT_Global->AddAccelerationStructure(0, 2, { tlas });
+	descriptorSetRT_Global->Update();
 
 	Pipeline::CreateInfo raytracingPipelineCI;
 	raytracingPipelineCI.debugName = "Ray Tracing Pipeline";
@@ -909,12 +1066,25 @@ int main()
 	raytracingPipelineCI.dynamicStates = {};
 	raytracingPipelineCI.shaderGroupInfos = {
 		{ ShaderGroupType::GENERAL, 0, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
-		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED, { {setLayout3RT}, {} }, 2 },
+		{ ShaderGroupType::TRIANGLES_HIT_GROUP, MIRU_SHADER_UNUSED, 1, 2, MIRU_SHADER_UNUSED, },
 		{ ShaderGroupType::GENERAL, 3, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED, MIRU_SHADER_UNUSED },
 	};
 	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8, cpu_alloc_0 };
-	raytracingPipelineCI.layout = { {setLayout1RT, setLayout2RT}, {} };
+	raytracingPipelineCI.layout = { {setLayout1RT }, {} };
 	Ref<Pipeline> raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
+	auto handles = raytracingPipeline->GetShaderGroupHandles();
+
+	ShaderBindingTable::CreateInfo sbtCI;
+	sbtCI.debugName = "Ray Tracing Pipeline";
+	sbtCI.device = context->GetDevice();
+	sbtCI.shaderRecords = { 
+		{ handles[0].first, handles[0].second, {} }, 
+		{ handles[1].first, handles[1].second, {} }, 
+		{ handles[2].first, handles[2].second, {} } 
+	};
+	sbtCI.pAllocator = cpu_alloc_0;
+	Ref<ShaderBindingTable> sbt = ShaderBindingTable::Create(&sbtCI);
+#endif
 
 	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
 	framebufferCI_0.debugName = "Framebuffer0";
@@ -962,20 +1132,56 @@ int main()
 		if (shaderRecompile)
 		{
 			context->DeviceWaitIdle();
+
 			vertexShader->Recompile();
 			fragmentShader->Recompile();
-			postProcessVertexShader->Recompile();
-			postProcessFragmentShader->Recompile();
-
 			pCI.shaders = { vertexShader, fragmentShader };
 			pipeline = Pipeline::Create(&pCI);
+
+			postProcessVertexShader->Recompile();
+			postProcessFragmentShader->Recompile();
 			p1CI.shaders = { postProcessVertexShader, postProcessFragmentShader };
 			postProcessPipeline = Pipeline::Create(&p1CI);
+			
+#if MIRU_TEST_RT
+			raytracingShader->Recompile();
+			raytracingPipelineCI.shaders = { raytracingShader };
+			raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
+			auto handles = raytracingPipeline->GetShaderGroupHandles();
 
+			sbtCI.shaderRecords = {
+				{ handles[0].first, handles[0].second, {} },
+				{ handles[1].first, handles[1].second, {} },
+				{ handles[2].first, handles[2].second, {} }
+			};
+			sbt = ShaderBindingTable::Create(&sbtCI);
+#endif
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			shaderRecompile = false;
 			frameIndex = 0;
+
+			//Transition any resource into the correct states.
+			{
+				cmdBuffer->Reset(2, false);
+				cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+
+				Barrier::CreateInfo bCI;
+				bCI.type = Barrier::Type::IMAGE;
+				bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+				bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
+				bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+				bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+				bCI.pImage = resolveAndInputImage;
+				bCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+				bCI.newLayout = Image::Layout::UNKNOWN;
+				bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+				Ref<Barrier> b = Barrier::Create(&bCI);
+				cmdBuffer->PipelineBarrier(2, PipelineStageBit::BOTTOM_OF_PIPE_BIT, PipelineStageBit::TOP_OF_PIPE_BIT, DependencyBit::NONE_BIT, { b });
+
+				cmdBuffer->End(2);
+			}
+			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
 		}
 		if (swapchain->m_Resized)
 		{
@@ -984,6 +1190,7 @@ int main()
 			pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 			pipeline = Pipeline::Create(&pCI);
+
 			p1CI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 			p1CI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 			postProcessPipeline = Pipeline::Create(&p1CI);
@@ -1011,6 +1218,21 @@ int main()
 			descriptorSet1->AddImage(0, 0, { { nullptr, resolveAndInputImageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 			descriptorSet1->Update();
 
+			RT_RWImageCI.width = width;
+			RT_RWImageCI.height = height;
+			RT_RWImage = Image::Create(&RT_RWImageCI);
+			RT_RWImageViewCI.pImage = RT_RWImage;
+			RT_RWImageView = ImageView::Create(&RT_RWImageViewCI);
+
+#if MIRU_TEST_RT
+			descriptorSetRT_Global = nullptr;
+			descriptorSetRT_Global = DescriptorSet::Create(&descriptorSetRTCI);
+			descriptorSetRT_Global->AddBuffer(0, 0, { { ubViewSceneConstants } });
+			descriptorSetRT_Global->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
+			descriptorSetRT_Global->AddAccelerationStructure(0, 2, { tlas });
+			descriptorSetRT_Global->Update();
+#endif
+
 			framebufferCI_0.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[0] };
 			framebufferCI_0.width = width;
 			framebufferCI_0.height = height;
@@ -1029,6 +1251,28 @@ int main()
 
 			swapchain->m_Resized = false;
 			frameIndex = 0;
+
+			//Transition any resource into the correct states.
+			{
+				cmdBuffer->Reset(2, false);
+				cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+
+				Barrier::CreateInfo bCI;
+				bCI.type = Barrier::Type::IMAGE;
+				bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+				bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
+				bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+				bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+				bCI.pImage = RT_RWImage;
+				bCI.oldLayout = Image::Layout::UNKNOWN;
+				bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
+				bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+				Ref<Barrier> b = Barrier::Create(&bCI);
+				cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
+
+				cmdBuffer->End(2);
+			}
+			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
 		}
 		{
 			if (r > b && b < increment)
@@ -1054,7 +1298,7 @@ int main()
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0} });
+			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0}, {r, g, b, 1.0f} });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
 			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
@@ -1065,6 +1309,66 @@ int main()
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet1 }, postProcessPipeline);
 			cmdBuffer->Draw(frameIndex, 3);
 			cmdBuffer->EndRenderPass(frameIndex);
+
+#if MIRU_TEST_RT == 1
+			cmdBuffer->BindPipeline(frameIndex, raytracingPipeline);
+			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSetRT_Global }, raytracingPipeline);
+			cmdBuffer->TraceRays(frameIndex, &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::RAYGEN), &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::MISS), &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::HIT_GROUP), nullptr, width, height, 1);
+
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::SHADER_READ_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.pImage = RT_RWImage;
+			bCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
+			bCI.newLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
+			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			Ref<Barrier> b1 = Barrier::Create(&bCI);
+
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			Ref<Barrier> b2 = Barrier::Create(&bCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::RAY_TRACING_SHADER_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b1 });
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b2 });
+
+			cmdBuffer->CopyImage(frameIndex, RT_RWImage, Image::Layout::TRANSFER_SRC_OPTIMAL,
+				swapchain->m_SwapchainImages[frameIndex], Image::Layout::TRANSFER_DST_OPTIMAL,
+				{ { {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0, 0, 0}, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0, 0, 0},
+				{RT_RWImage->GetCreateInfo().width, RT_RWImage->GetCreateInfo().height, 1} } });
+
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::TRANSFER_READ_BIT;
+			bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.pImage = RT_RWImage;
+			bCI.oldLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
+			bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
+			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			b1 = Barrier::Create(&bCI);
+
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::TRANSFER_READ_BIT;
+			bCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.newLayout = Image::Layout::PRESENT_SRC;
+			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			b2 = Barrier::Create(&bCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b1 });
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
+#endif
 			cmdBuffer->End(frameIndex);
 
 			proj = Mat4::Perspective(3.14159/2.0, float(width)/float(height), 0.1f, 100.0f);

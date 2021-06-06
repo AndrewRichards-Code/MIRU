@@ -63,7 +63,7 @@
 #define MIRU_COMBINED_IMAGE_SAMPLER_ARRAY(image_type, set_num, bind_num, type, name, count) image_type(set_num, bind_num, type, name##_ImageCIS[count]); MIRU_SAMPLER(set_num, bind_num, name##_SamplerCIS[count])
 
 //Subpass Input Attachments
-#if defined MIRU_VULKAN
+#if defined MIRU_VULKAN && defined MIRU_FRAGMENT_SHADER
 #define MIRU_SUBPASS_INPUT(set_num, bind_num, idx_num, type, name) [[vk::binding(bind_num, set_num)]][[vk::input_attachment_index(idx_num)]] SubpassInput<type> name
 #define MIRU_SUBPASS_INPUT_MS(set_num, bind_num, idx_num, type, name) [[vk::binding(bind_num, set_num)]][[vk::input_attachment_index(idx_num)]] SubpassInputMS<type> name
 #define MIRU_SUBPASS_LOAD(name, sv_pos) name.SubpassLoad()

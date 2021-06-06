@@ -58,7 +58,9 @@ namespace shader_compiler
 		command += " -Fo " + absoluteDstDir;
 		for (auto& includeDirectory : includeDirectories)
 			command += " -I " + includeDirectory;
-		command += " -DMIRU_D3D12 " + additionCommandlineArgs;
+		command += " -DMIRU_VULKAN " + additionCommandlineArgs;
+		if (shaderModel.find("ps") != std::string::npos)
+			command += " -DMIRU_FRAGMENT_SHADER";
 
 		//Run glslangValidator
 		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV using DXC\n");

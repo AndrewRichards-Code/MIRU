@@ -171,7 +171,7 @@ namespace crossplatform
 			uint32_t		maxRecursionDepth;
 			uint32_t		maxPayloadSize;
 			uint32_t		maxHitAttributeSize;
-			Ref<Allocator>	pAllocator;			//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
+			Ref<Allocator>	pAllocator;							//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
 		
 		struct CreateInfo
@@ -202,11 +202,11 @@ namespace crossplatform
 		virtual ~Pipeline() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
+		virtual std::vector<std::pair<ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() = 0;
+
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-
-		Ref<Buffer> m_SBTs[4];
 	};
 }
 }

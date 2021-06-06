@@ -291,6 +291,7 @@ DescriptorSet::~DescriptorSet()
 		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[2]);
 		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[3]);
 	}
+	ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_AssignedSets -= m_CI.pDescriptorSetLayouts.size();
 }
 
 void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex)
