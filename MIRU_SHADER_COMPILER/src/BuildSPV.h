@@ -215,6 +215,8 @@ namespace shader_compiler
 		for (auto& includeDirectory : includeDirectories)
 			command += " -I" + includeDirectory;
 		command += " -DMIRU_VULKAN " + additionCommandlineArgs;
+		if (shaderStage.find("frag") != std::string::npos)
+			command += " -DMIRU_FRAGMENT_SHADER";
 
 		//Run glslangValidator
 		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: HLSL -> SPV using GLSLANGVALIDATOR\n");
