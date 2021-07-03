@@ -119,7 +119,7 @@ namespace crossplatform
 
 		virtual void ResolveImage(uint32_t index, const Ref<Image>& srcImage, Image::Layout srcImageLayout, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Resolve>& resolveRegions) = 0;
 
-		virtual void BeginDebugLabel(uint32_t index, const std::string& label) = 0;
+		virtual void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = {0.0f, 0.0f , 0.0f, 0.0f }) = 0;
 		virtual void EndDebugLabel(uint32_t index) = 0;
 
 	protected:

@@ -236,7 +236,7 @@ int main()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -931,7 +931,7 @@ int main()
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginDebugLabel(frameIndex, "Main Render");
+			cmdBuffer->BeginDebugLabel(frameIndex, "Main Render", {1, 0, 0, 1});
 			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0} });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);

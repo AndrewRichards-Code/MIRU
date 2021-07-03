@@ -627,7 +627,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageResolve.size()), vkImageResolve.data());
 }
 
-void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label)
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -636,10 +636,10 @@ void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label)
 	vkLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
 	vkLabel.pNext = nullptr;
 	vkLabel.pLabelName = label.c_str();
-	vkLabel.color[0] = 0.0f;
-	vkLabel.color[1] = 0.0f;
-	vkLabel.color[2] = 0.0f;
-	vkLabel.color[3] = 0.0f;
+	vkLabel.color[0] = rgba[0];
+	vkLabel.color[1] = rgba[1];
+	vkLabel.color[2] = rgba[2];
+	vkLabel.color[3] = rgba[3];
 	if (vkCmdBeginDebugUtilsLabelEXT)
 		vkCmdBeginDebugUtilsLabelEXT(m_CmdBuffers[index], &vkLabel);
 }
