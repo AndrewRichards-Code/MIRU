@@ -626,4 +626,30 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 	vkCmdResolveImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), 
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageResolve.size()), vkImageResolve.data());
 }
+
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	VkDebugUtilsLabelEXT vkLabel;
+	vkLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+	vkLabel.pNext = nullptr;
+	vkLabel.pLabelName = label.c_str();
+	vkLabel.color[0] = 0.0f;
+	vkLabel.color[1] = 0.0f;
+	vkLabel.color[2] = 0.0f;
+	vkLabel.color[3] = 0.0f;
+	if (vkCmdBeginDebugUtilsLabelEXT)
+		vkCmdBeginDebugUtilsLabelEXT(m_CmdBuffers[index], &vkLabel);
+}
+
+void CommandBuffer::EndDebugLabel(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (vkCmdEndDebugUtilsLabelEXT)
+		vkCmdEndDebugUtilsLabelEXT(m_CmdBuffers[index]);
+}
 #endif

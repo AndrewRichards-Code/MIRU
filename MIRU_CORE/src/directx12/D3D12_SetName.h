@@ -7,6 +7,11 @@ namespace miru
 {
 namespace d3d12
 {
+	typedef HRESULT(WINAPI* PFN_PIXBeginEventOnCommandList)(ID3D12GraphicsCommandList*, UINT64, _In_ PCSTR);
+	typedef HRESULT(WINAPI* PFN_PIXEndEventOnCommandList)(ID3D12GraphicsCommandList*);
+	inline PFN_PIXBeginEventOnCommandList PIXBeginEventOnCommandList;
+	inline PFN_PIXEndEventOnCommandList PIXEndEventOnCommandList;
+
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
 	static inline void D3D12SetName(void* object, const std::string& name)
 	{

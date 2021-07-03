@@ -1118,4 +1118,22 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 		ResolveImage(index, colourImage, m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex], resolveImage, m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex], { resolveRegion });
 	}
 }
+
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (PIXBeginEventOnCommandList)
+		PIXBeginEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]), PIX_COLOR_DEFAULT, label.c_str());
+}
+
+void CommandBuffer::EndDebugLabel(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (PIXEndEventOnCommandList)
+		PIXEndEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]));
+}
 #endif

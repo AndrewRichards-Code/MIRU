@@ -14,6 +14,10 @@ namespace debug
 		RenderDoc();
 		~RenderDoc();
 
+	private:
+		void LoadRenderDoc();
+		void UnloadRenderDoc();
+
 		//Members
 	public:
 		RENDERDOC_API_1_4_0* m_RenderDocApi;

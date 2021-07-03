@@ -236,7 +236,7 @@ int main()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -931,6 +931,7 @@ int main()
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
+			cmdBuffer->BeginDebugLabel(frameIndex, "Main Render");
 			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0} });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
@@ -942,6 +943,7 @@ int main()
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet1 }, postProcessPipeline);
 			cmdBuffer->Draw(frameIndex, 3);
 			cmdBuffer->EndRenderPass(frameIndex);
+			cmdBuffer->EndDebugLabel(frameIndex);
 			cmdBuffer->End(frameIndex);
 
 			proj = Mat4::Perspective(3.14159/2.0, float(width)/float(height), 0.1f, 100.0f);
