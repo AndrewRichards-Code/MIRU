@@ -17,9 +17,23 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.pContext)->m_Queues[0];
 
 	//Create Swapchain
+	std::pair<DXGI_FORMAT, DXGI_COLOR_SPACE_TYPE> surfaceFormat;
+	switch (m_CI.bpcColourSpace)
+	{
+	default:
+	case crossplatform::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
+		surfaceFormat = { DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR_KHR:
+		surfaceFormat = { DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
+		surfaceFormat = { DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
+		surfaceFormat = { DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 }; break;
+	}
+
 	m_SwapchainDesc.Width = m_CI.width;
 	m_SwapchainDesc.Height = m_CI.height;
-	m_SwapchainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	m_SwapchainDesc.Format = surfaceFormat.first;
 	m_SwapchainDesc.Stereo = false;
 	m_SwapchainDesc.SampleDesc = { 1, 0 };
 	m_SwapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -36,9 +50,38 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	#endif
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
+
+	//Set Colour space
+	IDXGIOutput6* output;
+	MIRU_ASSERT(m_Swapchain->GetContainingOutput(reinterpret_cast<IDXGIOutput**>(&output)), "ERROR: D3D12: Failed to get containing Output.");
+	DXGI_OUTPUT_DESC1 outputDesc;
+	output->GetDesc1(&outputDesc);
+	if (outputDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) //HDR
+	{
+		if (surfaceFormat.second == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
+		{
+			UINT colourSpaceSupport;
+			MIRU_ASSERT(m_Swapchain->CheckColorSpaceSupport(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, &colourSpaceSupport), "ERROR: D3D12: Failed to check ColourSpace support.");
+			if ((colourSpaceSupport & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) == DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT)
+			{
+				MIRU_ASSERT(m_Swapchain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020), "ERROR: D3D12: Failed to set ColourSpace.");
+				surfaceFormat.second = DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+			}
+		}
+	}
+	else if (outputDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709) //SDR
+	{
+		surfaceFormat.second = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Unknown colour space.")
+	}
+	m_Format = surfaceFormat.first;
+	m_ColorSpace = surfaceFormat.second;
+
 	//D3D12SetName(m_Swapchain, m_CI.debugName);
 	MIRU_ASSERT(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
-	m_Format = m_SwapchainDesc.Format;
 
 	//Create Swapchian RTV
 	m_SwapchainRTVDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;

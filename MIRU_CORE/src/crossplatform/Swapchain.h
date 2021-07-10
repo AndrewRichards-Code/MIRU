@@ -13,6 +13,13 @@ namespace crossplatform
 	{
 		//enums/structs
 	public:
+		enum class BPC_ColourSpace
+		{
+			B8G8R8A8_UNORM_SRGB_NONLINEAR,					// 8-bit sRGB Non-linear
+			A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR_KHR,	//10-bit sRGB Non-linear
+			A2B10G10R10_UNORM_PACK32_HDR10_ST2084,			//10-bit HDR10 Non-linear
+			R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR		//16-bit scRGB Linear
+		};
 		struct CreateInfo
 		{
 			std::string		debugName;
@@ -22,6 +29,7 @@ namespace crossplatform
 			uint32_t		height;
 			uint32_t		swapchainCount;
 			bool			vSync;
+			BPC_ColourSpace bpcColourSpace;
 		};
 
 		//Methods
