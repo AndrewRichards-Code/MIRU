@@ -567,6 +567,8 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 
+	m_RenderPassFramebufferAttachementLayouts.clear();
+
 	size_t i = 0;
 	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
 	{
