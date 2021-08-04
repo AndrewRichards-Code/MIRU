@@ -124,6 +124,7 @@ set( src_cpp
         )
 
 include_directories(
+        ${MIRU_SOLUTION_DIR}/MIRU_CORE/dep
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/src
         ${MIRU_SOLUTION_DIR}/MIRU_CORE/redist
 )
