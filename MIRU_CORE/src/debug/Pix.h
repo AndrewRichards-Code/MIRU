@@ -15,10 +15,15 @@ namespace debug
 	public:
 		Pix();
 		~Pix();
+	
+		static void LoadWinPixEventRuntime();
+		static void UnloadWinPixEventRuntime();
+		
+	private:
+		void LoadWinPixGpuCapturer();
+		void UnloadWinPixGpuCapturer();
 
 		//Members
-	public:
-
 	private:
 		//Pix Libraries
 		static arc::DynamicLibrary::LibraryHandle s_WinPixEventRuntimeHandle;

@@ -73,6 +73,9 @@ namespace d3d12
 
 		void ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions) override;
 		
+		void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = { 0.0f, 0.0f , 0.0f, 0.0f }) override;
+		void EndDebugLabel(uint32_t index) override;
+
 	private:
 		void ResolvePreviousSubpassAttachments(uint32_t index);
 

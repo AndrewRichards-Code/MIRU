@@ -568,6 +568,8 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 
+	m_RenderPassFramebufferAttachementLayouts.clear();
+
 	size_t i = 0;
 	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
 	{
@@ -1190,5 +1192,26 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 
 		ResolveImage(index, colourImage, m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex], resolveImage, m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex], { resolveRegion });
 	}
+}
+
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	BYTE r = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[0], 0.0f, 255.0f));
+	BYTE g = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[1], 0.0f, 255.0f));
+	BYTE b = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[2], 0.0f, 255.0f));
+	if (PIXBeginEventOnCommandList)
+		PIXBeginEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]), PIX_COLOR(r, g, b), label.c_str());
+}
+
+void CommandBuffer::EndDebugLabel(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (PIXEndEventOnCommandList)
+		PIXEndEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]));
 }
 #endif

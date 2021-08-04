@@ -235,8 +235,8 @@ void WindowUpdate()
 
 int main()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 	
@@ -283,7 +283,7 @@ int main()
 	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
-	shaderCI.binaryFilepath = "res/bin/basic_vs_5_1_vs_main.spv";
+	shaderCI.binaryFilepath = "res/bin/basic_vs_6_0_vs_main.spv";
 	shaderCI.binaryCode = {};
 	#if _DEBUG
 	bool debug = true;
@@ -296,7 +296,7 @@ int main()
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
 		"vs_main",
-		"vs_5_1",
+		"vs_6_0",
 		{},
 		true,
 		true,
@@ -308,9 +308,9 @@ int main()
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "res/bin/basic_ps_5_1_ps_main.spv";
+	shaderCI.binaryFilepath = "res/bin/basic_ps_6_0_ps_main.spv";
 	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderModel = "ps_5_1";
+	shaderCI.recompileArguments.shaderModel = "ps_6_0";
 	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
 
 	//Ray Tracing library
@@ -330,16 +330,16 @@ int main()
 	//PostProcessing
 	shaderCI.debugName = "PostProcess: Vertex Shader Module";
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
-	shaderCI.binaryFilepath = "res/bin/postprocess_vs_5_1_vs_main.spv";
+	shaderCI.binaryFilepath = "res/bin/postprocess_vs_6_0_vs_main.spv";
 	shaderCI.recompileArguments.hlslFilepath = "res/shaders/postprocess.hlsl";
 	shaderCI.recompileArguments.entryPoint = "vs_main";
-	shaderCI.recompileArguments.shaderModel = "vs_5_1";
+	shaderCI.recompileArguments.shaderModel = "vs_6_0";
 	Ref<Shader> postProcessVertexShader= Shader::Create(&shaderCI);
 	shaderCI.debugName = "PostProcess: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "res/bin/postprocess_ps_5_1_ps_main.spv";
+	shaderCI.binaryFilepath = "res/bin/postprocess_ps_6_0_ps_main.spv";
 	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderModel = "ps_5_1";
+	shaderCI.recompileArguments.shaderModel = "ps_6_0";
 	Ref<Shader> postProcessFragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;

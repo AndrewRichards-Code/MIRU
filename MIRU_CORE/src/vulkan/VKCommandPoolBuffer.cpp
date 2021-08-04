@@ -707,4 +707,30 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 	vkCmdResolveImage(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), 
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageResolve.size()), vkImageResolve.data());
 }
+
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	VkDebugUtilsLabelEXT vkLabel;
+	vkLabel.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+	vkLabel.pNext = nullptr;
+	vkLabel.pLabelName = label.c_str();
+	vkLabel.color[0] = rgba[0];
+	vkLabel.color[1] = rgba[1];
+	vkLabel.color[2] = rgba[2];
+	vkLabel.color[3] = rgba[3];
+	if (vkCmdBeginDebugUtilsLabelEXT)
+		vkCmdBeginDebugUtilsLabelEXT(m_CmdBuffers[index], &vkLabel);
+}
+
+void CommandBuffer::EndDebugLabel(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (vkCmdEndDebugUtilsLabelEXT)
+		vkCmdEndDebugUtilsLabelEXT(m_CmdBuffers[index]);
+}
 #endif

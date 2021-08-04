@@ -52,12 +52,12 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_SurfaceCapability), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceCapabilities.");
 
 	uint32_t surfaceFormatsCount = 0;
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, 0), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
+	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
 	m_SurfaceFormats.resize(surfaceFormatsCount);
 	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, m_SurfaceFormats.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
 
 	uint32_t presentModesCount = 0;
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, 0), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
+	MIRU_ASSERT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
 	m_PresentModes.resize(presentModesCount);
 	MIRU_ASSERT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, m_PresentModes.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
 
@@ -66,8 +66,21 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		MIRU_ASSERT(true, "ERROR: VULKAN: Could not find suitable surface formats and/or present modes for the created surface");
 	}
 
-	VkSurfaceFormatKHR surfaceFormat = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR };
+	VkSurfaceFormatKHR surfaceFormat;
+	switch (m_CI.bpcColourSpace)
+	{
+	default:
+	case crossplatform::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
+		surfaceFormat = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR:
+		surfaceFormat = { VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_COLORSPACE_SRGB_NONLINEAR_KHR }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
+		surfaceFormat = { VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_COLOR_SPACE_HDR10_ST2084_EXT }; break;
+	case crossplatform::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
+		surfaceFormat = { VK_FORMAT_R16G16B16A16_SFLOAT, VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT }; break;
+	}
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+
 	m_ChosenSurfaceFormat = m_SurfaceFormats[0]; //Default
 	for (auto& _surfaceFormat : m_SurfaceFormats)
 	{

@@ -31,6 +31,7 @@ namespace d3d12
 
 		UINT m_Width, m_Height;
 		DXGI_FORMAT m_Format;
+		DXGI_COLOR_SPACE_TYPE m_ColorSpace;
 	};
 }
 }
