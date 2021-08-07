@@ -5,11 +5,7 @@ namespace miru
 {
 namespace vulkan
 {
-	inline PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT;
-	inline PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT;
-
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
-	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
 	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const std::string& name)
 	{
