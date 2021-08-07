@@ -90,7 +90,7 @@ void Shader::D3D12ShaderReflection()
 	uint32_t partIndex;
 	uint32_t dxil_kind = 0x4c495844; //MAKEFOURCC('D', 'X', 'I', 'L')
 	dxc_container_reflection->FindFirstPartKind(dxil_kind, &partIndex);
-	if (partIndex != 4) //No reflection able of shader model 5_1 and lower.
+	if (partIndex == 0) //No reflection available for non-DXIL shaders.
 		return;
 
 	//General parsing functions:
@@ -160,200 +160,130 @@ void Shader::D3D12ShaderReflection()
 		}
 	};
 	
-	//Shader Reflection
-	ID3D12ShaderReflection* shader_reflection = nullptr;
-	dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection));
-	if (shader_reflection)
+	if (m_CI.stageAndEntryPoints.size() == 1)
 	{
-		D3D12_SHADER_DESC shaderDesc;
-		shader_reflection->GetDesc(&shaderDesc);
-
-		D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(shaderDesc.Version);
-		uint16_t major = D3D12_SHVER_GET_MAJOR(shaderDesc.Version);
-		uint16_t minor = D3D12_SHVER_GET_MINOR(shaderDesc.Version);
-
-		D3D_FEATURE_LEVEL featureLevel;
-		shader_reflection->GetMinFeatureLevel(&featureLevel);
-
-		auto D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> crossplatform::VertexType
+		//Shader Reflection
+		ID3D12ShaderReflection* shader_reflection = nullptr;
+		dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection));
+		if (shader_reflection)
 		{
-			switch (type)
-			{
-			case D3D_REGISTER_COMPONENT_UNKNOWN:
-				break;
-			case D3D_REGISTER_COMPONENT_UINT32:
-				return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT)
-					+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
-			case D3D_REGISTER_COMPONENT_SINT32:
-				return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT)
-					+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
-			case D3D_REGISTER_COMPONENT_FLOAT32:
-				return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT)
-					+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
-			default:
-				break;
-			}
-			MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
-			return static_cast<crossplatform::VertexType>(0);
-		};
+			D3D12_SHADER_DESC shaderDesc;
+			shader_reflection->GetDesc(&shaderDesc);
 
-		if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
-		{
-			auto sizeof_miru_crossplatform_VertexType = [](crossplatform::VertexType type) -> uint32_t
+			D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(shaderDesc.Version);
+			uint16_t major = D3D12_SHVER_GET_MAJOR(shaderDesc.Version);
+			uint16_t minor = D3D12_SHVER_GET_MINOR(shaderDesc.Version);
+
+			D3D_FEATURE_LEVEL featureLevel;
+			shader_reflection->GetMinFeatureLevel(&featureLevel);
+
+			auto D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> crossplatform::VertexType
 			{
 				switch (type)
 				{
-				case miru::crossplatform::VertexType::FLOAT:
-				case miru::crossplatform::VertexType::INT:
-				case miru::crossplatform::VertexType::UINT:
-					return 4;
-				case miru::crossplatform::VertexType::VEC2:
-				case miru::crossplatform::VertexType::IVEC2:
-				case miru::crossplatform::VertexType::UVEC2:
-					return 8;
-				case miru::crossplatform::VertexType::VEC3:
-				case miru::crossplatform::VertexType::IVEC3:
-				case miru::crossplatform::VertexType::UVEC3:
-					return 12;
-				case miru::crossplatform::VertexType::VEC4:
-				case miru::crossplatform::VertexType::IVEC4:
-				case miru::crossplatform::VertexType::UVEC4:
-					return 16;
-				case miru::crossplatform::VertexType::DOUBLE:
-					return 8;
-				case miru::crossplatform::VertexType::DVEC2:
-					return 16;
-				case miru::crossplatform::VertexType::DVEC3:
-					return 24;
-				case miru::crossplatform::VertexType::DVEC4:
-					return 32;
+				case D3D_REGISTER_COMPONENT_UNKNOWN:
+					break;
+				case D3D_REGISTER_COMPONENT_UINT32:
+					return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT)
+						+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+				case D3D_REGISTER_COMPONENT_SINT32:
+					return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT)
+						+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+				case D3D_REGISTER_COMPONENT_FLOAT32:
+					return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT)
+						+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
 				default:
-					return 0;
+					break;
 				}
+				MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
+				return static_cast<crossplatform::VertexType>(0);
 			};
 
-			m_VSIADs.clear();
-			for (UINT i = 0; i < shaderDesc.InputParameters; i++)
+			if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
 			{
-				D3D12_SIGNATURE_PARAMETER_DESC input_parameter;
-				shader_reflection->GetInputParameterDesc(i, &input_parameter);
-
-				VertexShaderInputAttributeDescription vsiad;
-				vsiad.location = input_parameter.SemanticIndex;
-				vsiad.binding = 0;
-				vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
-				vsiad.offset = m_VSIADs.empty() ? 0 : m_VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(m_VSIADs.back().vertexType);
-				vsiad.semanticName = input_parameter.SemanticName;
-				m_VSIADs.push_back(vsiad);
-			}
-		}
-
-		if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_PIXEL_SHADER)
-		{
-			for (UINT i = 0; i < shaderDesc.OutputParameters; i++)
-			{
-				m_PSOADs.clear();
-				D3D12_SIGNATURE_PARAMETER_DESC out_parameter;
-				shader_reflection->GetOutputParameterDesc(i, &out_parameter);
-
-				PixelShaderOutputAttributeDescription psoad;
-				psoad.location = out_parameter.SemanticIndex;
-				psoad.outputType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(out_parameter.ComponentType, (uint32_t)log2((double)(out_parameter.Mask + 1)));
-				psoad.semanticName = out_parameter.SemanticName;
-				m_PSOADs.push_back(psoad);
-			}
-		}
-
-		for (auto& rbds : m_RBDs)
-		{
-			rbds.second.clear();
-		}
-		m_RBDs.clear();
-
-		std::vector<std::string> cis_list;
-		for (UINT i = 0; i < shaderDesc.BoundResources; i++)
-		{
-			D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
-			shader_reflection->GetResourceBindingDesc(i, &bindingDesc);
-			size_t structSize = 0;
-
-			crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
-			if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
-			{
-				_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
-				ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name);
-				shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
-				structSize = static_cast<size_t>(shaderBufferDesc.Size);
-			}
-
-			std::string name = bindingDesc.Name;
-			if (name.find("CIS") != std::string::npos)
-			{
-				bool found = false;
-				for (auto& cis : cis_list)
+				auto sizeof_miru_crossplatform_VertexType = [](crossplatform::VertexType type) -> uint32_t
 				{
-					if (cis.compare(name.substr(0, name.find_last_of('_'))) == 0)
+					switch (type)
 					{
-						found = true;
-						break;
+					case miru::crossplatform::VertexType::FLOAT:
+					case miru::crossplatform::VertexType::INT:
+					case miru::crossplatform::VertexType::UINT:
+						return 4;
+					case miru::crossplatform::VertexType::VEC2:
+					case miru::crossplatform::VertexType::IVEC2:
+					case miru::crossplatform::VertexType::UVEC2:
+						return 8;
+					case miru::crossplatform::VertexType::VEC3:
+					case miru::crossplatform::VertexType::IVEC3:
+					case miru::crossplatform::VertexType::UVEC3:
+						return 12;
+					case miru::crossplatform::VertexType::VEC4:
+					case miru::crossplatform::VertexType::IVEC4:
+					case miru::crossplatform::VertexType::UVEC4:
+						return 16;
+					case miru::crossplatform::VertexType::DOUBLE:
+						return 8;
+					case miru::crossplatform::VertexType::DVEC2:
+						return 16;
+					case miru::crossplatform::VertexType::DVEC3:
+						return 24;
+					case miru::crossplatform::VertexType::DVEC4:
+						return 32;
+					default:
+						return 0;
 					}
-				}
-				if (found)
+				};
+
+				m_VSIADs.clear();
+				for (UINT i = 0; i < shaderDesc.InputParameters; i++)
 				{
-					continue;
+					D3D12_SIGNATURE_PARAMETER_DESC input_parameter;
+					shader_reflection->GetInputParameterDesc(i, &input_parameter);
+
+					VertexShaderInputAttributeDescription vsiad;
+					vsiad.location = input_parameter.SemanticIndex;
+					vsiad.binding = 0;
+					vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
+					vsiad.offset = m_VSIADs.empty() ? 0 : m_VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(m_VSIADs.back().vertexType);
+					vsiad.semanticName = input_parameter.SemanticName;
+					m_VSIADs.push_back(vsiad);
 				}
-				else
-					cis_list.push_back(name.substr(0, name.find_last_of('_')));
-				descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
 
-			ResourceBindingDescription rbd;
-			rbd.binding = bindingDesc.BindPoint;
-			rbd.type = descType;
-			rbd.descriptorCount = bindingDesc.BindCount;
-			rbd.stage = get_shader_stage(stage);
-			rbd.name = name;
-			rbd.structSize = structSize;
-			m_RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
-		}
-	}
+			if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_PIXEL_SHADER)
+			{
+				for (UINT i = 0; i < shaderDesc.OutputParameters; i++)
+				{
+					m_PSOADs.clear();
+					D3D12_SIGNATURE_PARAMETER_DESC out_parameter;
+					shader_reflection->GetOutputParameterDesc(i, &out_parameter);
 
-	//Library Refelection
-	ID3D12LibraryReflection* library_reflection = nullptr;
-	dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&library_reflection));
-	if (library_reflection)
-	{
-		for (auto& rbds : m_RBDs)
-		{
-			rbds.second.clear();
-		}
-		m_RBDs.clear();
+					PixelShaderOutputAttributeDescription psoad;
+					psoad.location = out_parameter.SemanticIndex;
+					psoad.outputType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(out_parameter.ComponentType, (uint32_t)log2((double)(out_parameter.Mask + 1)));
+					psoad.semanticName = out_parameter.SemanticName;
+					m_PSOADs.push_back(psoad);
+				}
+			}
 
-		D3D12_LIBRARY_DESC libraryDesc;
-		library_reflection->GetDesc(&libraryDesc);
-		for(UINT i = 0; i < libraryDesc.FunctionCount; i++)
-		{
-			ID3D12FunctionReflection* function_reflection = library_reflection->GetFunctionByIndex(i);
-
-			D3D12_FUNCTION_DESC functionDesc;
-			function_reflection->GetDesc(&functionDesc);
-
-			D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(functionDesc.Version);
-			uint16_t major = D3D12_SHVER_GET_MAJOR(functionDesc.Version);
-			uint16_t minor = D3D12_SHVER_GET_MINOR(functionDesc.Version);
+			for (auto& rbds : m_RBDs)
+			{
+				rbds.second.clear();
+			}
+			m_RBDs.clear();
 
 			std::vector<std::string> cis_list;
-			for (UINT j = 0; j < functionDesc.BoundResources; j++)
+			for (UINT i = 0; i < shaderDesc.BoundResources; i++)
 			{
 				D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
-				function_reflection->GetResourceBindingDesc(j, &bindingDesc);
+				shader_reflection->GetResourceBindingDesc(i, &bindingDesc);
 				size_t structSize = 0;
 
 				crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
 				if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
 				{
 					_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
-					ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = function_reflection->GetConstantBufferByName(bindingDesc.Name);
+					ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name);
 					shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
 					structSize = static_cast<size_t>(shaderBufferDesc.Size);
 				}
@@ -379,19 +309,96 @@ void Shader::D3D12ShaderReflection()
 					descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 				}
 
-				ResourceBindingDescription& rbd = m_RBDs[bindingDesc.Space][bindingDesc.BindPoint];
+				ResourceBindingDescription rbd;
 				rbd.binding = bindingDesc.BindPoint;
 				rbd.type = descType;
 				rbd.descriptorCount = bindingDesc.BindCount;
-				rbd.stage |= get_shader_stage(stage);
+				rbd.stage = get_shader_stage(stage);
 				rbd.name = name;
 				rbd.structSize = structSize;
+				m_RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
 			}
 		}
+		MIRU_D3D12_SAFE_RELEASE(shader_reflection);
+	}
+	else
+	{
+
+		//Library Refelection
+		ID3D12LibraryReflection* library_reflection = nullptr;
+		dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&library_reflection));
+		if (library_reflection)
+		{
+			for (auto& rbds : m_RBDs)
+			{
+				rbds.second.clear();
+			}
+			m_RBDs.clear();
+
+			D3D12_LIBRARY_DESC libraryDesc;
+			library_reflection->GetDesc(&libraryDesc);
+			for (UINT i = 0; i < libraryDesc.FunctionCount; i++)
+			{
+				ID3D12FunctionReflection* function_reflection = library_reflection->GetFunctionByIndex(i);
+
+				D3D12_FUNCTION_DESC functionDesc;
+				function_reflection->GetDesc(&functionDesc);
+
+				D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(functionDesc.Version);
+				uint16_t major = D3D12_SHVER_GET_MAJOR(functionDesc.Version);
+				uint16_t minor = D3D12_SHVER_GET_MINOR(functionDesc.Version);
+
+				std::vector<std::string> cis_list;
+				for (UINT j = 0; j < functionDesc.BoundResources; j++)
+				{
+					D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
+					function_reflection->GetResourceBindingDesc(j, &bindingDesc);
+					size_t structSize = 0;
+
+					crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+					if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+					{
+						_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
+						ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = function_reflection->GetConstantBufferByName(bindingDesc.Name);
+						shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
+						structSize = static_cast<size_t>(shaderBufferDesc.Size);
+					}
+
+					std::string name = bindingDesc.Name;
+					if (name.find("CIS") != std::string::npos)
+					{
+						bool found = false;
+						for (auto& cis : cis_list)
+						{
+							if (cis.compare(name.substr(0, name.find_last_of('_'))) == 0)
+							{
+								found = true;
+								break;
+							}
+						}
+						if (found)
+						{
+							continue;
+						}
+						else
+							cis_list.push_back(name.substr(0, name.find_last_of('_')));
+						descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
+					}
+
+					ResourceBindingDescription& rbd = m_RBDs[bindingDesc.Space][bindingDesc.BindPoint];
+					rbd.binding = bindingDesc.BindPoint;
+					rbd.type = descType;
+					rbd.descriptorCount = bindingDesc.BindCount;
+					rbd.stage |= get_shader_stage(stage);
+					rbd.name = name;
+					rbd.structSize = structSize;
+				}
+			}
+		}
+		MIRU_D3D12_SAFE_RELEASE(library_reflection);
 	}
 
-	MIRU_D3D12_SAFE_RELEASE(library_reflection);
-	MIRU_D3D12_SAFE_RELEASE(shader_reflection);
+	
 	MIRU_D3D12_SAFE_RELEASE(dxc_container_reflection);
 	MIRU_D3D12_SAFE_RELEASE(dxc_shader_bin);
 	MIRU_D3D12_SAFE_RELEASE(dxc_library);

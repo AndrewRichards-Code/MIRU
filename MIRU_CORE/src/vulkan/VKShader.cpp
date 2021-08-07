@@ -229,11 +229,14 @@ void Shader::SpirvCrossReflection()
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
 			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
-			size_t structSize = 0;
+			std::string name = compiled_bin.get_name(res.id);
 			
+			size_t structSize = 0;
 			crossplatform::DescriptorType descType = descriptorType;
-			if(descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+			if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+			{
 				structSize = compiled_bin.get_declared_struct_size(type);
+			}
 
 			uint32_t set = compiled_bin.get_decoration(res.id, spv::DecorationDescriptorSet);
 			uint32_t binding = compiled_bin.get_decoration(res.id, spv::DecorationBinding);
@@ -264,7 +267,7 @@ void Shader::SpirvCrossReflection()
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
 			rbd.stage = stageBit;
-			rbd.name = res.name;
+			rbd.name = name;
 			rbd.structSize = structSize;
 			m_RBDs[set][binding] = rbd;
 		}
