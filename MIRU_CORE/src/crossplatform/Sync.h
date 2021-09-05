@@ -135,7 +135,7 @@ namespace crossplatform
 			Ref<Image>					pImage;					//For Type::IMAGE
 			Image::Layout				oldLayout;				//For Type::IMAGE
 			Image::Layout				newLayout;				//For Type::IMAGE
-			Image::SubresourceRange		subresoureRange;		//For Type::IMAGE
+			Image::SubresourceRange		subresourceRange;		//For Type::IMAGE
 		};
 		//Methods
 	public:

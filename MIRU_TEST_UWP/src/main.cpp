@@ -231,16 +231,14 @@ public:
 		Shader::CreateInfo shaderCI;
 		shaderCI.debugName = "Basic: Vertex Shader Module";
 		shaderCI.device = context->GetDevice();
-		shaderCI.stage = Shader::StageBit::VERTEX_BIT;
-		shaderCI.entryPoint = "vs_main";
+		shaderCI.stageAndEntryPoints = { { Shader::StageBit::VERTEX_BIT, "vs_main" } };
 		shaderCI.binaryFilepath = "res/bin/basic_vert_vs_main.cso";
 		shaderCI.binaryCode = {};
 		shaderCI.recompileArguments = {};
 		vertexShader = Shader::Create(&shaderCI);
 
 		shaderCI.debugName = "Basic: Fragment Shader Module";
-		shaderCI.stage = Shader::StageBit::PIXEL_BIT;
-		shaderCI.entryPoint = "ps_main";
+		shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main" } };
 		shaderCI.binaryFilepath = "res/bin/basic_frag_ps_main.cso";
 		fragmentShader = Shader::Create(&shaderCI);
 
@@ -371,7 +369,7 @@ public:
 			bCI.pImage = image;
 			bCI.oldLayout = Image::Layout::UNKNOWN;
 			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 			Ref<Barrier> b = Barrier::Create(&bCI);
 			cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
 			cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
@@ -398,7 +396,7 @@ public:
 			bCI.pImage = image;
 			bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 			Ref<Barrier> b = Barrier::Create(&bCI);
 			cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 

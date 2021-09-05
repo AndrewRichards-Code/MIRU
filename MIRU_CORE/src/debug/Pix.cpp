@@ -70,6 +70,7 @@ void Pix::UnloadWinPixEventRuntime()
 
 void Pix::LoadWinPixGpuCapturer()
 {
+#if !defined (MIRU_WIN64_UWP)
 	if (!s_WinPixGpuCapturerHandle)
 	{
 		LPWSTR programFilesPath;
@@ -104,10 +105,12 @@ void Pix::LoadWinPixGpuCapturer()
 		}
 	}
 	s_WinPixGpuCapturerRefCount++;
+#endif
 }
 
 void Pix::UnloadWinPixGpuCapturer()
 {
+#if !defined (MIRU_WIN64_UWP)
 	s_WinPixGpuCapturerRefCount--;
 	if (!s_WinPixGpuCapturerRefCount)
 	{
@@ -117,6 +120,7 @@ void Pix::UnloadWinPixGpuCapturer()
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
+#endif
 }
 
 #elif defined(__ANDROID__)

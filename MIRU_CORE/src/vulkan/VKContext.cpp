@@ -12,7 +12,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 
 	//Instance 
-	uint32_t apiVersion = VK_MAKE_VERSION(m_CI.api_version_major, m_CI.api_version_minor, 0);
+	uint32_t apiVersion = VK_MAKE_API_VERSION(0, m_CI.api_version_major, m_CI.api_version_minor, VK_HEADER_VERSION);
 	const char* engineName = "MIRU - x64";
 
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)

@@ -185,11 +185,11 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_IMB.oldLayout = static_cast<VkImageLayout>(m_CI.oldLayout);
 		m_IMB.newLayout = static_cast<VkImageLayout>(m_CI.newLayout);
 		m_IMB.image = ref_cast<vulkan::Image>(m_CI.pImage)->m_Image;
-		m_IMB.subresourceRange.aspectMask = static_cast<VkImageAspectFlagBits>(m_CI.subresoureRange.aspect);
-		m_IMB.subresourceRange.baseMipLevel = m_CI.subresoureRange.baseMipLevel;
-		m_IMB.subresourceRange.levelCount = m_CI.subresoureRange.mipLevelCount;
-		m_IMB.subresourceRange.baseArrayLayer = m_CI.subresoureRange.baseArrayLayer;
-		m_IMB.subresourceRange.layerCount = m_CI.subresoureRange.arrayLayerCount;
+		m_IMB.subresourceRange.aspectMask = static_cast<VkImageAspectFlagBits>(m_CI.subresourceRange.aspect);
+		m_IMB.subresourceRange.baseMipLevel = m_CI.subresourceRange.baseMipLevel;
+		m_IMB.subresourceRange.levelCount = m_CI.subresourceRange.mipLevelCount;
+		m_IMB.subresourceRange.baseArrayLayer = m_CI.subresourceRange.baseArrayLayer;
+		m_IMB.subresourceRange.layerCount = m_CI.subresourceRange.arrayLayerCount;
 	}
 	else
 		return;

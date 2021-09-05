@@ -33,7 +33,7 @@ void RenderDoc::LoadRenderDoc()
 {
 	if (!s_RenderDocHandle)
 	{
-	#if defined(_WIN64)
+	#if defined(_WIN64) && !defined (MIRU_WIN64_UWP)
 		LPWSTR programFilesPath;
 		SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, 0, &programFilesPath);
 		s_RenderDocFullpath = arc::ToString(programFilesPath);
@@ -47,7 +47,7 @@ void RenderDoc::LoadRenderDoc()
 		{
 			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
 
-		#if defined(_WIN64)
+		#if defined(_WIN64) && !defined (MIRU_WIN64_UWP)
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		#elif defined(__ANDROID__)
 			MIRU_WARN(true, error_str.c_str());

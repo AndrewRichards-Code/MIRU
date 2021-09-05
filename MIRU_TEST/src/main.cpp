@@ -716,7 +716,7 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, { 
@@ -743,7 +743,7 @@ int main()
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Ref<Barrier> b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
@@ -755,7 +755,7 @@ int main()
 		bCI.pImage = RT_RWImage;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
-		bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 		b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
@@ -1175,7 +1175,7 @@ int main()
 				bCI.pImage = resolveAndInputImage;
 				bCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 				bCI.newLayout = Image::Layout::UNKNOWN;
-				bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 				Ref<Barrier> b = Barrier::Create(&bCI);
 				cmdBuffer->PipelineBarrier(2, PipelineStageBit::BOTTOM_OF_PIPE_BIT, PipelineStageBit::TOP_OF_PIPE_BIT, DependencyBit::NONE_BIT, { b });
 
@@ -1266,7 +1266,7 @@ int main()
 				bCI.pImage = RT_RWImage;
 				bCI.oldLayout = Image::Layout::UNKNOWN;
 				bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
-				bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 				Ref<Barrier> b = Barrier::Create(&bCI);
 				cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
@@ -1324,7 +1324,7 @@ int main()
 			bCI.pImage = RT_RWImage;
 			bCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
 			bCI.newLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			Ref<Barrier> b1 = Barrier::Create(&bCI);
 
 			bCI.type = Barrier::Type::IMAGE;
@@ -1335,7 +1335,7 @@ int main()
 			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
 			bCI.oldLayout = Image::Layout::UNKNOWN;
 			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			Ref<Barrier> b2 = Barrier::Create(&bCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::RAY_TRACING_SHADER_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b1 });
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b2 });
@@ -1353,7 +1353,7 @@ int main()
 			bCI.pImage = RT_RWImage;
 			bCI.oldLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
 			bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			b1 = Barrier::Create(&bCI);
 
 			bCI.type = Barrier::Type::IMAGE;
@@ -1364,7 +1364,7 @@ int main()
 			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
 			bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.newLayout = Image::Layout::PRESENT_SRC;
-			bCI.subresoureRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			b2 = Barrier::Create(&bCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b1 });
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
