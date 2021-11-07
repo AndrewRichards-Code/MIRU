@@ -107,8 +107,8 @@ public:
 		std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 		Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 		Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-		std::vector<Ref<Semaphore>>acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-		std::vector<Ref<Semaphore>>submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+		Ref<Semaphore> acquire = Semaphore::Create(&acquireSemaphoreCI);
+		Ref<Semaphore> submit = Semaphore::Create(&submitSemaphoreCI);
 
 		uint32_t frameIndex = 0;
 		uint32_t frameCount = 0;
@@ -139,7 +139,6 @@ public:
 					r += increment;
 				}
 
-				Ref<Semaphore> acquire = acquires[frameIndex];
 				swapchain->AcquireNextImage(acquire, frameIndex);
 
 				draws[frameIndex]->Wait();
@@ -155,9 +154,9 @@ public:
 				cmdBuffer->DrawIndexed(frameIndex, 36);
 				cmdBuffer->EndRenderPass(frameIndex);
 				cmdBuffer->End(frameIndex);
-				cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, draws[frameIndex]);
+				cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
-				swapchain->Present(cmdPool, submits[frameIndex], frameIndex);
+				swapchain->Present(cmdPool, submit, frameIndex);
 
 				proj = perspectiveFov(radians(90.0f), float(width), float(height), 0.1f, 100.0f);
 				if (GraphicsAPI::IsVulkan())

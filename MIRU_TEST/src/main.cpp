@@ -1110,8 +1110,8 @@ int main()
 	std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	std::vector<Ref<Semaphore>>acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-	std::vector<Ref<Semaphore>>submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+	Ref<Semaphore> acquire = Semaphore::Create(&acquireSemaphoreCI);
+	Ref<Semaphore> submit = Semaphore::Create(&submitSemaphoreCI);
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
@@ -1244,8 +1244,8 @@ int main()
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+			acquire = Semaphore::Create(&acquireSemaphoreCI);
+			submit = Semaphore::Create(&submitSemaphoreCI);
 
 			swapchain->m_Resized = false;
 			windowResize = false;
@@ -1293,7 +1293,6 @@ int main()
 				r += increment;
 			}
 
-			Ref<Semaphore> acquire = acquires[frameIndex];
 			swapchain->AcquireNextImage(acquire, frameIndex);
 
 			draws[frameIndex]->Wait();
@@ -1373,9 +1372,9 @@ int main()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
 #endif
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, draws[frameIndex]);
+			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], frameIndex);
+			swapchain->Present(cmdPool, submit, frameIndex);
 
 			proj = Mat4::Perspective(3.14159/2.0, float(width)/float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
