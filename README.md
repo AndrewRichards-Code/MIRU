@@ -34,12 +34,14 @@ This repository is under active development and is not currently intended for co
 - Pipeline Caching?
 - Sparse and Aliased resources?
 - Other idiosyncratic differences between D3D12 and Vulkan.
+- Video Encode and Decode.
+- VK_KHR_dynamic_rendering for rendering without RenderPasses and Framebuffers.
 
 ## Supports:
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2104.20, RenderDoc v1.13
+- Graphics Debuggers: Pix 2108.18, RenderDoc v1.16
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
@@ -67,7 +69,7 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 ### Windows x64:
 - Microsoft Visual Studio 2022
 - Toolset: v143 
-- Windows SDK: 10.0.19041.0
+- Windows SDK: 10.0.22000.0
 - ISO C++ 17
 - Microsoft.Windows.CppWinRT NuGet package (For MIRU_TEST_UWP only)
 

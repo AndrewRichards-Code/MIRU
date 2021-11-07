@@ -8,6 +8,8 @@ namespace crossplatform
 	class Context;
 	class Image;
 	class ImageView;
+	class Semaphore;
+	class CommandPool;
 
 	class Swapchain
 	{
@@ -39,6 +41,8 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual void AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex) = 0;
+		virtual void Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex) = 0;
 
 	protected:
 		void FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);

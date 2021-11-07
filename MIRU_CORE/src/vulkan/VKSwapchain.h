@@ -14,6 +14,8 @@ namespace vulkan
 		~Swapchain();
 
 		void Resize(uint32_t width, uint32_t height) override;
+		void AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex) override;
+		void Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex) override;
 
 		//Members
 	public:

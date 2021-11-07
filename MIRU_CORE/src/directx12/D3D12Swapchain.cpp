@@ -88,7 +88,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SwapchainRTVDescHeapDesc.NumDescriptors = m_SwapchainDesc.BufferCount;
 	m_SwapchainRTVDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_SwapchainRTVDescHeapDesc.NodeMask = 0;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to get Swapchain Images");
+	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
 	D3D12SetName(m_SwapchainRTVDescHeap, m_CI.debugName + ": RTV Descriptor Heap");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE swapchainRTV_CPUDescHandle = m_SwapchainRTVDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -99,7 +99,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	for(UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
-		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Images");
+		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
 		m_Device->CreateRenderTargetView(swapchainRTV, nullptr, swapchainRTV_CPUDescHandle);
 		D3D12SetName(swapchainRTV, m_CI.debugName + ": RTV " + std::to_string(i));
 
@@ -139,14 +139,14 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_SwapchainRTVs.clear();
 	m_SwapchainRTV_CPU_Desc_Handles.clear();
 
-	MIRU_ASSERT(m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags), "ERROR: ");
+	MIRU_ASSERT(m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags), "ERROR: D3D12: Failed to Resize Swapchain Images");
 
 	//Create Swapchian RTV
 	m_SwapchainRTVDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	m_SwapchainRTVDescHeapDesc.NumDescriptors = m_SwapchainDesc.BufferCount;
 	m_SwapchainRTVDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_SwapchainRTVDescHeapDesc.NodeMask = 0;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to get Swapchain Images");
+	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
 	D3D12SetName(m_SwapchainRTVDescHeap, m_CI.debugName + ": RTV Descriptor Heap");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE swapchainRTV_CPUDescHandle = m_SwapchainRTVDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -157,7 +157,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	for (UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
-		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Images");
+		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
 		m_Device->CreateRenderTargetView(swapchainRTV, nullptr, swapchainRTV_CPUDescHandle);
 		D3D12SetName(swapchainRTV, m_CI.debugName + ": RTV " + std::to_string(i));
 
@@ -168,5 +168,26 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height, static_cast<uint32_t>(m_Format));
 	m_Resized = true;
+}
+
+void Swapchain::AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	imageIndex = static_cast<uint32_t>(m_Swapchain->GetCurrentBackBufferIndex());
+}
+
+void Swapchain::Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if (m_CI.vSync)
+	{
+		MIRU_ASSERT(m_Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+	}
+	else
+	{
+		MIRU_ASSERT(m_Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+	}
 }
 #endif
