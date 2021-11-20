@@ -20,7 +20,7 @@ namespace crossplatform
 		GraphicsAPI() = delete;
 		~GraphicsAPI() = delete;
 
-		static void SetAPI(API api);
+		static void SetAPI(API api, bool forceOverride = false);
 		static const API& GetAPI() { return s_API; }
 
 		static bool IsD3D12() { return s_API == API::D3D12; }
