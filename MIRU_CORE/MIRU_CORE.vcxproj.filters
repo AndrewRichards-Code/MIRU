@@ -102,12 +102,6 @@
     <ClInclude Include="src\debug\GraphicsDebugger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\vulkan\VKAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -201,6 +195,12 @@
     <ClInclude Include="src\crossplatform\ShaderBindingTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dep\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\VulkanMemoryAllocator\include\vk_mem_alloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\crossplatform\Buffer.cpp">
@@ -281,12 +281,6 @@
     <ClCompile Include="src\debug\Pix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vulkan\VKAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -330,6 +324,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\crossplatform\ShaderBindingTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\D3D12MemoryAllocator\include\D3D12MemAlloc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\VulkanMemoryAllocator\include\vk_mem_alloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
