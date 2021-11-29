@@ -9,7 +9,7 @@
 #pragma comment(lib, "vulkan-1.lib")
 
 //VulkanMemoryAllocator
-#include "VulkanMemoryAllocator/src/vk_mem_alloc.h"
+#include "VulkanMemoryAllocator/include/vk_mem_alloc.h"
 
 //Spirv-cross Header and Library
 #include "spirv_cross/Include/spirv_cross.hpp"

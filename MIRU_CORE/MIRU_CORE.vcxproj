@@ -204,8 +204,6 @@
     <ClInclude Include="dep\ARC\src\ScopeAndRef.h" />
     <ClInclude Include="dep\ARC\src\StringConversion.h" />
     <ClInclude Include="dep\ARC\src\WindowsErrorHandling.h" />
-    <ClInclude Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.h" />
-    <ClInclude Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.h" />
     <ClInclude Include="src\crossplatform\AccelerationStructure.h" />
     <ClInclude Include="src\crossplatform\Allocator.h" />
     <ClInclude Include="src\crossplatform\Buffer.h" />
@@ -256,8 +254,6 @@
     <ClInclude Include="src\miru_core_common.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="redist\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp" />
-    <ClCompile Include="redist\VulkanMemoryAllocator\src\vk_mem_alloc.cpp" />
     <ClCompile Include="src\crossplatform\AccelerationStructure.cpp" />
     <ClCompile Include="src\crossplatform\Allocator.cpp" />
     <ClCompile Include="src\crossplatform\Buffer.cpp" />

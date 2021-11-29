@@ -1,3 +1,9 @@
 [submodule "MIRU_CORE/dep/ARC"]
 	path = MIRU_CORE/dep/ARC
 	url = https://github.com/AndrewRichards-Code/ARC.git
+[submodule "MIRU_CORE/dep/VulkanMemoryAllocator"]
+	path = MIRU_CORE/dep/VulkanMemoryAllocator
+	url = git@github.com:AndrewRichards-Code/VulkanMemoryAllocator.git
+[submodule "MIRU_CORE/dep/D3D12MemoryAllocator"]
+	path = MIRU_CORE/dep/D3D12MemoryAllocator
+	url = git@github.com:AndrewRichards-Code/D3D12MemoryAllocator.git

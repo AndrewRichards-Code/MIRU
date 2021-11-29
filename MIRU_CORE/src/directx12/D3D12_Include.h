@@ -7,7 +7,8 @@
 #pragma comment(lib, "dxgi.lib")
 
 //D3D12MemoryAllocator
-#include "D3D12MemoryAllocator/src/D3D12MemAlloc.h"
+#define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED
+#include "D3D12MemoryAllocator/include/D3D12MemAlloc.h"
 
 //DXC Header and Library
 #include <d3d12shader.h>
