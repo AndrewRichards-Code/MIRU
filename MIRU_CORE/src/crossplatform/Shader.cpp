@@ -6,7 +6,6 @@
 #include "vulkan/VKShader.h"
 #endif
 
-#include "ARC/src/FileSystemHelpers.h"
 #include "ARC/src/FileLoader.h"
 
 using namespace miru;
@@ -88,9 +87,9 @@ void Shader::GetShaderByteCode()
 	//Check shader exist and the binary is upto date.
 	#if !defined(MIRU_WIN64_UWP)
 	bool buildShader = true;
-	if (arc::FileExist(binFilepath) && arc::FileExist(m_CI.recompileArguments.hlslFilepath))
+	if (std::filesystem::exists(binFilepath) && std::filesystem::exists(m_CI.recompileArguments.hlslFilepath))
 	{
-		buildShader = arc::FileLastWriteTime(binFilepath) < arc::FileLastWriteTime(m_CI.recompileArguments.hlslFilepath);
+		buildShader = std::filesystem::last_write_time(binFilepath) < std::filesystem::last_write_time(m_CI.recompileArguments.hlslFilepath);
 	}
 
 	if (buildShader)

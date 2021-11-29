@@ -49,20 +49,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	s_RefCount++;
 
 	//Check provide feature level
-	uint32_t featureLevel = D3D_FEATURE_LEVEL_11_0;
-	if (m_CI.api_version_major == 12)
-		featureLevel += 0x1000;
-	if (m_CI.api_version_minor == 1)
-		featureLevel += 0x0100;
+	D3D_FEATURE_LEVEL featureLevel = static_cast<D3D_FEATURE_LEVEL>((m_CI.api_version_major << 12) + (m_CI.api_version_minor << 8));
+	HRESULT res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], featureLevel, __uuidof(ID3D12Device), nullptr);
 
-	D3D_FEATURE_LEVEL featureLevels[4] = { D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
-	HRESULT res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, __uuidof(ID3D12Device), nullptr);
-	if (res != S_OK)
+	if (res != S_FALSE)
 	{
-		for (size_t i = 0; i < 4; i++)
+		D3D_FEATURE_LEVEL featureLevels[5] = { D3D_FEATURE_LEVEL_12_2, D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
+		for (size_t i = 0; i < _countof(featureLevels); i++)
 		{
 			featureLevel = featureLevels[i];
-			res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], (D3D_FEATURE_LEVEL)featureLevel, __uuidof(ID3D12Device), nullptr);
+			res = D3D12CreateDevice(m_PhysicalDevices.m_Adapters[0], featureLevel, __uuidof(ID3D12Device), nullptr);
 			if (res == S_FALSE)
 				break;
 			else

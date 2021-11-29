@@ -6,7 +6,7 @@
 #undef far
 #undef near
 
-#define MIRU_TEST_RT 1
+#define MIRU_TEST_RT 0
 
 using namespace miru;
 using namespace crossplatform;
@@ -187,8 +187,8 @@ HWND window;
 bool g_WindowQuit = false;
 uint32_t width = 800;
 uint32_t height = 600;
-bool windowResize;
-bool shaderRecompile;
+bool windowResize = false;
+bool shaderRecompile = false;
 int var_x, var_y, var_z = 0;
 LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -235,8 +235,8 @@ void WindowUpdate()
 
 int main()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 	
@@ -356,13 +356,11 @@ int main()
 	cmdBufferCI.pCommandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
-	cmdBufferCI.allocateNewCommandPoolPerBuffer = GraphicsAPI::IsD3D12();
 	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
 	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
-	cmdCopyBufferCI.allocateNewCommandPoolPerBuffer = false;
 	Ref<CommandBuffer> cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	Allocator::CreateInfo allocCI;
@@ -947,7 +945,7 @@ int main()
 		RenderPass::AttachmentStoreOp::STORE,
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
-		GraphicsAPI::IsD3D12()?Image::Layout::PRESENT_SRC : Image::Layout::UNKNOWN,
+		Image::Layout::UNKNOWN,
 		Image::Layout::COLOUR_ATTACHMENT_OPTIMAL
 		},
 		{depthImage->GetCreateInfo().format,											//Depth MSAA
@@ -966,7 +964,7 @@ int main()
 		RenderPass::AttachmentLoadOp::DONT_CARE,
 		RenderPass::AttachmentStoreOp::DONT_CARE,
 		Image::Layout::UNKNOWN,
-		Image::Layout::COLOUR_ATTACHMENT_OPTIMAL
+		GraphicsAPI::IsD3D12() ? Image::Layout::UNKNOWN : Image::Layout::SHADER_READ_ONLY_OPTIMAL
 		},
 		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,						//Swapchain
 		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
@@ -1112,8 +1110,8 @@ int main()
 	std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-	std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+	Ref<Semaphore> acquire = Semaphore::Create(&acquireSemaphoreCI);
+	Ref<Semaphore> submit = Semaphore::Create(&submitSemaphoreCI);
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
@@ -1183,7 +1181,7 @@ int main()
 			}
 			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
 		}
-		if (swapchain->m_Resized)
+		if (swapchain->m_Resized || windowResize)
 		{
 			swapchain->Resize(width, height);
 			
@@ -1246,11 +1244,11 @@ int main()
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-			submit = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+			acquire = Semaphore::Create(&acquireSemaphoreCI);
+			submit = Semaphore::Create(&submitSemaphoreCI);
 
 			swapchain->m_Resized = false;
-			frameIndex = 0;
+			windowResize = false;
 
 			//Transition any resource into the correct states.
 			{
@@ -1274,6 +1272,7 @@ int main()
 			}
 			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
 		}
+
 		{
 			if (r > b && b < increment)
 			{
@@ -1294,7 +1293,10 @@ int main()
 				r += increment;
 			}
 
+			swapchain->AcquireNextImage(acquire, frameIndex);
+
 			draws[frameIndex]->Wait();
+			draws[frameIndex]->Reset();
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
@@ -1370,6 +1372,9 @@ int main()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
 #endif
 			cmdBuffer->End(frameIndex);
+			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+
+			swapchain->Present(cmdPool, submit, frameIndex);
 
 			proj = Mat4::Perspective(3.14159/2.0, float(width)/float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
@@ -1385,10 +1390,9 @@ int main()
 
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 2 * sizeof(Mat4), ubData);
 			cpu_alloc_0->SubmitData(ub2->GetAllocation(), sizeof(Mat4), (void*)&modl.a);
+			
+			frameCount++;
 		}
-		cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
-		frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;
-		frameCount++;
 	}
 	context->DeviceWaitIdle();
 }

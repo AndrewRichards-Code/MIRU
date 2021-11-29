@@ -208,67 +208,6 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const Ref<crossplatform::Swapchain>& swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainImages.size();
-
-	if (swapchainImageCount != cmdBufferIndices.size()
-		|| swapchainImageCount != draws.size()
-		|| swapchainImageCount != acquires.size()
-		|| swapchainImageCount != submits.size())
-	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: SwapchainImageCount and number of synchronisation objects does not match.");
-	}
-	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
-	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
-
-	VkDevice& vkDevice = context->m_Device;
-	VkQueue vkQueue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
-	VkSwapchainKHR& vkSwapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
-
-	draws[m_CurrentFrame]->Wait();
-	draws[m_CurrentFrame]->Reset();
-
-	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(vkDevice, vkSwapchain, UINT64_MAX, ref_cast<Semaphore>(acquires[m_CurrentFrame])->m_Semaphore, VK_NULL_HANDLE, &imageIndex);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || resized)
-	{
-		resized = false;
-		swapchain->m_Resized = true;
-		return;
-	}
-	else
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
-
-	std::vector<Ref<crossplatform::Semaphore>> _acquires = { acquires[m_CurrentFrame] };
-	std::vector<Ref<crossplatform::Semaphore>> _submits = { submits[m_CurrentFrame] };
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, _acquires, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, _submits, draws[m_CurrentFrame]);
-
-	VkPresentInfoKHR pi = {};
-	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	pi.pNext = nullptr;
-	pi.waitSemaphoreCount = 1;
-	pi.pWaitSemaphores = &ref_cast<Semaphore>(submits[m_CurrentFrame])->m_Semaphore;
-	pi.swapchainCount = 1;
-	pi.pSwapchains = &vkSwapchain;
-	pi.pImageIndices = &imageIndex;
-	pi.pResults = nullptr;
-
-	result = vkQueuePresentKHR(vkQueue, &pi);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || resized)
-	{
-		resized = false;
-		swapchain->m_Resized = true;
-		return;
-	}
-	else
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to present the Image from Swapchain.");
-
-	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
-}
-
 void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

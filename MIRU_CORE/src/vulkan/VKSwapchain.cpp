@@ -2,6 +2,8 @@
 #if defined(MIRU_VULKAN)
 #include "VKSwapchain.h"
 #include "VKContext.h"
+#include "VKSync.h"
+#include "VKCommandPoolBuffer.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -239,5 +241,50 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 	m_Resized = true;
+}
+
+void Swapchain::AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	VkResult result = vkAcquireNextImageKHR(m_Device, m_Swapchain, UINT64_MAX, ref_cast<Semaphore>(acquire)->m_Semaphore, VK_NULL_HANDLE, &imageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		m_Resized = true;
+	}
+	else
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
+	}
+}
+
+void Swapchain::Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	const Ref<Context>& context = ref_cast<Context>(m_CI.pContext);
+	const Ref<CommandPool>& pool = ref_cast<CommandPool>(cmdPool);
+
+	VkQueue vkQueue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
+
+	VkPresentInfoKHR pi = {};
+	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	pi.pNext = nullptr;
+	pi.waitSemaphoreCount = 1;
+	pi.pWaitSemaphores = &ref_cast<Semaphore>(submit)->m_Semaphore;
+	pi.swapchainCount = 1;
+	pi.pSwapchains = &m_Swapchain;
+	pi.pImageIndices = &imageIndex;
+	pi.pResults = nullptr;
+
+	VkResult result = vkQueuePresentKHR(vkQueue, &pi);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		m_Resized = true;
+	}
+	else
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to present the Image from Swapchain.");
+	}
 }
 #endif

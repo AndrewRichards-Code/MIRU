@@ -37,7 +37,6 @@ public:
 	bool m_exit = false;
 	uint32_t width;
 	uint32_t height;
-	bool windowResize;
 	bool shaderRecompile;
 	int var_x, var_y, var_z = 0;
 
@@ -108,8 +107,8 @@ public:
 		std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 		Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 		Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-		std::vector<Ref<Semaphore>>acquire = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
-		std::vector<Ref<Semaphore>>submit = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+		Ref<Semaphore> acquire = Semaphore::Create(&acquireSemaphoreCI);
+		Ref<Semaphore> submit = Semaphore::Create(&submitSemaphoreCI);
 
 		uint32_t frameIndex = 0;
 		uint32_t frameCount = 0;
@@ -140,7 +139,10 @@ public:
 					r += increment;
 				}
 
+				swapchain->AcquireNextImage(acquire, frameIndex);
+
 				draws[frameIndex]->Wait();
+				draws[frameIndex]->Reset();
 
 				cmdBuffer->Reset(frameIndex, false);
 				cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
@@ -152,6 +154,9 @@ public:
 				cmdBuffer->DrawIndexed(frameIndex, 36);
 				cmdBuffer->EndRenderPass(frameIndex);
 				cmdBuffer->End(frameIndex);
+				cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+
+				swapchain->Present(cmdPool, submit, frameIndex);
 
 				proj = perspectiveFov(radians(90.0f), float(width), float(height), 0.1f, 100.0f);
 				if (GraphicsAPI::IsVulkan())
@@ -172,10 +177,9 @@ public:
 
 				var_x++;
 				var_y = 20;
+			
+				frameCount++;
 			}
-			cmdBuffer->Present({ 0, 1 }, swapchain, draws, acquire, submit, windowResize);
-			frameIndex = (frameIndex + 1) % swapchainCI.swapchainCount;
-			frameCount++;
 
 			CoreWindow::GetForCurrentThread().Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 		}
@@ -256,13 +260,11 @@ public:
 		cmdBufferCI.pCommandPool = cmdPool;
 		cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 		cmdBufferCI.commandBufferCount = 3;
-		cmdBufferCI.allocateNewCommandPoolPerBuffer = GraphicsAPI::IsD3D12();
 		cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 		cmdCopyBufferCI.debugName = "CmdCopyBuffer";
 		cmdCopyBufferCI.pCommandPool = cmdCopyPool;
 		cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 		cmdCopyBufferCI.commandBufferCount = 1;
-		cmdCopyBufferCI.allocateNewCommandPoolPerBuffer = false;
 		cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 		Allocator::CreateInfo allocCI;

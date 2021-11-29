@@ -73,7 +73,6 @@ namespace crossplatform
 			Ref<CommandPool>	pCommandPool;
 			Level				level;
 			uint32_t			commandBufferCount;
-			bool				allocateNewCommandPoolPerBuffer; //For D3D12 only: 1:1 CmdBuffer-CmdPool usage.
 		};
 
 		//Methods
@@ -87,7 +86,6 @@ namespace crossplatform
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
 		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
 		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& _signals, const Ref<Fence>& fence) = 0;
-		virtual void Present(const std::vector<uint32_t>& cmdBufferIndices, const Ref<Swapchain>& swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized) = 0;
 
 		virtual void SetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;
@@ -133,8 +131,6 @@ namespace crossplatform
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-
-		size_t m_CurrentFrame = 0;
 	};
 }
 }

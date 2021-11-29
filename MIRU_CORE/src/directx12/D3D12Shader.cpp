@@ -5,7 +5,7 @@
 using namespace miru;
 using namespace d3d12;
 
-arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDXCompiler;
+arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDXCompiler = nullptr;
 std::filesystem::path Shader::s_DXCompilerFullpath;
 uint32_t Shader::s_RefCount = 0;
 
@@ -36,6 +36,7 @@ Shader::~Shader()
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
+	s_HModeuleDXCompiler = nullptr;
 
 	m_ShaderByteCode.pShaderBytecode = nullptr;
 	m_ShaderByteCode.BytecodeLength = 0;

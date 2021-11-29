@@ -22,30 +22,34 @@ CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	m_Queue = ref_cast<Context>(pCreateInfo->pContext)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
-
-	MIRU_ASSERT(m_Device->CreateCommandAllocator(m_Queue->GetDesc().Type, IID_PPV_ARGS(&m_CmdPool)), "ERROR: D3D12: Failed to create CommandPool.");
-	D3D12SetName(m_CmdPool, m_CI.debugName);
 }
 
 CommandPool::~CommandPool()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_D3D12_SAFE_RELEASE(m_CmdPool);
+	for (auto& cmdPool : m_CmdPools)
+	{
+		MIRU_D3D12_SAFE_RELEASE(cmdPool);
+	}
 }
 
 void CommandPool::Trim()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
-
-	return;
 }
 
 void CommandPool::Reset(bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(m_CmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+	if ((m_CI.flags & FlagBit::RESET_COMMAND_BUFFER_BIT) == FlagBit::RESET_COMMAND_BUFFER_BIT)
+	{
+		for (auto& cmdPool : m_CmdPools)
+		{
+			MIRU_ASSERT(cmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+		}
+	}
 }
 
 uint32_t CommandPool::GetCommandQueueIndex(const CommandPool::QueueType& type)
@@ -72,28 +76,20 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Device = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Device;
-	m_CmdPool = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPool;
-	D3D12_COMMAND_QUEUE_DESC queueDesc = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue->GetDesc();
 
-	if (m_CI.allocateNewCommandPoolPerBuffer)
-	{
-		m_CmdPools.resize(m_CI.commandBufferCount);
-		for (size_t i = 0; i < m_CmdPools.size(); i++)
-		{
-			MIRU_ASSERT(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&m_CmdPools[i])), "ERROR: D3D12: Failed to create CommandPool.");
-			D3D12SetName(m_CmdPools[i], m_CI.debugName);
-		}
-	}
+	Ref<CommandPool> cmdPool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	m_Device = cmdPool->m_Device;
+	D3D12_COMMAND_QUEUE_DESC queueDesc = cmdPool->m_Queue->GetDesc();
+	std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = cmdPool->m_CmdPools;
 
+	d3d12CmdAllocators.resize(m_CI.commandBufferCount);
 	m_CmdBuffers.resize(m_CI.commandBufferCount);
 	for (size_t i = 0; i < m_CmdBuffers.size(); i++)
 	{
-		ID3D12CommandAllocator* cmdPool = m_CmdPool;
-		if (m_CI.allocateNewCommandPoolPerBuffer)
-			cmdPool = m_CmdPools[i];
-
-		MIRU_ASSERT(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, cmdPool, nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
+		MIRU_ASSERT(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&d3d12CmdAllocators[i])), "ERROR: D3D12: Failed to create CommandPool.");
+		D3D12SetName(d3d12CmdAllocators[i], cmdPool->GetCreateInfo().debugName + ": " + std::to_string(i));
+	
+		MIRU_ASSERT(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, d3d12CmdAllocators[i], nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
 		D3D12SetName(m_CmdBuffers[i], m_CI.debugName + ": " + std::to_string(i));
 		End(static_cast<uint32_t>(i));
 	}
@@ -156,10 +152,9 @@ CommandBuffer::~CommandBuffer()
 	MIRU_D3D12_SAFE_RELEASE(m_CmdBuffer_Sampler_DescriptorHeap);
 
 	for (auto& cmdBuffer : m_CmdBuffers)
+	{
 		MIRU_D3D12_SAFE_RELEASE(cmdBuffer);
-
-	for (auto& cmdPool : m_CmdPools)
-		MIRU_D3D12_SAFE_RELEASE(cmdPool);
+	}
 }
 
 void CommandBuffer::Begin(uint32_t index, UsageBit usage)
@@ -195,14 +190,10 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	if (m_Resettable)
 	{
 		CHECK_VALID_INDEX_RETURN(index);
-		ID3D12CommandAllocator* cmdPool = m_CmdPool;
-		if (m_CI.allocateNewCommandPoolPerBuffer)
-		{
-			cmdPool = m_CmdPools[index];
-			MIRU_ASSERT(cmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
-		}
+		std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPools;
 
-		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(cmdPool, nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
+		MIRU_ASSERT(d3d12CmdAllocators[index]->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(d3d12CmdAllocators[index], nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
 		m_Resettable = false;
 	}
 }
@@ -254,53 +245,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	if (fence)
 	{
 		ref_cast<Fence>(fence)->GetValue()++;
-		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
+		MIRU_ASSERT(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
 	}
-}
-
-void CommandBuffer::Present(const std::vector<uint32_t>& cmdBufferIndices, const Ref<crossplatform::Swapchain>& swapchain, const std::vector<Ref<crossplatform::Fence>>& draws, const std::vector<Ref<crossplatform::Semaphore>>& acquires, const std::vector<Ref<crossplatform::Semaphore>>& submits, bool& resized)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	size_t swapchainImageCount = ref_cast<Swapchain>(swapchain)->m_SwapchainRTVs.size();
-
-	if (swapchainImageCount != cmdBufferIndices.size()
-		|| swapchainImageCount != draws.size()
-		|| swapchainImageCount != acquires.size()
-		|| swapchainImageCount != submits.size())
-	{
-		MIRU_ASSERT(true, "ERROR: D3D12: SwapchainImageCount and number of synchronisation objects does not match.");
-	}
-	
-	IDXGISwapChain4* d3d12Swapchain = ref_cast<Swapchain>(swapchain)->m_Swapchain;
-	ID3D12CommandQueue* d3d12Queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
-	UINT imageIndex = d3d12Swapchain->GetCurrentBackBufferIndex();
-
-	draws[m_CurrentFrame]->Wait();
-	draws[m_CurrentFrame]->Reset();
-
-	if (resized)
-	{
-		resized = false;
-		swapchain->m_Resized = true;
-		return;
-	}
-
-	Submit({ cmdBufferIndices[m_CurrentFrame] }, {}, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, {}, {});
-	
-	if (swapchain->GetCreateInfo().vSync)
-	{
-		MIRU_ASSERT(d3d12Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
-	}
-	else
-	{
-		MIRU_ASSERT(d3d12Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
-	}
-
-	ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()++;
-	MIRU_ASSERT(d3d12Queue->Signal(ref_cast<Fence>(draws[m_CurrentFrame])->m_Fence, ref_cast<Fence>(draws[m_CurrentFrame])->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
-	
-	m_CurrentFrame = ((m_CurrentFrame + (size_t)1) % swapchainImageCount);
 }
 
 void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)

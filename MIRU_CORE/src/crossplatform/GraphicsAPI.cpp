@@ -12,9 +12,9 @@ bool GraphicsAPI::s_AllowSetNameInitialised = false;
 
 std::shared_ptr<debug::GraphicsDebugger> GraphicsAPI::s_GraphicsDebugger;
 
-void GraphicsAPI::SetAPI(GraphicsAPI::API api)
+void GraphicsAPI::SetAPI(GraphicsAPI::API api, bool forceOverride)
 {
-	if (!s_ApiInitialised)
+	if (!s_ApiInitialised || forceOverride)
 	{
 		s_API = api;
 		s_ApiInitialised = true;
