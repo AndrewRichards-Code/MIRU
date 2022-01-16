@@ -91,7 +91,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MIRU_SHADER_CORE/redist;$(SolutionDir)MIRU_SHADER_CORE/dep;$(SolutionDir)MIRU_SHADER_CORE/src;$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -107,7 +107,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_SHADER_CORE;$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Gaming.Desktop.x64'">
@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MIRU_SHADER_CORE/redist;$(SolutionDir)MIRU_SHADER_CORE/dep;$(SolutionDir)MIRU_SHADER_CORE/src;$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -160,7 +160,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)MIRU_SHADER_CORE;$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'">
@@ -199,7 +199,7 @@
     <ClInclude Include="dep\ARC\src\EnumClassBitwiseOperators.h" />
     <ClInclude Include="dep\ARC\src\ExportAttributes.h" />
     <ClInclude Include="dep\ARC\src\FileLoader.h" />
-    <ClInclude Include="dep\ARC\src\FileSystemHelpers.h" />
+    <ClInclude Include="dep\ARC\src\FileSaver.h" />
     <ClInclude Include="dep\ARC\src\Log.h" />
     <ClInclude Include="dep\ARC\src\ScopeAndRef.h" />
     <ClInclude Include="dep\ARC\src\StringConversion.h" />

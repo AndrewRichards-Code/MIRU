@@ -16,7 +16,12 @@ namespace d3d12
 		void Reconstruct() override;
 		void GetShaderResources() override;
 
-		void D3D12ShaderReflection();
+		void D3D12ShaderReflection(
+			const std::vector<char>& shaderBinary,
+			const std::vector<std::pair<crossplatform::Shader::StageBit, std::string>>& stageAndEntryPoints,
+			std::vector<crossplatform::Shader::VertexShaderInputAttributeDescription>& VSIADs,
+			std::vector<crossplatform::Shader::PixelShaderOutputAttributeDescription>& PSOADs,
+			std::map<uint32_t, std::map<uint32_t, crossplatform::Shader::ResourceBindingDescription>>& RBDs);
 
 		//Members
 	public:
@@ -24,12 +29,6 @@ namespace d3d12
 
 		D3D12_SHADER_BYTECODE m_ShaderByteCode;
 		D3D12_FEATURE_DATA_SHADER_MODEL m_ShaderModelData = {};
-
-	private:
-		//DXCompiler Library
-		static arc::DynamicLibrary::LibraryHandle s_HModeuleDXCompiler;
-		static std::filesystem::path s_DXCompilerFullpath;
-		static uint32_t s_RefCount;
 	};
 }
 }

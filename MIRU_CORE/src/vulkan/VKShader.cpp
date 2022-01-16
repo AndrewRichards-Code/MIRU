@@ -2,6 +2,8 @@
 #if defined(MIRU_VULKAN)
 #include "VKShader.h"
 
+#include "crossplatform/DescriptorPoolSet.h"
+
 using namespace miru;
 using namespace vulkan;
 
@@ -59,19 +61,22 @@ void Shader::Reconstruct()
 	}
 }
 
-#include "crossplatform/DescriptorPoolSet.h"
-
 void Shader::GetShaderResources()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	SpirvCrossReflection();
+	VulkanShaderReflection(m_ShaderBinary, m_CI.stageAndEntryPoints, m_VSIADs, m_PSOADs, m_RBDs);
 }
 
-void Shader::SpirvCrossReflection()
+void Shader::VulkanShaderReflection(
+	const std::vector<char>& shaderBinary,
+	const std::vector<std::pair<Shader::StageBit, std::string>>& stageAndEntryPoints,
+	std::vector<Shader::VertexShaderInputAttributeDescription>& VSIADs,
+	std::vector<Shader::PixelShaderOutputAttributeDescription>& PSOADs,
+	std::map<uint32_t, std::map<uint32_t, Shader::ResourceBindingDescription>>& RBDs)
 {
-	const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
-	size_t spv_bin_word_count = m_ShaderBinary.size() / 4;
+	const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(shaderBinary.data());
+	size_t spv_bin_word_count = shaderBinary.size() / 4;
 	spirv_cross::Compiler compiled_bin(spv_bin, spv_bin_word_count);
 	spirv_cross::ShaderResources resources = compiled_bin.get_shader_resources();
 
@@ -79,11 +84,11 @@ void Shader::SpirvCrossReflection()
 	/*if ((uint32_t)stage != (uint32_t)log2((double)m_CI.stage)) // Convert Bitfield to uint32_t
 		MIRU_ASSERT(true, "ERROR: VULKAN: The SPIR-V source file doesn't match the specified stage.");*/
 
-	StageBit stageBit = StageBit(0);
-	for (auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
+	Shader::StageBit stageBit = Shader::StageBit(0);
+	for (auto& stageAndEntryPoint : stageAndEntryPoints)
 		stageBit |= stageAndEntryPoint.first;
 
-	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType = 
+	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType =
 		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> crossplatform::VertexType
 	{
 		switch (type)
@@ -103,10 +108,10 @@ void Shader::SpirvCrossReflection()
 		case spirv_cross::SPIRType::BaseType::UShort:
 			break;
 		case spirv_cross::SPIRType::BaseType::Int:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT) 
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT)
 				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::UInt:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT) 
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT)
 				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Int64:
 			break;
@@ -117,10 +122,10 @@ void Shader::SpirvCrossReflection()
 		case spirv_cross::SPIRType::BaseType::Half:
 			break;
 		case spirv_cross::SPIRType::BaseType::Float:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT) 
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT)
 				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Double:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::DOUBLE) 
+			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::DOUBLE)
 				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Struct:
 			break;
@@ -140,7 +145,7 @@ void Shader::SpirvCrossReflection()
 			break;
 		}
 
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
+		MIRU_SHADER_CORE_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
 		return static_cast<crossplatform::VertexType>(0);
 	};
 
@@ -180,24 +185,24 @@ void Shader::SpirvCrossReflection()
 
 	if (stage == spv::ExecutionModel::ExecutionModelVertex)
 	{
-		m_VSIADs.clear();
+		VSIADs.clear();
 		for (auto& res : resources.stage_inputs)
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
 			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
 
-			VertexShaderInputAttributeDescription vsiad;
+			Shader::VertexShaderInputAttributeDescription vsiad;
 			vsiad.location = compiled_bin.get_decoration(res.id, spv::DecorationLocation);
 			vsiad.binding = 0;
 			vsiad.vertexType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
-			vsiad.offset = m_VSIADs.empty() ? 0 : m_VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(m_VSIADs.back().vertexType);
+			vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(VSIADs.back().vertexType);
 			vsiad.semanticName = res.name;
-			m_VSIADs.push_back(vsiad);
+			VSIADs.push_back(vsiad);
 		}
 	}
 	if (stage == spv::ExecutionModel::ExecutionModelFragment)
 	{
-		m_PSOADs.clear();
+		PSOADs.clear();
 		for (auto& res : resources.stage_outputs)
 		{
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
@@ -207,22 +212,22 @@ void Shader::SpirvCrossReflection()
 			uint32_t index = compiled_bin.get_decoration(res.id, spv::DecorationIndex);
 			uint32_t componenet = compiled_bin.get_decoration(res.id, spv::DecorationComponent);
 
-			FragmentShaderOutputAttributeDescription fsoad;
+			Shader::FragmentShaderOutputAttributeDescription fsoad;
 			fsoad.location = location;
 			fsoad.outputType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
 			fsoad.semanticName = res.name;
-			m_PSOADs.push_back(fsoad);
+			PSOADs.push_back(fsoad);
 		}
 	}
 
-	for (auto& rbds : m_RBDs)
+	for (auto& rbds : RBDs)
 	{
 		rbds.second.clear();
 	}
-	m_RBDs.clear();
+	RBDs.clear();
 
 	std::vector<std::string> cis_list;
-	auto push_back_ResourceBindingDescription = 
+	auto push_back_ResourceBindingDescription =
 		[&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, crossplatform::DescriptorType descriptorType) -> void
 	{
 		for (auto& res : resources)
@@ -230,7 +235,7 @@ void Shader::SpirvCrossReflection()
 			const spirv_cross::SPIRType& type = compiled_bin.get_type(res.type_id);
 			const spirv_cross::SPIRType& base_type = compiled_bin.get_type(res.base_type_id);
 			std::string name = compiled_bin.get_name(res.id);
-			
+
 			size_t structSize = 0;
 			crossplatform::DescriptorType descType = descriptorType;
 			if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
@@ -262,14 +267,14 @@ void Shader::SpirvCrossReflection()
 				descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
 
-			ResourceBindingDescription rbd;
+			Shader::ResourceBindingDescription rbd;
 			rbd.binding = binding;
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
 			rbd.stage = stageBit;
 			rbd.name = name;
 			rbd.structSize = structSize;
-			m_RBDs[set][binding] = rbd;
+			RBDs[set][binding] = rbd;
 		}
 	};
 

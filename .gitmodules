@@ -1,5 +1,5 @@
 [submodule "MIRU_CORE/dep/ARC"]
-	path = MIRU_CORE/dep/ARC
+	path = MIRU_SHADER_CORE/dep/ARC
 	url = https://github.com/AndrewRichards-Code/ARC.git
 [submodule "MIRU_CORE/dep/VulkanMemoryAllocator"]
 	path = MIRU_CORE/dep/VulkanMemoryAllocator
@@ -7,3 +7,7 @@
 [submodule "MIRU_CORE/dep/D3D12MemoryAllocator"]
 	path = MIRU_CORE/dep/D3D12MemoryAllocator
 	url = git@github.com:AndrewRichards-Code/D3D12MemoryAllocator.git
+[submodule "MIRU_CORE/dep/SPIRV-Cross"]
+	path = MIRU_SHADER_CORE/dep/SPIRV-Cross
+	url = git@github.com:AndrewRichards-Code/SPIRV-Cross.git
+	branch = master

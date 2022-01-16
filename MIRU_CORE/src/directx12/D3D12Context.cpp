@@ -38,8 +38,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-		s_DXILFullpath = std::string(PROJECT_DIR) + "redist/dxc/lib/x64/dxil.dll";
-		s_HModeuleDXIL = arc::DynamicLibrary::Load(s_DXILFullpath.generic_string());
+		s_DXILFullpath = shader_core::GetLibraryFullpath_dxil();
+		s_HModeuleDXIL = shader_core::LoadLibrary_dxil();
 		if (!s_HModeuleDXIL)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";

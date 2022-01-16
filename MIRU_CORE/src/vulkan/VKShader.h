@@ -16,7 +16,12 @@ namespace vulkan
 		void Reconstruct() override;
 		void GetShaderResources() override;
 
-		void SpirvCrossReflection();
+		void VulkanShaderReflection(
+			const std::vector<char>& shaderBinary,
+			const std::vector<std::pair<crossplatform::Shader::StageBit, std::string>>& stageAndEntryPoints,
+			std::vector<crossplatform::Shader::VertexShaderInputAttributeDescription>& VSIADs,
+			std::vector<crossplatform::Shader::PixelShaderOutputAttributeDescription>& PSOADs,
+			std::map<uint32_t, std::map<uint32_t, crossplatform::Shader::ResourceBindingDescription>>& RBDs);
 
 		//Members
 	public:

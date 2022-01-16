@@ -69,6 +69,14 @@
 //MIRU GraphicsAPI
 #include "crossplatform/GraphicsAPI.h"
 
+//MIRU_SHADER_CORE
+#include "miru_shader_core.h"
+#if defined(_DEBUG)
+#pragma comment(lib, "lib/x64/Debug/MIRU_SHADER_CORE.lib")
+#else
+#pragma comment(lib, "lib/x64/Release/MIRU_SHADER_CORE.lib")
+#endif
+
 //MIRU Helpers
 #include "ARC/src/StringConversion.h"
 #include "ARC/src/DynamicLibrary.h"

@@ -1,0 +1,2 @@
+DirectXShaderCompiler Release 2021/12/02
+Redistribution - No Modifications.

@@ -142,6 +142,9 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	m_CmdBuffer_Sampler_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	m_CmdBuffer_Sampler_DescriptorHeapDesc.NodeMask = 0;
 	m_Device->CreateDescriptorHeap(&m_CmdBuffer_Sampler_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_Sampler_DescriptorHeap));
+
+	m_CBV_SRV_UAV_DescriptorOffset = 0;
+	m_SamplerDescriptorOffset = 0;
 }
 
 CommandBuffer::~CommandBuffer()
@@ -823,8 +826,6 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		{
 			MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
 		}
-
-
 
 		i++;
 		if (i >= ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters.size())

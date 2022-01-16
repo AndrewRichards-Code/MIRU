@@ -59,26 +59,7 @@ namespace crossplatform
 			size_t				structSize;
 		};
 
-		//See MSCDocumentation.h for correct usage.
-		//All filepaths and directories must be relative to the current working directory.
-		//All locations must be full paths i.e. dxc.
-		struct RecompileArguments
-		{
-			std::string					mscDirectory;
-			std::string					hlslFilepath;
-			std::string					outputDirectory;	//Optional
-			std::vector<std::string>	includeDirectories;	//Optional
-			std::string					entryPoint;			//Required for non lib shaders.
-			std::string					shaderModel;		//Optional
-			std::vector<std::string>	macros;				//Optional
-			bool						cso;				//Either cso or spv must be true
-			bool						spv;				//Either cso or spv must be true
-			std::string					dxcArguments;		//Optional. Example: ""\-Zi -Od"\".
-			std::string					dxcLocation;		//Optional
-			bool						nologo;				//Optional
-			bool						nooutput;			//Optional
-		};
-
+		typedef shader_core::CompileArguments RecompileArguments;
 		struct CreateInfo
 		{
 			std::string										debugName;
@@ -104,7 +85,6 @@ namespace crossplatform
 
 	protected:
 		void GetShaderByteCode();
-		int Call_MIRU_SHADER_COMPILER();
 		virtual void Reconstruct() = 0;
 
 		//Members

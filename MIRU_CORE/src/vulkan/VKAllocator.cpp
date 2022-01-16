@@ -30,6 +30,7 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	m_AI.pRecordSettings = nullptr;
 	m_AI.instance = context->m_Instance;
 	m_AI.vulkanApiVersion = 0; // context->m_AI.apiVersion;
+	m_AI.pTypeExternalMemoryHandleTypes = nullptr;
 	
 	MIRU_ASSERT(vmaCreateAllocator(&m_AI, &m_Allocator), "ERROR: VULKAN: Failed to create Allocator.");
 	//VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);

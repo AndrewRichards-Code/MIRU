@@ -291,7 +291,6 @@ int main()
 	bool debug = false;
 	#endif
 	shaderCI.recompileArguments = {
-		debug ? "../MIRU_SHADER_COMPILER/exe/x64/Debug" : "../MIRU_SHADER_COMPILER/exe/x64/Release",
 		"res/shaders/basic.hlsl",
 		"res/bin",
 		{"../MIRU_SHADER_COMPILER/shaders/includes"},
@@ -300,7 +299,7 @@ int main()
 		{},
 		true,
 		true,
-		"",
+		{"-Zi", "-Od", "-Fd"},
 		"",
 		false,
 		false 
@@ -1171,7 +1170,7 @@ int main()
 				bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 				bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 				bCI.pImage = resolveAndInputImage;
-				bCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+				bCI.oldLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 				bCI.newLayout = Image::Layout::UNKNOWN;
 				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 				Ref<Barrier> b = Barrier::Create(&bCI);

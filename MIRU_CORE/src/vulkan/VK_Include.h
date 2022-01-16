@@ -11,14 +11,6 @@
 //VulkanMemoryAllocator
 #include "VulkanMemoryAllocator/include/vk_mem_alloc.h"
 
-//Spirv-cross Header and Library
-#include "spirv_cross/Include/spirv_cross.hpp"
-#if defined(_DEBUG)
-#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-cored.lib")
-#else
-#pragma comment(lib, "spirv_cross/lib/x64/spirv-cross-core.lib")
-#endif
-
 #elif defined(__ANDROID__)
 #if !defined( VK_USE_PLATFORM_ANDROID_KHR)
 #define VK_USE_PLATFORM_ANDROID_KHR

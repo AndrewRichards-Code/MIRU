@@ -177,9 +177,6 @@
     <ClInclude Include="dep\ARC\src\FileLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dep\ARC\src\FileSystemHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dep\ARC\src\Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -199,6 +196,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\VulkanMemoryAllocator\include\vk_mem_alloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\ARC\src\FileSaver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

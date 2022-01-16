@@ -10,11 +10,6 @@
 #define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED
 #include "D3D12MemoryAllocator/include/D3D12MemAlloc.h"
 
-//DXC Header and Library
-#include <d3d12shader.h>
-#include <dxcapi.h>
-//#pragma comment(lib, "dxc/lib/x64/dxcompiler.lib")
-
 #define MIRU_D3D12_SAFE_RELEASE(x) if((x)) { (x)->Release(); (x) = nullptr; }
 
 #endif

@@ -38,15 +38,8 @@ void Shader::Recompile()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	#if !defined(MIRU_WIN64_UWP)
-	int returnCode = Call_MIRU_SHADER_COMPILER();
-	if (returnCode != 0)
-	{
-		MIRU_WARN(returnCode, "WARN: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
-	}
-	else
-	{
-		Reconstruct();
-	}
+	shader_core::CompileShaderFromSource(m_CI.recompileArguments);
+	Reconstruct();
 	#endif
 }
 
@@ -94,66 +87,10 @@ void Shader::GetShaderByteCode()
 
 	if (buildShader)
 	{
-		int returnCode = Call_MIRU_SHADER_COMPILER();
-		if (returnCode != 0)
-		{
-			MIRU_ASSERT(returnCode, "ERROR: CROSSPLATFORM: MIRU_SHADER_COMIPLER returned an error.");
-		}
+		shader_core::CompileShaderFromSource(m_CI.recompileArguments);
 	}
 	#endif
 
 	m_ShaderBinary = arc::ReadBinaryFile(binFilepath);
 	MIRU_ASSERT(m_ShaderBinary.empty(), "ERROR: CROSSPLATFORM: Unable to read shader binary file.");
-}
-
-int Shader::Call_MIRU_SHADER_COMPILER()
-{
-	#if defined(__ANDROID__)
-	MIRU_WARN(true, "WARN: CROSSPLATFORM: MIRU_SHADER_COMPILER is not available on Android. Use offline shader compliation.");
-	return 0;
-	#endif
-
-	if (m_CI.recompileArguments.hlslFilepath.empty()
-		&& m_CI.recompileArguments.mscDirectory.empty()
-		&& (m_CI.recompileArguments.cso || m_CI.recompileArguments.spv))
-	{
-		MIRU_WARN(true, "WARN: CROSSPLATFORM: Invalid recompile arguments provided.");
-		return 1;
-	}
-
-	std::string currentWorkingDir = std::filesystem::current_path().string() + "\\";
-
-	std::string command = "MIRU_SHADER_COMPILER ";
-	command += " -f:" + currentWorkingDir + m_CI.recompileArguments.hlslFilepath;
-	command += " -o:" + currentWorkingDir + m_CI.recompileArguments.outputDirectory;
-	for (auto& includeDir : m_CI.recompileArguments.includeDirectories)
-		command += " -i:" + currentWorkingDir + includeDir;
-	if (!m_CI.recompileArguments.entryPoint.empty())
-		command += " -e:" + m_CI.recompileArguments.entryPoint;
-	if (!m_CI.recompileArguments.shaderModel.empty())
-		command += " -t:" + m_CI.recompileArguments.shaderModel;
-	for (auto& macro : m_CI.recompileArguments.macros)
-		command += " -d:" + std::string(macro);
-	if (m_CI.recompileArguments.cso)
-		command += " -cso";
-	if (m_CI.recompileArguments.spv)
-		command += " -spv";
-	if (!m_CI.recompileArguments.dxcLocation.empty())
-		command += " -dxc:" + m_CI.recompileArguments.dxcLocation;
-	if (!m_CI.recompileArguments.dxcArguments.empty())
-		command += " -dxc_args:" + m_CI.recompileArguments.dxcArguments;
-	if (m_CI.recompileArguments.nologo)
-		command += " -nologo";
-	if (m_CI.recompileArguments.nooutput)
-		command += " -nooutput";
-
-	std::string mscLocation = currentWorkingDir + m_CI.recompileArguments.mscDirectory;
-
-	MIRU_PRINTF("%s", ("MIRU_CORE: Recompiling shader: " + currentWorkingDir + m_CI.recompileArguments.hlslFilepath + "\n").c_str());
-	MIRU_PRINTF("%s", ("Executing: " + mscLocation + "> " + command + "\n\n").c_str());
-	int returnCode = system(("cd " + mscLocation + " && " + command).c_str());
-	MIRU_PRINTF("'MIRU_SHADER_COMPILER.exe' has exited with code %d (0x%x).\n", returnCode, returnCode);
-	MIRU_PRINTF("%s", "MIRU_CORE: Recompiling shader finished.\n\n");
-
-	return returnCode;
 }
