@@ -294,6 +294,16 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		vkDynamicState.dynamicStateCount = static_cast<uint32_t>(vkDynamicStates.size());
 		vkDynamicState.pDynamicStates = vkDynamicStates.data();
 
+		//Dynamic Rendering
+		VkPipelineRenderingCreateInfoKHR vkPipelineRenderingCI;
+		vkPipelineRenderingCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+		vkPipelineRenderingCI.pNext = nullptr;
+		vkPipelineRenderingCI.viewMask = m_CI.dynamicRendering.viewMask;
+		vkPipelineRenderingCI.colorAttachmentCount = static_cast<uint32_t>(m_CI.dynamicRendering.colourAttachmentFormats.size());
+		vkPipelineRenderingCI.pColorAttachmentFormats = reinterpret_cast<VkFormat*>(m_CI.dynamicRendering.colourAttachmentFormats.data());
+		vkPipelineRenderingCI.depthAttachmentFormat = static_cast<VkFormat>(m_CI.dynamicRendering.depthAttachmentFormat);
+		vkPipelineRenderingCI.stencilAttachmentFormat = static_cast<VkFormat>(m_CI.dynamicRendering.depthAttachmentFormat);
+
 		//Fill Vulkan structure
 		m_GPCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		m_GPCI.pNext = nullptr;
@@ -310,7 +320,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.pColorBlendState = &vkColourBlendState;
 		m_GPCI.pDynamicState = &vkDynamicState;
 		m_GPCI.layout = m_PipelineLayout;
-		m_GPCI.renderPass = ref_cast<RenderPass>(m_CI.renderPass)->m_RenderPass;
+		if (m_CI.renderPass)
+			m_GPCI.renderPass = ref_cast<RenderPass>(m_CI.renderPass)->m_RenderPass;
+		else
+			m_GPCI.pNext = &vkPipelineRenderingCI;
 		m_GPCI.subpass = m_CI.subpassIndex;
 		m_GPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_GPCI.basePipelineIndex = -1;

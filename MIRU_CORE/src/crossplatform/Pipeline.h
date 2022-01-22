@@ -23,7 +23,8 @@ namespace crossplatform
 		enum class AttachmentStoreOp : uint32_t
 		{
 			STORE,
-			DONT_CARE
+			DONT_CARE,
+			NONE = 1000301000,
 		};
 		struct AttachmentDescription
 		{
@@ -173,6 +174,14 @@ namespace crossplatform
 			uint32_t		maxHitAttributeSize;
 			Ref<Allocator>	pAllocator;							//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
+
+		struct DynamicRenderingCreateInfo
+		{
+			uint32_t					viewMask;
+			std::vector<Image::Format>	colourAttachmentFormats;
+			Image::Format				depthAttachmentFormat;
+			Image::Format				stencilAttachmentFormat;
+		};
 		
 		struct CreateInfo
 		{
@@ -194,6 +203,7 @@ namespace crossplatform
 			PipelineLayout					layout;				//All.
 			Ref<RenderPass>					renderPass;			//Graphics only.
 			uint32_t						subpassIndex;		//Graphics only.
+			DynamicRenderingCreateInfo		dynamicRendering;	//Graphics only. Use this if not using a RenderPass.
 		};
 
 		//Methods
@@ -207,6 +217,28 @@ namespace crossplatform
 		//Members
 	protected:
 		CreateInfo m_CI = {};
+	};
+
+	struct RenderingAttachmentInfo
+	{
+		Ref<ImageView>					imageView;
+		Image::Layout					imageLayout;
+		ResolveModeBits					resolveMode;
+		Ref<ImageView>					resolveImageView;
+		Image::Layout					resolveImageLayout;
+		RenderPass::AttachmentLoadOp	loadOp;
+		RenderPass::AttachmentStoreOp	storeOp;
+		Image::ClearValue				clearValue;
+	};
+	struct RenderingInfo
+	{
+		RenderingFlagBits						flags;
+		Rect2D									renderArea;
+		uint32_t								layerCount;
+		uint32_t								viewMask;
+		std::vector<RenderingAttachmentInfo>	colourAttachments;
+		RenderingAttachmentInfo*				pDepthAttachment;
+		RenderingAttachmentInfo*				pStencilAttachment;
 	};
 }
 }

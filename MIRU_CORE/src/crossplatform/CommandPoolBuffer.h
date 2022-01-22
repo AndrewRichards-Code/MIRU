@@ -99,6 +99,9 @@ namespace crossplatform
 		virtual void EndRenderPass(uint32_t index) = 0;
 		virtual void NextSubpass(uint32_t index) = 0;
 
+		virtual void BeginRendering(uint32_t index, const RenderingInfo& renderingInfo) = 0;
+		virtual void EndRendering(uint32_t index) = 0;
+
 		virtual void BindPipeline(uint32_t index, const Ref<Pipeline>& pipeline) = 0;
 
 		virtual void BindVertexBuffers(uint32_t index, const std::vector<Ref<BufferView>>& vertexBufferViews) = 0;

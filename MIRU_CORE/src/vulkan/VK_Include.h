@@ -161,6 +161,19 @@ namespace miru
 	}
 #endif
 
+#if defined(VK_KHR_dynamic_rendering)
+	inline PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
+	inline PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
+
+	inline bool LoadPFN_VK_KHR_dynamic_rendering(VkDevice& device)
+	{
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdBeginRenderingKHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdEndRenderingKHR);
+
+		return true;
+	}
+#endif
+
 	//VK_KHR_acceleration_structure
 	//Requires Vulkan 1.1
 	//Requires VK_EXT_descriptor_indexing
@@ -204,5 +217,9 @@ namespace miru
 	//Requires Vulkan 1.0
 	//Requires VK_KHR_get_physical_device_properties2
 	//Promoted to Vulkan 1.2
+
+	//VK_KHR_dynamic_rendering
+	//Requires Vulkan 1.0
+	//Requires VK_KHR_get_physical_device_properties2
 }
 #endif

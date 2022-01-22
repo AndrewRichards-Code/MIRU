@@ -161,31 +161,51 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Dynamic
 
 		//RTV and DSV
-		size_t j = 0;
-		for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].colourAttachments)
+		if (m_CI.renderPass)
 		{
-			if (attachment.layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL)
-				m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
-			
-			j++;
-			if (j >= 8)
-				break;
-		}
-		m_GPSD.NumRenderTargets = static_cast<UINT>(j);		
-		for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment)
-		{
-			if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-				|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
-				|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
-				|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+			size_t j = 0;
+			for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].colourAttachments)
 			{
-				m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+				if (attachment.layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL)
+					m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+
+				j++;
+				if (j >= 8)
+					break;
 			}
-			
-			break; //There can be only one DSV.
+			m_GPSD.NumRenderTargets = static_cast<UINT>(j);
+			for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment)
+			{
+				if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+					|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
+					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+				{
+					m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+				}
+
+				break; //There can be only one DSV.
+			}
+			if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_GPSD.DepthStencilState = {};
 		}
-		if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-			m_GPSD.DepthStencilState = {};
+		else
+		{
+			size_t j = 0;
+			for (auto& colourAttachmentFormat : m_CI.dynamicRendering.colourAttachmentFormats)
+			{
+				m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(colourAttachmentFormat);
+				
+				j++;
+				if (j >= 8)
+					break;
+			}
+			m_GPSD.NumRenderTargets = static_cast<UINT>(j);
+			m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
+
+			if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_GPSD.DepthStencilState = {};
+		}
 
 		//Fill D3D12 structure
 		m_GPSD.pRootSignature = m_GlobalRootSignature.rootSignature;

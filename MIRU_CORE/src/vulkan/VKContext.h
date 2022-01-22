@@ -32,6 +32,9 @@ namespace vulkan
 			std::vector<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> m_PhysicalDeviceRayTracingPipelineFeatures;
 			std::vector<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> m_PhysicalDeviceRayTracingPipelineProperties;
 			#endif
+			#if defined(VK_KHR_dynamic_rendering)
+			std::vector<VkPhysicalDeviceDynamicRenderingFeaturesKHR> m_PhysicalDeviceDynamicRenderingFeaturesKHR;
+			#endif
 
 			PhysicalDevices(const VkInstance& instance, uint32_t apiVersion);
 

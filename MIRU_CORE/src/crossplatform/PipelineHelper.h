@@ -328,5 +328,26 @@ namespace crossplatform
 		UINT32 = 1,
 		NONE = 1000165000
 	};
+
+	//Multisample Image Resolve Mode
+
+	enum class ResolveModeBits : uint32_t
+	{
+		NONE = 0x00000000,
+		SAMPLE_ZERO_BIT = 0x00000001,
+		AVERAGE_BIT = 0x00000002,
+		MIN_BIT = 0x00000004,
+		MAX_BIT = 0x00000008
+	};
+
+	//Rendering Flags
+
+	enum class RenderingFlagBits : uint32_t
+	{
+		NONE_BIT = 0x00000000,
+		CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT = 0x00000001,
+		SUSPENDING_BIT = 0x00000002,
+		RESUMING_BIT = 0x00000004,
+	};
 }
 }

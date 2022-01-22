@@ -50,6 +50,9 @@ namespace d3d12
 		void EndRenderPass(uint32_t index) override;
 		void NextSubpass(uint32_t index) override;
 
+		void BeginRendering(uint32_t index, const crossplatform::RenderingInfo& renderingInfo) override;
+		void EndRendering(uint32_t index) override;
+
 		void BindPipeline(uint32_t index, const Ref<crossplatform::Pipeline>& pipeline) override;
 
 		void BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) override;
@@ -105,6 +108,7 @@ namespace d3d12
 		std::vector<crossplatform::Image::Layout> m_RenderPassFramebufferAttachementLayouts;
 		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;
 		uint32_t m_SubpassIndex = (uint32_t)-1;
+		crossplatform::RenderingInfo m_RenderingInfo;
 		bool m_Resettable = false;
 	};
 }

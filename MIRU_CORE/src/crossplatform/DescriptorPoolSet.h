@@ -25,7 +25,7 @@ namespace crossplatform
 		INPUT_ATTACHMENT = 10,
 		ACCELERATION_STRUCTURE = 1000150000,
 
-		D3D12_RENDER_TARGET_VIEW = 0x1000001, 
+		D3D12_RENDER_TARGET_VIEW = 0x1000001,
 		D3D12_DEPTH_STENCIL_VIEW = 0x1000002
 	};
 	class DescriptorPool
@@ -34,8 +34,8 @@ namespace crossplatform
 	public:
 		struct PoolSize
 		{
-			DescriptorType    type;
-			uint32_t          descriptorCount;
+			DescriptorType	type;
+			uint32_t		descriptorCount;
 		};
 		struct CreateInfo
 		{

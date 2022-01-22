@@ -124,6 +124,11 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 #if defined(VK_VERSION_1_2)
 		if (apiVersion >= VK_API_VERSION_1_2)
 		{
+			#if defined(VK_KHR_dynamic_rendering)
+			VkPhysicalDeviceAccelerationStructureFeaturesKHR& physicalDeviceAccelerationStructureFeatures = m_PhysicalDevices.m_PhysicalDeviceAccelerationStructureFeatures[0];
+			physicalDeviceAccelerationStructureFeatures.pNext = &(m_PhysicalDevices.m_PhysicalDeviceDynamicRenderingFeaturesKHR[0]);
+			#endif
+
 			VkPhysicalDeviceRayTracingPipelineFeaturesKHR& physicalDeviceRayTracingPipelineFeatures = m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0];
 			physicalDeviceRayTracingPipelineFeatures.pNext = &(m_PhysicalDevices.m_PhysicalDeviceAccelerationStructureFeatures[0]);
 
@@ -227,6 +232,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(EXT_debug_utils);
 #endif
 
+#if defined(VK_KHR_dynamic_rendering)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_dynamic_rendering);
+#endif
+
 	//Set Names
 	//VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
 	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName));
@@ -320,6 +329,9 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 	m_PhysicalDeviceRayTracingPipelineFeatures.resize(m_PhysicalDevices.size());
 	m_PhysicalDeviceRayTracingPipelineProperties.resize(m_PhysicalDevices.size());
 	#endif
+	#if defined(VK_KHR_dynamic_rendering)
+	m_PhysicalDeviceDynamicRenderingFeaturesKHR.resize(m_PhysicalDevices.size());
+	#endif
 
 	for (size_t i = 0; i < m_PhysicalDevices.size(); i++)
 	{
@@ -328,9 +340,17 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevices[i], &m_PhysicalDeviceMemoryProperties[i]);
 		
 		//Features2
+		#if defined(VK_KHR_dynamic_rendering)
+		m_PhysicalDeviceDynamicRenderingFeaturesKHR[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+		#endif
+
 		#if defined(VK_KHR_acceleration_structure)
 		m_PhysicalDeviceAccelerationStructureFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-		m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = nullptr;
+			#if defined(VK_KHR_dynamic_rendering)
+			m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = &m_PhysicalDeviceDynamicRenderingFeaturesKHR[i];
+			#else
+			m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = nullptr;
+			#endif
 		#endif
 
 		#if defined(VK_KHR_ray_tracing_pipeline)
@@ -393,6 +413,8 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 		{
 			vkGetPhysicalDeviceProperties2(m_PhysicalDevices[i], &m_PhysicalDeviceProperties2[i]);
 		}
+
+		//
 	}
 }
 

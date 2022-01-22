@@ -399,6 +399,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
+
 void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -675,6 +676,69 @@ void CommandBuffer::NextSubpass(uint32_t index)
 
 			if(flags)
 				reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_DSVDescHandle, flags, m_RenderPassClearValues[attachId].depthStencil.depth, shrink_uint32_t_to_uint8_t(m_RenderPassClearValues[attachId].depthStencil.stencil), 0, nullptr);
+		}
+	}
+}
+
+void CommandBuffer::BeginRendering(uint32_t index, const crossplatform::RenderingInfo& renderingInfo)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	m_RenderingInfo = renderingInfo;
+
+	//Set RenderTargets
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
+	for (auto& attachment : m_RenderingInfo.colourAttachments)
+		rtvs.push_back(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle);
+	if (m_RenderingInfo.pDepthAttachment)
+		dsv = ref_cast<ImageView>(m_RenderingInfo.pDepthAttachment->imageView)->m_DSVDescHandle;
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, dsv.ptr?&dsv:nullptr);
+
+	//Clear imageviews
+	uint32_t attachId = 0;
+	for (auto& attachment : m_RenderingInfo.colourAttachments)
+	{
+		if (attachment.loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle, attachment.clearValue.colour.float32, 0, nullptr);
+	}
+	if (m_RenderingInfo.pDepthAttachment && m_RenderingInfo.pStencilAttachment)
+	{
+		D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
+		if (m_RenderingInfo.pDepthAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			flags |= D3D12_CLEAR_FLAG_DEPTH;
+		if (m_RenderingInfo.pStencilAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			flags |= D3D12_CLEAR_FLAG_STENCIL;
+
+		if (flags)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(m_RenderingInfo.pDepthAttachment->imageView)->m_DSVDescHandle, flags, m_RenderingInfo.pDepthAttachment->clearValue.depthStencil.depth, shrink_uint32_t_to_uint8_t(m_RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil), 0, nullptr);
+	}
+}
+
+void CommandBuffer::EndRendering(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	for (auto& colourAttachment : m_RenderingInfo.colourAttachments)
+	{
+		if (colourAttachment.resolveImageView)
+		{
+			const Ref<crossplatform::Image>& colourImage = ref_cast<ImageView>(colourAttachment.imageView)->GetCreateInfo().pImage;
+			const Ref<crossplatform::Image>& resolveImage = ref_cast<ImageView>(colourAttachment.resolveImageView)->GetCreateInfo().pImage;
+			const crossplatform::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
+			const crossplatform::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
+
+			Image::Resolve resolveRegion;
+			resolveRegion.srcSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers };
+			resolveRegion.srcOffset = { 0, 0, 0 };
+			resolveRegion.dstSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
+			resolveRegion.dstOffset = { 0, 0, 0 };
+			resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth };
+
+			ResolveImage(index, colourImage, colourAttachment.imageLayout, resolveImage, colourAttachment.resolveImageLayout, { resolveRegion });
 		}
 	}
 }

@@ -386,6 +386,68 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	vkCmdNextSubpass(m_CmdBuffers[index], VK_SUBPASS_CONTENTS_INLINE);
 }
 
+void CommandBuffer::BeginRendering(uint32_t index, const crossplatform::RenderingInfo& renderingInfo)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	auto RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR = [](const crossplatform::RenderingAttachmentInfo& renderingAttachment) -> VkRenderingAttachmentInfoKHR
+	{
+		VkRenderingAttachmentInfoKHR vkRenderingAttachment;
+		vkRenderingAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		vkRenderingAttachment.pNext = nullptr;
+		vkRenderingAttachment.imageView = ref_cast<ImageView>(renderingAttachment.imageView)->m_ImageView;
+		vkRenderingAttachment.imageLayout = static_cast<VkImageLayout>(renderingAttachment.imageLayout);
+		vkRenderingAttachment.resolveMode = static_cast<VkResolveModeFlagBits>(renderingAttachment.resolveMode);
+		vkRenderingAttachment.resolveImageView = renderingAttachment.resolveImageView ? ref_cast<ImageView>(renderingAttachment.resolveImageView)->m_ImageView : VK_NULL_HANDLE;
+		vkRenderingAttachment.resolveImageLayout = static_cast<VkImageLayout>(renderingAttachment.resolveImageLayout);
+		vkRenderingAttachment.loadOp = static_cast<VkAttachmentLoadOp>(renderingAttachment.loadOp);
+		vkRenderingAttachment.storeOp = static_cast<VkAttachmentStoreOp>(renderingAttachment.storeOp);
+		vkRenderingAttachment.clearValue = *reinterpret_cast<const VkClearValue*>(&renderingAttachment.clearValue);
+
+		return vkRenderingAttachment;
+	};
+
+	std::vector<VkRenderingAttachmentInfoKHR> vkColourAttachments;
+	vkColourAttachments.reserve(renderingInfo.colourAttachments.size());
+	for (const auto& colourAttachment : renderingInfo.colourAttachments)
+		vkColourAttachments.push_back(RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(colourAttachment));
+
+	VkRenderingAttachmentInfoKHR vkDepthAttachment;
+	if (renderingInfo.pDepthAttachment)
+		vkDepthAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(*renderingInfo.pDepthAttachment);
+
+	VkRenderingAttachmentInfoKHR vkStencilAttachment;
+	if (renderingInfo.pStencilAttachment)
+		vkStencilAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(*renderingInfo.pStencilAttachment);
+
+	VkRenderingInfoKHR vkRenderingInfo;
+	vkRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+	vkRenderingInfo.pNext = nullptr;
+	vkRenderingInfo.flags = static_cast<VkRenderingFlagsKHR>(renderingInfo.flags);
+	vkRenderingInfo.renderArea.offset.x = renderingInfo.renderArea.offset.x;
+	vkRenderingInfo.renderArea.offset.y = renderingInfo.renderArea.offset.y;
+	vkRenderingInfo.renderArea.extent.width = renderingInfo.renderArea.extent.width;
+	vkRenderingInfo.renderArea.extent.height = renderingInfo.renderArea.extent.height;
+	vkRenderingInfo.layerCount = renderingInfo.layerCount;
+	vkRenderingInfo.viewMask = renderingInfo.viewMask;
+	vkRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(vkColourAttachments.size());
+	vkRenderingInfo.pColorAttachments = vkColourAttachments.data();
+	vkRenderingInfo.pDepthAttachment = renderingInfo.pDepthAttachment ? &vkDepthAttachment : nullptr;
+	vkRenderingInfo.pStencilAttachment = renderingInfo.pStencilAttachment ? &vkStencilAttachment : nullptr;
+
+	vkCmdBeginRenderingKHR(m_CmdBuffers[index], &vkRenderingInfo);
+}
+
+void CommandBuffer::EndRendering(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdEndRenderingKHR(m_CmdBuffers[index]);
+}
+
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
