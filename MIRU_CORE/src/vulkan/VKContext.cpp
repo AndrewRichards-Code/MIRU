@@ -11,18 +11,18 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	//Instance 
-	uint32_t apiVersion = VK_MAKE_API_VERSION(0, m_CI.api_version_major, m_CI.api_version_minor, VK_HEADER_VERSION);
-	const char* engineName = "MIRU - x64";
+	//Instance
+	uint32_t apiVersion = 0;
+	vkEnumerateInstanceVersion(&apiVersion);
+	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(apiVersion);
+	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(apiVersion);
+	m_RI.apiVersionPatch= VK_API_VERSION_PATCH(apiVersion);
 
-#if defined(VK_USE_PLATFORM_ANDROID_KHR)
-	if (!InitVulkan()) 
-	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Failed to load 'libvulkan.so'.");
-	}
-	apiVersion = VK_MAKE_VERSION(1, 0, 0);
+	#if defined(VK_USE_PLATFORM_WIN32_KHR)
+	const char* engineName = "MIRU - x64";
+	#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
 	engineName = "MIRU - ARM64";
-#endif
+	#endif
 
 	m_AI.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	m_AI.pNext = nullptr;
@@ -33,41 +33,80 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_AI.apiVersion = apiVersion;
 
 	//Add additional instance/device layers/extensions
-	auto push_back_exclusive = [](std::vector<std::string>& list, const std::string& string) -> void
+	
+
+	#if defined(VK_VERSION_1_0)
+	if (apiVersion >= VK_API_VERSION_1_0)
 	{
-		bool found = false;
-		for (auto& item : list)
+		//Debug
+		#if defined(_DEBUG)
+		m_CI.debugValidationLayers = true;
+		#endif
+		if (m_CI.debugValidationLayers)
 		{
-			if (strcmp(string.c_str(), item.c_str()) == 0)
-			{
-				found = true;
-				break;
-			}
+			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
+			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
 		}
-		if (!found)
-			list.push_back(string);
-	};
+		if (crossplatform::GraphicsAPI::IsSetNameAllowed())
+			m_InstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-#if defined(_DEBUG)
-	push_back_exclusive(m_CI.instanceLayers, "VK_LAYER_KHRONOS_validation");
-	push_back_exclusive(m_CI.deviceLayers, "VK_LAYER_KHRONOS_validation");
-#endif
+		//Surface and Swapchain
+		m_InstanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		m_DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		#if defined(VK_USE_PLATFORM_WIN32_KHR)
+		m_InstanceExtensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+		#elif defined(VK_USE_PLATFORM_ANDROIOD_KHR)
+		instanceExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+		#endif
 
-	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_surface");
-	push_back_exclusive(m_CI.deviceExtensions, "VK_KHR_swapchain");
+		//Extensions
+		if ((m_CI.extensions & ExtensionsBit::DYNAMIC_RENDERING) == ExtensionsBit::DYNAMIC_RENDERING)
+		{
+			#if defined(VK_KHR_dynamic_rendering)
+			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+			//Required by VK_KHR_dynamic_rendering
+			if (apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
+	}
+	#endif
+	#if defined(VK_VERSION_1_1)
+	if (apiVersion >= VK_API_VERSION_1_1)
+	{
+		//Extensions
+		if ((m_CI.extensions & ExtensionsBit::RAY_TRACING) == ExtensionsBit::RAY_TRACING)
+		{
+			#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
+			//Required for ExtensionsBit::RAY_TRACING
+			m_DeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+			m_DeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
 
-#if defined(VK_USE_PLATFORM_WIN32_KHR)
-	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_win32_surface");
-#elif defined(VK_USE_PLATFORM_ANDROIOD_KHR)
-	push_back_exclusive(m_CI.instanceExtensions, "VK_KHR_android_surface");
-#endif
+			//Required by VK_KHR_acceleration_structure
+			if (apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			if (apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			m_DeviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 
-	uint32_t layerCount = 0;
-	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
+			//Required for VK_KHR_ray_tracing_pipeline
+			if (apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME); //Promoted to Vulkan 1.2
+
+			//Required by VK_KHR_spirv_1_4
+			if (apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			#endif
+		}
+	}
+	#endif
+
+	uint32_t instanceLayerCount = 0;
+	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
 	std::vector<VkLayerProperties> instanceLayerProperties;
-	instanceLayerProperties.resize(layerCount);
-	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&layerCount, instanceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
-	for (auto& requestLayer : m_CI.instanceLayers)
+	instanceLayerProperties.resize(instanceLayerCount);
+	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
+	for (auto& requestLayer : m_InstanceLayers)
 	{
 		for (auto& layerProperty : instanceLayerProperties)
 		{
@@ -78,15 +117,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	if (crossplatform::GraphicsAPI::IsSetNameAllowed())
-		push_back_exclusive(m_CI.instanceExtensions, "VK_EXT_debug_utils");
-
-	uint32_t extensionCount = 0;
-	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
+	uint32_t instanceExtensionCount = 0;
+	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
 	std::vector<VkExtensionProperties> instanceExtensionProperties;
-	instanceExtensionProperties.resize(extensionCount);
-	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, instanceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
-	for (auto& requestExtension : m_CI.instanceExtensions)
+	instanceExtensionProperties.resize(instanceExtensionCount);
+	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
+	for (auto& requestExtension : m_InstanceExtensions)
 	{
 		for (auto& extensionProperty : instanceExtensionProperties)
 		{
@@ -110,36 +146,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//PhysicalDevice
 	m_PhysicalDevices = PhysicalDevices(m_Instance, apiVersion);
-	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PhysicalDevices[0]; //We only use the first PhysicalDevice
-
-	//PhysicalDeviceFeatures
-	VkPhysicalDeviceFeatures physicalDeviceFeatures = m_PhysicalDevices.m_PhysicalDeviceFeatures[0];
-
-	void* deviceCI_pNext = nullptr;
-#if defined(VK_KHR_ray_tracing_pipeline)
-	if (apiVersion >= VK_API_VERSION_1_1)
-	{
-		deviceCI_pNext = &(m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0]);
-
-#if defined(VK_VERSION_1_2)
-		if (apiVersion >= VK_API_VERSION_1_2)
-		{
-			#if defined(VK_KHR_dynamic_rendering)
-			VkPhysicalDeviceAccelerationStructureFeaturesKHR& physicalDeviceAccelerationStructureFeatures = m_PhysicalDevices.m_PhysicalDeviceAccelerationStructureFeatures[0];
-			physicalDeviceAccelerationStructureFeatures.pNext = &(m_PhysicalDevices.m_PhysicalDeviceDynamicRenderingFeaturesKHR[0]);
-			#endif
-
-			VkPhysicalDeviceRayTracingPipelineFeaturesKHR& physicalDeviceRayTracingPipelineFeatures = m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0];
-			physicalDeviceRayTracingPipelineFeatures.pNext = &(m_PhysicalDevices.m_PhysicalDeviceAccelerationStructureFeatures[0]);
-
-			VkPhysicalDeviceVulkan12Features& physicalDeviceVulkan12Features = m_PhysicalDevices.m_PhysicalDeviceVulkan12Features[0];
-			physicalDeviceVulkan12Features.pNext = &(m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineFeatures[0]);
-			deviceCI_pNext = &physicalDeviceVulkan12Features;
-		}
-#endif
-
-	}
-#endif
+	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice; //We only use the first PhysicalDevice
 
 	//Device
 	uint32_t queueFamilyPropertiesCount = 0;
@@ -162,12 +169,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_DeviceQueueCIs[i].pQueuePriorities = m_QueuePriorities[i].data();
 	}
 
-	uint32_t layerPropertiesCount = 0;
-	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &layerPropertiesCount, nullptr), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
+	uint32_t deviceLayerCount = 0;
+	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
 	std::vector<VkLayerProperties> deviceLayerProperties;
-	deviceLayerProperties.resize(layerPropertiesCount);
-	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &layerPropertiesCount, deviceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
-	for (auto& requestLayer : m_CI.deviceLayers)
+	deviceLayerProperties.resize(deviceLayerCount);
+	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, deviceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
+	for (auto& requestLayer : m_DeviceLayers)
 	{
 		for (auto& layerProperty : deviceLayerProperties)
 		{
@@ -178,12 +185,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	uint32_t extensionPropertiesCount = 0;
-	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &extensionPropertiesCount, 0), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
+	uint32_t deviceExtensionCount = 0;
+	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, 0), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
 	std::vector<VkExtensionProperties> deviceExtensionProperties;
-	deviceExtensionProperties.resize(extensionPropertiesCount);
-	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &extensionPropertiesCount, deviceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
-	for (auto& requestExtension : m_CI.deviceExtensions)
+	deviceExtensionProperties.resize(deviceExtensionCount);
+	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, deviceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
+	for (auto& requestExtension : m_DeviceExtensions)
 	{
 		for (auto& extensionProperty : deviceExtensionProperties)
 		{
@@ -194,6 +201,31 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
+	//PhysicalDeviceFeatures
+	VkPhysicalDeviceFeatures physicalDeviceFeatures = m_PhysicalDevices.m_PDIs[0].m_Features;
+
+	m_PhysicalDevices.FillOutFeaturesAndProperties(this);
+	void* deviceCI_pNext = nullptr;
+	#if defined(VK_KHR_get_physical_device_properties2)
+	if (IsActive(m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+		deviceCI_pNext = &m_PhysicalDevices.m_PDIs[0].m_Features2;
+	#endif
+
+	m_RI.activeExtensions = ExtensionsBit::NONE;
+	#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME)
+		&& IsActive(m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
+	}
+	#endif
+	#if defined(VK_KHR_dynamic_rendering)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
+	}
+	#endif
+
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	m_DeviceCI.pNext = deviceCI_pNext;
 	m_DeviceCI.flags = 0;
@@ -203,7 +235,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_DeviceCI.ppEnabledLayerNames = m_ActiveDeviceLayers.data();
 	m_DeviceCI.enabledExtensionCount = static_cast<uint32_t>(m_ActiveDeviceExtensions.size());
 	m_DeviceCI.ppEnabledExtensionNames = m_ActiveDeviceExtensions.data();
-	m_DeviceCI.pEnabledFeatures = &physicalDeviceFeatures;
+	m_DeviceCI.pEnabledFeatures = deviceCI_pNext ? nullptr : &physicalDeviceFeatures;;
 
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
@@ -212,24 +244,21 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	#define MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(ext) if(IsActive(m_ActiveInstanceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Instance); }
 	#define MIRU_VULKAN_LOAD_DEVICE_EXTENSION(ext) if(IsActive(m_ActiveDeviceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Device); }
 
-#if defined(VK_KHR_acceleration_structure)
-	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_acceleration_structure);
+#if defined(VK_EXT_debug_utils)
+	MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(EXT_debug_utils);
 #endif
 
 #if defined(VK_KHR_buffer_device_address)
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_buffer_device_address);
 #endif
 
-#if defined(VK_KHR_deferred_host_operations)
-	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_deferred_host_operations);
-#endif
-
 #if defined(VK_KHR_ray_tracing_pipeline)
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_ray_tracing_pipeline);
 #endif
-	
-#if defined(VK_EXT_debug_utils)
-	MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(EXT_debug_utils);
+
+#if defined(VK_KHR_acceleration_structure)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_acceleration_structure);
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_deferred_host_operations);
 #endif
 
 #if defined(VK_KHR_dynamic_rendering)
@@ -238,7 +267,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Set Names
 	//VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
-	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PhysicalDevices[0], "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PhysicalDeviceProperties[0].deviceName));
+	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[0].m_Properties.deviceName));
 	VKSetName<VkDevice>(m_Device, (uint64_t)m_Device, m_CI.deviceDebugName);
 	
 	//Device Queues
@@ -294,127 +323,106 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 
 	uint32_t physicalDeviceCount = 0;
 	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
-	m_PhysicalDevices.resize(physicalDeviceCount);
-	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, m_PhysicalDevices.data()), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
-
-	for (size_t i = 0; i < m_PhysicalDevices.size(); i++)
+	m_PDIs.resize(physicalDeviceCount);
+	std::vector<VkPhysicalDevice> vkPhysicalDevices(physicalDeviceCount);
+	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices.data()), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
+	for (size_t i = 0; i < vkPhysicalDevices.size(); i++)
 	{
-		if (m_PhysicalDevices[i] == VK_NULL_HANDLE)
+		if (vkPhysicalDevices[i] == VK_NULL_HANDLE)
 		{
-			std::vector<VkPhysicalDevice>::const_iterator it = m_PhysicalDevices.cbegin() + i;
-			m_PhysicalDevices.erase(it);
+			std::vector<VkPhysicalDevice>::const_iterator it = vkPhysicalDevices.cbegin() + i;
+			vkPhysicalDevices.erase(it);
 		}
 	}
-	if (m_PhysicalDevices.empty())
+	if (vkPhysicalDevices.empty())
 	{
 		MIRU_ASSERT(true, "ERROR: VULKAN: No valid Vulkan devices are available.");
 	}
+	for (size_t i = 0; i < m_PDIs.size(); i++) 
+		m_PDIs[i].m_PhysicalDevice = vkPhysicalDevices[i]; 
+}
 
-	m_PhysicalDeviceFeatures.resize(m_PhysicalDevices.size());
-	m_PhysicalDeviceProperties.resize(m_PhysicalDevices.size());
-	m_PhysicalDeviceMemoryProperties.resize(m_PhysicalDevices.size());
-	
-	#if defined(VK_VERSION_1_1)
-	m_PhysicalDeviceFeatures2.resize(m_PhysicalDevices.size());
-	m_PhysicalDeviceProperties2.resize(m_PhysicalDevices.size());
-	#endif
-	#if defined(VK_VERSION_1_2)
-	m_PhysicalDeviceVulkan12Features.resize(m_PhysicalDevices.size());
-	#endif
-	#if defined(VK_KHR_acceleration_structure)
-	m_PhysicalDeviceAccelerationStructureFeatures.resize(m_PhysicalDevices.size());
-	m_PhysicalDeviceAccelerationStructureProperties.resize(m_PhysicalDevices.size());
-	#endif
-	#if defined(VK_KHR_ray_tracing_pipeline)
-	m_PhysicalDeviceRayTracingPipelineFeatures.resize(m_PhysicalDevices.size());
-	m_PhysicalDeviceRayTracingPipelineProperties.resize(m_PhysicalDevices.size());
-	#endif
-	#if defined(VK_KHR_dynamic_rendering)
-	m_PhysicalDeviceDynamicRenderingFeaturesKHR.resize(m_PhysicalDevices.size());
-	#endif
-
-	for (size_t i = 0; i < m_PhysicalDevices.size(); i++)
+void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
+{
+	for (PhysicalDeviceInfo& pdi : m_PDIs)
 	{
-		vkGetPhysicalDeviceFeatures(m_PhysicalDevices[i], &m_PhysicalDeviceFeatures[i]);
-		vkGetPhysicalDeviceProperties(m_PhysicalDevices[i], &m_PhysicalDeviceProperties[i]);
-		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevices[i], &m_PhysicalDeviceMemoryProperties[i]);
+		vkGetPhysicalDeviceFeatures(pdi.m_PhysicalDevice, &pdi.m_Features);
+		vkGetPhysicalDeviceProperties(pdi.m_PhysicalDevice, &pdi.m_Properties);
+		vkGetPhysicalDeviceMemoryProperties(pdi.m_PhysicalDevice, &pdi.m_MemoryProperties);
 		
-		//Features2
-		#if defined(VK_KHR_dynamic_rendering)
-		m_PhysicalDeviceDynamicRenderingFeaturesKHR[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-		#endif
+		#if defined(VK_KHR_get_physical_device_properties2)
+		if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+		{
+			//Features2
+			void** nextPropsAddr = nullptr;
+			nextPropsAddr = &pdi.m_Features2.pNext;
 
-		#if defined(VK_KHR_acceleration_structure)
-		m_PhysicalDeviceAccelerationStructureFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-			#if defined(VK_KHR_dynamic_rendering)
-			m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = &m_PhysicalDeviceDynamicRenderingFeaturesKHR[i];
-			#else
-			m_PhysicalDeviceAccelerationStructureFeatures[i].pNext = nullptr;
+			#if defined(VK_KHR_buffer_device_address)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			{
+				pdi.m_BufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures;
+				nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures.pNext;
+			}
 			#endif
-		#endif
 
-		#if defined(VK_KHR_ray_tracing_pipeline)
-		m_PhysicalDeviceRayTracingPipelineFeatures[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-			#if defined(VK_KHR_acceleration_structure)
-			m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = &m_PhysicalDeviceAccelerationStructureFeatures[i];
-			#else		
-			m_PhysicalDeviceRayTracingPipelineFeatures[i].pNext = nullptr;
-			#endif
-		#endif
-
-		#if defined(VK_VERSION_1_2)
-		m_PhysicalDeviceVulkan12Features[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 			#if defined(VK_KHR_ray_tracing_pipeline)
-			m_PhysicalDeviceVulkan12Features[i].pNext = &m_PhysicalDeviceRayTracingPipelineFeatures[i];
-			#else		
-			m_PhysicalDeviceVulkan12Features[i].pNext = nullptr;
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
+			{
+				pdi.m_RayTracingPipelineFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_RayTracingPipelineFeatures;
+				nextPropsAddr = &pdi.m_RayTracingPipelineFeatures.pNext;
+			}
 			#endif
-		#endif
 
-		#if defined(VK_VERSION_1_1)
-		m_PhysicalDeviceFeatures2[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-			#if defined(VK_VERSION_1_2)
-			m_PhysicalDeviceFeatures2[i].pNext = &m_PhysicalDeviceVulkan12Features[i];
-			#else	
-			m_PhysicalDeviceFeatures2[i].pNext = nullptr
-			#endif
-		#endif
-		
-		if (apiVersion >= VK_API_VERSION_1_2)
-		{
-			vkGetPhysicalDeviceFeatures2(m_PhysicalDevices[i], &m_PhysicalDeviceFeatures2[i]);
-		}
-
-		//Properties2
-		#if defined(VK_KHR_acceleration_structure)
-		m_PhysicalDeviceAccelerationStructureProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
-		m_PhysicalDeviceAccelerationStructureProperties[i].pNext = nullptr;
-		#endif
-
-		#if defined(VK_KHR_ray_tracing_pipeline)
-		m_PhysicalDeviceRayTracingPipelineProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 			#if defined(VK_KHR_acceleration_structure)
-			m_PhysicalDeviceRayTracingPipelineProperties[i].pNext = &m_PhysicalDeviceAccelerationStructureProperties[i];
-			#else		
-			m_PhysicalDeviceRayTracingPipelineProperties[i].pNext = nullptr;
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+			{
+				pdi.m_AccelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_AccelerationStructureFeatures;
+				nextPropsAddr = &pdi.m_AccelerationStructureFeatures.pNext;
+			}
 			#endif
-		#endif
 
-		#if defined(VK_VERSION_1_1)
-			m_PhysicalDeviceProperties2[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-			#if defined(VK_VERSION_1_2)
-			m_PhysicalDeviceProperties2[i].pNext = &m_PhysicalDeviceRayTracingPipelineProperties[i];
-			#else	
-			m_PhysicalDeviceProperties2[i].pNext = nullptr
+			#if defined(VK_KHR_dynamic_rendering)
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
+			{
+				pdi.m_DynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_DynamicRenderingFeatures;
+				nextPropsAddr = &pdi.m_DynamicRenderingFeatures.pNext;
+			}
 			#endif
-		#endif
 
-		if (apiVersion >= VK_API_VERSION_1_2)
-		{
-			vkGetPhysicalDeviceProperties2(m_PhysicalDevices[i], &m_PhysicalDeviceProperties2[i]);
+			pdi.m_Features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			vkGetPhysicalDeviceFeatures2(pdi.m_PhysicalDevice, &pdi.m_Features2);
+		
+
+			//Properties2
+			nextPropsAddr = nullptr;
+			nextPropsAddr = &pdi.m_Properties2.pNext;
+
+			#if defined(VK_KHR_ray_tracing_pipeline)
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
+			{
+				pdi.m_RayTracingPipelineProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+				*nextPropsAddr = &pdi.m_RayTracingPipelineProperties;
+				nextPropsAddr = &pdi.m_RayTracingPipelineProperties.pNext;
+			}
+			#endif
+
+			#if defined(VK_KHR_acceleration_structure)
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+			{
+				pdi.m_AccelerationStructureProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
+				*nextPropsAddr = &pdi.m_AccelerationStructureProperties;
+				nextPropsAddr = &pdi.m_AccelerationStructureProperties.pNext;
+			}
+			#endif
+
+			pdi.m_Properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+			vkGetPhysicalDeviceProperties2(pdi.m_PhysicalDevice, &pdi.m_Properties2);
 		}
-
-		//
+#endif
 	}
 }
 

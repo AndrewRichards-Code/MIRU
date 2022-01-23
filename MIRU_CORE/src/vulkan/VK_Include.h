@@ -174,52 +174,5 @@ namespace miru
 	}
 #endif
 
-	//VK_KHR_acceleration_structure
-	//Requires Vulkan 1.1
-	//Requires VK_EXT_descriptor_indexing
-	//Requires VK_KHR_buffer_device_address
-	//Requires VK_KHR_deferred_host_operations
-
-	//VK_EXT_descriptor_indexing
-	//Requires Vulkan 1.0
-	//Requires VK_KHR_get_physical_device_properties2
-	//Requires VK_KHR_maintenance3
-	//Promoted to Vulkan 1.2
-
-	//VK_KHR_buffer_device_address
-	//Requires Vulkan 1.0
-	//Requires VK_KHR_get_physical_device_properties2
-	//Promoted to Vulkan 1.2
-
-	//VK_KHR_deferred_host_operations
-	//Requires Vulkan 1.0
-
-	//VK_KHR_get_physical_device_properties2
-	//Requires Vulkan 1.0
-	//Promoted to Vulkan 1.1
-
-	//VK_KHR_maintenance3
-	//Requires Vulkan 1.0
-	//Requires VK_KHR_get_physical_device_properties2
-	//Promoted to Vulkan 1.1
-
-	//VK_KHR_ray_tracing_pipeline
-	//Requires Vulkan 1.1
-	//Requires VK_KHR_spirv_1_4
-	//Requires VK_KHR_acceleration_structure
-
-	//VK_KHR_spirv_1_4
-	//Requires Vulkan 1.1
-	//Requires VK_KHR_shader_float_controls
-	//Promoted to Vulkan 1.2
-
-	//VK_KHR_shader_float_controls
-	//Requires Vulkan 1.0
-	//Requires VK_KHR_get_physical_device_properties2
-	//Promoted to Vulkan 1.2
-
-	//VK_KHR_dynamic_rendering
-	//Requires Vulkan 1.0
-	//Requires VK_KHR_get_physical_device_properties2
 }
 #endif

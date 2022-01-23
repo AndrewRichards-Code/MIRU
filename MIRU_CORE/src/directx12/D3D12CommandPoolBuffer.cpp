@@ -94,10 +94,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 		End(static_cast<uint32_t>(i));
 	}
 
-	D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12Options;
-	MIRU_ASSERT(m_Device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &d3d12Options, sizeof(d3d12Options)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS");
-	
-	switch (d3d12Options.ResourceBindingTier)
+	switch (ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext)->m_Features.d3d12Options.ResourceBindingTier)
 	{
 	case D3D12_RESOURCE_BINDING_TIER_3:
 	{
@@ -121,11 +118,11 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	case D3D12_RESOURCE_BINDING_TIER_1:
 	default:
 	{
-		auto contextCI = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext)->GetCreateInfo();
+		const auto& contextRI = m_CI.pCommandPool->GetCreateInfo().pContext->GetResultInfo();
 		m_MaxDescriptorCount = 1000000;
 		m_MaxCBVsPerStage = 14;
 		m_MaxSRVsPerStage = 128;
-		m_MaxUAVsPerStage = (contextCI.api_version_major == 11 && contextCI.api_version_minor == 0) ? 8 : 64;
+		m_MaxUAVsPerStage = (contextRI.apiVersionMajor == 11 && contextRI.apiVersionMinor == 0) ? 8 : 64;
 		m_MaxSamplersPerStage = 16;
 		break;
 	}

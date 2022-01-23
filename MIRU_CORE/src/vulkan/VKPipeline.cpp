@@ -413,8 +413,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		//Get ShaderHandles
 		const Ref<Context>& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.pAllocator->GetCreateInfo().pContext);
-		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleSize;
-		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PhysicalDeviceRayTracingPipelineProperties[0].shaderGroupHandleAlignment;
+		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleSize;
+		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleAlignment;
 
 		const uint32_t& handleSize = vkHandleSize;
 		const size_t handleSizeAligned = alignedSize(vkHandleSize, vkHandleSizeAligned);

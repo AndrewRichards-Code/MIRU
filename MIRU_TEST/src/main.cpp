@@ -235,23 +235,16 @@ void WindowUpdate()
 
 int main()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 	
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Context::CreateInfo contextCI;
-	contextCI.api_version_major = GraphicsAPI::IsD3D12() ? 12 : 1;
-	contextCI.api_version_minor = GraphicsAPI::IsD3D12() ? 1 : 2;
 	contextCI.applicationName = "MIRU_TEST";
-	contextCI.instanceLayers = { "VK_LAYER_KHRONOS_validation" };
-	contextCI.instanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
-	contextCI.deviceLayers = { "VK_LAYER_KHRONOS_validation" };
-	contextCI.deviceExtensions = { "VK_KHR_swapchain",
-		"VK_KHR_acceleration_structure", "VK_KHR_ray_tracing_pipeline",
-		"VK_KHR_deferred_host_operations" };
+	contextCI.extensions = Context::ExtensionsBit::RAY_TRACING | Context::ExtensionsBit::DYNAMIC_RENDERING;
 	contextCI.deviceDebugName = "GPU Device";
 	Ref<Context> context = Context::Create(&contextCI);
 

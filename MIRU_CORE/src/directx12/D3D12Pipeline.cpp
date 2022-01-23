@@ -701,6 +701,6 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipel
 	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
 	MIRU_ASSERT(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 
-	return std::move(result);
+	return result;
 }
 #endif

@@ -15,7 +15,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PhysicalDevices[0];
+	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
 	uint32_t queueFamilyIndex = 0;
 
 	//Surface

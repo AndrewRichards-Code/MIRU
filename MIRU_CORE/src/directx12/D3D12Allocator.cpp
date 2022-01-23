@@ -18,7 +18,7 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	m_AllocatorDesc.pDevice = m_Device;
 	m_AllocatorDesc.PreferredBlockSize = static_cast<UINT64>(m_CI.blockSize);
 	m_AllocatorDesc.pAllocationCallbacks = nullptr;
-	m_AllocatorDesc.pAdapter = dynamic_cast<IDXGIAdapter*>(ref_cast<Context>(m_CI.pContext)->m_PhysicalDevices.m_Adapters[0]);
+	m_AllocatorDesc.pAdapter = dynamic_cast<IDXGIAdapter*>(ref_cast<Context>(m_CI.pContext)->m_PhysicalDevices.m_PDIs[0].m_Adapter);
 
 	MIRU_ASSERT(D3D12MA::CreateAllocator(&m_AllocatorDesc, &m_Allocator), "ERROR: D3D12: Failed to create Allocator.");
 	//D3D12SetName(m_MemoryHeap, m_CI.debugName);

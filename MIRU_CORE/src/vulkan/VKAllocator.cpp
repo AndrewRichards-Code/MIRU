@@ -19,7 +19,7 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	buffer_device_address |= (context->m_AI.apiVersion >= VK_API_VERSION_1_2);
 
 	m_AI.flags = buffer_device_address ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
-	m_AI.physicalDevice = context->m_PhysicalDevices.m_PhysicalDevices[0];
+	m_AI.physicalDevice = context->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
 	m_AI.device = m_Device;
 	m_AI.preferredLargeHeapBlockSize = static_cast<VkDeviceSize>(m_CI.blockSize);
 	m_AI.pAllocationCallbacks = nullptr;
