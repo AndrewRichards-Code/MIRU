@@ -41,7 +41,7 @@ void Shader::Reconstruct()
 	m_ShaderModuleCI.pCode = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
 
 	MIRU_ASSERT(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
-	VKSetName<VkShaderModule>(m_Device, (uint64_t)m_ShaderModule, m_CI.debugName);
+	VKSetName<VkShaderModule>(m_Device, m_ShaderModule, m_CI.debugName);
 
 	for (const auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
 	{

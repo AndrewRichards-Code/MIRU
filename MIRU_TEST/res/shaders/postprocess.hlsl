@@ -2,13 +2,13 @@
 
 struct VS_OUT
 {
-    MIRU_LOCATION(0, float4, position, SV_POSITION);
+	MIRU_LOCATION(0, float4, position, SV_POSITION);
 };
 typedef VS_OUT PS_IN;
 
 struct PS_OUT
 {
-    MIRU_LOCATION(0, float4, colour, SV_TARGET0);
+	MIRU_LOCATION(0, float4, colour, SV_TARGET0);
 };
 MIRU_SUBPASS_INPUT(0, 0, 0, float4, input);
 

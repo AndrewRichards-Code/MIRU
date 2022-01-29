@@ -31,7 +31,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_VmaACI.pUserData = nullptr;
 
 	MIRU_ASSERT(vmaCreateBuffer(m_CI.pAllocator->GetVmaAllocator(), &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
-	VKSetName<VkBuffer>(m_Device, (uint64_t)m_Buffer, m_CI.debugName);
+	VKSetName<VkBuffer>(m_Device, m_Buffer, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.width = 0;

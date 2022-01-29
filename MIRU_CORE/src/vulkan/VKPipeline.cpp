@@ -92,7 +92,7 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 	m_RenderPassCI.pDependencies = m_SubpassDependencies.data();
 
 	MIRU_ASSERT(vkCreateRenderPass(m_Device, &m_RenderPassCI, nullptr, &m_RenderPass), "ERROR: VULKAN: Failed to create RenderPass.");
-	VKSetName<VkRenderPass>(m_Device, (uint64_t)m_RenderPass, m_CI.debugName);
+	VKSetName<VkRenderPass>(m_Device, m_RenderPass, m_CI.debugName);
 }
 
 RenderPass::~RenderPass()
@@ -129,7 +129,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_PLCI.pPushConstantRanges = vkPushConstantRanges.data();
 	
 	MIRU_ASSERT(vkCreatePipelineLayout(m_Device, &m_PLCI, nullptr, &m_PipelineLayout), "ERROR: VULKAN: Failed to create PipelineLayout.");
-	VKSetName<VkPipelineLayout>(m_Device, (uint64_t)m_PipelineLayout, m_CI.debugName + " : PipelineLayout");
+	VKSetName<VkPipelineLayout>(m_Device, m_PipelineLayout, m_CI.debugName + " : PipelineLayout");
 
 	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
 	{
@@ -329,7 +329,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.basePipelineIndex = -1;
 
 		MIRU_ASSERT(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &m_GPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Graphics Pipeline.");
-		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
+		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
 	{
@@ -342,7 +342,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPCI.basePipelineIndex = -1;
 		
 		MIRU_ASSERT(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
-		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Compute Pipeline");
+		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
 	{
@@ -409,7 +409,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_RTPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_RTPCI.basePipelineIndex = -1;
 		MIRU_ASSERT(vkCreateRayTracingPipelinesKHR(m_Device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &m_RTPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Ray Tracing Pipeline.");
-		VKSetName<VkPipeline>(m_Device, (uint64_t)m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
+		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
 		//Get ShaderHandles
 		const Ref<Context>& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.pAllocator->GetCreateInfo().pContext);

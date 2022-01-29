@@ -651,7 +651,7 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipel
 		descriptoTableSRV_UAV_CBV.pDescriptorRanges = result.descriptorRangesSRV_UAV_CBV.back().data();
 		if (ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorRanges[D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER].NumDescriptors)
 		{
-			descriptorTableSampler.NumDescriptorRanges = static_cast<UINT>(result.descriptorRangesSampler.back().size());;
+			descriptorTableSampler.NumDescriptorRanges = static_cast<UINT>(result.descriptorRangesSampler.back().size());
 			descriptorTableSampler.pDescriptorRanges = result.descriptorRangesSampler.back().data();
 		}
 

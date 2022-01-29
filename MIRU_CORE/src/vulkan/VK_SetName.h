@@ -7,7 +7,7 @@ namespace vulkan
 {
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
 	template<class T>
-	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const std::string& name)
+	static inline void VKSetName(VkDevice& device, const T& objectHandle, const std::string& name)
 	{
 		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
 			return;
@@ -67,6 +67,8 @@ namespace vulkan
 			objectType = VK_OBJECT_TYPE_SURFACE_KHR;
 		else if (typeid(T) == typeid(VkSwapchainKHR))
 			objectType = VK_OBJECT_TYPE_SWAPCHAIN_KHR;
+		else if (typeid(T) == typeid(VkAccelerationStructureKHR))
+			objectType = VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR;
 		else
 			objectType = VK_OBJECT_TYPE_UNKNOWN;
 	
@@ -74,7 +76,7 @@ namespace vulkan
 		nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
 		nameInfo.pNext = nullptr;
 		nameInfo.objectType = objectType;
-		nameInfo.objectHandle = objectHandle;
+		nameInfo.objectHandle = reinterpret_cast<uint64_t>(objectHandle);
 		nameInfo.pObjectName = name.c_str();
 	
 		if (vkSetDebugUtilsObjectNameEXT)
@@ -83,7 +85,7 @@ namespace vulkan
 #else
 	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
-	static inline void VKSetName(VkDevice& device, uint64_t objectHandle, const std::string& name) { return; }
+	static inline void VKSetName(VkDevice& device, const T& objectHandle, const std::string& name) { return; }
 #endif
 }
 }

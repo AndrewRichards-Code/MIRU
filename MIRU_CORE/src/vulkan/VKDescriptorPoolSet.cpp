@@ -27,7 +27,7 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 	m_DescriptorPoolCI.pPoolSizes = m_PoolSizes.data();
 
 	MIRU_ASSERT(vkCreateDescriptorPool(m_Device, &m_DescriptorPoolCI, nullptr, &m_DescriptorPool), "ERROR: VULKAN: Failed to create DescriptorPool.");
-	VKSetName<VkDescriptorPool>(m_Device, (uint64_t)m_DescriptorPool, m_CI.debugName);
+	VKSetName<VkDescriptorPool>(m_Device, m_DescriptorPool, m_CI.debugName);
 }
 
 DescriptorPool::~DescriptorPool()
@@ -60,7 +60,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 	m_DescriptorSetLayoutCI.pBindings = m_DescriptorSetLayoutBindings.data();
 
 	MIRU_ASSERT(vkCreateDescriptorSetLayout(m_Device, &m_DescriptorSetLayoutCI, nullptr, &m_DescriptorSetLayout), "ERROR: VULKAN: Failed to create DescriptorSetLayout.");
-	VKSetName<VkDescriptorSetLayout>(m_Device, (uint64_t)m_DescriptorSetLayout, m_CI.debugName);
+	VKSetName<VkDescriptorSetLayout>(m_Device, m_DescriptorSetLayout, m_CI.debugName);
 }
 
 DescriptorSetLayout::~DescriptorSetLayout()
@@ -94,7 +94,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	uint32_t i = 0;
 	for (auto& descriptorSet : m_DescriptorSets)
 	{
-		VKSetName<VkDescriptorSet>(m_Device, (uint64_t)descriptorSet, m_CI.debugName + ": " + std::to_string(i));
+		VKSetName<VkDescriptorSet>(m_Device, descriptorSet, m_CI.debugName + ": " + std::to_string(i));
 		i++;
 	}
 }

@@ -5,6 +5,43 @@
 using namespace miru;
 using namespace vulkan;
 
+static VkDebugUtilsMessengerEXT debugUtilsMessenger;
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void* userData)
+{
+	std::string message = "";
+	switch (messageSeverity)
+	{
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+		message += "VERBOSE: ";
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+		message += "INFO: ";
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+		message += "WARNING: ";
+		break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+		message += "ERROR: ";
+		break;
+	default:
+		break;
+	}
+
+	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+		message += "GENERAL| ";
+	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+		message += "VALIDATION| ";
+	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+		message += "PREFORMANCE| ";
+
+	message += ": Message ID Number: " + std::to_string(callbackData->messageIdNumber);
+	message += ": Message ID Name: " + std::string(callbackData->pMessageIdName);
+	message += ": Message: " + std::string(callbackData->pMessage);
+
+	MIRU_PRINTF("%s\n", message.c_str());
+	return true;
+}
+
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -14,9 +51,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Instance
 	uint32_t apiVersion = 0;
 	vkEnumerateInstanceVersion(&apiVersion);
-	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(apiVersion);
-	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(apiVersion);
-	m_RI.apiVersionPatch= VK_API_VERSION_PATCH(apiVersion);
+	
 
 	#if defined(VK_USE_PLATFORM_WIN32_KHR)
 	const char* engineName = "MIRU - x64";
@@ -33,8 +68,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_AI.apiVersion = apiVersion;
 
 	//Add additional instance/device layers/extensions
-	
-
 	#if defined(VK_VERSION_1_0)
 	if (apiVersion >= VK_API_VERSION_1_0)
 	{
@@ -116,7 +149,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_ActiveInstanceLayers.push_back(requestLayer.c_str()); break;
 		}
 	}
-
 	uint32_t instanceExtensionCount = 0;
 	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
 	std::vector<VkExtensionProperties> instanceExtensionProperties;
@@ -168,7 +200,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_DeviceQueueCIs[i].queueCount = m_QueueFamilyProperties[i].queueCount;
 		m_DeviceQueueCIs[i].pQueuePriorities = m_QueuePriorities[i].data();
 	}
-
 	uint32_t deviceLayerCount = 0;
 	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
 	std::vector<VkLayerProperties> deviceLayerProperties;
@@ -184,7 +215,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_ActiveDeviceLayers.push_back(requestLayer.c_str()); break;
 		}
 	}
-
 	uint32_t deviceExtensionCount = 0;
 	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, 0), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
 	std::vector<VkExtensionProperties> deviceExtensionProperties;
@@ -201,9 +231,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	//PhysicalDeviceFeatures
+	//PhysicalDevice Features
 	VkPhysicalDeviceFeatures physicalDeviceFeatures = m_PhysicalDevices.m_PDIs[0].m_Features;
-
 	m_PhysicalDevices.FillOutFeaturesAndProperties(this);
 	void* deviceCI_pNext = nullptr;
 	#if defined(VK_KHR_get_physical_device_properties2)
@@ -225,6 +254,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
 	}
 	#endif
+	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+	m_RI.apiVersionPatch = VK_API_VERSION_PATCH(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	m_DeviceCI.pNext = deviceCI_pNext;
@@ -265,10 +297,22 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_dynamic_rendering);
 #endif
 
+	//Setup debug callback
+	VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI;
+	debugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	debugUtilsMessengerCI.pNext = nullptr;
+	debugUtilsMessengerCI.flags = 0;
+	debugUtilsMessengerCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	debugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	debugUtilsMessengerCI.pfnUserCallback = DebugUtilsMessengerCallback;
+	debugUtilsMessengerCI.pUserData = nullptr;
+
+	MIRU_ASSERT(vkCreateDebugUtilsMessengerEXT(m_Instance, &debugUtilsMessengerCI, nullptr, &debugUtilsMessenger),"ERROR: VULKAN: Failed to create DebugUtilsMessenger");
+
 	//Set Names
-	//VKSetName<VkInstance>(m_Device, (uint64_t)m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
-	VKSetName<VkPhysicalDevice>(m_Device, (uint64_t)m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[0].m_Properties.deviceName));
-	VKSetName<VkDevice>(m_Device, (uint64_t)m_Device, m_CI.deviceDebugName);
+	//VKSetName<VkInstance>(m_Device, m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
+	VKSetName<VkPhysicalDevice>(m_Device, m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[0].m_Properties.deviceName));
+	VKSetName<VkDevice>(m_Device, m_Device, m_CI.deviceDebugName);
 	
 	//Device Queues
 	for (size_t i = 0; i < m_DeviceQueueCIs.size(); i++)
@@ -288,7 +332,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				typeStr += "Compute/";
 			if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
 				typeStr += "Transfer";
-			VKSetName<VkQueue>(m_Device, (uint64_t)queue, m_CI.deviceDebugName + ": Queue - " + typeStr);
+			VKSetName<VkQueue>(m_Device, queue, m_CI.deviceDebugName + ": Queue - " + typeStr);
 		}
 		m_Queues.push_back(localQueues);
 		localQueues.clear();
@@ -299,6 +343,7 @@ Context::~Context()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	vkDestroyDebugUtilsMessengerEXT(m_Instance, debugUtilsMessenger, nullptr);
 	vkDestroyDevice(m_Device, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 }

@@ -33,7 +33,6 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	m_AI.pTypeExternalMemoryHandleTypes = nullptr;
 	
 	MIRU_ASSERT(vmaCreateAllocator(&m_AI, &m_Allocator), "ERROR: VULKAN: Failed to create Allocator.");
-	//VKSetName<VkDeviceMemory>(m_Device, (uint64_t)m_DeviceMemory, m_CI.debugName);
 }
 
 Allocator::~Allocator()

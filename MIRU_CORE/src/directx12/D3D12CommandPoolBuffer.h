@@ -58,7 +58,7 @@ namespace d3d12
 		void BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) override;
 		void BindIndexBuffer(uint32_t index, const Ref<crossplatform::BufferView>& indexBufferView) override;
 
-		void BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, const Ref<crossplatform::Pipeline>& pipeline) override;
+		void BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<crossplatform::Pipeline>& pipeline) override;
 
 		void DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) override;
 		void Draw(uint32_t index, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) override;
@@ -96,8 +96,8 @@ namespace d3d12
 		const uint32_t m_MaxSamplerCount = 2048;
 
 		std::vector<bool> m_SetDescriptorHeaps_PerCmdBuffer;
-		UINT m_CBV_SRV_UAV_DescriptorOffset;
-		UINT m_SamplerDescriptorOffset;
+		UINT m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset;
+		UINT m_CmdBuffer_SamplerDescriptorOffset;
 
 		ID3D12DescriptorHeap* m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap;
 		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc;

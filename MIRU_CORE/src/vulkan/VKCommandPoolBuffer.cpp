@@ -29,7 +29,7 @@ CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 	m_CmdPoolCI.queueFamilyIndex = GetQueueFamilyIndex(m_CI.queueType);
 
 	MIRU_ASSERT(vkCreateCommandPool(m_Device, &m_CmdPoolCI, nullptr, &m_CmdPool), "ERROR: VULKAN: Failed to create CommandPool.");
-	VKSetName<VkCommandPool>(m_Device, (uint64_t)m_CmdPool, m_CI.debugName);
+	VKSetName<VkCommandPool>(m_Device, m_CmdPool, m_CI.debugName);
 }
 
 CommandPool::~CommandPool()
@@ -103,7 +103,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	size_t i = 0;
 	for (auto& cmdBuffer : m_CmdBuffers)
 	{
-		VKSetName<VkCommandBuffer>(m_Device, (uint64_t)cmdBuffer, m_CI.debugName + std::to_string(i));
+		VKSetName<VkCommandBuffer>(m_Device, cmdBuffer, m_CI.debugName + ": " + std::to_string(i));
 		i++;
 	}
 	
@@ -484,25 +484,23 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::Buf
 	vkCmdBindIndexBuffer(m_CmdBuffers[index], buffer, static_cast<VkDeviceSize>(ci.offset), type);
 }
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, const Ref<crossplatform::Pipeline>& pipeline)
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<crossplatform::Pipeline>& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
 
 	std::vector<VkDescriptorSet> vkDescriptorSets;
-	uint32_t descriptorSetCount = 0;
 	for (auto& descriptorSet : descriptorSets)
 	{
 		for (auto& vkDescriptorSet : ref_cast<const DescriptorSet>(descriptorSet)->m_DescriptorSets)
 		{		
 			vkDescriptorSets.push_back(vkDescriptorSet);
-			descriptorSetCount++;
 		}
 	}
 
-	vkCmdBindDescriptorSets(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type),
-		ref_cast<Pipeline>(pipeline)->m_PipelineLayout, 0, descriptorSetCount, vkDescriptorSets.data(), 0, nullptr);
+	vkCmdBindDescriptorSets(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), 
+		ref_cast<Pipeline>(pipeline)->m_PipelineLayout, firstSet, static_cast<uint32_t>(vkDescriptorSets.size()), vkDescriptorSets.data(), 0, nullptr);
 }
 
 void CommandBuffer::DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)

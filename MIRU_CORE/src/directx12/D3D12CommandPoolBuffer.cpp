@@ -140,8 +140,8 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	m_CmdBuffer_Sampler_DescriptorHeapDesc.NodeMask = 0;
 	m_Device->CreateDescriptorHeap(&m_CmdBuffer_Sampler_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_Sampler_DescriptorHeap));
 
-	m_CBV_SRV_UAV_DescriptorOffset = 0;
-	m_SamplerDescriptorOffset = 0;
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset = 0;
+	m_CmdBuffer_SamplerDescriptorOffset = 0;
 }
 
 CommandBuffer::~CommandBuffer()
@@ -169,8 +169,8 @@ void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 
 	if (index == 0)
 	{
-		m_CBV_SRV_UAV_DescriptorOffset = 0;
-		m_SamplerDescriptorOffset = 0;
+		m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset = 0;
+		m_CmdBuffer_SamplerDescriptorOffset = 0;
 	}
 }
 
@@ -792,7 +792,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::Buf
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, const Ref<crossplatform::Pipeline>& pipeline) 
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<crossplatform::Pipeline>& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -808,90 +808,94 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	
-	MIRU_ASSERT(!(m_CBV_SRV_UAV_DescriptorOffset < m_MaxDescriptorCount * cbv_srv_uav_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
-	MIRU_ASSERT(!(m_SamplerDescriptorOffset < m_MaxSamplerCount * samplerDescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
+	MIRU_ASSERT(!(m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset < m_MaxDescriptorCount * cbv_srv_uav_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
+	MIRU_ASSERT(!(m_CmdBuffer_SamplerDescriptorOffset < m_MaxSamplerCount * samplerDescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
 
-	UINT cbv_srv_uav_DescriptorOffset = 0;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle;
+	UINT Current_CBV_SRV_UAV_DescriptorOffset = 0;
+	UINT Current_Sampler_DescriptorOffset = 0;
 	
-	UINT samplerDescriptorOffset = 0;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_CmdBuffer_Sampler_DescriptorHeapHandle;
-
-	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> CBV_SRV_UAV_DescriptorHeapHandles;
-	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> SamplerDescriptorHeapHandles;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> CBV_SRV_UAV_GPUDescriptorHandles;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> Sampler_GPUDescriptorHandles;
 
 	for(auto& descriptorSet : descriptorSets)
 	{
-		auto d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
-		auto heap = d3d12DescriptorSet->m_DescriptorHeaps;
-		auto heapDesc = d3d12DescriptorSet->m_DescriptorHeapDescs;
+		Ref<DescriptorSet> d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
+		const auto& heap = d3d12DescriptorSet->m_DescriptorHeaps;
+		const auto& heapDesc = d3d12DescriptorSet->m_DescriptorHeapDescs;
 		
 		for (size_t i = 0; i < heap.size(); i++)
 		{
 			if (heapDesc[i][0].NumDescriptors)
 			{
-				m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset + m_CBV_SRV_UAV_DescriptorOffset;
-				CBV_SRV_UAV_DescriptorHeapHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + cbv_srv_uav_DescriptorOffset + m_CBV_SRV_UAV_DescriptorOffset });
-				m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapHandle, heap[i][0]->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-				cbv_srv_uav_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
+				D3D12_CPU_DESCRIPTOR_HANDLE Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle;
+				Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset;
+				CBV_SRV_UAV_GPUDescriptorHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset });
+				m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle, heap[i][0]->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+				Current_CBV_SRV_UAV_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
 			}
 
 			if (heapDesc[i][1].NumDescriptors)
 			{
-				m_CmdBuffer_Sampler_DescriptorHeapHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset + m_SamplerDescriptorOffset;
-				SamplerDescriptorHeapHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + samplerDescriptorOffset + m_SamplerDescriptorOffset });
-				m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors, m_CmdBuffer_Sampler_DescriptorHeapHandle, heap[i][1]->GetCPUDescriptorHandleForHeapStart(),D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-				samplerDescriptorOffset += heapDesc[i][1].NumDescriptors * samplerDescriptorSize;
+				D3D12_CPU_DESCRIPTOR_HANDLE Current_CmdBuffer_Sampler_CPUDescriptorHandle;
+				Current_CmdBuffer_Sampler_CPUDescriptorHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_Sampler_DescriptorOffset + m_CmdBuffer_SamplerDescriptorOffset;
+				Sampler_GPUDescriptorHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_Sampler_DescriptorOffset + m_CmdBuffer_SamplerDescriptorOffset });
+				m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors, Current_CmdBuffer_Sampler_CPUDescriptorHandle, heap[i][1]->GetCPUDescriptorHandleForHeapStart(),D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+				Current_Sampler_DescriptorOffset += heapDesc[i][1].NumDescriptors * samplerDescriptorSize;
 			}
 		}
 	}
 
-	m_CBV_SRV_UAV_DescriptorOffset += cbv_srv_uav_DescriptorOffset;
-	m_SamplerDescriptorOffset += samplerDescriptorOffset;
+	m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset += Current_CBV_SRV_UAV_DescriptorOffset;
+	m_CmdBuffer_SamplerDescriptorOffset += Current_Sampler_DescriptorOffset;
 	
-	size_t CBV_SRV_UAV_DescriptorHeapHandleIndex = 0;
-	size_t SamplerDescriptorHeapHandleIndex = 0;
+	size_t CBV_SRV_UAV_GPUDescriptorHandleIndex = 0;
+	size_t Sampler_GPUDescriptorHandleIndex = 0;
 
-	size_t i = 0;
-	for (auto& rootParam : ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters)
+	size_t rootParameterIndex = 0;
+	for (const auto& rootParameter : ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters)
 	{
-		D3D12_ROOT_DESCRIPTOR_TABLE pipeline_table = ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters[i].DescriptorTable;
-		D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle;
-	
-		if (pipeline_table.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+		const D3D12_ROOT_DESCRIPTOR_TABLE& descriptorTable = rootParameter.DescriptorTable;
+		D3D12_GPU_DESCRIPTOR_HANDLE GPUDescriptorHandle;
+
+		const UINT& descriptorRangeSet = descriptorTable.pDescriptorRanges[0].RegisterSpace;
+		UINT lastSet = firstSet + static_cast<UINT>(descriptorSets.size()) - 1;
+		if (descriptorRangeSet < firstSet || descriptorRangeSet > lastSet)
 		{
-			MIRU_ASSERT(!(SamplerDescriptorHeapHandleIndex < SamplerDescriptorHeapHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
-			gpuDescHandle = SamplerDescriptorHeapHandles[SamplerDescriptorHeapHandleIndex];
-			SamplerDescriptorHeapHandleIndex++;
+			rootParameterIndex++;
+			continue;
+		}
+	
+		if (descriptorTable.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+		{
+			MIRU_ASSERT(!(Sampler_GPUDescriptorHandleIndex < Sampler_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			GPUDescriptorHandle = Sampler_GPUDescriptorHandles[Sampler_GPUDescriptorHandleIndex];
+			Sampler_GPUDescriptorHandleIndex++;
 		}
 		else
 		{
-			MIRU_ASSERT(!(CBV_SRV_UAV_DescriptorHeapHandleIndex < CBV_SRV_UAV_DescriptorHeapHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
-			gpuDescHandle = CBV_SRV_UAV_DescriptorHeapHandles[CBV_SRV_UAV_DescriptorHeapHandleIndex];
-			CBV_SRV_UAV_DescriptorHeapHandleIndex++;
+			MIRU_ASSERT(!(CBV_SRV_UAV_GPUDescriptorHandleIndex < CBV_SRV_UAV_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			GPUDescriptorHandle = CBV_SRV_UAV_GPUDescriptorHandles[CBV_SRV_UAV_GPUDescriptorHandleIndex];
+			CBV_SRV_UAV_GPUDescriptorHandleIndex++;
 		}
 
 		if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
 		{
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
 		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
 		{
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
 		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
 		{
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(i), gpuDescHandle);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
 		else
 		{
 			MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
 		}
 
-		i++;
-		if (i >= ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters.size())
-			break;
-		
+		rootParameterIndex++;
 	}
 };
 
@@ -961,12 +965,12 @@ void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDevice
 	else
 		desc.MissShaderTable = { 0, 0, 0 };
 
-	if(pHitShaderBindingTable)
+	if (pHitShaderBindingTable)
 		desc.HitGroupTable = { pHitShaderBindingTable->deviceAddress, pHitShaderBindingTable->size, pHitShaderBindingTable->stride };
 	else
 		desc.HitGroupTable = { 0, 0, 0 };
 
-	if(pCallableShaderBindingTable)
+	if (pCallableShaderBindingTable)
 		desc.CallableShaderTable = { pCallableShaderBindingTable->deviceAddress, pCallableShaderBindingTable->size, pCallableShaderBindingTable->stride };
 	else
 		desc.CallableShaderTable = { 0, 0, 0 };

@@ -21,7 +21,7 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 	m_FenceCI.flags = m_CI.signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
 	MIRU_ASSERT(vkCreateFence(m_Device, &m_FenceCI, nullptr, &m_Fence), "ERROR: VULKAN: Failed to a create Fence.");
-	VKSetName<VkFence>(m_Device, (uint64_t)m_Fence, m_CI.debugName);
+	VKSetName<VkFence>(m_Device, m_Fence, m_CI.debugName);
 }
 
 Fence::~Fence()
@@ -83,7 +83,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	m_SemaphoreCI.flags = 0;
 
 	MIRU_ASSERT(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create Semaphore.");
-	VKSetName<VkSemaphore>(m_Device, (uint64_t)m_Semaphore, m_CI.debugName);
+	VKSetName<VkSemaphore>(m_Device, m_Semaphore, m_CI.debugName);
 }
 
 Semaphore::~Semaphore()
@@ -106,7 +106,7 @@ Event::Event(Event::CreateInfo* pCreateInfo)
 	m_EventCI.flags = 0;
 
 	MIRU_ASSERT(vkCreateEvent(m_Device, &m_EventCI, nullptr, &m_Event), "ERROR: VULKAN: Failed to a create Event.");
-	VKSetName<VkEvent>(m_Device, (uint64_t)m_Event, m_CI.debugName);
+	VKSetName<VkEvent>(m_Device, m_Event, m_CI.debugName);
 }
 
 Event::~Event()

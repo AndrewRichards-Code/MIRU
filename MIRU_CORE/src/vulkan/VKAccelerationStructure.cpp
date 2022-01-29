@@ -117,7 +117,7 @@ AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* 
 	m_ASCI.deviceAddress = m_CI.deviceAddress;
 
 	MIRU_ASSERT(vkCreateAccelerationStructureKHR(m_Device, &m_ASCI, nullptr, &m_AS), "ERROR: VULKAN: Failed to create AccelerationStructure.");
-	VKSetName<VkAccelerationStructureKHR>(m_Device, (uint64_t)m_AS, m_CI.debugName);
+	VKSetName<VkAccelerationStructureKHR>(m_Device, m_AS, m_CI.debugName);
 }
 
 AccelerationStructure::~AccelerationStructure() 

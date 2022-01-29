@@ -37,7 +37,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_VmaACI.pUserData = nullptr;
 
 	MIRU_ASSERT(vmaCreateImage(m_CI.pAllocator->GetVmaAllocator(), &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
-	VKSetName<VkImage>(m_Device, (uint64_t)m_Image, m_CI.debugName);
+	VKSetName<VkImage>(m_Device, m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.width = 0;
@@ -309,7 +309,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	};
 
 	MIRU_ASSERT(vkCreateImageView(m_Device, &m_ImageViewCI, nullptr, &m_ImageView), "ERROR: VULKAN: Failed to create ImageView.");
-	VKSetName<VkImageView>(m_Device, (uint64_t)m_ImageView, m_CI.debugName);
+	VKSetName<VkImageView>(m_Device, m_ImageView, m_CI.debugName);
 }
 
 ImageView::~ImageView() 
@@ -347,7 +347,7 @@ Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 	m_SamplerCI.unnormalizedCoordinates = m_CI.unnormalisedCoordinates;
 
 	MIRU_ASSERT(vkCreateSampler(m_Device, &m_SamplerCI, nullptr, &m_Sampler), "ERROR: VULKAN: Failed to create Sampler.");
-	VKSetName<VkSampler>(m_Device, (uint64_t)m_Sampler, m_CI.debugName);
+	VKSetName<VkSampler>(m_Device, m_Sampler, m_CI.debugName);
 }
 
 Sampler::~Sampler()
