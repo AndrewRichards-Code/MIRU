@@ -53,6 +53,9 @@ This repository is under active development and is not currently intended for co
 ### MIRU_CORE: 
 Contains the core functionality of the Low level Graphics API wrapper. Provide path to VulkanSDK; Build as static library; Dynamic Runtime Linking (MD).
 
+### MIRU_SHADER_CORE: 
+Contains the core functionality for compiling the shaders. Build as static library; Dynamic Runtime Linking (MD).
+
 ### MIRU_SHADER_COMPILER: 
 A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using DXC/FXC. Provide paths to DXC/FXC; Build as executable; Dynamic Runtime Linking (MD).
 
@@ -86,8 +89,4 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Android CMake: 3.10.2.4988404
 - Android API: Minimum 24 - Target 28
 - ISO C++ 17 (-std=c++1z)
-
-## Build Tools with CMake:
-### Window x64 (Generator Visual Studio 2019 Win64):
-- CMake Minimun Versionn 3.20
 
