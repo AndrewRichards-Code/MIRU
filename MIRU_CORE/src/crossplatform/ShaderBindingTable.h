@@ -15,7 +15,7 @@ namespace crossplatform
 		std::vector<uint64_t>	parameters;
 	};
 
-	class ShaderBindingTable final
+	class MIRU_API ShaderBindingTable final
 	{
 		//enum/structs
 	public:

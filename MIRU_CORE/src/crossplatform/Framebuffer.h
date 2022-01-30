@@ -8,7 +8,7 @@ namespace crossplatform
 	class RenderPass;
 	class ImageView;
 
-	class Framebuffer
+	class MIRU_API Framebuffer
 	{
 		//enum/struct
 	public:

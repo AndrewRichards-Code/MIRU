@@ -25,7 +25,7 @@
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
-    <Image Include="..\logo.png" />
+    <Image Include="..\Branding\logo.png" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
@@ -39,11 +39,11 @@
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
     <None Include="MIRU_TEST_UWP_TemporaryKey.pfx" />
-    <None Include="..\MIRU_CORE\redist\dxc\lib\x64\dxcompiler.dll" />
-    <None Include="..\MIRU_CORE\redist\dxc\lib\x64\dxil.dll" />
     <None Include="res\bin\basic_frag_ps_main.cso" />
     <None Include="res\bin\basic_frag_ps_main.spv" />
     <None Include="res\bin\basic_vert_vs_main.cso" />
     <None Include="res\bin\basic_vert_vs_main.spv" />
+    <None Include="..\External\dxc\bin\x64\dxcompiler.dll" />
+    <None Include="..\External\dxc\bin\x64\dxil.dll" />
   </ItemGroup>
 </Project>

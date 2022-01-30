@@ -5,7 +5,7 @@ namespace miru
 {
 namespace crossplatform
 {
-	class Context
+	class MIRU_API Context
 	{
 		//enums/structs
 	public:

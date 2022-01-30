@@ -11,7 +11,7 @@ namespace crossplatform
 	class Semaphore;
 	class CommandPool;
 
-	class Swapchain
+	class MIRU_API Swapchain
 	{
 		//enums/structs
 	public:

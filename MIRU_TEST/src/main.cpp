@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "../dep/STBI/stb_image.h"
+#include "STBI/stb_image.h"
 
 //Forward Declaration from other cpp files.
 void Basic();

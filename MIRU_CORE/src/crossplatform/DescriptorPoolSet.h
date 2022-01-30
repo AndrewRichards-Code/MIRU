@@ -28,7 +28,7 @@ namespace crossplatform
 		D3D12_RENDER_TARGET_VIEW = 0x1000001,
 		D3D12_DEPTH_STENCIL_VIEW = 0x1000002
 	};
-	class DescriptorPool
+	class MIRU_API DescriptorPool
 	{		
 		//enums/structs
 	public:
@@ -55,7 +55,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
-	class DescriptorSetLayout
+	class MIRU_API DescriptorSetLayout
 	{
 		//enums/structs
 	public:
@@ -83,7 +83,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
-	class DescriptorSet
+	class MIRU_API DescriptorSet
 	{
 		//enums/structs
 	public:

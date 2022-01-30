@@ -817,11 +817,14 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> CBV_SRV_UAV_GPUDescriptorHandles;
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> Sampler_GPUDescriptorHandles;
 
+	UINT totalDescriptorSets = 0;
+
 	for(auto& descriptorSet : descriptorSets)
 	{
 		Ref<DescriptorSet> d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
 		const auto& heap = d3d12DescriptorSet->m_DescriptorHeaps;
 		const auto& heapDesc = d3d12DescriptorSet->m_DescriptorHeapDescs;
+		totalDescriptorSets += static_cast<UINT>(descriptorSet->GetCreateInfo().pDescriptorSetLayouts.size());
 		
 		for (size_t i = 0; i < heap.size(); i++)
 		{
@@ -858,7 +861,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 		D3D12_GPU_DESCRIPTOR_HANDLE GPUDescriptorHandle;
 
 		const UINT& descriptorRangeSet = descriptorTable.pDescriptorRanges[0].RegisterSpace;
-		UINT lastSet = firstSet + static_cast<UINT>(descriptorSets.size()) - 1;
+		UINT lastSet = firstSet + totalDescriptorSets - 1;
 		if (descriptorRangeSet < firstSet || descriptorRangeSet > lastSet)
 		{
 			rootParameterIndex++;

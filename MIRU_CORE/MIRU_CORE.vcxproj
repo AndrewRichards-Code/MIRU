@@ -26,26 +26,26 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Gaming.Desktop.x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -70,20 +70,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Gaming.Desktop.x64'">
-    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'">
-    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)lib\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -91,8 +93,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_SHADER_CORE\redist;$(ProjectDir)..\MIRU_SHADER_CORE\dep;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -102,6 +104,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Platform)\$(Configuration)\;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MIRU_SHADER_CORE.lib;spirv-cross-core.lib;vulkan-1.lib;dxgi.lib;d3d12.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -142,8 +146,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_SHADER_CORE\redist;$(ProjectDir)..\MIRU_SHADER_CORE\dep;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)redist;$(ProjectDir)dep;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MIRU_WIN64_UWP;MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -155,6 +159,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Platform)\$(Configuration)\;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MIRU_SHADER_CORE.lib;spirv-cross-core.lib;vulkan-1.lib;dxgi.lib;d3d12.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -192,20 +198,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dep\ARC\src\ConsoleOutputColours.h" />
-    <ClInclude Include="dep\ARC\src\DATE\date.h" />
-    <ClInclude Include="dep\ARC\src\DebugMacros.h" />
-    <ClInclude Include="dep\ARC\src\DynamicLibrary.h" />
-    <ClInclude Include="dep\ARC\src\EnumClassBitwiseOperators.h" />
-    <ClInclude Include="dep\ARC\src\ExportAttributes.h" />
-    <ClInclude Include="dep\ARC\src\FileLoader.h" />
-    <ClInclude Include="dep\ARC\src\FileSaver.h" />
-    <ClInclude Include="dep\ARC\src\Log.h" />
-    <ClInclude Include="dep\ARC\src\ScopeAndRef.h" />
-    <ClInclude Include="dep\ARC\src\StringConversion.h" />
-    <ClInclude Include="dep\ARC\src\WindowsErrorHandling.h" />
-    <ClInclude Include="dep\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
-    <ClInclude Include="dep\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="src\crossplatform\AccelerationStructure.h" />
     <ClInclude Include="src\crossplatform\Allocator.h" />
     <ClInclude Include="src\crossplatform\Buffer.h" />
@@ -256,8 +248,8 @@
     <ClInclude Include="src\miru_core_common.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dep\D3D12MemoryAllocator\include\D3D12MemAlloc.cpp" />
-    <ClCompile Include="dep\VulkanMemoryAllocator\include\vk_mem_alloc.cpp" />
+    <ClCompile Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.cpp" />
+    <ClCompile Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.cpp" />
     <ClCompile Include="src\crossplatform\AccelerationStructure.cpp" />
     <ClCompile Include="src\crossplatform\Allocator.cpp" />
     <ClCompile Include="src\crossplatform\Buffer.cpp" />

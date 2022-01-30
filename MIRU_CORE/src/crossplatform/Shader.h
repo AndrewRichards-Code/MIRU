@@ -8,7 +8,7 @@ namespace crossplatform
 	enum class VertexType : uint32_t;
 	enum class DescriptorType : uint32_t;
 
-	class Shader
+	class MIRU_API Shader
 	{
 		//enums/structs
 	public:

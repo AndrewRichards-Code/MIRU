@@ -49,7 +49,7 @@ namespace crossplatform
 		FORCE_OPAQUE_BIT = 0x00000004,
 		FORCE_NO_OPAQUE_BIT = 0x00000008,
 	};
-	typedef struct InstanceData
+	struct InstanceData
 	{
 		TransformMatrix		transform;
 		uint32_t			instanceCustomIndex : 24;
@@ -57,10 +57,10 @@ namespace crossplatform
 		uint32_t			instanceShaderBindingTableRecordOffset : 24;
 		uint32_t			flags : 8;
 		DeviceAddress		accelerationStructureReference;
-	} InstanceData;
+	};
 
 	class AccelerationStructure;
-	class AccelerationStructureBuildInfo
+	class MIRU_API AccelerationStructureBuildInfo
 	{
 		//enums/structs
 	public:
@@ -177,7 +177,7 @@ namespace crossplatform
 	};
 
 	class Buffer;
-	class AccelerationStructure
+	class MIRU_API AccelerationStructure
 	{
 		//enums/structs
 	public:
@@ -216,7 +216,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
-	DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure);
-	DeviceAddress GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer);
+	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure);
+	MIRU_API DeviceAddress GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer);
 }
 }

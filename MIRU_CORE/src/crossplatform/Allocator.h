@@ -10,7 +10,7 @@ namespace crossplatform
 	
 	class Context;
 
-	struct Allocation
+	struct MIRU_API Allocation
 	{
 		NativeAllocation	nativeAllocation;
 		size_t				width;
@@ -26,7 +26,7 @@ namespace crossplatform
 		#endif
 	};
 
-	class Allocator
+	class MIRU_API Allocator
 	{
 		//enums/structs
 	public:

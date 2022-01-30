@@ -1,7 +1,7 @@
 #include "miru_core.h"
 #include "maths.h"
 
-#include "../dep/STBI/stb_image.h"
+#include "STBI/stb_image.h"
 
 using namespace miru;
 using namespace crossplatform;

@@ -3,6 +3,7 @@
 #pragma warning(disable : 26812) //Disables 'Prefered scoped enum' warning C26812
 #pragma warning(disable : 26495) //Disables 'Unitialised variable' warning C26495
 #pragma warning(disable : 26451) //Disables  'Arithmetic overflow' warning C26451
+#pragma warning(disable : 4251)  //Disables 'Needs  dll-interface' warning C4251
 #endif
 
 //CSTDLIB
@@ -49,6 +50,9 @@
 #define MIRU_VULKAN
 #if defined(MIRU_WIN64_UWP)
 #undef MIRU_VULKAN
+#define ARC_WIN64_UWP
+#undef WINAPI_FAMILY
+#define WINAPI_FAMILY WINAPI_FAMILY_PC_APP
 #endif
 #elif defined(__APPLE__)
 #define MIRU_METAL //Use Metal?
@@ -66,16 +70,19 @@
 //Vulkan
 #include "vulkan/VK_Include.h"
 
+//MIRU API
+#define ARC_DLL
+#ifdef MIRU_BUILD_DLL
+#define ARC_BUILD_DLL
+#endif
+#include "ARC/src/ExportAttributes.h"
+#define MIRU_API ARC_API
+
 //MIRU GraphicsAPI
 #include "crossplatform/GraphicsAPI.h"
 
 //MIRU_SHADER_CORE
 #include "miru_shader_core.h"
-#if defined(_DEBUG)
-#pragma comment(lib, "lib/x64/Debug/MIRU_SHADER_CORE.lib")
-#else
-#pragma comment(lib, "lib/x64/Release/MIRU_SHADER_CORE.lib")
-#endif
 
 //MIRU Helpers
 #include "ARC/src/StringConversion.h"
@@ -125,7 +132,7 @@ namespace miru
 #include "ARC/src/DebugMacros.h"
 namespace miru
 {
-	class Timer
+	class MIRU_API Timer
 	{
 		//enum/struct
 		struct ProfileDatum

@@ -4,12 +4,14 @@
 #if defined(_WIN64)
 #define VK_USE_PLATFORM_WIN32_KHR
 
-//Header and Library
+//Vulkan Header
 #include "vulkan/vulkan.h"
-#pragma comment(lib, "vulkan-1.lib")
 
 //VulkanMemoryAllocator
 #include "VulkanMemoryAllocator/include/vk_mem_alloc.h"
+
+//SPIR-V Cross Core
+#include "SPIRV-Cross/spirv_cross.hpp"
 
 #elif defined(__ANDROID__)
 #if !defined( VK_USE_PLATFORM_ANDROID_KHR)

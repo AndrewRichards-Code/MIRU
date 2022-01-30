@@ -1,7 +1,7 @@
 #include "miru_core.h"
 #include "maths.h"
 
-#include "../dep/STBI/stb_image.h"
+#include "STBI/stb_image.h"
 
 using namespace miru;
 using namespace crossplatform;
@@ -59,8 +59,8 @@ static void WindowUpdate()
 
 void Basic()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
@@ -194,7 +194,7 @@ void Basic()
 	int img_width;
 	int img_height;
 	int bpp;
-	uint8_t* imageData = stbi_load("../logo.png", &img_width, &img_height, &bpp, 4);
+	uint8_t* imageData = stbi_load("../Branding/logo.png", &img_width, &img_height, &bpp, 4);
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";

@@ -9,7 +9,7 @@ namespace crossplatform
 {
 	class Swapchain;
 
-	class Image
+	class MIRU_API Image
 	{
 		//enums/structs
 	public:
@@ -294,7 +294,7 @@ namespace crossplatform
 		bool m_SwapchainImage = false;
 	};
 
-	class ImageView
+	class MIRU_API ImageView
 	{
 		//enums/structs
 	public:
@@ -320,7 +320,7 @@ namespace crossplatform
 		bool m_SwapchainImageView = false;
 	};
 
-	class Sampler
+	class MIRU_API Sampler
 	{
 		//enums/structs
 	public:

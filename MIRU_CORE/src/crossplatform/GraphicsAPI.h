@@ -6,7 +6,7 @@ namespace miru
 {
 namespace crossplatform
 {
-	class GraphicsAPI
+	class MIRU_API GraphicsAPI
 	{
 	public:
 		enum class API : uint32_t

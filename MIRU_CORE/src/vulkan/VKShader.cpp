@@ -80,10 +80,6 @@ void Shader::VulkanShaderReflection(
 	spirv_cross::Compiler compiled_bin(spv_bin, spv_bin_word_count);
 	spirv_cross::ShaderResources resources = compiled_bin.get_shader_resources();
 
-	spv::ExecutionModel stage = compiled_bin.get_execution_model();
-	/*if ((uint32_t)stage != (uint32_t)log2((double)m_CI.stage)) // Convert Bitfield to uint32_t
-		MIRU_ASSERT(true, "ERROR: VULKAN: The SPIR-V source file doesn't match the specified stage.");*/
-
 	Shader::StageBit stageBit = Shader::StageBit(0);
 	for (auto& stageAndEntryPoint : stageAndEntryPoints)
 		stageBit |= stageAndEntryPoint.first;
@@ -183,7 +179,8 @@ void Shader::VulkanShaderReflection(
 		}
 	};
 
-	if (stage == spv::ExecutionModel::ExecutionModelVertex)
+	spv::ExecutionModel executionModel = compiled_bin.get_execution_model();
+	if (executionModel == spv::ExecutionModel::ExecutionModelVertex)
 	{
 		VSIADs.clear();
 		for (auto& res : resources.stage_inputs)
@@ -200,7 +197,7 @@ void Shader::VulkanShaderReflection(
 			VSIADs.push_back(vsiad);
 		}
 	}
-	if (stage == spv::ExecutionModel::ExecutionModelFragment)
+	if (executionModel == spv::ExecutionModel::ExecutionModelFragment)
 	{
 		PSOADs.clear();
 		for (auto& res : resources.stage_outputs)

@@ -6,7 +6,7 @@ namespace miru
 {
 namespace crossplatform
 {
-	class Buffer
+	class MIRU_API Buffer
 	{
 		//enums/structs
 	public:
@@ -65,7 +65,7 @@ namespace crossplatform
 		Allocation m_Allocation;
 	};
 
-	class BufferView
+	class MIRU_API BufferView
 	{
 		//enums/structs
 	public:

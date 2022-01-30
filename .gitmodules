@@ -1,13 +1,13 @@
-[submodule "MIRU_CORE/dep/ARC"]
+[submodule "External/ARC"]
 	path = External/ARC
-	url = https://github.com/AndrewRichards-Code/ARC.git
-[submodule "MIRU_CORE/dep/VulkanMemoryAllocator"]
+	url = git@github.com:AndrewRichards-Code/ARC.git
+[submodule "External/VulkanMemoryAllocator"]
 	path = External/VulkanMemoryAllocator
 	url = git@github.com:AndrewRichards-Code/VulkanMemoryAllocator.git
-[submodule "MIRU_CORE/dep/D3D12MemoryAllocator"]
+[submodule "External/D3D12MemoryAllocator"]
 	path = External/D3D12MemoryAllocator
 	url = git@github.com:AndrewRichards-Code/D3D12MemoryAllocator.git
-[submodule "MIRU_CORE/dep/SPIRV-Cross"]
+[submodule "External/SPIRV-Cross"]
 	path = External/SPIRV-Cross
 	url = git@github.com:AndrewRichards-Code/SPIRV-Cross.git
 	branch = master

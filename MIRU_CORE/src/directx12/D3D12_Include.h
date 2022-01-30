@@ -1,10 +1,8 @@
 #pragma once
 #if defined(MIRU_D3D12)
-//Header and Library
+//D3D12 Header
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
 
 //D3D12MemoryAllocator
 #define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED

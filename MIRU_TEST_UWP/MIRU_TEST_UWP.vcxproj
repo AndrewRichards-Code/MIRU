@@ -58,12 +58,12 @@
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)exe\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)exe\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)exe\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)exe\int\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -85,28 +85,39 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)MIRU_CORE\dep;$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\src;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\External;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MIRU_CORE.lib;vulkan-1.lib;WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MIRU_CORE.lib;WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Windows</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">copy /Y "$(SolutionDir)bin\$(Platform)\$(Configuration)\MIRU_CORE.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\MIRU_CORE.dll"
+copy /Y "$(SolutionDir)External\dxc\bin\x64\dxil.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\dxil.dll"
+copy /Y "$(SolutionDir)External\dxc\bin\x64\dxcompiler.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\dxcompiler.dll"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)MIRU_CORE\dep;$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\src;$(VULKAN_SDK)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\External;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)MIRU_CORE\redist;$(SolutionDir)MIRU_CORE\lib\$(Platform)\$(Configuration);$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MIRU_CORE.lib;vulkan-1.lib;WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MIRU_CORE.lib;WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Windows</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">copy /Y "$(SolutionDir)bin\$(Platform)\$(Configuration)\MIRU_CORE.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\MIRU_CORE.dll"
+copy /Y "$(SolutionDir)External\dxc\bin\x64\dxil.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\dxil.dll"
+copy /Y "$(SolutionDir)External\dxc\bin\x64\dxcompiler.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\AppX\dxcompiler.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -114,7 +125,7 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\logo.png" />
+    <Image Include="..\Branding\logo.png" />
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
     <Image Include="Assets\SplashScreen.scale-200.png" />
     <Image Include="Assets\Square150x150Logo.scale-200.png" />
@@ -127,16 +138,8 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\MIRU_CORE\redist\dxc\lib\x64\dxcompiler.dll">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-    </None>
-    <None Include="..\MIRU_CORE\redist\dxc\lib\x64\dxil.dll">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-    </None>
+    <None Include="..\External\dxc\bin\x64\dxcompiler.dll" />
+    <None Include="..\External\dxc\bin\x64\dxil.dll" />
     <None Include="MIRU_TEST_UWP_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />

@@ -4,7 +4,7 @@
 
 std::filesystem::path miru::shader_core::GetLibraryFullpath_dxil()
 {
-	return std::string(PROJECT_DIR) + "redist/dxc/bin/x64/dxil.dll";
+	return std::string(PROJECT_DIR) + "../External/dxc/bin/x64/dxil.dll";
 }
 
 arc::DynamicLibrary::LibraryHandle miru::shader_core::LoadLibrary_dxil()
@@ -14,7 +14,7 @@ arc::DynamicLibrary::LibraryHandle miru::shader_core::LoadLibrary_dxil()
 
 std::filesystem::path miru::shader_core::GetLibraryFullpath_dxcompiler()
 {
-	return std::string(PROJECT_DIR) + "redist/dxc/bin/x64/dxcompiler.dll";
+	return std::string(PROJECT_DIR) + "../External/dxc/bin/x64/dxcompiler.dll";
 }
 
 arc::DynamicLibrary::LibraryHandle miru::shader_core::LoadLibrary_dxcompiler()

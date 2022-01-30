@@ -10,7 +10,7 @@ namespace miru
 {
 namespace crossplatform
 {
-	class RenderPass
+	class MIRU_API RenderPass
 	{
 		//enum/structs
 	public:
@@ -82,7 +82,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 
 	};
-	class Pipeline
+	class MIRU_API Pipeline
 	{
 		//enums/structs
 	public:

@@ -13,7 +13,7 @@ namespace crossplatform
 	class Swapchain;
 	class Framebuffer;
 
-	class CommandPool
+	class MIRU_API CommandPool
 	{
 		//enums/structs
 	public:
@@ -52,7 +52,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
-	class CommandBuffer
+	class MIRU_API CommandBuffer
 	{
 		//enums/structs
 	public:

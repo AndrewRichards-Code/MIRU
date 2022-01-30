@@ -8,18 +8,10 @@
 #include <map>
 #include <filesystem>
 
-//DXC Header and Library
+//DXC Header
 #define NOMINMAX
 #include "dxc/inc/d3d12shader.h"
 #include "dxc/inc/dxcapi.h"
-
-//Spirv-cross Header and Library
-#include "SPIRV-Cross/spirv_cross.hpp"
-#if defined(_DEBUG)
-#pragma comment(lib, "lib/x64/Debug/spirv-cross-core.lib")
-#else
-#pragma comment(lib, "lib/x64/Release/spirv-cross-core.lib")
-#endif
 
 #define MIRU_SHADER_CORE_D3D12_SAFE_RELEASE(x) if((x)) { (x)->Release(); (x) = nullptr; }
 

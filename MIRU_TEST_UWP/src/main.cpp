@@ -1,10 +1,10 @@
 #include "miru_core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../dep/STBI/stb_image.h"
+#include "STBI/stb_image.h"
 
-#include "../dep/glm/glm/glm.hpp"
-#include "../dep/glm/glm/gtc/matrix_transform.hpp"
+#include "glm/glm/glm.hpp"
+#include "glm/glm/gtc/matrix_transform.hpp"
 
 #include <windows.h>
 #include <winrt/Windows.Foundation.h>
@@ -148,7 +148,7 @@ public:
 				cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
 				cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0} });
 				cmdBuffer->BindPipeline(frameIndex, pipeline);
-				cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, pipeline);
+				cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet }, 0, pipeline);
 				cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
 				cmdBuffer->BindIndexBuffer(frameIndex, ibv);
 				cmdBuffer->DrawIndexed(frameIndex, 36);
@@ -211,13 +211,13 @@ public:
 		GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
 		Context::CreateInfo contextCI;
-		contextCI.api_version_major = 12;
-		contextCI.api_version_minor = 1;
 		contextCI.applicationName = "MIRU_TEST_UWP";
-		contextCI.instanceLayers = {};
-		contextCI.instanceExtensions = {};
-		contextCI.deviceLayers = {};
-		contextCI.deviceExtensions = {};
+		#ifdef _DEBUG
+		contextCI.debugValidationLayers = true;
+		#else
+		contextCI.debugValidationLayers = false;
+		#endif
+		contextCI.extensions = Context::ExtensionsBit::NONE;
 		contextCI.deviceDebugName = "GPU Device";
 		context = Context::Create(&contextCI);
 

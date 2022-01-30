@@ -9,7 +9,7 @@ namespace crossplatform
 	class Buffer;
 
 	//Host-Device Synchronisation
-	class Fence
+	class MIRU_API Fence
 	{
 		//enum/struct
 	public:
@@ -38,7 +38,7 @@ namespace crossplatform
 	};
 
 	//Inter/Intra-Queue Synchronisation
-	class Semaphore
+	class MIRU_API Semaphore
 	{
 		//enum/struct
 	public:
@@ -59,7 +59,7 @@ namespace crossplatform
 	};
 
 	//Inter/Intra-Command Buffer Synchronisation
-	class Event
+	class MIRU_API Event
 	{
 		//enum/struct
 	public:
@@ -85,7 +85,7 @@ namespace crossplatform
 	};
 
 	//Inter/Intra-Command Buffer Resource Synchronisation
-	class Barrier
+	class MIRU_API Barrier
 	{
 		//enum/struct
 	public:
