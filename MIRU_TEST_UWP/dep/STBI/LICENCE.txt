@@ -1,2 +1,0 @@
-stb_image is public domain.
-https://github.com/nothings/stb
