@@ -71,12 +71,12 @@
 #include "vulkan/VK_Include.h"
 
 //MIRU API
-#define ARC_DLL
-#ifdef MIRU_BUILD_DLL
-#define ARC_BUILD_DLL
-#endif
 #include "ARC/src/ExportAttributes.h"
-#define MIRU_API ARC_API
+#ifdef MIRU_BUILD_DLL
+#define MIRU_API ARC_EXPORT
+#else
+#define MIRU_API ARC_IMPORT
+#endif
 
 //MIRU GraphicsAPI
 #include "crossplatform/GraphicsAPI.h"

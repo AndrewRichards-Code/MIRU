@@ -147,7 +147,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>MIRU_WIN64_UWP;MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>

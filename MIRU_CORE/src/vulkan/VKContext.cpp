@@ -5,43 +5,6 @@
 using namespace miru;
 using namespace vulkan;
 
-static VkDebugUtilsMessengerEXT debugUtilsMessenger;
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void* userData)
-{
-	std::string message = "";
-	switch (messageSeverity)
-	{
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-		message += "VERBOSE: ";
-		break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-		message += "INFO: ";
-		break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-		message += "WARNING: ";
-		break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-		message += "ERROR: ";
-		break;
-	default:
-		break;
-	}
-
-	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
-		message += "GENERAL| ";
-	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
-		message += "VALIDATION| ";
-	if ((messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT) == VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
-		message += "PREFORMANCE| ";
-
-	message += ": Message ID Number: " + std::to_string(callbackData->messageIdNumber);
-	message += ": Message ID Name: " + std::string(callbackData->pMessageIdName);
-	message += ": Message: " + std::string(callbackData->pMessage);
-
-	MIRU_PRINTF("%s\n", message.c_str());
-	return true;
-}
-
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -297,18 +260,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_dynamic_rendering);
 #endif
 
-	//Setup debug callback
-	VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI;
-	debugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	debugUtilsMessengerCI.pNext = nullptr;
-	debugUtilsMessengerCI.flags = 0;
-	debugUtilsMessengerCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	debugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	debugUtilsMessengerCI.pfnUserCallback = DebugUtilsMessengerCallback;
-	debugUtilsMessengerCI.pUserData = nullptr;
-
-	MIRU_ASSERT(vkCreateDebugUtilsMessengerEXT(m_Instance, &debugUtilsMessengerCI, nullptr, &debugUtilsMessenger),"ERROR: VULKAN: Failed to create DebugUtilsMessenger");
-
 	//Set Names
 	//VKSetName<VkInstance>(m_Device, m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
 	VKSetName<VkPhysicalDevice>(m_Device, m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[0].m_Properties.deviceName));
@@ -343,7 +294,6 @@ Context::~Context()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	vkDestroyDebugUtilsMessengerEXT(m_Instance, debugUtilsMessenger, nullptr);
 	vkDestroyDevice(m_Device, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 }
