@@ -118,6 +118,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Multisample
 		m_GPSD.SampleDesc.Count = static_cast<UINT>(m_CI.multisampleState.rasterisationSamples);
 		m_GPSD.SampleDesc.Quality = 0;
+		m_GPSD.SampleMask = static_cast<UINT>(m_CI.multisampleState.sampleMask);
 
 		//DepthStencil
 		m_GPSD.DepthStencilState.DepthEnable = m_CI.depthStencilState.depthTestEnable;

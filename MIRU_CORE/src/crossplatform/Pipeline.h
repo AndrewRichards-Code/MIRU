@@ -124,6 +124,7 @@ namespace crossplatform
 			Image::SampleCountBit	rasterisationSamples;
 			bool					sampleShadingEnable;
 			float					minSampleShading;
+			uint32_t				sampleMask;
 			bool					alphaToCoverageEnable;
 			bool					alphaToOneEnable;
 		};

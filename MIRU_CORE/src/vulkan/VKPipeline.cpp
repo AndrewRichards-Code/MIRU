@@ -220,7 +220,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		vkMultisampleState.rasterizationSamples = static_cast<VkSampleCountFlagBits>(m_CI.multisampleState.rasterisationSamples);
 		vkMultisampleState.sampleShadingEnable = m_CI.multisampleState.sampleShadingEnable;
 		vkMultisampleState.minSampleShading = m_CI.multisampleState.minSampleShading;
-		vkMultisampleState.pSampleMask = nullptr;
+		vkMultisampleState.pSampleMask = static_cast<VkSampleMask*>(&m_CI.multisampleState.sampleMask);
 		vkMultisampleState.alphaToCoverageEnable = m_CI.multisampleState.alphaToCoverageEnable;
 		vkMultisampleState.alphaToOneEnable = m_CI.multisampleState.alphaToOneEnable;
 
