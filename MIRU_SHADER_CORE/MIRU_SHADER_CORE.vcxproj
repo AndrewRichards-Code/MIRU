@@ -96,7 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_shader_core_common.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src</AdditionalIncludeDirectories>
@@ -134,7 +134,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PROJECT_DIR=R"($(ProjectDir))";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_shader_core_common.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src</AdditionalIncludeDirectories>

@@ -590,7 +590,7 @@ void Basic()
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
 	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::BACK_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
-	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_8_BIT, false, 1.0f, false, false };
+	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_8_BIT, false, 1.0f, UINT32_MAX, false, false };
 	pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
 	pCI.colourBlendState.logicOpEnable = false;
 	pCI.colourBlendState.logicOp = LogicOp::COPY;
