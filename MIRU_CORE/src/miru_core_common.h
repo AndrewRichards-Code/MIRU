@@ -90,7 +90,7 @@
 #include "ARC/src/ScopeAndRef.h"
 namespace miru
 {
-	auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t
+	inline auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t
 	{
 		uint8_t b = 0;
 		for (int i = 0; i < 8; i++)
@@ -98,7 +98,7 @@ namespace miru
 		return b;
 	};
 
-	auto alignedSize = [](uint32_t value, uint32_t alignment) -> size_t
+	inline auto alignedSize = [](uint32_t value, uint32_t alignment) -> size_t
 	{
 		return static_cast<size_t>((value + alignment - 1) & ~(alignment - 1));
 	};
