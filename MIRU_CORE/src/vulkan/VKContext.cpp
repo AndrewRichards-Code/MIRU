@@ -339,6 +339,8 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t a
 
 void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	for (PhysicalDeviceInfo& pdi : m_PDIs)
 	{
 		vkGetPhysicalDeviceFeatures(pdi.m_PhysicalDevice, &pdi.m_Features);

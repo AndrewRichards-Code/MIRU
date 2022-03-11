@@ -245,19 +245,19 @@ namespace crossplatform
 		
 		union ClearColourValue 
 		{
-			float       float32[4];
-			int32_t     int32[4];
-			uint32_t    uint32[4];
+			float		float32[4];
+			int32_t		int32[4];
+			uint32_t	uint32[4];
 		};
 		struct ClearDepthStencilValue 
 		{
-			float       depth;
-			uint32_t    stencil;
+			float		depth;
+			uint32_t	stencil;
 		};
 		union ClearValue 
 		{
-			ClearColourValue          colour;
-			ClearDepthStencilValue    depthStencil;
+			ClearColourValue		colour;
+			ClearDepthStencilValue	depthStencil;
 		};
 
 		struct CreateInfo
