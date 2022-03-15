@@ -3,6 +3,7 @@
 //D3D12 Header
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include "d3dx12.h"
 
 //D3D12MemoryAllocator
 #define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED

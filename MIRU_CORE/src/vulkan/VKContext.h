@@ -23,6 +23,10 @@ namespace vulkan
 				VkPhysicalDeviceFeatures2 m_Features2;
 				VkPhysicalDeviceProperties2 m_Properties2;
 				#endif
+				#if defined(VK_KHR_multiview)
+				VkPhysicalDeviceMultiviewFeaturesKHR m_MultivewFeatures;
+				VkPhysicalDeviceMultiviewPropertiesKHR m_MultivewProperties;
+				#endif
 				#if defined(VK_KHR_buffer_device_address)
 				VkPhysicalDeviceBufferDeviceAddressFeatures m_BufferDeviceAddressFeatures;
 				#endif

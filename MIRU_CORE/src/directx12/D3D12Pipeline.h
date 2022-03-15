@@ -69,6 +69,9 @@ namespace d3d12
 		std::vector<D3D12_RECT> m_Scissors;
 
 		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
+
+		D3D12_VIEW_INSTANCING_DESC m_ViewInstancingDesc;
+		std::vector<D3D12_VIEW_INSTANCE_LOCATION> m_ViewInstanceLocations;
 	};
 }
 }

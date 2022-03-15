@@ -91,6 +91,21 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 	m_RenderPassCI.dependencyCount = static_cast<uint32_t>(m_SubpassDependencies.size());
 	m_RenderPassCI.pDependencies = m_SubpassDependencies.data();
 
+	#if defined(VK_KHR_multiview)
+	if (!m_CI.multiview.viewMasks.empty())
+	{
+		m_MultiviewCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR;
+		m_MultiviewCreateInfo.pNext = nullptr;
+		m_MultiviewCreateInfo.subpassCount = static_cast<uint32_t>(m_CI.multiview.viewMasks.size());
+		m_MultiviewCreateInfo.pViewMasks = m_CI.multiview.viewMasks.size() ? m_CI.multiview.viewMasks.data() : nullptr;
+		m_MultiviewCreateInfo.dependencyCount = static_cast<uint32_t>(m_CI.multiview.viewOffsets.size());
+		m_MultiviewCreateInfo.pViewOffsets = m_CI.multiview.viewOffsets.size() ? m_CI.multiview.viewOffsets.data() : nullptr;
+		m_MultiviewCreateInfo.correlationMaskCount = static_cast<uint32_t>(m_CI.multiview.correlationMasks.size());
+		m_MultiviewCreateInfo.pCorrelationMasks = m_CI.multiview.correlationMasks.size() ? m_CI.multiview.correlationMasks.data() : nullptr;
+		m_RenderPassCI.pNext = &m_MultiviewCreateInfo;
+	}
+	#endif
+
 	MIRU_ASSERT(vkCreateRenderPass(m_Device, &m_RenderPassCI, nullptr, &m_RenderPass), "ERROR: VULKAN: Failed to create RenderPass.");
 	VKSetName<VkRenderPass>(m_Device, m_RenderPass, m_CI.debugName);
 }

@@ -36,14 +36,18 @@ namespace crossplatform
 			//D3D12: Core
 			//Vulkan: VK_KHR_dynamic_rendering: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_KHR_dynamic_rendering
 			DYNAMIC_RENDERING		= 0x00000020,
+			//STATUS: O
+			//D3D12: https://microsoft.github.io/DirectX-Specs/d3d/ViewInstancing.html
+			//Vulkan: VK_KHR_multiview : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_KHR_multiview 
+			MULTIVIEW				= 0x00000040,
 			//STATUS: X 
 			//D3D12: https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-overview
 			//Vulkan: VK_KHR_video_queue, VK_KHR_video_encode_queue, VK_KHR_video_encode_h264/_h265 : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#provisional-extension-appendices-list
-			VIDEO_ENCODE			= 0x00000040,
+			VIDEO_ENCODE			= 0x00000080,
 			//STATUS: X 
 			//D3D12: https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-overview
 			//| Vulkan: VK_KHR_video_queue, VK_KHR_video_decode_queue, VK_KHR_video_decode_h264/_h265 : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#provisional-extension-appendices-list
-			VIDEO_DECODE			= 0x00000080,
+			VIDEO_DECODE			= 0x00000100,
 		};
 		struct CreateInfo
 		{

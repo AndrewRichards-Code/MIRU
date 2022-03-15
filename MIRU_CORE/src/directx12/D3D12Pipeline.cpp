@@ -215,7 +215,32 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.CachedPSO = {};
 		m_GPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-		MIRU_ASSERT(m_Device->CreateGraphicsPipelineState(&m_GPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
+		CD3DX12_PIPELINE_STATE_STREAM2 gpss2(m_GPSD);
+
+		const RenderPass::MultiviewCreateInfo& multiview = m_CI.renderPass->GetCreateInfo().multiview;
+		if (!multiview.viewMasks.empty())
+		{
+			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)] - 1);
+			
+			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
+			for (auto& viewInstanceLocation : m_ViewInstanceLocations)
+				viewInstanceLocation = { 0, 0 };
+			for (size_t i = 0; i < std::min(m_ViewInstanceLocations.size(), multiview.viewOffsets.size()); i++)
+			{
+				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(multiview.viewOffsets[i]);
+				m_ViewInstanceLocations[i].ViewportArrayIndex = static_cast<UINT>(multiview.viewOffsets[i]);
+			}
+			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
+			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
+
+			gpss2.ViewInstancingDesc = CD3DX12_VIEW_INSTANCING_DESC(m_ViewInstancingDesc);
+		}
+		
+		D3D12_PIPELINE_STATE_STREAM_DESC gpssd;
+		gpssd.SizeInBytes = sizeof(gpss2);
+		gpssd.pPipelineStateSubobjectStream = &gpss2;
+
+		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&gpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
@@ -226,7 +251,13 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPSD.CachedPSO = {};
 		m_CPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-		MIRU_ASSERT(m_Device->CreateComputePipelineState(&m_CPSD, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
+		CD3DX12_PIPELINE_STATE_STREAM2 cpss2(m_CPSD);
+
+		D3D12_PIPELINE_STATE_STREAM_DESC cpssd;
+		cpssd.SizeInBytes = sizeof(cpss2);
+		cpssd.pPipelineStateSubobjectStream = &cpss2;
+
+		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&cpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)

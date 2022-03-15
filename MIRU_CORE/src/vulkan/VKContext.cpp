@@ -65,6 +65,15 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
 			#endif
 		}
+		if ((m_CI.extensions & ExtensionsBit::MULTIVIEW) == ExtensionsBit::MULTIVIEW)
+		{
+			#if defined(VK_KHR_multiview)
+			m_DeviceExtensions.push_back(VK_KHR_MULTIVIEW_EXTENSION_NAME);
+			//Required by VK_KHR_multiview
+			if (apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
 	}
 	#endif
 	#if defined(VK_VERSION_1_1)
@@ -217,6 +226,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
 	}
 	#endif
+	#if defined(VK_KHR_multiview)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
+	}
+	#endif
 	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 	m_RI.apiVersionPatch = VK_API_VERSION_PATCH(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
@@ -354,6 +369,15 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			void** nextPropsAddr = nullptr;
 			nextPropsAddr = &pdi.m_Features2.pNext;
 
+			#if defined(VK_KHR_multiview)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			{
+				pdi.m_MultivewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_MultivewFeatures;
+				nextPropsAddr = &pdi.m_MultivewFeatures.pNext;
+			}
+			#endif
+
 			#if defined(VK_KHR_buffer_device_address)
 			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
@@ -397,6 +421,15 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			//Properties2
 			nextPropsAddr = nullptr;
 			nextPropsAddr = &pdi.m_Properties2.pNext;
+			
+			#if defined(VK_KHR_multiview)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			{
+				pdi.m_MultivewProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
+				*nextPropsAddr = &pdi.m_MultivewProperties;
+				nextPropsAddr = &pdi.m_MultivewProperties.pNext;
+			}
+			#endif
 
 			#if defined(VK_KHR_ray_tracing_pipeline)
 			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))

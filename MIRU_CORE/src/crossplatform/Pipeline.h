@@ -62,6 +62,12 @@ namespace crossplatform
 			DependencyBit		dependencies;	//What rendering localities are needed between subpasses?
 		};
 		#define MIRU_SUBPASS_EXTERNAL (~0U)
+		struct MultiviewCreateInfo
+		{
+			std::vector<uint32_t>	viewMasks = {};			//Which views rendering is broadcast to in each subpass; described as a bitfield of view indices. size() is 'subpassCount'
+			std::vector<int32_t>	viewOffsets = {};		//Which views in the source subpass the views in the destination subpass depend on. size() is 'dependencyCount'
+			std::vector<uint32_t>	correlationMasks = {};	//Indicates a sets of views that may be more efficient to render concurrently; described as a bitfield of view indices. size() is 'correlationMaskCount'
+		};
 		struct CreateInfo
 		{
 			std::string							debugName;
@@ -69,6 +75,7 @@ namespace crossplatform
 			std::vector<AttachmentDescription>	attachments;				//List of a images and their usage throughout the whole RenderPass.
 			std::vector<SubpassDescription>		subpassDescriptions;		//List of subpass to executed with the RenderPass.
 			std::vector<SubpassDependency>		subpassDependencies;		//List of dependency between subpass. One subpass may have multiple dependcies on other subpasses.
+			MultiviewCreateInfo					multiview;					//For Multiview RenderPasses only.
 		};
 
 		//Methods
@@ -236,7 +243,7 @@ namespace crossplatform
 		RenderingFlagBits						flags;
 		Rect2D									renderArea;
 		uint32_t								layerCount;
-		uint32_t								viewMask;
+		uint32_t								viewMask;			//Used for multiview rendering.
 		std::vector<RenderingAttachmentInfo>	colourAttachments;
 		RenderingAttachmentInfo*				pDepthAttachment;
 		RenderingAttachmentInfo*				pStencilAttachment;

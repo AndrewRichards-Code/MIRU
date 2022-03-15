@@ -752,6 +752,11 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
+		
+		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
+			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_SubpassIndex]);
+		else if (m_RenderingInfo.viewMask > 0)
+			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingInfo.viewMask);
 	}
 	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
 	{

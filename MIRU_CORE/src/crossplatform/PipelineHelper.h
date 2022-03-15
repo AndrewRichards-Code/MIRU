@@ -333,7 +333,7 @@ namespace crossplatform
 
 	enum class ResolveModeBits : uint32_t
 	{
-		NONE = 0x00000000,
+		NONE_BIT = 0x00000000,
 		SAMPLE_ZERO_BIT = 0x00000001,
 		AVERAGE_BIT = 0x00000002,
 		MIN_BIT = 0x00000004,

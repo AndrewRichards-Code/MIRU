@@ -25,6 +25,9 @@ namespace vulkan
 		std::vector<std::array<std::vector<VkAttachmentReference>, 5>> m_AttachmentReferencesByUsageBySubpass;
 		std::vector<VkSubpassDescription> m_SubpassDescriptions;
 		std::vector<VkSubpassDependency> m_SubpassDependencies;
+		#if defined(VK_KHR_multiview)
+		VkRenderPassMultiviewCreateInfoKHR m_MultiviewCreateInfo;
+		#endif
 	};
 
 	class Pipeline final : public crossplatform::Pipeline
