@@ -44,7 +44,7 @@ namespace d3d12
 		void PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, crossplatform::DependencyBit dependencies, const std::vector<Ref<crossplatform::Barrier>>& barriers) override;
 
 		void ClearColourImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges) override;
-		void ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image> &image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges) override;
+		void ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges) override;
 
 		void BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) override;
 		void EndRenderPass(uint32_t index) override;
@@ -74,7 +74,7 @@ namespace d3d12
 		void CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions) override;
 
 		void ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions) override;
-		
+
 		void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = { 0.0f, 0.0f , 0.0f, 0.0f }) override;
 		void EndDebugLabel(uint32_t index) override;
 
@@ -87,29 +87,44 @@ namespace d3d12
 		std::vector<ID3D12CommandList*> m_CmdBuffers;
 
 	private:
-		D3D12_RESOURCE_BINDING_TIER m_ResourceBindingTier;
-		uint32_t m_MaxDescriptorCount;
-		uint32_t m_MaxCBVsPerStage;
-		uint32_t m_MaxSRVsPerStage;
-		uint32_t m_MaxUAVsPerStage;
-		uint32_t m_MaxSamplersPerStage;
-		const uint32_t m_MaxSamplerCount = 2048;
+		struct ResourceBindingCapabilities
+		{
+			uint32_t maxDescriptorCount;
+			uint32_t maxCBVsPerStage;
+			uint32_t maxSRVsPerStage;
+			uint32_t maxUAVsPerStage;
+			uint32_t maxSamplersPerStage;
+			uint32_t maxSamplerCount = 2048;
+		} m_ResourceBindingCapabilities;
 
-		std::vector<bool> m_SetDescriptorHeaps_PerCmdBuffer;
-		UINT m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset;
-		UINT m_CmdBuffer_SamplerDescriptorOffset;
+		struct RenderingResource
+		{
+			//End, Reset control
+			bool Resettable = false;
 
-		ID3D12DescriptorHeap* m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap;
-		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc;
-		ID3D12DescriptorHeap* m_CmdBuffer_Sampler_DescriptorHeap;
-		D3D12_DESCRIPTOR_HEAP_DESC m_CmdBuffer_Sampler_DescriptorHeapDesc;
+			//Descriptor Heap for binding Descriptor Sets
+			ID3D12DescriptorHeap* CBV_SRV_UAV_DescriptorHeap;
+			ID3D12DescriptorHeap* SAMPLER_DescriptorHeap;
+			ID3D12DescriptorHeap* RTV_DescriptorHeap;
+			ID3D12DescriptorHeap* DSV_DescriptorHeap;
+			UINT CBV_SRV_UAV_DescriptorOffset;
+			UINT SAMPLER_DescriptorOffset;
+			UINT RTV_DescriptorOffset;
+			UINT DSV_DescriptorOffset;
+			bool SetDescriptorHeap;
 
-		Ref<crossplatform::Framebuffer> m_RenderPassFramebuffer;
-		std::vector<crossplatform::Image::Layout> m_RenderPassFramebufferAttachementLayouts;
-		std::vector<crossplatform::Image::ClearValue> m_RenderPassClearValues;
-		uint32_t m_SubpassIndex = (uint32_t)-1;
-		crossplatform::RenderingInfo m_RenderingInfo;
-		bool m_Resettable = false;
+			//RenderPass Control Info
+			Ref<crossplatform::Framebuffer> Framebuffer;
+			std::vector<crossplatform::Image::ClearValue> ClearValues;
+			uint32_t SubpassIndex = (uint32_t)-1;
+
+			//Dynamic Rendering Info
+			crossplatform::RenderingInfo RenderingInfo;
+		};
+		typedef std::vector<RenderingResource> RenderingResources;
+		RenderingResources m_RenderingResources;
+
+		std::map<Ref<crossplatform::Image>, crossplatform::Image::Layout> m_RenderPassAttachementImageLayouts;
 	};
 }
 }

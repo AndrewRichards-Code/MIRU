@@ -84,6 +84,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 
 	d3d12CmdAllocators.resize(m_CI.commandBufferCount);
 	m_CmdBuffers.resize(m_CI.commandBufferCount);
+	m_RenderingResources.resize(m_CI.commandBufferCount);
 	for (size_t i = 0; i < m_CmdBuffers.size(); i++)
 	{
 		MIRU_ASSERT(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&d3d12CmdAllocators[i])), "ERROR: D3D12: Failed to create CommandPool.");
@@ -98,59 +99,63 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	{
 	case D3D12_RESOURCE_BINDING_TIER_3:
 	{
-		m_MaxDescriptorCount 
-			= m_MaxCBVsPerStage 
-			= m_MaxSRVsPerStage 
-			= m_MaxUAVsPerStage 
-			= m_MaxSamplersPerStage 
-			= 1000000;
+		m_ResourceBindingCapabilities = { 1000000, 1000000, 1000000, 1000000, 1000000, 2048 };
 		break;
 	}
 	case D3D12_RESOURCE_BINDING_TIER_2:
 	{
-		m_MaxDescriptorCount = 1000000;
-		m_MaxCBVsPerStage = 14;
-		m_MaxSRVsPerStage = 1000000;
-		m_MaxUAVsPerStage = 64;
-		m_MaxSamplersPerStage = 1000000;
+		m_ResourceBindingCapabilities = { 1000000, 14, 1000000, 64, 1000000, 2048 };
 		break;
 	}
 	case D3D12_RESOURCE_BINDING_TIER_1:
 	default:
 	{
 		const auto& contextRI = m_CI.pCommandPool->GetCreateInfo().pContext->GetResultInfo();
-		m_MaxDescriptorCount = 1000000;
-		m_MaxCBVsPerStage = 14;
-		m_MaxSRVsPerStage = 128;
-		m_MaxUAVsPerStage = (contextRI.apiVersionMajor == 11 && contextRI.apiVersionMinor == 0) ? 8 : 64;
-		m_MaxSamplersPerStage = 16;
+		uint32_t maxUAVsPerStage = (contextRI.apiVersionMajor == 11 && contextRI.apiVersionMinor == 0) ? 8 : 64;
+		m_ResourceBindingCapabilities = { 1000000, 14, 128, maxUAVsPerStage, 16, 2048 };
 		break;
 	}
 	}
 
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.NumDescriptors = m_MaxDescriptorCount;
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc.NodeMask = 0;
-	m_Device->CreateDescriptorHeap(&m_CmdBuffer_CBV_SRV_UAV_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap));
+	for (size_t i = 0; i < m_RenderingResources.size(); i++)
+	{
+		RenderingResource& renderingResource = m_RenderingResources[i];
 
-	m_CmdBuffer_Sampler_DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-	m_CmdBuffer_Sampler_DescriptorHeapDesc.NumDescriptors = m_MaxSamplerCount;
-	m_CmdBuffer_Sampler_DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	m_CmdBuffer_Sampler_DescriptorHeapDesc.NodeMask = 0;
-	m_Device->CreateDescriptorHeap(&m_CmdBuffer_Sampler_DescriptorHeapDesc, IID_PPV_ARGS(&m_CmdBuffer_Sampler_DescriptorHeap));
+		D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc;
+		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		DescriptorHeapDesc.NumDescriptors = m_ResourceBindingCapabilities.maxDescriptorCount;
+		DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		DescriptorHeapDesc.NodeMask = 0;
+		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.CBV_SRV_UAV_DescriptorHeap));
+		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		DescriptorHeapDesc.NumDescriptors = m_ResourceBindingCapabilities.maxSamplerCount;
+		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.SAMPLER_DescriptorHeap));
+		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		DescriptorHeapDesc.NumDescriptors = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
+		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.RTV_DescriptorHeap));
+		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		DescriptorHeapDesc.NumDescriptors = 1;
+		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.DSV_DescriptorHeap));
 
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset = 0;
-	m_CmdBuffer_SamplerDescriptorOffset = 0;
+		renderingResource.CBV_SRV_UAV_DescriptorOffset = 0;
+		renderingResource.SAMPLER_DescriptorOffset = 0;
+		renderingResource.RTV_DescriptorOffset = 0;
+		renderingResource.DSV_DescriptorOffset = 0;
+	}
 }
 
 CommandBuffer::~CommandBuffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_D3D12_SAFE_RELEASE(m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap);
-	MIRU_D3D12_SAFE_RELEASE(m_CmdBuffer_Sampler_DescriptorHeap);
-
+	for (auto& renderingResource : m_RenderingResources)
+	{
+		MIRU_D3D12_SAFE_RELEASE(renderingResource.CBV_SRV_UAV_DescriptorHeap);
+		MIRU_D3D12_SAFE_RELEASE(renderingResource.SAMPLER_DescriptorHeap);
+		MIRU_D3D12_SAFE_RELEASE(renderingResource.RTV_DescriptorHeap);
+		MIRU_D3D12_SAFE_RELEASE(renderingResource.DSV_DescriptorHeap);
+	}
 	for (auto& cmdBuffer : m_CmdBuffers)
 	{
 		MIRU_D3D12_SAFE_RELEASE(cmdBuffer);
@@ -161,42 +166,40 @@ void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	CHECK_VALID_INDEX_RETURN(index);
 	Reset(index, false);
 
-	m_SetDescriptorHeaps_PerCmdBuffer.resize(m_CmdBuffers.size());
-	for (auto setDescriptorHeap : m_SetDescriptorHeaps_PerCmdBuffer)
-		setDescriptorHeap = true;
-
-	if (index == 0)
-	{
-		m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset = 0;
-		m_CmdBuffer_SamplerDescriptorOffset = 0;
-	}
+	RenderingResource& renderingResource = m_RenderingResources[index];
+	renderingResource.SetDescriptorHeap = true;
+	renderingResource.CBV_SRV_UAV_DescriptorOffset = 0;
+	renderingResource.SAMPLER_DescriptorOffset = 0;
+	renderingResource.RTV_DescriptorOffset = 0;
+	renderingResource.DSV_DescriptorOffset = 0;
 }
 
 void CommandBuffer::End(uint32_t index)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	CHECK_VALID_INDEX_RETURN(index);
 	MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Close(), "ERROR: D3D12: Failed to end CommandBuffer.");
-	m_Resettable = true;
+	m_RenderingResources[index].Resettable = true;
 }
 
 void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (m_Resettable)
+	CHECK_VALID_INDEX_RETURN(index);
+	if (m_RenderingResources[index].Resettable)
 	{
-		CHECK_VALID_INDEX_RETURN(index);
 		std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPools;
 
 		MIRU_ASSERT(d3d12CmdAllocators[index]->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
 		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(d3d12CmdAllocators[index], nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
-		m_Resettable = false;
+		m_RenderingResources[index].Resettable = false;
 	}
 }
+
 void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<crossplatform::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -213,7 +216,6 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<cro
 		if (secondaryIndex < commandBuffer->GetCreateInfo().commandBufferCount)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ExecuteBundle(reinterpret_cast<ID3D12GraphicsCommandList*>(ref_cast<CommandBuffer>(commandBuffer)->m_CmdBuffers[secondaryIndex]));
 	}
-
 }
 
 void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence)
@@ -302,7 +304,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
-	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	UINT RTV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
@@ -389,7 +391,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 			}
 			m_Device->CreateRenderTargetView(ref_cast<Image>(image)->m_Image, 0/*&m_RTVDesc*/, handle);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(handle, clear.float32, 0, nullptr);
-			handle.ptr += rtvDescriptorSize;
+			handle.ptr += RTV_DescriptorSize;
 		}
 	}
 
@@ -416,7 +418,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
-	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	UINT DSV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
@@ -487,7 +489,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 			}
 			}
 			m_Device->CreateDepthStencilView(ref_cast<Image>(image)->m_Image, 0/*&m_DSVDesc*/, handle);
-			handle.ptr += rtvDescriptorSize;
+			handle.ptr += DSV_DescriptorSize;
 			descriptorCount++;
 		}
 	}
@@ -497,17 +499,19 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues) 
+void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	m_RenderPassFramebuffer = framebuffer;
-	m_RenderPassClearValues = clearValues;
+	RenderingResource& renderingResource = m_RenderingResources[index];
+
+	renderingResource.Framebuffer = framebuffer;
+	renderingResource.ClearValues = clearValues;
 	
 	//Transition resources to be begin render pass.
-	m_SubpassIndex = (uint32_t)-1;
-	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
+	renderingResource.SubpassIndex = (uint32_t)-1;
+	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
@@ -515,20 +519,29 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 
-	m_RenderPassFramebufferAttachementLayouts.clear();
-
 	size_t i = 0;
-	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
+	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		if(m_RenderPassFramebuffer->GetCreateInfo().attachments.size() != m_RenderPassFramebufferAttachementLayouts.size())
-			m_RenderPassFramebufferAttachementLayouts.push_back(ref_cast<Image>(imageView->GetCreateInfo().pImage)->GetCreateInfo().layout);
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
 
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[i];
+		//Set the initial layout from Image creation.
+		if (m_RenderPassAttachementImageLayouts.find(image) == m_RenderPassAttachementImageLayouts.end())
+			m_RenderPassAttachementImageLayouts[image] = image->GetCreateInfo().layout;
+		//Remove old images.
+		for (auto it = m_RenderPassAttachementImageLayouts.begin(); it != m_RenderPassAttachementImageLayouts.end();)
+		{
+			if (it->first.use_count() == 1)
+				it = m_RenderPassAttachementImageLayouts.erase(it);
+			else
+				it++;
+		}
+
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[i] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 		i++;
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
@@ -542,13 +555,14 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+	RenderingResource& renderingResource = m_RenderingResources[index];
 
 	//Resolve any attachments from the previous subpass
 	ResolvePreviousSubpassAttachments(index);
 
 	//Transition resources to be end render pass.
-	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
-	m_SubpassIndex = (uint32_t)-1;
+	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	renderingResource.SubpassIndex = (uint32_t)-1;
 
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
@@ -557,14 +571,15 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
 
 	size_t i = 0;
-	for (auto& imageView : m_RenderPassFramebuffer->GetCreateInfo().attachments)
+	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[i];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[i] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 		i++;
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
@@ -575,14 +590,15 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+	RenderingResource& renderingResource = m_RenderingResources[index];
 
 	//Resolve any attachments from the previous subpass
 	ResolvePreviousSubpassAttachments(index);
 
-	m_SubpassIndex++;
-	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
-	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
-	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = m_RenderPassFramebuffer->GetCreateInfo().attachments;
+	renderingResource.SubpassIndex++;
+	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
+	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
 	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	//Transition resources for the subpass.
@@ -594,52 +610,57 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	for (auto& input : subpassDesc.inputAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[input.attachmentIndex];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = input.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[input.attachmentIndex] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& colour : subpassDesc.colourAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = colour.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& resolve : subpassDesc.resolveAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = resolve.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[depthStencil.attachmentIndex];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = depthStencil.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[depthStencil.attachmentIndex] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& preseverse : subpassDesc.preseverseAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
-		barrierCI.pImage = imageView->GetCreateInfo().pImage;
-		barrierCI.oldLayout = m_RenderPassFramebufferAttachementLayouts[preseverse.attachmentIndex];
+		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		barrierCI.pImage = image;
+		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = preseverse.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
 		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
-		m_RenderPassFramebufferAttachementLayouts[preseverse.attachmentIndex] = barrierCI.newLayout;
+		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
 
@@ -650,29 +671,38 @@ void CommandBuffer::NextSubpass(uint32_t index)
 		rtvs.push_back(ref_cast<ImageView>(framebufferAttachments[attachment.attachmentIndex])->m_RTVDescHandle);
 	if(!subpassDesc.depthStencilAttachment.empty())
 		dsv = ref_cast<ImageView>(framebufferAttachments[subpassDesc.depthStencilAttachment[0].attachmentIndex])->m_DSVDescHandle;
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, dsv.ptr?&dsv:nullptr);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, (dsv.ptr ? &dsv : nullptr));
 
 	//Clear imageviews
 	uint32_t attachId = 0;
 	for (auto& attachment : subpassDesc.colourAttachments)
 	{
 		attachId = attachment.attachmentIndex;
-		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, m_RenderPassClearValues[attachId].colour.float32, 0, nullptr);
+		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, renderingResource.ClearValues[attachId].colour.float32, 0, nullptr);
 	}
 	if (!subpassDesc.depthStencilAttachment.empty())
 	{
 		attachId = subpassDesc.depthStencilAttachment[0].attachmentIndex;
-		if (ref_cast<Framebuffer>(m_RenderPassFramebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasDSV)
+		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasDSV)
 		{
 			D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
+			FLOAT depthClearValue = 0.0f;
+			UINT8 stencilClearValue = 0;
+
 			if (renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			{
 				flags |= D3D12_CLEAR_FLAG_DEPTH;
+				depthClearValue = renderingResource.ClearValues[attachId].depthStencil.depth;
+			}
 			if (renderpassAttachments[attachId].stencilLoadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			{
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
+				stencilClearValue = shrink_uint32_t_to_uint8_t(renderingResource.ClearValues[attachId].depthStencil.stencil);
+			}
 
 			if(flags)
-				reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_DSVDescHandle, flags, m_RenderPassClearValues[attachId].depthStencil.depth, shrink_uint32_t_to_uint8_t(m_RenderPassClearValues[attachId].depthStencil.stencil), 0, nullptr);
+				reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_DSVDescHandle, flags, depthClearValue, stencilClearValue, 0, nullptr);
 		}
 	}
 }
@@ -682,34 +712,68 @@ void CommandBuffer::BeginRendering(uint32_t index, const crossplatform::Renderin
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	m_RenderingInfo = renderingInfo;
+	RenderingResource& renderingResource = m_RenderingResources[index];
+	renderingResource.RenderingInfo = renderingInfo;
 
 	//Set RenderTargets
+	UINT RTV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	UINT DSV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
-	for (auto& attachment : m_RenderingInfo.colourAttachments)
-		rtvs.push_back(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle);
-	if (m_RenderingInfo.pDepthAttachment)
-		dsv = ref_cast<ImageView>(m_RenderingInfo.pDepthAttachment->imageView)->m_DSVDescHandle;
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, dsv.ptr?&dsv:nullptr);
+	for (auto& attachment : renderingResource.RenderingInfo.colourAttachments)
+	{
+		Ref<ImageView> imageView = ref_cast<ImageView>(attachment.imageView);
+		Ref<Image> image = ref_cast<Image>(imageView->GetCreateInfo().pImage);
+		D3D12_CPU_DESCRIPTOR_HANDLE& RTVDescHandle = imageView->m_RTVDescHandle;
+		if (!RTVDescHandle.ptr)
+		{
+			RTVDescHandle.ptr = renderingResource.RTV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + renderingResource.RTV_DescriptorOffset;
+			m_Device->CreateRenderTargetView(image->m_Image, &(imageView->m_RTVDesc), RTVDescHandle);
+			renderingResource.RTV_DescriptorOffset += RTV_DescriptorSize;
+		}
+		rtvs.push_back(RTVDescHandle);
+	}
+	if (renderingResource.RenderingInfo.pDepthAttachment)
+	{
+		Ref<ImageView> imageView = ref_cast<ImageView>(renderingResource.RenderingInfo.pDepthAttachment->imageView);
+		Ref<Image> image = ref_cast<Image>(imageView->GetCreateInfo().pImage);
+		D3D12_CPU_DESCRIPTOR_HANDLE& DSVDescHandle = imageView->m_DSVDescHandle;
+		if (!DSVDescHandle.ptr)
+		{
+			DSVDescHandle.ptr = renderingResource.DSV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + renderingResource.RTV_DescriptorOffset;
+			m_Device->CreateDepthStencilView(image->m_Image, &(imageView->m_DSVDesc), DSVDescHandle);
+			renderingResource.DSV_DescriptorOffset += DSV_DescriptorSize;
+		}
+		dsv = DSVDescHandle;
+	}
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, (dsv.ptr ? &dsv : nullptr));
 
 	//Clear imageviews
 	uint32_t attachId = 0;
-	for (auto& attachment : m_RenderingInfo.colourAttachments)
+	for (auto& attachment : renderingResource.RenderingInfo.colourAttachments)
 	{
 		if (attachment.loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle, attachment.clearValue.colour.float32, 0, nullptr);
 	}
-	if (m_RenderingInfo.pDepthAttachment && m_RenderingInfo.pStencilAttachment)
+	if (renderingResource.RenderingInfo.pDepthAttachment || renderingResource.RenderingInfo.pStencilAttachment)
 	{
 		D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
-		if (m_RenderingInfo.pDepthAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		FLOAT depthClearValue = 0.0f;
+		UINT8 stencilClearValue = 0;
+
+		if (renderingResource.RenderingInfo.pDepthAttachment && renderingResource.RenderingInfo.pDepthAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		{
 			flags |= D3D12_CLEAR_FLAG_DEPTH;
-		if (m_RenderingInfo.pStencilAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+			depthClearValue = renderingResource.RenderingInfo.pDepthAttachment->clearValue.depthStencil.depth;
+		}
+		if (renderingResource.RenderingInfo.pStencilAttachment && renderingResource.RenderingInfo.pStencilAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		{	
 			flags |= D3D12_CLEAR_FLAG_STENCIL;
+			stencilClearValue = shrink_uint32_t_to_uint8_t(renderingResource.RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil);
+		}
 
 		if (flags)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(m_RenderingInfo.pDepthAttachment->imageView)->m_DSVDescHandle, flags, m_RenderingInfo.pDepthAttachment->clearValue.depthStencil.depth, shrink_uint32_t_to_uint8_t(m_RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil), 0, nullptr);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(renderingResource.RenderingInfo.pDepthAttachment->imageView)->m_DSVDescHandle, flags, depthClearValue, stencilClearValue, 0, nullptr);
 	}
 }
 
@@ -718,8 +782,9 @@ void CommandBuffer::EndRendering(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+	RenderingResource& renderingResource = m_RenderingResources[index];
 
-	for (auto& colourAttachment : m_RenderingInfo.colourAttachments)
+	for (auto& colourAttachment : renderingResource.RenderingInfo.colourAttachments)
 	{
 		if (colourAttachment.resolveImageView)
 		{
@@ -754,9 +819,9 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
 		
 		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
-			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_SubpassIndex]);
-		else if (m_RenderingInfo.viewMask > 0)
-			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingInfo.viewMask);
+			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_RenderingResources[index].SubpassIndex]);
+		else if (m_RenderingResources[index].RenderingInfo.viewMask > 0)
+			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingResources[index].RenderingInfo.viewMask);
 	}
 	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
 	{
@@ -802,25 +867,26 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+	RenderingResource& renderingResource = m_RenderingResources[index];
 
-	if (m_SetDescriptorHeaps_PerCmdBuffer[index])
+	if (renderingResource.SetDescriptorHeap)
 	{
-		ID3D12DescriptorHeap* heaps[2] = { m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap,  m_CmdBuffer_Sampler_DescriptorHeap };
+		ID3D12DescriptorHeap* heaps[2] = { renderingResource.CBV_SRV_UAV_DescriptorHeap,  renderingResource.SAMPLER_DescriptorHeap };
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetDescriptorHeaps(2, heaps);
-		m_SetDescriptorHeaps_PerCmdBuffer[index] = false;
+		renderingResource.SetDescriptorHeap = false;
 	}
 	
-	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	UINT samplerDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	UINT CBV_SRV_UAV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	UINT SAMPLER_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	
-	MIRU_ASSERT(!(m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset < m_MaxDescriptorCount * cbv_srv_uav_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
-	MIRU_ASSERT(!(m_CmdBuffer_SamplerDescriptorOffset < m_MaxSamplerCount * samplerDescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
+	MIRU_ASSERT(!(renderingResource.CBV_SRV_UAV_DescriptorOffset < m_ResourceBindingCapabilities.maxDescriptorCount * CBV_SRV_UAV_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
+	MIRU_ASSERT(!(renderingResource.SAMPLER_DescriptorOffset < m_ResourceBindingCapabilities.maxSamplerCount * SAMPLER_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
 
 	UINT Current_CBV_SRV_UAV_DescriptorOffset = 0;
-	UINT Current_Sampler_DescriptorOffset = 0;
+	UINT Current_SAMPLER_DescriptorOffset = 0;
 	
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> CBV_SRV_UAV_GPUDescriptorHandles;
-	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> Sampler_GPUDescriptorHandles;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> SAMPLER_GPUDescriptorHandles;
 
 	UINT totalDescriptorSets = 0;
 
@@ -836,28 +902,28 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 			if (heapDesc[i][0].NumDescriptors)
 			{
 				D3D12_CPU_DESCRIPTOR_HANDLE Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle;
-				Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle.ptr = m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset;
-				CBV_SRV_UAV_GPUDescriptorHandles.push_back({ m_CmdBuffer_CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset });
+				Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle.ptr = renderingResource.CBV_SRV_UAV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + renderingResource.CBV_SRV_UAV_DescriptorOffset;
+				CBV_SRV_UAV_GPUDescriptorHandles.push_back({ renderingResource.CBV_SRV_UAV_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_CBV_SRV_UAV_DescriptorOffset + renderingResource.CBV_SRV_UAV_DescriptorOffset });
 				m_Device->CopyDescriptorsSimple(heapDesc[i][0].NumDescriptors, Current_CmdBuffer_CBV_SRV_UAV_CPUDescriptorHandle, heap[i][0]->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-				Current_CBV_SRV_UAV_DescriptorOffset += heapDesc[i][0].NumDescriptors * cbv_srv_uav_DescriptorSize;
+				Current_CBV_SRV_UAV_DescriptorOffset += heapDesc[i][0].NumDescriptors * CBV_SRV_UAV_DescriptorSize;
 			}
 
 			if (heapDesc[i][1].NumDescriptors)
 			{
 				D3D12_CPU_DESCRIPTOR_HANDLE Current_CmdBuffer_Sampler_CPUDescriptorHandle;
-				Current_CmdBuffer_Sampler_CPUDescriptorHandle.ptr = m_CmdBuffer_Sampler_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_Sampler_DescriptorOffset + m_CmdBuffer_SamplerDescriptorOffset;
-				Sampler_GPUDescriptorHandles.push_back({ m_CmdBuffer_Sampler_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_Sampler_DescriptorOffset + m_CmdBuffer_SamplerDescriptorOffset });
+				Current_CmdBuffer_Sampler_CPUDescriptorHandle.ptr = renderingResource.SAMPLER_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + Current_SAMPLER_DescriptorOffset + renderingResource.SAMPLER_DescriptorOffset;
+				SAMPLER_GPUDescriptorHandles.push_back({ renderingResource.SAMPLER_DescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + Current_SAMPLER_DescriptorOffset + renderingResource.SAMPLER_DescriptorOffset });
 				m_Device->CopyDescriptorsSimple(heapDesc[i][1].NumDescriptors, Current_CmdBuffer_Sampler_CPUDescriptorHandle, heap[i][1]->GetCPUDescriptorHandleForHeapStart(),D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-				Current_Sampler_DescriptorOffset += heapDesc[i][1].NumDescriptors * samplerDescriptorSize;
+				Current_SAMPLER_DescriptorOffset += heapDesc[i][1].NumDescriptors * SAMPLER_DescriptorSize;
 			}
 		}
 	}
 
-	m_CmdBuffer_CBV_SRV_UAV_DescriptorOffset += Current_CBV_SRV_UAV_DescriptorOffset;
-	m_CmdBuffer_SamplerDescriptorOffset += Current_Sampler_DescriptorOffset;
+	renderingResource.CBV_SRV_UAV_DescriptorOffset += Current_CBV_SRV_UAV_DescriptorOffset;
+	renderingResource.SAMPLER_DescriptorOffset += Current_SAMPLER_DescriptorOffset;
 	
 	size_t CBV_SRV_UAV_GPUDescriptorHandleIndex = 0;
-	size_t Sampler_GPUDescriptorHandleIndex = 0;
+	size_t SAMPLER_GPUDescriptorHandleIndex = 0;
 
 	size_t rootParameterIndex = 0;
 	for (const auto& rootParameter : ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootParameters)
@@ -875,9 +941,9 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 	
 		if (descriptorTable.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
 		{
-			MIRU_ASSERT(!(Sampler_GPUDescriptorHandleIndex < Sampler_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
-			GPUDescriptorHandle = Sampler_GPUDescriptorHandles[Sampler_GPUDescriptorHandleIndex];
-			Sampler_GPUDescriptorHandleIndex++;
+			MIRU_ASSERT(!(SAMPLER_GPUDescriptorHandleIndex < SAMPLER_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			GPUDescriptorHandle = SAMPLER_GPUDescriptorHandles[SAMPLER_GPUDescriptorHandleIndex];
+			SAMPLER_GPUDescriptorHandleIndex++;
 		}
 		else
 		{
@@ -1176,13 +1242,14 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+	RenderingResource& renderingResource = m_RenderingResources[index];
 
-	if (m_SubpassIndex == MIRU_SUBPASS_EXTERNAL)
+	if (renderingResource.SubpassIndex == MIRU_SUBPASS_EXTERNAL)
 		return;
 	
-	const Ref<crossplatform::RenderPass>& renderPass = m_RenderPassFramebuffer->GetCreateInfo().renderPass;
-	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[m_SubpassIndex];
-	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = m_RenderPassFramebuffer->GetCreateInfo().attachments;
+	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
+	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
 	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	if (subpassDesc.resolveAttachments.empty())
@@ -1210,7 +1277,7 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 		resolveRegion.dstOffset = { 0, 0, 0 };
 		resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth};
 
-		ResolveImage(index, colourImage, m_RenderPassFramebufferAttachementLayouts[colour.attachmentIndex], resolveImage, m_RenderPassFramebufferAttachementLayouts[resolve.attachmentIndex], { resolveRegion });
+		ResolveImage(index, colourImage, m_RenderPassAttachementImageLayouts[colourImage], resolveImage, m_RenderPassAttachementImageLayouts[resolveImage], { resolveRegion });
 	}
 }
 

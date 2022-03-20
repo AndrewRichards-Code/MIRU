@@ -41,7 +41,9 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 			if (layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL || layout == Image::Layout::PRESENT_SRC || layout == Image::Layout::SHARED_PRESENT)
 				NeedRTV = true;
 			if (layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
-				|| layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+				|| layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
+				|| layout == Image::Layout::DEPTH_ATTACHMENT_OPTIMAL || layout == Image::Layout::DEPTH_READ_ONLY_OPTIMAL
+				|| layout == Image::Layout::STENCIL_ATTACHMENT_OPTIMAL || layout == Image::Layout::STENCIL_READ_ONLY_OPTIMAL)
 				NeedDSV = true;
 			if (layout == Image::Layout::SHADER_READ_ONLY_OPTIMAL)
 				NeedSRV = true;

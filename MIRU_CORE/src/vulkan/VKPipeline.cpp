@@ -317,7 +317,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		vkPipelineRenderingCI.colorAttachmentCount = static_cast<uint32_t>(m_CI.dynamicRendering.colourAttachmentFormats.size());
 		vkPipelineRenderingCI.pColorAttachmentFormats = reinterpret_cast<VkFormat*>(m_CI.dynamicRendering.colourAttachmentFormats.data());
 		vkPipelineRenderingCI.depthAttachmentFormat = static_cast<VkFormat>(m_CI.dynamicRendering.depthAttachmentFormat);
-		vkPipelineRenderingCI.stencilAttachmentFormat = static_cast<VkFormat>(m_CI.dynamicRendering.depthAttachmentFormat);
+		vkPipelineRenderingCI.stencilAttachmentFormat = static_cast<VkFormat>(m_CI.dynamicRendering.stencilAttachmentFormat);
 
 		//Fill Vulkan structure
 		m_GPCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

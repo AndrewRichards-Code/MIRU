@@ -155,6 +155,8 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 
 		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
 			return;
+		if (m_CI.newLayout == Image::Layout::UNKNOWN) //Only transition resource to defined a layout.
+			return;
 
 		D3D12_RESOURCE_DESC resDesc = barrier.Transition.pResource->GetDesc();
 		if (resDesc.DepthOrArraySize == m_CI.subresourceRange.arrayLayerCount

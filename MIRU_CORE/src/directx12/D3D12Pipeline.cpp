@@ -180,7 +180,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 					|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
 					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
+					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_OPTIMAL
+					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_OPTIMAL
+					|| attachment.layout == Image::Layout::STENCIL_ATTACHMENT_OPTIMAL
+					|| attachment.layout == Image::Layout::STENCIL_READ_ONLY_OPTIMAL)
 				{
 					m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
 				}
@@ -217,11 +221,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		CD3DX12_PIPELINE_STATE_STREAM2 gpss2(m_GPSD);
 
-		const RenderPass::MultiviewCreateInfo& multiview = m_CI.renderPass->GetCreateInfo().multiview;
-		if (!multiview.viewMasks.empty())
+		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
 		{
+			const RenderPass::MultiviewCreateInfo& multiview = m_CI.renderPass->GetCreateInfo().multiview;
 			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)] - 1);
-			
+
 			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
 			for (auto& viewInstanceLocation : m_ViewInstanceLocations)
 				viewInstanceLocation = { 0, 0 };
