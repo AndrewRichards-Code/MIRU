@@ -57,6 +57,11 @@ namespace crossplatform
 			//D3D12: https://microsoft.github.io/DirectX-Specs/d3d/ViewInstancing.html
 			//Vulkan: VK_KHR_multiview : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_KHR_multiview 
 			MULTIVIEW					= 0x00000100,
+
+			//STATUS: O Allows SV_RenderTargetArrayIndex/gl_Layer and SV_ViewportArrayIndex/gl_ViewportIndex
+			//D3D12: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics
+			//Vulkan: VK_EXT_shader_viewport_index_layer : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/vkspec.html#VK_EXT_shader_viewport_index_layer
+			SHADER_VIEWPORT_INDEX_LAYER = 0x00000200,
 			
 			//STATUS: X 
 			//D3D12: https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-overview

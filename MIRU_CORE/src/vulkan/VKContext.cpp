@@ -74,6 +74,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
 			#endif
 		}
+		if ((m_CI.extensions & ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER) == ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER)
+		{
+			#if defined(VK_EXT_shader_viewport_index_layer)
+			m_DeviceExtensions.push_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
+			#endif
+		}
 	}
 	#endif
 	#if defined(VK_VERSION_1_1)
@@ -230,6 +236,12 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
 	{
 		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
+	}
+	#endif
+	#if defined(VK_EXT_shader_viewport_index_layer)
+	if (IsActive(m_ActiveDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
 	}
 	#endif
 	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
