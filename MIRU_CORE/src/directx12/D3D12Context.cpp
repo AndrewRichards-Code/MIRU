@@ -78,6 +78,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
 	if (m_Features.d3d12Options3.ViewInstancingTier > D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
 		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
+	if (m_Features.d3d12Options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation)
+		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
 	
 
 	//Create Info Queue

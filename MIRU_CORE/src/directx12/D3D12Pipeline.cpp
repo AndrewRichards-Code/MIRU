@@ -137,9 +137,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.DepthStencilState.BackFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.back.compareOp) + 1);
 
 		//ColourBlend
-		m_GPSD.BlendState.AlphaToCoverageEnable = false;
-		m_GPSD.BlendState.IndependentBlendEnable = false;
-		m_GPSD.SampleMask = UINT_MAX;
+		m_GPSD.BlendState.AlphaToCoverageEnable = m_CI.multisampleState.alphaToCoverageEnable;
+		m_GPSD.BlendState.IndependentBlendEnable = true;
 		size_t i = 0;
 		for (auto& blend : m_CI.colourBlendState.attachments)
 		{

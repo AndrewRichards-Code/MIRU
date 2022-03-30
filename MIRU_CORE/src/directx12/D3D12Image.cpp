@@ -403,9 +403,23 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(m_CI.pImage)->m_ResourceDesc;
 	ID3D12Resource* image = ref_cast<Image>(m_CI.pImage)->m_Image;
 
+	auto DepthToColourFormat = [](const DXGI_FORMAT& format) -> DXGI_FORMAT
+	{
+		if (format == DXGI_FORMAT_D16_UNORM)
+			return DXGI_FORMAT_R16_UNORM;
+		else if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
+			return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		else if (format == DXGI_FORMAT_D32_FLOAT)
+			return DXGI_FORMAT_R32_FLOAT;
+		else if (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT)
+			return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+		else
+			return format;
+	};
+
 	//RTV
 	{
-		m_RTVDesc.Format = resourceDesc.Format;
+		m_RTVDesc.Format = DepthToColourFormat(resourceDesc.Format);
 
 		switch (m_CI.viewType)
 		{
@@ -532,7 +546,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 	//SRV
 	{
-		m_SRVDesc.Format = resourceDesc.Format;
+		m_SRVDesc.Format = DepthToColourFormat(resourceDesc.Format);
 		m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 		switch (m_CI.viewType)
@@ -624,7 +638,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 	//UAV
 	{
-		m_UAVDesc.Format = resourceDesc.Format;
+		m_UAVDesc.Format = DepthToColourFormat(resourceDesc.Format);
 
 		switch (m_CI.viewType)
 		{
