@@ -59,8 +59,8 @@ static void WindowUpdate()
 
 void Raytracing()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
@@ -118,9 +118,7 @@ void Raytracing()
 		true,
 		true,
 		{"-Zi", "-Od", "-Fd"},
-		"",
-		false,
-		false
+		""
 	};
 	Ref<Shader> raytracingShader = Shader::Create(&shaderCI);
 

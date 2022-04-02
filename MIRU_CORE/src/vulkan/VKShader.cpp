@@ -141,7 +141,7 @@ void Shader::VulkanShaderReflection(
 			break;
 		}
 
-		MIRU_SHADER_CORE_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
+		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
 		return static_cast<crossplatform::VertexType>(0);
 	};
 

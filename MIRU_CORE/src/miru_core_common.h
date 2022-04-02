@@ -81,9 +81,6 @@
 //MIRU GraphicsAPI
 #include "crossplatform/GraphicsAPI.h"
 
-//MIRU_SHADER_CORE
-#include "miru_shader_core.h"
-
 //MIRU Helpers
 #include "ARC/src/StringConversion.h"
 #include "ARC/src/DynamicLibrary.h"

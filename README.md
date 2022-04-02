@@ -54,10 +54,7 @@ This repository is under active development and is not currently intended for co
 Contains the core functionality of the Low level Graphics API wrapper. Provide path to VulkanSDK; Build as dynamic library; Dynamic Runtime Linking (MD).
 
 ### MIRU_SHADER_COMPILER: 
-A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using DXC/FXC. Provide paths to DXC/FXC; Build as executable; Dynamic Runtime Linking (MD).
-
-### MIRU_SHADER_CORE: 
-Contains the core functionality for compiling the shaders. Build as static library; Dynamic Runtime Linking (MD).
+A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using dxcompiler. Build as executable; Dynamic Runtime Linking (MD).
 
 ### MIRU_TEST: 
 Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD).

@@ -2,6 +2,7 @@
 #if defined(MIRU_D3D12)
 #include "D3D12Context.h"
 #include "D3D12Sync.h"
+#include "D3D12Shader.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -41,8 +42,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-		s_DXILFullpath = shader_core::GetLibraryFullpath_dxil();
-		s_HModeuleDXIL = shader_core::LoadLibrary_dxil();
+		s_DXILFullpath = crossplatform::Shader::GetLibraryFullpath_dxil();
+		s_HModeuleDXIL = crossplatform::Shader::LoadLibrary_dxil();
 		if (!s_HModeuleDXIL)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";

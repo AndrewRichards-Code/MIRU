@@ -3,20 +3,7 @@
 
 #include "ErrorCodes.h"
 #include "MSCDocumentation.h"
-#include "BuildSPV.h"
-#include "BuildCSO.h"
-
-#if defined(_WIN64)
-#include <Windows.h>
-HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-#define CONSOLE_OUTPUT_RED SetConsoleTextAttribute(hConsole, 4)
-#define CONSOLE_OUTPUT_GREEN SetConsoleTextAttribute(hConsole, 2)
-#define CONSOLE_OUTPUT_WHITE SetConsoleTextAttribute(hConsole, 7)
-#else
-#define CONSOLE_OUTPUT_RED
-#define CONSOLE_OUTPUT_GREEN
-#define CONSOLE_OUTPUT_WHITE
-#endif
+#include "miru_core.h"
 
 using namespace miru;
 using namespace shader_compiler;
@@ -26,8 +13,6 @@ int main(int argc, const char** argv)
 	MIRU_SHDAER_COMPILER_SET_ERROR_CODE_TO_STRING_FUNCTION;
 	
 	ErrorCode error = ErrorCode::MIRU_SHADER_COMPILER_OK;
-
-	CONSOLE_OUTPUT_WHITE;
 
 	//Null arguments
 	if (!argc)
@@ -52,7 +37,7 @@ int main(int argc, const char** argv)
 			output = false;
 	}
 	if (logo)
-		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2021 Andrew Richards.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2022 Andrew Richards.\n\n");
 	if (help)
 	{
 		MIRU_SHADER_COMPILER_PRINTF(help_doucumentation);
@@ -82,8 +67,8 @@ int main(int argc, const char** argv)
 	}
 
 	//Get Filepath, Directories and others
-	std::string filepath, outputDir, entryPoint, shaderModel, dxc_path, dxc_args;
-	std::vector<std::string> includeDirs;
+	std::string filepath, outputDir, entryPoint, shaderModel, dxc_path;
+	std::vector<std::string> includeDirs, macros, dxc_args;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
 	{
@@ -121,17 +106,20 @@ int main(int argc, const char** argv)
 		else if (tempFilepath.find("-dxc_args:") != std::string::npos || tempFilepath.find("-DXC_ARGS:") != std::string::npos)
 		{
 			tempFilepath.erase(0, std::string("-DXC_ARGS:").size());
-			dxc_args = tempFilepath;
+			std::string string;
+			std::stringstream stream(tempFilepath);
+			while (stream >> string)
+				dxc_args.push_back(string);
 		}
 		else if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
 		{
-			dxc_args += tempFilepath + " ";
+			tempFilepath.erase(0, tagSize - size_t(1));
+			macros.push_back(tempFilepath);
 		}
 		else
 		{
 			continue;
 		}
-
 	}
 
 	//Check parsed arguments
@@ -158,20 +146,18 @@ int main(int argc, const char** argv)
 	}
 
 	//Build binary
-	if (cso)
-	{
-		CONSOLE_OUTPUT_GREEN;
-		error = BuildCSO(filepath, outputDir, includeDirs, entryPoint, shaderModel, dxc_args, dxc_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "CSO Shader Compile Error.\n\n");
-		CONSOLE_OUTPUT_WHITE;
-	}
-	if (spv)
-	{
-		CONSOLE_OUTPUT_RED;
-		error = BuildSPV(filepath, outputDir, includeDirs, entryPoint, shaderModel, dxc_args, dxc_path);
-		MIRU_SHADER_COMPILER_ERROR_CODE(error, "SPV Shader Compile Error.\n\n");
-		CONSOLE_OUTPUT_WHITE;
-	}
+	crossplatform::Shader::CompileArguments compileArgs;
+	compileArgs.hlslFilepath = filepath;
+	compileArgs.outputDirectory = outputDir;
+	compileArgs.includeDirectories = includeDirs;
+	compileArgs.entryPoint = entryPoint;
+	compileArgs.shaderModel = shaderModel;
+	compileArgs.macros = macros;
+	compileArgs.cso = cso;
+	compileArgs.spv = spv;
+	compileArgs.dxcArguments = dxc_args;
+	compileArgs.dxcLocation = dxc_path;
+	crossplatform::Shader::CompileShaderFromSource(compileArgs);
 
 	if (pause)
 	{

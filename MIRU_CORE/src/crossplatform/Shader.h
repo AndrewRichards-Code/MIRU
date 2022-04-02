@@ -62,7 +62,23 @@ namespace crossplatform
 			size_t				structSize;
 		};
 
-		typedef shader_core::CompileArguments RecompileArguments;
+		//See MSCDocumentation.h for correct usage.
+		//All filepaths and directories must be relative to the current working directory.
+		//All locations must be full paths i.e. dxc.
+		struct CompileArguments
+		{
+			std::string					hlslFilepath;
+			std::string					outputDirectory;	//Optional
+			std::vector<std::string>	includeDirectories;	//Optional
+			std::string					entryPoint;			//Required for non lib shaders.
+			std::string					shaderModel;		//Optional
+			std::vector<std::string>	macros;				//Optional
+			bool						cso;				//Either cso or spv must be true
+			bool						spv;				//Either cso or spv must be true
+			std::vector<std::string>	dxcArguments;		//Optional
+			std::string					dxcLocation;		//Optional
+		};
+
 		struct CreateInfo
 		{
 			std::string										debugName;
@@ -70,7 +86,7 @@ namespace crossplatform
 			std::vector<std::pair<StageBit, std::string>>	stageAndEntryPoints;
 			std::string										binaryFilepath;
 			std::vector<char>								binaryCode;
-			RecompileArguments								recompileArguments;
+			CompileArguments								recompileArguments;
 		};
 
 		//Methods
@@ -85,6 +101,13 @@ namespace crossplatform
 		const std::vector<VertexShaderInputAttributeDescription>& GetVSIADs() const { return m_VSIADs; };
 		const std::vector<PixelShaderOutputAttributeDescription>& GetPSOADs() const { return m_PSOADs; };
 		const std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
+
+	public:
+		static void CompileShaderFromSource(const CompileArguments& arguments);
+		static std::filesystem::path GetLibraryFullpath_dxil();
+		static arc::DynamicLibrary::LibraryHandle LoadLibrary_dxil();
+		static std::filesystem::path GetLibraryFullpath_dxcompiler();
+		static arc::DynamicLibrary::LibraryHandle LoadLibrary_dxcompiler();
 
 	protected:
 		void GetShaderByteCode();

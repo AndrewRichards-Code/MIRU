@@ -113,9 +113,7 @@ void DynamicRendering()
 		true,
 		true,
 		{"-Zi", "-Od", "-Fd"},
-		"",
-		false,
-		false
+		""
 	};
 	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
