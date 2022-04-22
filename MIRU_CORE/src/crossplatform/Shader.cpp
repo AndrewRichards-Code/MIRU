@@ -193,6 +193,8 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					char* s = (char*)errors->GetStringPointer();
 					MIRU_PRINTF("%s", s);
 				}
+				MIRU_D3D12_SAFE_RELEASE(errorsName);
+				MIRU_D3D12_SAFE_RELEASE(errors);
 
 				HRESULT complicationResults = S_OK;
 				results->GetStatus(&complicationResults);
@@ -214,6 +216,8 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				{
 					MIRU_WARN(true, "WARN: CROSSPLATFORM: Failed to GetOutput for shader binary and/or shader name.");
 				}
+				MIRU_D3D12_SAFE_RELEASE(shaderName);
+				MIRU_D3D12_SAFE_RELEASE(shaderBinary);
 
 				if (results->HasOutput(DXC_OUT_PDB))
 				{
@@ -230,7 +234,11 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					{
 						MIRU_WARN(true, "WARN: CROSSPLATFORM: Failed to GetOutput for shader PDB binary and/or shader PDB name.");
 					}
+					MIRU_D3D12_SAFE_RELEASE(pdbName);
+					MIRU_D3D12_SAFE_RELEASE(pdbBinary);
 				}
+				
+				MIRU_D3D12_SAFE_RELEASE(results);
 			}
 		}
 		MIRU_D3D12_SAFE_RELEASE(sourceBlob);
