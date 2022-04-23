@@ -732,4 +732,30 @@ void CommandBuffer::EndDebugLabel(uint32_t index)
 	if (vkCmdEndDebugUtilsLabelEXT)
 		vkCmdEndDebugUtilsLabelEXT(m_CmdBuffers[index]);
 }
+
+void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform::Viewport>& viewports)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkViewport> vkViewports;
+	vkViewports.reserve(viewports.size());
+	for (auto& viewport : viewports)
+		vkViewports.push_back({ viewport.x, viewport.y, viewport.width, viewport.height, viewport.minDepth, viewport.maxDepth });
+
+	vkCmdSetViewport(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkViewports.size()), vkViewports.data());
+}
+
+void CommandBuffer::SetScissor(uint32_t index, const std::vector<crossplatform::Rect2D>& scissors)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<VkRect2D> vkRect2D;
+	vkRect2D.reserve(scissors.size());
+	for (auto& scissor : scissors)
+		vkRect2D.push_back({ {scissor.offset.x, scissor.offset.y}, {scissor.extent.width, scissor.extent.height} });
+
+	vkCmdSetScissor(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkRect2D.size()), vkRect2D.data());
+}
 #endif

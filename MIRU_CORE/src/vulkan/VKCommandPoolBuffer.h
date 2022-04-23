@@ -78,6 +78,9 @@ namespace vulkan
 		void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = { 0.0f, 0.0f , 0.0f, 0.0f }) override;
 		void EndDebugLabel(uint32_t index) override;
 
+		void SetViewport(uint32_t index, const std::vector<crossplatform::Viewport>& viewports) override;
+		void SetScissor(uint32_t index, const std::vector<crossplatform::Rect2D>& scissors) override;
+
 		//Members
 	public:
 		VkDevice& m_Device;

@@ -59,8 +59,8 @@ static void WindowUpdate()
 
 void DynamicRendering()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
@@ -449,8 +449,8 @@ void DynamicRendering()
 	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
 	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
-	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
-	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
+	pCI.viewportState.viewports = { {} }; //Specify number of viewports to be used.
+	pCI.viewportState.scissors = { {} }; //Specify number of scissors to be used.
 	pCI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::BACK_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
 	pCI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, UINT32_MAX, false, false };
 	pCI.depthStencilState = { true, true, CompareOp::GREATER, false, false, {}, {}, 0.0f, 1.0f };
@@ -462,7 +462,7 @@ void DynamicRendering()
 	pCI.colourBlendState.blendConstants[1] = 0.0f;
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
-	pCI.dynamicStates = {};
+	pCI.dynamicStates = { { DynamicState::VIEWPORT, DynamicState::SCISSOR } }; //Specify dynamics state.
 	pCI.layout = { {setLayout1, setLayout2 }, {} };
 	pCI.renderPass = nullptr;
 	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN};
@@ -510,10 +510,6 @@ void DynamicRendering()
 		if (swapchain->m_Resized || windowResize)
 		{
 			swapchain->Resize(width, height);
-
-			pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
-			pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
-			pipeline = Pipeline::Create(&pCI);
 
 			depthCI.width = width;
 			depthCI.height = height;
@@ -585,8 +581,11 @@ void DynamicRendering()
 			Ref<Barrier>barrierDepth = Barrier::Create(&barrierDepthCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, DependencyBit::NONE_BIT, { barrierDepth });
 
-			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT }, pCI.viewportState.scissors[0], 1, 0, { colourRAI }, &depthRAI, nullptr });
+
+			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colourRAI }, &depthRAI, nullptr });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
+			cmdBuffer->SetViewport(frameIndex, { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} });
+			cmdBuffer->SetScissor(frameIndex, { {{(int32_t)0, (int32_t)0}, {width, height}} });
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p0 }, 0, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p1 }, 1, pipeline);
 			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });

@@ -814,9 +814,12 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
-		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
-		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
+
+		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), crossplatform::DynamicState::VIEWPORT) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
+		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), crossplatform::DynamicState::SCISSOR) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		
 		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
 			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_RenderingResources[index].SubpassIndex]);
@@ -1235,6 +1238,32 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		Ref<crossplatform::Barrier> postResolveBarrierDst = Barrier::Create(&bCI);
 		PipelineBarrier(index, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
 	}
+}
+
+void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform::Viewport>& viewports)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<D3D12_VIEWPORT> d3d12Viewports;
+	d3d12Viewports.reserve(viewports.size());
+	for (auto& viewport : viewports)
+		d3d12Viewports.push_back({ viewport.x, viewport.y, viewport.width, viewport.height, viewport.minDepth, viewport.maxDepth });
+
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(d3d12Viewports.size()), d3d12Viewports.data());
+}
+
+void CommandBuffer::SetScissor(uint32_t index, const std::vector<crossplatform::Rect2D>& scissors)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	std::vector<D3D12_RECT> d3d12Scissors;
+	d3d12Scissors.reserve(scissors.size());
+	for (auto& scissor : scissors)
+		d3d12Scissors.push_back({ static_cast<LONG>(scissor.offset.x), static_cast<LONG>(scissor.offset.y), static_cast<LONG>(scissor.extent.width), static_cast<LONG>(scissor.extent.height) });
+
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(d3d12Scissors.size()), d3d12Scissors.data());
 }
 
 void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)

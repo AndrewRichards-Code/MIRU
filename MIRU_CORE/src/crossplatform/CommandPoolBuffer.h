@@ -127,6 +127,9 @@ namespace crossplatform
 		virtual void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = {0.0f, 0.0f , 0.0f, 0.0f }) = 0;
 		virtual void EndDebugLabel(uint32_t index) = 0;
 
+		virtual void SetViewport(uint32_t index, const std::vector<Viewport>& viewports) = 0;
+		virtual void SetScissor(uint32_t index, const std::vector<Rect2D>& scissors) = 0;
+
 	protected:
 		inline bool CheckValidIndex(uint32_t index) { return (index < m_CI.commandBufferCount); }
 		#define CHECK_VALID_INDEX_RETURN(index) if (!CheckValidIndex(index)) {return;}
