@@ -56,7 +56,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		#endif
 
 		//Extensions
-		if ((m_CI.extensions & ExtensionsBit::DYNAMIC_RENDERING) == ExtensionsBit::DYNAMIC_RENDERING)
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DYNAMIC_RENDERING))
 		{
 			#if defined(VK_KHR_dynamic_rendering)
 			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
@@ -65,7 +65,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
 			#endif
 		}
-		if ((m_CI.extensions & ExtensionsBit::MULTIVIEW) == ExtensionsBit::MULTIVIEW)
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::MULTIVIEW))
 		{
 			#if defined(VK_KHR_multiview)
 			m_DeviceExtensions.push_back(VK_KHR_MULTIVIEW_EXTENSION_NAME);
@@ -74,7 +74,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
 			#endif
 		}
-		if ((m_CI.extensions & ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER) == ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER)
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER))
 		{
 			#if defined(VK_EXT_shader_viewport_index_layer)
 			m_DeviceExtensions.push_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
@@ -86,7 +86,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	if (apiVersion >= VK_API_VERSION_1_1)
 	{
 		//Extensions
-		if ((m_CI.extensions & ExtensionsBit::RAY_TRACING) == ExtensionsBit::RAY_TRACING)
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::RAY_TRACING))
 		{
 			#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
 			//Required for ExtensionsBit::RAY_TRACING
@@ -302,13 +302,13 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			vkGetDeviceQueue(m_Device, static_cast<uint32_t>(i), static_cast<uint32_t>(j), &queue);
 			localQueues.push_back(queue);
 			
-			VkQueueFlags flags = m_QueueFamilyProperties[i].queueFlags;
+			VkQueueFlagBits flags = static_cast<VkQueueFlagBits>(m_QueueFamilyProperties[i].queueFlags);
 			std::string typeStr("");
-			if((flags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
+			if (arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT))
 				typeStr += "Graphics/";
-			if ((flags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
+			if (arc::BitwiseCheck(flags, VK_QUEUE_COMPUTE_BIT))
 				typeStr += "Compute/";
-			if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
+			if (arc::BitwiseCheck(flags, VK_QUEUE_TRANSFER_BIT))
 				typeStr += "Transfer";
 			VKSetName<VkQueue>(m_Device, queue, m_CI.deviceDebugName + ": Queue - " + typeStr);
 		}

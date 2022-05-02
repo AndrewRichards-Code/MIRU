@@ -58,21 +58,21 @@ uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
 	uint32_t index = 0;
 	for (auto& queueFamilyProperty : ref_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties)
 	{
-		VkQueueFlags flags = queueFamilyProperty.queueFlags;
-		if ((flags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT
+		VkQueueFlagBits flags = static_cast<VkQueueFlagBits>(queueFamilyProperty.queueFlags);
+		if (arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
 			&& type == QueueType::GRAPHICS)
 		{
 			return index;
 		}
-		if ((flags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT
-			&& (flags & VK_QUEUE_GRAPHICS_BIT) != VK_QUEUE_GRAPHICS_BIT
+		if (arc::BitwiseCheck(flags, VK_QUEUE_COMPUTE_BIT)
+			&& !arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
 			&& type == QueueType::COMPUTE)
 		{
 			return index;
 		}
-		if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT
-			&& (flags & VK_QUEUE_COMPUTE_BIT) != VK_QUEUE_COMPUTE_BIT
-			&& (flags & VK_QUEUE_GRAPHICS_BIT) != VK_QUEUE_GRAPHICS_BIT
+		if (arc::BitwiseCheck(flags, VK_QUEUE_TRANSFER_BIT)s
+			&& !arc::BitwiseCheck(flags, VK_QUEUE_COMPUTE_BIT)
+			&& !arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
 			&& type == QueueType::TRANSFER)
 		{
 			return index;

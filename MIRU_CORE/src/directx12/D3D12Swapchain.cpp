@@ -62,7 +62,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		{
 			UINT colourSpaceSupport;
 			MIRU_ASSERT(m_Swapchain->CheckColorSpaceSupport(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, &colourSpaceSupport), "ERROR: D3D12: Failed to check ColourSpace support.");
-			if ((colourSpaceSupport & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) == DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT)
+			if (arc::BitwiseCheck(static_cast<DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG>(colourSpaceSupport), DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT))
 			{
 				MIRU_ASSERT(m_Swapchain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020), "ERROR: D3D12: Failed to set ColourSpace.");
 				surfaceFormat.second = DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;

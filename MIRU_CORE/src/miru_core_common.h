@@ -85,6 +85,7 @@
 #include "ARC/src/StringConversion.h"
 #include "ARC/src/DynamicLibrary.h"
 #include "ARC/src/ScopeAndRef.h"
+#include "ARC/src/Helpers.h"
 namespace miru
 {
 	inline auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t

@@ -43,7 +43,7 @@ void CommandPool::Reset(bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if ((m_CI.flags & FlagBit::RESET_COMMAND_BUFFER_BIT) == FlagBit::RESET_COMMAND_BUFFER_BIT)
+	if (arc::BitwiseCheck(m_CI.flags, FlagBit::RESET_COMMAND_BUFFER_BIT))
 	{
 		for (auto& cmdPool : m_CmdPools)
 		{

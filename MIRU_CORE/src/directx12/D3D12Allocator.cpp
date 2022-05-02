@@ -103,9 +103,9 @@ D3D12_HEAP_PROPERTIES Allocator::GetHeapProperties()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	bool deviceLocal = (m_CI.properties & PropertiesBit::DEVICE_LOCAL_BIT) == PropertiesBit::DEVICE_LOCAL_BIT;
-	bool hostVisible = (m_CI.properties & PropertiesBit::HOST_VISIBLE_BIT) == PropertiesBit::HOST_VISIBLE_BIT;
-	bool hostCoherent = (m_CI.properties & PropertiesBit::HOST_COHERENT_BIT) == PropertiesBit::HOST_COHERENT_BIT;
+	const bool& deviceLocal = arc::BitwiseCheck(m_CI.properties, PropertiesBit::DEVICE_LOCAL_BIT);
+	const bool& hostVisible = arc::BitwiseCheck(m_CI.properties, PropertiesBit::HOST_VISIBLE_BIT);
+	const bool& hostCoherent = arc::BitwiseCheck(m_CI.properties, PropertiesBit::HOST_COHERENT_BIT);
 
 	D3D12_HEAP_PROPERTIES result;
 	result.Type = deviceLocal ? D3D12_HEAP_TYPE_DEFAULT : D3D12_HEAP_TYPE_UPLOAD;

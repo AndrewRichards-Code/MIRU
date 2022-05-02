@@ -18,7 +18,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_Allocation.rowPitch = 0;
 	m_Allocation.rowPadding = 0;
 
-	if ((bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_BIT) || (bool)(m_CI.usage & Buffer::UsageBit::UNIFORM_TEXEL_BIT))
+	if (arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_BIT) || arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_TEXEL_BIT))
 	{
 		m_Allocation.width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
 	}
