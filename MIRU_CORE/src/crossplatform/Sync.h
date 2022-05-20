@@ -58,6 +58,33 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 	};
 
+	//Host-Device and Inter/Intra-Queue Synchronisation
+	class MIRU_API TimelineSemaphore
+	{
+		//enum/struct
+	public:
+		struct CreateInfo
+		{
+			std::string debugName;
+			void*		device;
+		};
+		//Methods
+	public:
+		static Ref<TimelineSemaphore> Create(TimelineSemaphore::CreateInfo* pCreateInfo);
+		virtual ~TimelineSemaphore() = default;
+		const CreateInfo& GetCreateInfo() { return m_CI; }
+
+		virtual void Signal(uint64_t value) = 0;
+		//Parameter: timeout is in nanoseconds.
+		virtual bool Wait(uint64_t value, uint64_t timeout) = 0;
+		virtual uint64_t GetValue() = 0;
+
+		//Members
+	protected:
+		CreateInfo m_CI = {};
+	};
+	typedef std::pair<Ref<TimelineSemaphore>, uint64_t> TimelineSemaphoreWithValue;
+
 	//Inter/Intra-Command Buffer Synchronisation
 	class MIRU_API Event
 	{
@@ -95,32 +122,48 @@ namespace crossplatform
 			BUFFER,
 			IMAGE
 		};
-		enum class AccessBit : uint32_t
+		enum class AccessBit : uint64_t
 		{
-			NONE_BIT = 0x00000000,
-			INDIRECT_COMMAND_READ_BIT = 0x00000001,
-			INDEX_READ_BIT = 0x00000002,
-			VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,
-			UNIFORM_READ_BIT = 0x00000008,
-			INPUT_ATTACHMENT_READ_BIT = 0x00000010,
-			SHADER_READ_BIT = 0x00000020,
-			SHADER_WRITE_BIT = 0x00000040,
-			COLOUR_ATTACHMENT_READ_BIT = 0x00000080,
-			COLOUR_ATTACHMENT_WRITE_BIT = 0x00000100,
-			DEPTH_STENCIL_ATTACHMENT_READ_BIT = 0x00000200,
-			DEPTH_STENCIL_ATTACHMENT_WRITE_BIT = 0x00000400,
-			TRANSFER_READ_BIT = 0x00000800,
-			TRANSFER_WRITE_BIT = 0x00001000,
-			HOST_READ_BIT = 0x00002000,
-			HOST_WRITE_BIT = 0x00004000,
-			MEMORY_READ_BIT = 0x00008000,
-			MEMORY_WRITE_BIT = 0x00010000,
-			TRANSFORM_FEEDBACK_WRITE_BIT = 0x02000000,
-			TRANSFORM_FEEDBACK_COUNTER_READ_BIT = 0x04000000,
-			TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT = 0x08000000,
-			CONDITIONAL_RENDERING_READ_BIT = 0x00100000,
-			ACCELERATION_STRUCTURE_READ_BIT = 0x00200000,
-			ACCELERATION_STRUCTURE_WRITE_BIT = 0x00400000,
+			NONE_BIT									= 0x00000000,
+			INDIRECT_COMMAND_READ_BIT					= 0x00000001,
+			INDEX_READ_BIT								= 0x00000002,
+			VERTEX_ATTRIBUTE_READ_BIT					= 0x00000004,
+			UNIFORM_READ_BIT							= 0x00000008,
+			INPUT_ATTACHMENT_READ_BIT					= 0x00000010,
+			SHADER_READ_BIT								= 0x00000020,
+			SHADER_WRITE_BIT							= 0x00000040,
+			COLOUR_ATTACHMENT_READ_BIT					= 0x00000080,
+			COLOUR_ATTACHMENT_WRITE_BIT					= 0x00000100,
+			DEPTH_STENCIL_ATTACHMENT_READ_BIT			= 0x00000200,
+			DEPTH_STENCIL_ATTACHMENT_WRITE_BIT			= 0x00000400,
+			TRANSFER_READ_BIT							= 0x00000800,
+			TRANSFER_WRITE_BIT							= 0x00001000,
+			HOST_READ_BIT								= 0x00002000,
+			HOST_WRITE_BIT								= 0x00004000,
+			MEMORY_READ_BIT								= 0x00008000,
+			MEMORY_WRITE_BIT							= 0x00010000,
+
+			//Extensions
+
+			TRANSFORM_FEEDBACK_WRITE_BIT				= 0x02000000,
+			TRANSFORM_FEEDBACK_COUNTER_READ_BIT			= 0x04000000,
+			TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT		= 0x08000000,
+			CONDITIONAL_RENDERING_READ_BIT				= 0x00100000,
+			FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT	= 0x00800000,
+			ACCELERATION_STRUCTURE_READ_BIT				= 0x00200000,
+			ACCELERATION_STRUCTURE_WRITE_BIT			= 0x00400000,
+			FRAGMENT_DENSITY_MAP_READ_BIT				= 0x01000000,
+			VIDEO_DECODE_READ_BIT						= 0x0000000800000000,
+			VIDEO_DECODE_WRITE_BIT						= 0x0000001000000000,
+			VIDEO_ENCODE_READ_BIT						= 0x0000002000000000,
+			VIDEO_ENCODE_WRITE_BIT						= 0x0000004000000000,
+			SHADER_BINDING_TABLE_READ_BIT				= 0x0000010000000000,
+
+			//SYNCHRONISATION_2
+
+			SHADER_SAMPLED_READ_BIT						= 0x0000000100000000,
+			SHADER_STORAGE_READ_BIT						= 0x0000000200000000,
+			SHADER_STORAGE_WRITE_BIT					= 0x0000000400000000,
 		};
 		struct CreateInfo
 		{
@@ -144,11 +187,49 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		inline const CreateInfo& GetCreateInfo() const { return m_CI; }
+		
+		static constexpr uint32_t QueueFamilyIgnored = ~0;
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 	};
-	#define MIRU_QUEUE_FAMILY_IGNORED (~0U)
+
+	//Inter/Intra-Command Buffer Resource Synchronisation
+	class MIRU_API Barrier2
+	{
+		//enum/struct
+	public:
+		struct CreateInfo
+		{
+			Barrier::Type				type;					//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			PipelineStageBit			srcStageMask;			//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			Barrier::AccessBit			srcAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			PipelineStageBit			dstStageMask;			//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			Barrier::AccessBit			dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
+			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
+			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
+			Ref<Buffer>					pBuffer;				//For Type::BUFFER
+			uint64_t					offset;					//For Type::BUFFER
+			uint64_t					size;					//For Type::BUFFER
+			Ref<Image>					pImage;					//For Type::IMAGE
+			Image::Layout				oldLayout;				//For Type::IMAGE
+			Image::Layout				newLayout;				//For Type::IMAGE
+			Image::SubresourceRange		subresourceRange;		//For Type::IMAGE
+		};
+		//Methods
+	public:
+		static Ref<Barrier2> Create(Barrier2::CreateInfo* pCreateInfo);
+		virtual ~Barrier2() = default;
+		const CreateInfo& GetCreateInfo() { return m_CI; }
+
+		inline const CreateInfo& GetCreateInfo() const { return m_CI; }
+
+		static constexpr uint32_t QueueFamilyIgnored = ~0;
+
+		//Members
+	protected:
+		CreateInfo m_CI = {};
+	};
 }
 }

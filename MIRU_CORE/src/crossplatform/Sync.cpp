@@ -53,6 +53,28 @@ Ref<Semaphore> Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 	}
 }
 
+Ref<TimelineSemaphore> TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* pCreateInfo)
+{
+	switch (GraphicsAPI::GetAPI())
+	{
+	case GraphicsAPI::API::D3D12:
+		#if defined (MIRU_D3D12)
+		return CreateRef<d3d12::TimelineSemaphore>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
+	case GraphicsAPI::API::VULKAN:
+		#if defined (MIRU_VULKAN)
+		return CreateRef<vulkan::TimelineSemaphore>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
+	case GraphicsAPI::API::UNKNOWN:
+	default:
+		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+	}
+}
+
 Ref<Event> Event::Create(Event::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())

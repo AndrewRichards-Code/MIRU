@@ -70,7 +70,7 @@ uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
 		{
 			return index;
 		}
-		if (arc::BitwiseCheck(flags, VK_QUEUE_TRANSFER_BIT)s
+		if (arc::BitwiseCheck(flags, VK_QUEUE_TRANSFER_BIT)
 			&& !arc::BitwiseCheck(flags, VK_QUEUE_COMPUTE_BIT)
 			&& !arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
 			&& type == QueueType::TRANSFER)
@@ -197,6 +197,64 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 
 	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	m_CmdBufferSI.pNext = nullptr;
+	m_CmdBufferSI.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.size());
+	m_CmdBufferSI.pWaitSemaphores = vkWaits.data();
+	m_CmdBufferSI.pWaitDstStageMask = (VkPipelineStageFlags*)(waitDstPipelineStages.data());
+	m_CmdBufferSI.commandBufferCount = static_cast<uint32_t>(submitCmdBuffers.size());
+	m_CmdBufferSI.pCommandBuffers = submitCmdBuffers.data();
+	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
+	m_CmdBufferSI.pSignalSemaphores = vkSignals.data();
+
+	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
+}
+
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if (waits.size() != waitDstPipelineStages.size())
+	{
+		MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait TimelineSemaphores and Wait Destination PipelineStages does not match.");
+	}
+
+	std::vector<VkCommandBuffer>submitCmdBuffers;
+	for (auto& index : cmdBufferIndices)
+	{
+		if (index < m_CI.commandBufferCount)
+			submitCmdBuffers.push_back(m_CmdBuffers[index]);
+	}
+	std::vector<VkSemaphore> vkWaits;
+	std::vector<uint64_t> vkWaitsValues;
+	for (auto& wait : waits)
+	{
+		vkWaits.push_back(ref_cast<TimelineSemaphore>(wait.first)->m_Semaphore);
+		vkWaitsValues.push_back(wait.second);
+	}
+
+	std::vector<VkSemaphore> vkSignals;
+	std::vector<uint64_t>  vkSignalValues;
+	for (auto& signal : signals)
+	{
+		vkSignals.push_back(ref_cast<Semaphore>(signal.first)->m_Semaphore);
+		vkSignalValues.push_back(signal.second);
+	}
+
+	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
+
+	VkTimelineSemaphoreSubmitInfoKHR timelineSemaphoreSI;
+	timelineSemaphoreSI.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR;
+	timelineSemaphoreSI.pNext = nullptr;
+	timelineSemaphoreSI.waitSemaphoreValueCount = static_cast<uint32_t>(vkWaitsValues.size());;
+	timelineSemaphoreSI.pWaitSemaphoreValues = vkWaitsValues.data();
+	timelineSemaphoreSI.signalSemaphoreValueCount = static_cast<uint32_t>(vkSignalValues.size());
+	timelineSemaphoreSI.pSignalSemaphoreValues = vkSignalValues.data();
+
+	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
+	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
+
+	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	m_CmdBufferSI.pNext = &timelineSemaphoreSI;
 	m_CmdBufferSI.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.size());
 	m_CmdBufferSI.pWaitSemaphores = vkWaits.data();
 	m_CmdBufferSI.pWaitDstStageMask = (VkPipelineStageFlags*)(waitDstPipelineStages.data());

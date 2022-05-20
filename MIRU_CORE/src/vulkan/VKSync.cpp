@@ -93,6 +93,80 @@ Semaphore::~Semaphore()
 	vkDestroySemaphore(m_Device, m_Semaphore, nullptr);
 }
 
+//TimelineSemaphore
+TimelineSemaphore::TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo)
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	m_CI = *pCreateInfo;
+
+	m_SemaphoreTypeCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO_KHR;
+	m_SemaphoreTypeCI.pNext = nullptr;
+	m_SemaphoreTypeCI.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE_KHR;
+	m_SemaphoreTypeCI.initialValue = 0;
+
+	m_SemaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	m_SemaphoreCI.pNext = &m_SemaphoreTypeCI;
+	m_SemaphoreCI.flags = 0;
+
+	MIRU_ASSERT(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create TimelineSemaphore.");
+	VKSetName<VkSemaphore>(m_Device, m_Semaphore, m_CI.debugName);
+}
+
+void TimelineSemaphore::Signal(uint64_t value)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	VkSemaphoreSignalInfoKHR signalInfo;
+	signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO_KHR;
+	signalInfo.pNext = nullptr;
+	signalInfo.semaphore = m_Semaphore;
+	signalInfo.value = value;
+
+	MIRU_ASSERT(vkSignalSemaphore(m_Device, &signalInfo), "ERROR: VULKAN: Failed to a signal TimelineSemaphore.");
+}
+
+bool TimelineSemaphore::Wait(uint64_t value, uint64_t timeout)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	VkSemaphoreWaitInfoKHR waitInfo;
+	waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO_KHR;
+	waitInfo.pNext = nullptr;
+	waitInfo.flags = 0;
+	waitInfo.semaphoreCount = 1;
+	waitInfo.pSemaphores = &m_Semaphore;
+	waitInfo.pValues = &value;
+
+	VkResult result = vkWaitSemaphores(m_Device, &waitInfo, timeout);
+	if (result == VK_SUCCESS)
+		return true;
+	else if (result == VK_TIMEOUT)
+		return false;
+	else
+	{
+		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to wait for TimelineSemaphore.");
+		return false;
+	}
+}
+
+uint64_t TimelineSemaphore::GetValue()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	uint64_t value;
+	MIRU_ASSERT(vkGetSemaphoreCounterValue(m_Device, m_Semaphore, &value), "ERROR: VULKAN: Failed to a get TimelineSemaphore's counter value.");
+	return value;
+}
+
+TimelineSemaphore::~TimelineSemaphore()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	vkDestroySemaphore(m_Device, m_Semaphore, nullptr);
+}
+
 //Event
 Event::Event(Event::CreateInfo* pCreateInfo)
 	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))

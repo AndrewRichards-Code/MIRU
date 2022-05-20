@@ -56,7 +56,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		#endif
 
 		//Extensions
-		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DYNAMIC_RENDERING))
+		AddExtensions();
 		{
 			#if defined(VK_KHR_dynamic_rendering)
 			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
@@ -218,35 +218,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		deviceCI_pNext = &m_PhysicalDevices.m_PDIs[0].m_Features2;
 	#endif
 
-	m_RI.activeExtensions = ExtensionsBit::NONE;
-	#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
-	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME)
-		&& IsActive(m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
-	{
-		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
-	}
-	#endif
-	#if defined(VK_KHR_dynamic_rendering)
-	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
-	{
-		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
-	}
-	#endif
-	#if defined(VK_KHR_multiview)
-	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
-	{
-		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
-	}
-	#endif
-	#if defined(VK_EXT_shader_viewport_index_layer)
-	if (IsActive(m_ActiveDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
-	{
-		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
-	}
-	#endif
-	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
-	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
-	m_RI.apiVersionPatch = VK_API_VERSION_PATCH(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+	SetResultInfo();
 
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	m_DeviceCI.pNext = deviceCI_pNext;
@@ -262,7 +234,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
 	//Load Extension PFN
-	#define _STR(str) #str
+	LoadExtensionPFNs();
 	#define MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(ext) if(IsActive(m_ActiveInstanceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Instance); }
 	#define MIRU_VULKAN_LOAD_DEVICE_EXTENSION(ext) if(IsActive(m_ActiveDeviceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Device); }
 
@@ -337,6 +309,168 @@ bool Context::IsActive(std::vector<const char*> list, const char* name)
 		}
 	}
 	return found;
+}
+
+void Context::AddExtensions()
+{
+	#if defined(VK_VERSION_1_0)
+	if (m_AI.apiVersion >= VK_API_VERSION_1_0)
+	{
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::TIMELINE_SEMAPHORE))
+		{
+			#if defined(VK_KHR_timeline_semaphore)
+			m_DeviceExtensions.push_back(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+			//Required by VK_KHR_timeline_semaphore
+			if (m_AI.apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SYNCHRONISATION_2))
+		{
+			#if defined(VK_KHR_synchronization2)
+			m_DeviceExtensions.push_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+			//Required by VK_KHR_synchronization2
+			if (m_AI.apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DYNAMIC_RENDERING))
+		{
+			#if defined(VK_KHR_dynamic_rendering)
+			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+			//Required by VK_KHR_dynamic_rendering
+			if (m_AI.apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::MULTIVIEW))
+		{
+			#if defined(VK_KHR_multiview)
+			m_DeviceExtensions.push_back(VK_KHR_MULTIVIEW_EXTENSION_NAME);
+			//Required by VK_KHR_multiview
+			if (m_AI.apiVersion < VK_API_VERSION_1_1)
+				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			#endif
+		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER))
+		{
+			#if defined(VK_EXT_shader_viewport_index_layer)
+			m_DeviceExtensions.push_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
+			#endif
+		}
+	}
+	#endif
+
+	#if defined(VK_VERSION_1_1)
+	if (m_AI.apiVersion >= VK_API_VERSION_1_1)
+	{
+		//Extensions
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::RAY_TRACING))
+		{
+			#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
+			//Required for ExtensionsBit::RAY_TRACING
+			m_DeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+			m_DeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+
+			//Required by VK_KHR_acceleration_structure
+			if (m_AI.apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			if (m_AI.apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			m_DeviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+
+			//Required for VK_KHR_ray_tracing_pipeline
+			if (m_AI.apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME); //Promoted to Vulkan 1.2
+
+			//Required by VK_KHR_spirv_1_4
+			if (m_AI.apiVersion < VK_API_VERSION_1_2)
+				m_DeviceExtensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME); //Promoted to Vulkan 1.2
+			#endif
+		}
+	}
+	#endif
+}
+
+void Context::SetResultInfo()
+{
+	m_RI.activeExtensions = ExtensionsBit::NONE;
+	#if defined(VK_KHR_ray_tracing_pipeline) && defined(VK_KHR_acceleration_structure)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME)
+		&& IsActive(m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
+	}
+	#endif
+	#if defined(VK_KHR_timeline_semaphore)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::TIMELINE_SEMAPHORE;
+	}
+	#endif
+	#if defined(VK_KHR_synchronization2)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::SYNCHRONISATION_2;
+	}
+	#endif
+	#if defined(VK_KHR_dynamic_rendering)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
+	}
+	#endif
+	#if defined(VK_KHR_multiview)
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
+	}
+	#endif
+	#if defined(VK_EXT_shader_viewport_index_layer)
+	if (IsActive(m_ActiveDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
+	{
+		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
+	}
+	#endif
+	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+	m_RI.apiVersionPatch = VK_API_VERSION_PATCH(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+}
+
+#define _STR(str) #str
+#define MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(ext) if(IsActive(m_ActiveInstanceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Instance); }
+#define MIRU_VULKAN_LOAD_DEVICE_EXTENSION(ext) if(IsActive(m_ActiveDeviceExtensions, _STR(VK_##ext))) { LoadPFN_VK_##ext(m_Device); }
+
+void Context::LoadExtensionPFNs()
+{
+	#if defined(VK_EXT_debug_utils)
+	MIRU_VULKAN_LOAD_INSTANCE_EXTENSION(EXT_debug_utils);
+	#endif
+
+	#if defined(VK_KHR_buffer_device_address)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_buffer_device_address);
+	#endif
+
+	#if defined(VK_KHR_ray_tracing_pipeline)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_ray_tracing_pipeline);
+	#endif
+
+	#if defined(VK_KHR_acceleration_structure)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_acceleration_structure);
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_deferred_host_operations);
+	#endif
+
+	#if defined(VK_KHR_synchronization2)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_synchronization2);
+	#endif
+
+	#if defined(VK_KHR_timeline_semaphore)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_timeline_semaphore);
+	#endif
+
+	#if defined(VK_KHR_dynamic_rendering)
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_dynamic_rendering);
+	#endif
 }
 
 Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t apiVersion)
@@ -417,12 +551,30 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			}
 			#endif
 
+			#if defined(VK_KHR_timeline_semaphore)
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			{
+				pdi.m_TimelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures;
+				nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures.pNext;
+			}
+			#endif
+
 			#if defined(VK_KHR_dynamic_rendering)
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_DynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
 				*nextPropsAddr = &pdi.m_DynamicRenderingFeatures;
 				nextPropsAddr = &pdi.m_DynamicRenderingFeatures.pNext;
+			}
+			#endif
+
+			#if defined(VK_KHR_multiview)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			{
+				pdi.m_MultivewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_MultivewFeatures;
+				nextPropsAddr = &pdi.m_MultivewFeatures.pNext;
 			}
 			#endif
 
@@ -458,6 +610,24 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				pdi.m_AccelerationStructureProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
 				*nextPropsAddr = &pdi.m_AccelerationStructureProperties;
 				nextPropsAddr = &pdi.m_AccelerationStructureProperties.pNext;
+			}
+			#endif
+
+			#if defined(VK_KHR_timeline_semaphore)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			{
+				pdi.m_TimelineSemaphoreProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES_KHR;
+				*nextPropsAddr = &pdi.m_TimelineSemaphoreProperties;
+				nextPropsAddr = &pdi.m_TimelineSemaphoreProperties.pNext;
+			}
+			#endif
+			
+			#if defined(VK_KHR_multiview)
+			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			{
+				pdi.m_MultivewProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR;
+				*nextPropsAddr = &pdi.m_MultivewProperties;
+				nextPropsAddr = &pdi.m_MultivewProperties.pNext;
 			}
 			#endif
 

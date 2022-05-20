@@ -163,6 +163,21 @@ namespace miru
 	}
 #endif
 
+#if defined(VK_KHR_timeline_semaphore)
+	inline PFN_vkGetSemaphoreCounterValueKHR vkGetSemaphoreCounterValueKHR;
+	inline PFN_vkSignalSemaphoreKHR vkSignalSemaphoreKHR;
+	inline PFN_vkWaitSemaphoresKHR vkWaitSemaphoresKHR;
+
+	inline bool LoadPFN_VK_KHR_timeline_semaphore(VkDevice& device)
+	{
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkGetSemaphoreCounterValueKHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkSignalSemaphoreKHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkWaitSemaphoresKHR);
+
+		return true;
+	}
+#endif
+
 #if defined(VK_KHR_dynamic_rendering)
 	inline PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
 	inline PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;

@@ -251,6 +251,38 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	std::vector<ID3D12CommandList*>submitCmdBuffers;
+
+	for (auto& index : cmdBufferIndices)
+	{
+		if (index < m_CI.commandBufferCount)
+			submitCmdBuffers.push_back(m_CmdBuffers[index]);
+	}
+
+	for (auto& wait : waits)
+	{
+		MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait.first)->m_Semaphore, wait.second), "ERROR: D3D12: Failed to Wait on the wait TimelineSemaphore.");
+	}
+
+	queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
+
+	for (auto& signal : signals)
+	{
+		MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal.first)->m_Semaphore, signal.second), "ERROR: D3D12: Failed to Signal the signal TimelineSemaphore.");
+	}
+
+	if (fence)
+	{
+		ref_cast<Fence>(fence)->GetValue()++;
+		MIRU_ASSERT(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
+	}
+}
+
 void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -516,8 +548,8 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
@@ -567,8 +599,8 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
@@ -605,8 +637,8 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	std::vector<Ref<crossplatform::Barrier>> barriers;
 	crossplatform::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-	barrierCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	for (auto& input : subpassDesc.inputAttachments)
 	{
 		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
@@ -1177,8 +1209,8 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		bCI.type = Barrier::Type::IMAGE;
 		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
 		bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.pImage = srcImage;
 		bCI.oldLayout = srcImageLayout;
 		bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;

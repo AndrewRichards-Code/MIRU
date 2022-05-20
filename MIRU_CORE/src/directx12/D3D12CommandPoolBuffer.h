@@ -37,6 +37,7 @@ namespace d3d12
 		void Reset(uint32_t index, bool releaseResources) override;
 		void ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<crossplatform::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) override;
 		void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence) override;
+		void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence) override;
 
 		void SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage) override;
 		void ResetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage) override;

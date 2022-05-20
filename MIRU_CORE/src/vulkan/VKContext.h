@@ -38,6 +38,10 @@ namespace vulkan
 				VkPhysicalDeviceAccelerationStructureFeaturesKHR m_AccelerationStructureFeatures;
 				VkPhysicalDeviceAccelerationStructurePropertiesKHR m_AccelerationStructureProperties;
 				#endif
+				#if defined(VK_KHR_timeline_semaphore)
+				VkPhysicalDeviceTimelineSemaphoreFeaturesKHR m_TimelineSemaphoreFeatures;
+				VkPhysicalDeviceTimelineSemaphorePropertiesKHR m_TimelineSemaphoreProperties;
+				#endif
 				#if defined(VK_KHR_dynamic_rendering)
 				VkPhysicalDeviceDynamicRenderingFeaturesKHR m_DynamicRenderingFeatures;
 				#endif
@@ -66,6 +70,11 @@ namespace vulkan
 		void DeviceWaitIdle() override { vkDeviceWaitIdle(m_Device); };
 
 		static bool IsActive(std::vector<const char*> list, const char* name);
+
+	private:
+		void AddExtensions();
+		void SetResultInfo();
+		void LoadExtensionPFNs();
 
 		//Members
 	public:

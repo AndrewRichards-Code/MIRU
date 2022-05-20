@@ -59,7 +59,7 @@ bool Fence::Wait()
 			return false;
 		else
 		{
-			MIRU_ASSERT(result, "ERROR: D3D12: Failed to get status of Fence.");
+			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait of Fence.");
 			return false;
 		}
 	}
@@ -91,6 +91,61 @@ Semaphore::~Semaphore()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	MIRU_D3D12_SAFE_RELEASE(m_Semaphore);
+}
+
+//TimelineSemaphore
+TimelineSemaphore::TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo)
+	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	m_CI = *pCreateInfo;
+	MIRU_ASSERT(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create TimelineSemaphore.");
+	D3D12SetName(m_Semaphore, m_CI.debugName + " : TimelineSemaphore");
+}
+
+TimelineSemaphore::~TimelineSemaphore()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	MIRU_D3D12_SAFE_RELEASE(m_Semaphore);
+}
+
+void TimelineSemaphore::Signal(uint64_t value)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	MIRU_ASSERT(m_Semaphore->Signal(value), "ERROR: D3D12: Failed to a signal TimelineSemaphore.");
+}
+
+bool TimelineSemaphore::Wait(uint64_t value, uint64_t timeout)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	UINT64 currentValue = m_Semaphore->GetCompletedValue();
+	if (currentValue < value)
+	{
+		HANDLE _event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		MIRU_ASSERT(m_Semaphore->SetEventOnCompletion(value, _event), "ERROR: D3D12: Failed to wait for Fence.");
+		DWORD result = WaitForSingleObject(_event, static_cast<DWORD>(timeout / 1000));
+		if (result == WAIT_OBJECT_0)
+			return true;
+		else if (result == WAIT_TIMEOUT)
+			return false;
+		else
+		{
+			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait of Fence.");
+			return false;
+		}
+	}
+	return true;
+}
+
+uint64_t TimelineSemaphore::GetValue()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	return m_Semaphore->GetCompletedValue();
 }
 
 //Event - Split Barrier

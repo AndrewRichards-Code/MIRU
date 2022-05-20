@@ -49,6 +49,23 @@ namespace d3d12
 		UINT64 m_Value;
 	};
 
+	class TimelineSemaphore final : public crossplatform::TimelineSemaphore
+	{
+		//Methods
+	public:
+		TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo);
+		~TimelineSemaphore();
+
+		void Signal(uint64_t value) override;
+		bool Wait(uint64_t value, uint64_t timeout) override;
+		uint64_t GetValue() override;
+
+		//Members
+	public:
+		ID3D12Device* m_Device;
+		ID3D12Fence* m_Semaphore;
+	};
+
 	class Event final : public crossplatform::Event
 	{
 		//Methods

@@ -40,6 +40,26 @@ namespace vulkan
 		VkSemaphoreCreateInfo m_SemaphoreCI;
 	};
 
+	class TimelineSemaphore final : public crossplatform::TimelineSemaphore
+	{
+		//Methods
+	public:
+		TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo);
+		~TimelineSemaphore();
+
+		void Signal(uint64_t value) override;
+		bool Wait(uint64_t value, uint64_t timeout) override;
+		uint64_t GetValue() override;
+
+		//Members
+	public:
+		VkDevice m_Device;
+
+		VkSemaphore m_Semaphore;
+		VkSemaphoreCreateInfo m_SemaphoreCI;
+		VkSemaphoreTypeCreateInfoKHR m_SemaphoreTypeCI;
+	};
+
 	class Event final : public crossplatform::Event
 	{
 		//Methods
