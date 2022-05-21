@@ -65,7 +65,7 @@
 #endif
 
 //D3D12
-#include "directx12/D3D12_Include.h"
+#include "d3d12/D3D12_Include.h"
 
 //Vulkan
 #include "vulkan/VK_Include.h"
@@ -77,6 +77,7 @@
 #else
 #define MIRU_API ARC_IMPORT
 #endif
+#define MIRU_CLASS_REF_TYPEDEF(_class) typedef Ref<_class> _class##Ref
 
 //MIRU GraphicsAPI
 #include "crossplatform/GraphicsAPI.h"
@@ -176,7 +177,7 @@ namespace miru
 
 //MIRU SetName
 #define MIRU_ALLOW_API_SETNAME_FN_COMPILE
-#include "directx12/D3D12_SetName.h"
+#include "d3d12/D3D12_SetName.h"
 #include "vulkan/VK_SetName.h"
 
 //MIRU Debugbreak, Assert and Warn

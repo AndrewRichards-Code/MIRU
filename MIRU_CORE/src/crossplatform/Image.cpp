@@ -1,6 +1,6 @@
 #include "miru_core_common.h"
 #if defined (MIRU_D3D12)
-#include "directx12/D3D12Image.h"
+#include "d3d12/D3D12Image.h"
 #endif
 #if defined (MIRU_VULKAN)
 #include "vulkan/VKImage.h"

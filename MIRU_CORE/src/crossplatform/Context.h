@@ -108,5 +108,6 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 		ResultInfo m_RI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Context);
 }
 }

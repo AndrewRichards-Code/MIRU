@@ -124,5 +124,6 @@ namespace crossplatform
 		//Key is the set number
 		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
 	};
+	MIRU_CLASS_REF_TYPEDEF(Shader);
 }
 }

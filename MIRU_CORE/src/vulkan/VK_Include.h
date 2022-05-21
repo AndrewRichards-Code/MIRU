@@ -32,6 +32,8 @@
 
 namespace miru
 {
+namespace vulkan
+{
 	//Current Extensions
 
 #if defined(VK_KHR_acceleration_structure)
@@ -178,6 +180,27 @@ namespace miru
 	}
 #endif
 
+#if defined(VK_KHR_synchronization2)
+	inline PFN_vkCmdPipelineBarrier2KHR vkCmdPipelineBarrier2KHR;
+	inline PFN_vkCmdResetEvent2KHR vkCmdResetEvent2KHR;
+	inline PFN_vkCmdSetEvent2KHR vkCmdSetEvent2KHR;
+	inline PFN_vkCmdWaitEvents2KHR vkCmdWaitEvents2KHR;
+	inline PFN_vkCmdWriteTimestamp2KHR vkCmdWriteTimestamp2KHR;
+	inline PFN_vkQueueSubmit2KHR vkQueueSubmit2KHR;
+
+	inline bool LoadPFN_VK_KHR_synchronization2(VkDevice& device)
+	{
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdPipelineBarrier2KHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdResetEvent2KHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdSetEvent2KHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdWaitEvents2KHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdWriteTimestamp2KHR);
+		MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkQueueSubmit2KHR);
+
+		return true;
+	}
+#endif
+
 #if defined(VK_KHR_dynamic_rendering)
 	inline PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
 	inline PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
@@ -191,5 +214,6 @@ namespace miru
 	}
 #endif
 
+}
 }
 #endif

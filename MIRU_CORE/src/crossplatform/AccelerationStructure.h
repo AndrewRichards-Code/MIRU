@@ -175,6 +175,7 @@ namespace crossplatform
 		BuildSizesInfo m_BSI= {};
 		BuildGeometryInfo m_BGI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(AccelerationStructureBuildInfo);
 
 	class Buffer;
 	class MIRU_API AccelerationStructure
@@ -215,6 +216,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(AccelerationStructure);
 
 	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure);
 	MIRU_API DeviceAddress GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer);

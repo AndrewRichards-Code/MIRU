@@ -80,7 +80,7 @@ namespace crossplatform
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-
 	};
+	MIRU_CLASS_REF_TYPEDEF(Allocator);
 }
 }

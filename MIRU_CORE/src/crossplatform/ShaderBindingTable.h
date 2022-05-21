@@ -45,5 +45,6 @@ namespace crossplatform
 		std::map<ShaderGroupHandleType, Ref<Buffer>> m_SBTs;
 		std::map<ShaderGroupHandleType, StridedDeviceAddressRegion> m_SDARs;
 	};
+	MIRU_CLASS_REF_TYPEDEF(ShaderBindingTable);
 }
 }

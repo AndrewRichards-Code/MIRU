@@ -297,6 +297,7 @@ namespace crossplatform
 		Allocation m_Allocation;
 		bool m_SwapchainImage = false;
 	};
+	MIRU_CLASS_REF_TYPEDEF(Image);
 
 	class MIRU_API ImageView
 	{
@@ -323,6 +324,7 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 		bool m_SwapchainImageView = false;
 	};
+	MIRU_CLASS_REF_TYPEDEF(ImageView);
 
 	class MIRU_API Sampler
 	{
@@ -386,5 +388,6 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Sampler);
 }
 }

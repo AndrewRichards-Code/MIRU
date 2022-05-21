@@ -326,11 +326,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				hitGroupDesc.AnyHitShaderImport = nullptr;
 				hitGroupDesc.ClosestHitShaderImport = nullptr;
 				hitGroupDesc.IntersectionShaderImport = nullptr;
-				if (shaderGroupInfo.anyHitShader != MIRU_SHADER_UNUSED)
+				if (shaderGroupInfo.anyHitShader != ShaderUnused)
 					hitGroupDesc.AnyHitShaderImport = exportDescs[shaderGroupInfo.anyHitShader].Name;
-				if (shaderGroupInfo.closestHitShader != MIRU_SHADER_UNUSED)
+				if (shaderGroupInfo.closestHitShader != ShaderUnused)
 					hitGroupDesc.ClosestHitShaderImport = exportDescs[shaderGroupInfo.closestHitShader].Name;
-				if (shaderGroupInfo.intersectionShader != MIRU_SHADER_UNUSED)
+				if (shaderGroupInfo.intersectionShader != ShaderUnused)
 					hitGroupDesc.IntersectionShaderImport = exportDescs[shaderGroupInfo.intersectionShader].Name;
 				hitGroupDescs.push_back(hitGroupDesc);
 				hitGroupCount++;

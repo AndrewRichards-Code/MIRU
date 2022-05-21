@@ -1,6 +1,6 @@
 #include "miru_core_common.h"
 #if defined (MIRU_D3D12)
-#include "directx12/D3D12Framebuffer.h"
+#include "d3d12/D3D12Framebuffer.h"
 #endif
 #if defined (MIRU_VULKAN)
 #include "vulkan/VKFramebuffer.h"

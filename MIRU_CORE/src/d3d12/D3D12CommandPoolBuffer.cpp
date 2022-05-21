@@ -251,7 +251,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence, bool unused)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1305,7 +1305,7 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 	CHECK_VALID_INDEX_RETURN(index);
 	RenderingResource& renderingResource = m_RenderingResources[index];
 
-	if (renderingResource.SubpassIndex == MIRU_SUBPASS_EXTERNAL)
+	if (renderingResource.SubpassIndex == RenderPass::SubpassExternal)
 		return;
 	
 	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;

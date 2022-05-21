@@ -71,7 +71,7 @@ void Basic()
 	contextCI.extensions = Context::ExtensionsBit::NONE;
 	contextCI.debugValidationLayers = true;
 	contextCI.deviceDebugName = "GPU Device";
-	Ref<Context> context = Context::Create(&contextCI);
+	ContextRef context = Context::Create(&contextCI);
 
 	//Creates the windows
 	WNDCLASS wc = { 0 };
@@ -92,7 +92,7 @@ void Basic()
 	swapchainCI.height = height;
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
-	Ref<Swapchain> swapchain = Swapchain::Create(&swapchainCI);
+	SwapchainRef swapchain = Swapchain::Create(&swapchainCI);
 	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
 
@@ -115,13 +115,13 @@ void Basic()
 		{"-Zi", "-Od", "-Fd"},
 		""
 	};
-	Ref<Shader> vertexShader = Shader::Create(&shaderCI);
+	ShaderRef vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
 	shaderCI.binaryFilepath = "res/bin/basic_ps_6_0_ps_main.spv";
 	shaderCI.recompileArguments.entryPoint = "ps_main";
 	shaderCI.recompileArguments.shaderModel = "ps_6_0";
-	Ref<Shader> fragmentShader = Shader::Create(&shaderCI);
+	ShaderRef fragmentShader = Shader::Create(&shaderCI);
 
 	//PostProcessing
 	shaderCI.debugName = "PostProcess: Vertex Shader Module";
@@ -130,44 +130,44 @@ void Basic()
 	shaderCI.recompileArguments.hlslFilepath = "res/shaders/postprocess.hlsl";
 	shaderCI.recompileArguments.entryPoint = "vs_main";
 	shaderCI.recompileArguments.shaderModel = "vs_6_0";
-	Ref<Shader> postProcessVertexShader = Shader::Create(&shaderCI);
+	ShaderRef postProcessVertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "PostProcess: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
 	shaderCI.binaryFilepath = "res/bin/postprocess_ps_6_0_ps_main.spv";
 	shaderCI.recompileArguments.entryPoint = "ps_main";
 	shaderCI.recompileArguments.shaderModel = "ps_6_0";
-	Ref<Shader> postProcessFragmentShader = Shader::Create(&shaderCI);
+	ShaderRef postProcessFragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
 	cmdPoolCI.pContext = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
-	Ref<CommandPool> cmdPool = CommandPool::Create(&cmdPoolCI);
+	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
 	cmdPoolCI.queueType = CommandPool::QueueType::TRANSFER;
-	Ref<CommandPool> cmdCopyPool = CommandPool::Create(&cmdPoolCI);
+	CommandPoolRef cmdCopyPool = CommandPool::Create(&cmdPoolCI);
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
 	cmdBufferCI.debugName = "CmdBuffer";
 	cmdBufferCI.pCommandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
-	Ref<CommandBuffer> cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
+	CommandBufferRef cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
 	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
-	Ref<CommandBuffer> cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
+	CommandBufferRef cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
 	allocCI.pContext = context;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
-	Ref<Allocator> cpu_alloc_0 = Allocator::Create(&allocCI);
+	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
 	allocCI.debugName = "GPU_ALLOC_0";
 	allocCI.properties = Allocator::PropertiesBit::DEVICE_LOCAL_BIT;
-	Ref<Allocator> gpu_alloc_0 = Allocator::Create(&allocCI);
+	AllocatorRef gpu_alloc_0 = Allocator::Create(&allocCI);
 
 	float vertices[32] =
 	{
@@ -201,11 +201,11 @@ void Basic()
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> c_vb = Buffer::Create(&verticesBufferCI);
+	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
 	verticesBufferCI.data = nullptr;
 	verticesBufferCI.pAllocator = gpu_alloc_0;
-	Ref<Buffer> g_vb = Buffer::Create(&verticesBufferCI);
+	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices Buffer";
@@ -214,11 +214,11 @@ void Basic()
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
 	indicesBufferCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> c_ib = Buffer::Create(&indicesBufferCI);
+	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
 	indicesBufferCI.data = nullptr;
 	indicesBufferCI.pAllocator = gpu_alloc_0;
-	Ref<Buffer> g_ib = Buffer::Create(&indicesBufferCI);
+	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
 	imageBufferCI.debugName = "MIRU logo upload buffer";
@@ -227,7 +227,7 @@ void Basic()
 	imageBufferCI.size = img_width * img_height * 4;
 	imageBufferCI.data = imageData;
 	imageBufferCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> c_imageBuffer = Buffer::Create(&imageBufferCI);
+	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
 
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "MIRU logo Image";
@@ -245,7 +245,7 @@ void Basic()
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
 	imageCI.pAllocator = gpu_alloc_0;
-	Ref<Image> image = Image::Create(&imageCI);
+	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 	Mat4 view = Mat4::Identity();
@@ -262,14 +262,14 @@ void Basic()
 	ubCI.size = 2 * sizeof(Mat4);
 	ubCI.data = ubData;
 	ubCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> ub1 = Buffer::Create(&ubCI);
+	BufferRef ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
 	ubCI.pAllocator = cpu_alloc_0;
-	Ref<Buffer> ub2 = Buffer::Create(&ubCI);
+	BufferRef ub2 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewCamCI;
 	ubViewCamCI.debugName = "Camera UBView";
@@ -279,7 +279,7 @@ void Basic()
 	ubViewCamCI.offset = 0;
 	ubViewCamCI.size = 2 * sizeof(Mat4);
 	ubViewCamCI.stride = 0;
-	Ref<BufferView> ubViewCam = BufferView::Create(&ubViewCamCI);
+	BufferViewRef ubViewCam = BufferView::Create(&ubViewCamCI);
 
 	BufferView::CreateInfo ubViewMdlCI;
 	ubViewMdlCI.debugName = "Model UBView";
@@ -289,13 +289,13 @@ void Basic()
 	ubViewMdlCI.offset = 0;
 	ubViewMdlCI.size = sizeof(Mat4);
 	ubViewMdlCI.stride = 0;
-	Ref<BufferView> ubViewMdl = BufferView::Create(&ubViewMdlCI);
+	BufferViewRef ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
 	//Transfer CmdBuffer
 	Fence::CreateInfo transferFenceCI = { "TransferFence", context->GetDevice(), false, UINT64_MAX };
-	Ref<Fence> transferFence = Fence::Create(&transferFenceCI);
+	FenceRef transferFence = Fence::Create(&transferFenceCI);
 	Semaphore::CreateInfo transferSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
-	Ref<Semaphore> transferSemaphore = Semaphore::Create(&transferSemaphoreCI);
+	SemaphoreRef transferSemaphore = Semaphore::Create(&transferSemaphoreCI);
 	{
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 
@@ -306,13 +306,13 @@ void Basic()
 		bCI.type = Barrier::Type::IMAGE;
 		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
 		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
-		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.srcQueueFamilyIndex =Barrier::QueueFamilyIgnored;
+		bCI.dstQueueFamilyIndex =Barrier::QueueFamilyIgnored;
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		Ref<Barrier> b = Barrier::Create(&bCI);
+		BarrierRef b = Barrier::Create(&bCI);
 		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -333,13 +333,13 @@ void Basic()
 		bCI.type = Barrier::Type::IMAGE;
 		bCI.srcAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		bCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
-		bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-		bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.pImage = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		Ref<Barrier> b = Barrier::Create(&bCI);
+		BarrierRef b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
 		cmdBuffer->End(2);
@@ -355,7 +355,7 @@ void Basic()
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
 	vbViewCI.stride = 4 * sizeof(float);
-	Ref<BufferView> vbv = BufferView::Create(&vbViewCI);
+	BufferViewRef vbv = BufferView::Create(&vbViewCI);
 
 	BufferView::CreateInfo ibViewCI;
 	ibViewCI.debugName = "IndicesBufferView";
@@ -365,7 +365,7 @@ void Basic()
 	ibViewCI.offset = 0;
 	ibViewCI.size = sizeof(indices);
 	ibViewCI.stride = sizeof(uint32_t);
-	Ref<BufferView> ibv = BufferView::Create(&ibViewCI);
+	BufferViewRef ibv = BufferView::Create(&ibViewCI);
 
 	ImageView::CreateInfo imageViewCI;
 	imageViewCI.debugName = "MIRU logo ImageView";
@@ -373,7 +373,7 @@ void Basic()
 	imageViewCI.pImage = image;
 	imageViewCI.viewType = Image::Type::TYPE_CUBE;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-	Ref<ImageView> imageView = ImageView::Create(&imageViewCI);
+	ImageViewRef imageView = ImageView::Create(&imageViewCI);
 
 	Sampler::CreateInfo samplerCI;
 	samplerCI.debugName = "Default Sampler";
@@ -393,7 +393,7 @@ void Basic()
 	samplerCI.maxLod = 1;
 	samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
 	samplerCI.unnormalisedCoordinates = false;
-	Ref<Sampler> sampler = Sampler::Create(&samplerCI);
+	SamplerRef sampler = Sampler::Create(&samplerCI);
 
 	//Colour MSAA
 	Image::CreateInfo colourCI;
@@ -412,7 +412,7 @@ void Basic()
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.pAllocator = gpu_alloc_0;
-	Ref<Image> colourImage = Image::Create(&colourCI);
+	ImageRef colourImage = Image::Create(&colourCI);
 
 	ImageView::CreateInfo colourImageViewCI;
 	colourImageViewCI.debugName = "Colour ImageView";
@@ -420,7 +420,7 @@ void Basic()
 	colourImageViewCI.pImage = colourImage;
 	colourImageViewCI.viewType = Image::Type::TYPE_2D;
 	colourImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
-	Ref<ImageView> colourImageView = ImageView::Create(&colourImageViewCI);
+	ImageViewRef colourImageView = ImageView::Create(&colourImageViewCI);
 
 	//Depth MSAA
 	Image::CreateInfo depthCI;
@@ -439,7 +439,7 @@ void Basic()
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.pAllocator = gpu_alloc_0;
-	Ref<Image> depthImage = Image::Create(&depthCI);
+	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
 	depthImageViewCI.debugName = "Depth ImageView";
@@ -447,7 +447,7 @@ void Basic()
 	depthImageViewCI.pImage = depthImage;
 	depthImageViewCI.viewType = Image::Type::TYPE_2D;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
-	Ref<ImageView> depthImageView = ImageView::Create(&depthImageViewCI);
+	ImageViewRef depthImageView = ImageView::Create(&depthImageViewCI);
 
 	//Resolve and Input
 	Image::CreateInfo resolveAndInputImageCI;
@@ -466,7 +466,7 @@ void Basic()
 	resolveAndInputImageCI.size = 0;
 	resolveAndInputImageCI.data = nullptr;
 	resolveAndInputImageCI.pAllocator = gpu_alloc_0;
-	Ref<Image> resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
+	ImageRef resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
 
 	ImageView::CreateInfo resolveAndInputImageViewCI;
 	resolveAndInputImageViewCI.debugName = "Resolve and Input ImageView";
@@ -474,7 +474,7 @@ void Basic()
 	resolveAndInputImageViewCI.pImage = resolveAndInputImage;
 	resolveAndInputImageViewCI.viewType = Image::Type::TYPE_2D;
 	resolveAndInputImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
-	Ref<ImageView> resolveAndInputImageView = ImageView::Create(&resolveAndInputImageViewCI);
+	ImageViewRef resolveAndInputImageView = ImageView::Create(&resolveAndInputImageViewCI);
 
 	//Basic and Pipeline Descriptor sets
 	DescriptorPool::CreateInfo descriptorPoolCI;
@@ -482,31 +482,31 @@ void Basic()
 	descriptorPoolCI.device = context->GetDevice();
 	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2}, {DescriptorType::INPUT_ATTACHMENT, 1} };
 	descriptorPoolCI.maxSets = 3;
-	Ref<DescriptorPool> descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
+	DescriptorPoolRef descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic: DescSetLayout1";
 	setLayoutCI.device = context->GetDevice();
 	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
-	Ref<DescriptorSetLayout> setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
+	DescriptorSetLayoutRef setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "Basic: DescSetLayout2";
 	setLayoutCI.descriptorSetLayoutBinding = {
 		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
 		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
 	};
-	Ref<DescriptorSetLayout> setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
+	DescriptorSetLayoutRef setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "PostProcess: DescSetLayout3";
 	setLayoutCI.descriptorSetLayoutBinding = {
 		{0, DescriptorType::INPUT_ATTACHMENT, 1, Shader::StageBit::FRAGMENT_BIT },
 	};
-	Ref<DescriptorSetLayout> setLayout3 = DescriptorSetLayout::Create(&setLayoutCI);
+	DescriptorSetLayoutRef setLayout3 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Basic: Descriptor Set 0";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
 	descriptorSetCI.pDescriptorSetLayouts = { setLayout1 };
-	Ref<DescriptorSet> descriptorSet_p0 = DescriptorSet::Create(&descriptorSetCI);
+	DescriptorSetRef descriptorSet_p0 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSetCI.debugName = "Basic: Descriptor Set 1";
 	descriptorSetCI.pDescriptorSetLayouts = { setLayout2 };
-	Ref<DescriptorSet> descriptorSet_p1 = DescriptorSet::Create(&descriptorSetCI);
+	DescriptorSetRef descriptorSet_p1 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet_p0->AddBuffer(0, 0, { { ubViewCam } });
 	descriptorSet_p1->AddBuffer(0, 0, { { ubViewMdl } });
 	descriptorSet_p1->AddImage(0, 1, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
@@ -515,7 +515,7 @@ void Basic()
 	descriptorSetCI.debugName = "PostProcess: Descriptor Set";
 	descriptorSetCI.pDescriptorPool = descriptorPool;
 	descriptorSetCI.pDescriptorSetLayouts = { setLayout3 };
-	Ref<DescriptorSet> descriptorSet1 = DescriptorSet::Create(&descriptorSetCI);
+	DescriptorSetRef descriptorSet1 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet1->AddImage(0, 0, { { nullptr, resolveAndInputImageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descriptorSet1->Update();
 
@@ -566,14 +566,14 @@ void Basic()
 		{PipelineType::GRAPHICS, {{2, Image::Layout::SHADER_READ_ONLY_OPTIMAL}}, {{3, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {}, {}, {} }
 	};
 	renderPassCI.subpassDependencies = {
-		{MIRU_SUBPASS_EXTERNAL, 0,
+		{RenderPass::SubpassExternal, 0,
 		PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
 		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT},
 		{0, 1,
 		PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
 		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT},
 	};
-	Ref<RenderPass> renderPass = RenderPass::Create(&renderPassCI);
+	RenderPassRef renderPass = RenderPass::Create(&renderPassCI);
 
 	//Basic and PostProcessing pipelines
 	Pipeline::CreateInfo pCI;
@@ -602,7 +602,7 @@ void Basic()
 	pCI.layout = { {setLayout1, setLayout2 }, {} };
 	pCI.renderPass = renderPass;
 	pCI.subpassIndex = 0;
-	Ref<Pipeline> pipeline = Pipeline::Create(&pCI);
+	PipelineRef pipeline = Pipeline::Create(&pCI);
 	Pipeline::CreateInfo p1CI = pCI;
 	p1CI.debugName = "PostProcess";
 	p1CI.shaders = { postProcessVertexShader, postProcessFragmentShader };
@@ -614,7 +614,7 @@ void Basic()
 	p1CI.layout = { {setLayout3 }, {} };
 	p1CI.renderPass = renderPass;
 	p1CI.subpassIndex = 1;
-	Ref<Pipeline> postProcessPipeline = Pipeline::Create(&p1CI);
+	PipelineRef postProcessPipeline = Pipeline::Create(&p1CI);
 
 	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
 	framebufferCI_0.debugName = "Framebuffer0";
@@ -624,7 +624,7 @@ void Basic()
 	framebufferCI_0.width = width;
 	framebufferCI_0.height = height;
 	framebufferCI_0.layers = 1;
-	Ref<Framebuffer> framebuffer0 = Framebuffer::Create(&framebufferCI_0);
+	FramebufferRef framebuffer0 = Framebuffer::Create(&framebufferCI_0);
 	framebufferCI_1.debugName = "Framebuffer1";
 	framebufferCI_1.device = context->GetDevice();
 	framebufferCI_1.renderPass = renderPass;
@@ -632,18 +632,18 @@ void Basic()
 	framebufferCI_1.width = width;
 	framebufferCI_1.height = height;
 	framebufferCI_1.layers = 1;
-	Ref<Framebuffer> framebuffer1 = Framebuffer::Create(&framebufferCI_1);
+	FramebufferRef framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
 	fenceCI.device = context->GetDevice();
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
-	std::vector<Ref<Fence>>draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
+	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	Ref<Semaphore> acquire = Semaphore::Create(&acquireSemaphoreCI);
-	Ref<Semaphore> submit = Semaphore::Create(&submitSemaphoreCI);
+	SemaphoreRef acquire = Semaphore::Create(&acquireSemaphoreCI);
+	SemaphoreRef submit = Semaphore::Create(&submitSemaphoreCI);
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
@@ -687,13 +687,13 @@ void Basic()
 				bCI.type = Barrier::Type::IMAGE;
 				bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
 				bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
-				bCI.srcQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
-				bCI.dstQueueFamilyIndex = MIRU_QUEUE_FAMILY_IGNORED;
+				bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+				bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 				bCI.pImage = resolveAndInputImage;
 				bCI.oldLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 				bCI.newLayout = Image::Layout::UNKNOWN;
 				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
-				Ref<Barrier> b = Barrier::Create(&bCI);
+				BarrierRef b = Barrier::Create(&bCI);
 				cmdBuffer->PipelineBarrier(2, PipelineStageBit::BOTTOM_OF_PIPE_BIT, PipelineStageBit::TOP_OF_PIPE_BIT, DependencyBit::NONE_BIT, { b });
 
 				cmdBuffer->End(2);

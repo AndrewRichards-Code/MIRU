@@ -33,5 +33,6 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Framebuffer);
 }
 }

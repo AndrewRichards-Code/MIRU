@@ -42,6 +42,9 @@ namespace vulkan
 				VkPhysicalDeviceTimelineSemaphoreFeaturesKHR m_TimelineSemaphoreFeatures;
 				VkPhysicalDeviceTimelineSemaphorePropertiesKHR m_TimelineSemaphoreProperties;
 				#endif
+				#if defined(VK_KHR_synchronization2)
+				VkPhysicalDeviceSynchronization2FeaturesKHR m_Synchronization2Features;
+				#endif
 				#if defined(VK_KHR_dynamic_rendering)
 				VkPhysicalDeviceDynamicRenderingFeaturesKHR m_DynamicRenderingFeatures;
 				#endif

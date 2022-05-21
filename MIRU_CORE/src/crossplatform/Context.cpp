@@ -1,6 +1,6 @@
 #include "miru_core_common.h"
 #if defined (MIRU_D3D12)
-#include "directx12/D3D12Context.h"
+#include "d3d12/D3D12Context.h"
 #endif
 #if defined (MIRU_VULKAN)
 #include "vulkan/VKContext.h"

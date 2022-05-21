@@ -36,6 +36,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Fence);
 
 	//Inter/Intra-Queue Synchronisation
 	class MIRU_API Semaphore
@@ -57,6 +58,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Semaphore);
 
 	//Host-Device and Inter/Intra-Queue Synchronisation
 	class MIRU_API TimelineSemaphore
@@ -83,6 +85,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(TimelineSemaphore);
 	typedef std::pair<Ref<TimelineSemaphore>, uint64_t> TimelineSemaphoreWithValue;
 
 	//Inter/Intra-Command Buffer Synchronisation
@@ -110,6 +113,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Event);
 
 	//Inter/Intra-Command Buffer Resource Synchronisation
 	class MIRU_API Barrier
@@ -194,6 +198,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Barrier);
 
 	//Inter/Intra-Command Buffer Resource Synchronisation
 	class MIRU_API Barrier2
@@ -231,5 +236,6 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Barrier2);
 }
 }

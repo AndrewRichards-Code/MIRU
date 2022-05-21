@@ -61,7 +61,7 @@ namespace crossplatform
 			Barrier::AccessBit	dstAccess;		//What accesses are needed into this subpass stage?
 			DependencyBit		dependencies;	//What rendering localities are needed between subpasses?
 		};
-		#define MIRU_SUBPASS_EXTERNAL (~0U)
+		static constexpr uint32_t SubpassExternal = ~0;
 		struct MultiviewCreateInfo
 		{
 			std::vector<uint32_t>	viewMasks = {};			//Which views rendering is broadcast to in each subpass; described as a bitfield of view indices. size() is 'subpassCount'
@@ -89,6 +89,8 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 
 	};
+	MIRU_CLASS_REF_TYPEDEF(RenderPass);
+
 	class MIRU_API Pipeline
 	{
 		//enums/structs
@@ -164,7 +166,7 @@ namespace crossplatform
 			std::vector<PushConstantRange>		  pushConstantRanges;
 		};
 
-		#define MIRU_SHADER_UNUSED (~0U)
+		static constexpr uint32_t ShaderUnused = ~0;
 		struct ShaderGroupInfo
 		{
 			ShaderGroupType type;								//If GENERAL, specify only a generalShader. If TRIANGLES_HIT_GROUP, specify a closestHitShader and/or an anyHitShader. If PROCEDURAL_HIT_GROUP, specify a closestHitShader and/or an anyHitShader and an intersectionShader must be specified.
@@ -226,6 +228,7 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(Pipeline);
 
 	struct RenderingAttachmentInfo
 	{

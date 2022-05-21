@@ -43,13 +43,13 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			std::string			debugName;
-			void*				device;
-			UsageBit			usage;
-			ImageDimension		imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for a image.
-			size_t				size;
-			void*				data;
-			Ref<Allocator>		pAllocator;
+			std::string		debugName;
+			void*			device;
+			UsageBit		usage;
+			ImageDimension	imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for an image.
+			size_t			size;
+			void*			data;
+			Ref<Allocator>	pAllocator;
 		};
 
 		//Methods
@@ -64,7 +64,8 @@ namespace crossplatform
 		CreateInfo m_CI = {};
 		Allocation m_Allocation;
 	};
-
+	MIRU_CLASS_REF_TYPEDEF(Buffer);
+	
 	class MIRU_API BufferView
 	{
 		//enums/structs
@@ -81,13 +82,13 @@ namespace crossplatform
 		};
 		struct CreateInfo
 		{
-			std::string			debugName;
-			void*				device;
-			Type				type;
-			Ref<Buffer>			pBuffer;
-			size_t				offset;
-			size_t				size;
-			size_t				stride;
+			std::string	debugName;
+			void*		device;
+			Type		type;
+			Ref<Buffer>	pBuffer;
+			size_t		offset;
+			size_t		size;
+			size_t		stride;
 		};
 
 		//Methods
@@ -100,5 +101,6 @@ namespace crossplatform
 	protected:
 		CreateInfo m_CI = {};
 	};
+	MIRU_CLASS_REF_TYPEDEF(BufferView);
 }
 }
