@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/AccelerationStructure.h"
+#include "base/AccelerationStructure.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class AccelerationStructureBuildInfo final : public crossplatform::AccelerationStructureBuildInfo
+	class AccelerationStructureBuildInfo final : public base::AccelerationStructureBuildInfo
 	{
 		//Methods
 	public:
@@ -22,7 +22,7 @@ namespace d3d12
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO m_RASPBI;
 	};
 
-	class AccelerationStructure final : public crossplatform::AccelerationStructure
+	class AccelerationStructure final : public base::AccelerationStructure
 	{
 		//Methods
 	public:

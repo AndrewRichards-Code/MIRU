@@ -16,7 +16,7 @@
 #include <winrt/Windows.Graphics.Display.h>
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 using namespace glm;
 
@@ -154,7 +154,7 @@ public:
 				cmdBuffer->DrawIndexed(frameIndex, 36);
 				cmdBuffer->EndRenderPass(frameIndex);
 				cmdBuffer->End(frameIndex);
-				cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+				cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
 				swapchain->Present(cmdPool, submit, frameIndex);
 

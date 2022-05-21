@@ -7,7 +7,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<RenderPass> RenderPass::Create(RenderPass::CreateInfo* pCreateInfo)
 {
@@ -27,7 +27,7 @@ Ref<RenderPass> RenderPass::Create(RenderPass::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -49,6 +49,6 @@ Ref<Pipeline> Pipeline::Create(Pipeline::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

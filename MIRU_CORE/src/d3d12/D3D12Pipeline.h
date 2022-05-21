@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_D3D12)
 #include "miru_core_common.h"
-#include "crossplatform/Pipeline.h"
+#include "base/Pipeline.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class RenderPass final : public crossplatform::RenderPass
+	class RenderPass final : public base::RenderPass
 	{
 		//Method
 	public:
@@ -19,7 +19,7 @@ namespace d3d12
 		ID3D12Device* m_Device;
 	};
 
-	class Pipeline final : public crossplatform::Pipeline
+	class Pipeline final : public base::Pipeline
 	{
 		//enums/structs
 	private:
@@ -39,16 +39,16 @@ namespace d3d12
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
-		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
+		std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
 
-		static D3D12_PRIMITIVE_TOPOLOGY ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology);
-		static DXGI_FORMAT ToDXGI_FORMAT(crossplatform::VertexType type);
+		static D3D12_PRIMITIVE_TOPOLOGY ToD3D12_PRIMITIVE_TOPOLOGY(base::PrimitiveTopology topology);
+		static DXGI_FORMAT ToDXGI_FORMAT(base::VertexType type);
 
 	private:
-		D3D12_BLEND ToD3D12_BLEND(crossplatform::BlendFactor blend);
-		D3D12_LOGIC_OP ToD3D12_LOGIC_OP(crossplatform::LogicOp logic);
+		D3D12_BLEND ToD3D12_BLEND(base::BlendFactor blend);
+		D3D12_LOGIC_OP ToD3D12_LOGIC_OP(base::LogicOp logic);
 
-		RootSignature CreateRootSignature(const crossplatform::Pipeline::PipelineLayout layout, uint32_t setNumOffset = 0, bool localRootSignature = false);
+		RootSignature CreateRootSignature(const base::Pipeline::PipelineLayout layout, uint32_t setNumOffset = 0, bool localRootSignature = false);
 		
 		//Members
 	public:
@@ -68,7 +68,7 @@ namespace d3d12
 		std::vector<D3D12_VIEWPORT> m_Viewports;
 		std::vector<D3D12_RECT> m_Scissors;
 
-		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
+		std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
 
 		D3D12_VIEW_INSTANCING_DESC m_ViewInstancingDesc;
 		std::vector<D3D12_VIEW_INSTANCE_LOCATION> m_ViewInstanceLocations;

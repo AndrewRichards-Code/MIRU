@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Swapchain.h"
+#include "base/Swapchain.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Swapchain final : public crossplatform::Swapchain
+	class Swapchain final : public base::Swapchain
 	{
 		//Methods
 	public:
@@ -14,8 +14,8 @@ namespace d3d12
 		~Swapchain();
 
 		void Resize(uint32_t width, uint32_t height) override;
-		void AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex) override;
-		void Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex) override;
+		void AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex) override;
+		void Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex) override;
 
 		//Members
 	public:

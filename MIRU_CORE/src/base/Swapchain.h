@@ -3,7 +3,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	class Context;
 	class Image;
@@ -41,8 +41,8 @@ namespace crossplatform
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
-		virtual void AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex) = 0;
-		virtual void Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex) = 0;
+		virtual void AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex) = 0;
+		virtual void Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex) = 0;
 
 	protected:
 		void FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);

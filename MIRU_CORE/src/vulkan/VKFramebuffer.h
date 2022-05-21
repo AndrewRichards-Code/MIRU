@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/Framebuffer.h"
+#include "base/Framebuffer.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Framebuffer final : public crossplatform::Framebuffer
+	class Framebuffer final : public base::Framebuffer
 	{
 		//Methods
 	public:

@@ -8,7 +8,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	class MIRU_API RenderPass
 	{

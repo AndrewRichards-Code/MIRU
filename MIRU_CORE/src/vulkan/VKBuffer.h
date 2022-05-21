@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/Buffer.h"
+#include "base/Buffer.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Buffer final : public crossplatform::Buffer
+	class Buffer final : public base::Buffer
 	{
 		//Methods
 	public:
@@ -28,7 +28,7 @@ namespace vulkan
 		VmaAllocationInfo m_VmaAI;
 	};
 
-	class BufferView final : public crossplatform::BufferView
+	class BufferView final : public base::BufferView
 	{
 	public:
 		//Methods

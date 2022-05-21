@@ -1,5 +1,5 @@
 #include "miru_core_common.h"
-#include "crossplatform/Context.h"
+#include "base/Context.h"
 #if defined (MIRU_D3D12)
 #include "d3d12/D3D12Swapchain.h"
 #include "d3d12/D3D12Image.h"
@@ -10,7 +10,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 {
@@ -30,7 +30,7 @@ Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 

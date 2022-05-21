@@ -3,7 +3,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	class RenderPass;
 	class ImageView;

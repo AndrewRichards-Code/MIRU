@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Shader.h"
+#include "base/Shader.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Shader final : public crossplatform::Shader
+	class Shader final : public base::Shader
 	{
 		//Methods
 	public:
@@ -18,10 +18,10 @@ namespace d3d12
 
 		void D3D12ShaderReflection(
 			const std::vector<char>& shaderBinary,
-			const std::vector<std::pair<crossplatform::Shader::StageBit, std::string>>& stageAndEntryPoints,
-			std::vector<crossplatform::Shader::VertexShaderInputAttributeDescription>& VSIADs,
-			std::vector<crossplatform::Shader::PixelShaderOutputAttributeDescription>& PSOADs,
-			std::map<uint32_t, std::map<uint32_t, crossplatform::Shader::ResourceBindingDescription>>& RBDs);
+			const std::vector<std::pair<base::Shader::StageBit, std::string>>& stageAndEntryPoints,
+			std::vector<base::Shader::VertexShaderInputAttributeDescription>& VSIADs,
+			std::vector<base::Shader::PixelShaderOutputAttributeDescription>& PSOADs,
+			std::map<uint32_t, std::map<uint32_t, base::Shader::ResourceBindingDescription>>& RBDs);
 
 		//Members
 	public:

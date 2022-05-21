@@ -7,7 +7,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	class Context;
 	class Swapchain;
@@ -86,8 +86,8 @@ namespace crossplatform
 		virtual void End(uint32_t index) = 0;
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
 		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<Fence>& fence) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<Fence>& fence, bool unused) = 0;
+		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<Fence>& fence) = 0;
+		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<Fence>& fence, bool unused) = 0;
 
 		virtual void SetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;

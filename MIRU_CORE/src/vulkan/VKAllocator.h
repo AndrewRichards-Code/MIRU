@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_VULKAN)
 #include "miru_core_common.h"
-#include "crossplatform/Allocator.h"
+#include "base/Allocator.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Allocator final : public crossplatform::Allocator
+	class Allocator final : public base::Allocator
 	{
 		//Methods
 	public:
@@ -16,11 +16,11 @@ namespace vulkan
 
 		void* GetNativeAllocator() override;
 
-		void SubmitData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
-		void AccessData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
+		void SubmitData(const base::Allocation& allocation, size_t size, void* data) override;
+		void AccessData(const base::Allocation& allocation, size_t size, void* data) override;
 
 	private:
-		/*VkMemoryPropertyFlags GetMemoryPropertyFlag(crossplatform::Resource::Type type, uint32_t usage);
+		/*VkMemoryPropertyFlags GetMemoryPropertyFlag(base::Resource::Type type, uint32_t usage);
 		uint32_t GetMemoryTypeIndex(VkMemoryPropertyFlags properties);
 		uint32_t GetQueueFamilyIndex(VkQueueFlagBits queueType);*/
 

@@ -7,7 +7,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<DescriptorPool> DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateInfo)
 {
@@ -27,7 +27,7 @@ Ref<DescriptorPool> DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateIn
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -49,7 +49,7 @@ Ref<DescriptorSetLayout> DescriptorSetLayout::Create(DescriptorSetLayout::Create
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -71,6 +71,6 @@ Ref<DescriptorSet> DescriptorSet::Create(DescriptorSet::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

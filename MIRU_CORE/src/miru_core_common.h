@@ -80,7 +80,7 @@
 #define MIRU_CLASS_REF_TYPEDEF(_class) typedef Ref<_class> _class##Ref
 
 //MIRU GraphicsAPI
-#include "crossplatform/GraphicsAPI.h"
+#include "base/GraphicsAPI.h"
 
 //MIRU Helpers
 #include "ARC/src/StringConversion.h"

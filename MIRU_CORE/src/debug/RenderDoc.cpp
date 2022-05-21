@@ -18,14 +18,14 @@ RenderDoc::RenderDoc()
 {
 	m_Debugger = DebuggerType::RENDER_DOC;
 	LoadRenderDoc();
-	if (crossplatform::GraphicsAPI::IsD3D12())
+	if (base::GraphicsAPI::IsD3D12())
 		Pix::LoadWinPixEventRuntime();
 }
 
 RenderDoc::~RenderDoc()
 {
 	UnloadRenderDoc();
-	if (crossplatform::GraphicsAPI::IsD3D12())
+	if (base::GraphicsAPI::IsD3D12())
 		Pix::UnloadWinPixEventRuntime();
 }
 
@@ -45,7 +45,7 @@ void RenderDoc::LoadRenderDoc()
 		s_RenderDocHandle = arc::DynamicLibrary::Load(s_RenderDocFullpath.generic_string());
 		if (!s_RenderDocHandle)
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";
 
 		#if defined(_WIN64) && !defined (MIRU_WIN64_UWP)
 			MIRU_WARN(GetLastError(), error_str.c_str());
@@ -60,7 +60,7 @@ void RenderDoc::LoadRenderDoc()
 	pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)arc::DynamicLibrary::LoadFunction(s_RenderDocHandle, "RENDERDOC_GetAPI");
 	if (!RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_0, (void**)&m_RenderDocApi))
 	{
-		std::string error_str = "WARN: CROSSPLATFORM: Unable to initial RenderDoc.";
+		std::string error_str = "WARN: BASE: Unable to initial RenderDoc.";
 		MIRU_WARN(true, error_str.c_str());
 		return;
 	}
@@ -73,7 +73,7 @@ void RenderDoc::UnloadRenderDoc()
 	{
 		if (!arc::DynamicLibrary::Unload(s_RenderDocHandle))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to free'" + s_RenderDocFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to free'" + s_RenderDocFullpath.generic_string() + "'.";
 
 		#if defined(_WIN64)
 			MIRU_WARN(GetLastError(), error_str.c_str());

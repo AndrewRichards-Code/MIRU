@@ -72,13 +72,13 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	switch (m_CI.bpcColourSpace)
 	{
 	default:
-	case crossplatform::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
+	case base::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
 		surfaceFormat = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR:
+	case base::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR:
 		surfaceFormat = { VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_COLORSPACE_SRGB_NONLINEAR_KHR }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
+	case base::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
 		surfaceFormat = { VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_COLOR_SPACE_HDR10_ST2084_EXT }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
+	case base::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
 		surfaceFormat = { VK_FORMAT_R16G16B16A16_SFLOAT, VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT }; break;
 	}
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -243,7 +243,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_Resized = true;
 }
 
-void Swapchain::AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex)
+void Swapchain::AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -258,7 +258,7 @@ void Swapchain::AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, u
 	}
 }
 
-void Swapchain::Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex)
+void Swapchain::Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

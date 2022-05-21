@@ -59,7 +59,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
 	D3D12SetName(m_Buffer, m_CI.debugName);
 	
-	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)m_D3D12MAllocation;
+	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
 
 	if (m_CI.data)
 	{

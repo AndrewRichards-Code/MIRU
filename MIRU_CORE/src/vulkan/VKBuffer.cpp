@@ -1,7 +1,7 @@
 #include "miru_core_common.h"
 #if defined(MIRU_VULKAN)
 #include "VKBuffer.h"
-#include "crossplatform/Allocator.h"
+#include "base/Allocator.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -33,7 +33,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vmaCreateBuffer(m_CI.pAllocator->GetVmaAllocator(), &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
 	VKSetName<VkBuffer>(m_Device, m_Buffer, m_CI.debugName);
 
-	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)&m_VmaAllocation;
+	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.width = 0;
 	m_Allocation.height = 0;
 	m_Allocation.rowPitch = 0;

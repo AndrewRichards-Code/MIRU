@@ -3,7 +3,7 @@
 #include "AccelerationStructure.h"
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<ShaderBindingTable> ShaderBindingTable::Create(ShaderBindingTable::CreateInfo* pCreateInfo)
 {
@@ -74,14 +74,14 @@ ShaderBindingTable::ShaderBindingTable(ShaderBindingTable::CreateInfo* pCreateIn
 		const ShaderGroupHandleType& type = sbt.first;
 		if (!shaderBindingTableData[type].empty())
 		{
-			crossplatform::Buffer::CreateInfo bufferCI;
+			base::Buffer::CreateInfo bufferCI;
 			bufferCI.debugName = debugNames[static_cast<size_t>(type)];
 			bufferCI.device = m_CI.device;
-			bufferCI.usage = crossplatform::Buffer::UsageBit::SHADER_BINDING_TABLE_BIT | crossplatform::Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+			bufferCI.usage = base::Buffer::UsageBit::SHADER_BINDING_TABLE_BIT | base::Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 			bufferCI.size = static_cast<uint32_t>(shaderBindingTableData[type].size());
 			bufferCI.data = shaderBindingTableData[type].data();
 			bufferCI.pAllocator = m_CI.pAllocator;
-			sbt.second = crossplatform::Buffer::Create(&bufferCI);
+			sbt.second = base::Buffer::Create(&bufferCI);
 
 			m_SDARs[type] = {
 				GetBufferDeviceAddress(m_CI.device, sbt.second),

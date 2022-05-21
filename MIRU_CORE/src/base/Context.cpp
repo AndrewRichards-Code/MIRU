@@ -7,7 +7,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<Context> Context::Create(Context::CreateInfo* pCreateInfo)
 {
@@ -27,6 +27,6 @@ Ref<Context> Context::Create(Context::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

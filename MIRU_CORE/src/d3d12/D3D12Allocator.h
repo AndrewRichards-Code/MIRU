@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_D3D12)
 #include "miru_core_common.h"
-#include "crossplatform/Allocator.h"
+#include "base/Allocator.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Allocator final : public crossplatform::Allocator
+	class Allocator final : public base::Allocator
 	{
 		//Methods
 	public:
@@ -16,8 +16,8 @@ namespace d3d12
 
 		void* GetNativeAllocator() override;
 
-		void SubmitData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
-		void AccessData(const crossplatform::Allocation& allocation, size_t size, void* data) override;
+		void SubmitData(const base::Allocation& allocation, size_t size, void* data) override;
+		void AccessData(const base::Allocation& allocation, size_t size, void* data) override;
 
 		D3D12_HEAP_PROPERTIES GetHeapProperties();
 

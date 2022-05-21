@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Buffer.h"
+#include "base/Buffer.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Buffer final : public crossplatform::Buffer
+	class Buffer final : public base::Buffer
 	{
 		//Methods
 	public:
@@ -28,7 +28,7 @@ namespace d3d12
 		D3D12MA::ALLOCATION_DESC m_D3D12MAllocationDesc;
 	};
 
-	class BufferView final : public crossplatform::BufferView
+	class BufferView final : public base::BufferView
 	{
 		//Methods
 	public:

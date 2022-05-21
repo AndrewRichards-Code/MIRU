@@ -33,7 +33,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 	m_GlobalRootSignature = CreateRootSignature(m_CI.layout);
 
-	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
+	if (m_CI.type == base::PipelineType::GRAPHICS)
 	{
 		//ShaderStages
 		for (auto& shader : m_CI.shaders)
@@ -74,20 +74,20 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//InputAssembly
 		switch (m_CI.inputAssemblyState.topology)
 		{
-		case crossplatform::PrimitiveTopology::POINT_LIST:
+		case base::PrimitiveTopology::POINT_LIST:
 			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
-		case crossplatform::PrimitiveTopology::LINE_LIST:
-		case crossplatform::PrimitiveTopology::LINE_STRIP:
-		case crossplatform::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
-		case crossplatform::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
+		case base::PrimitiveTopology::LINE_LIST:
+		case base::PrimitiveTopology::LINE_STRIP:
+		case base::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
+		case base::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
 			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
-		case crossplatform::PrimitiveTopology::TRIANGLE_LIST:
-		case crossplatform::PrimitiveTopology::TRIANGLE_STRIP:
-		case crossplatform::PrimitiveTopology::TRIANGLE_FAN:
-		case crossplatform::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
-		case crossplatform::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
+		case base::PrimitiveTopology::TRIANGLE_LIST:
+		case base::PrimitiveTopology::TRIANGLE_STRIP:
+		case base::PrimitiveTopology::TRIANGLE_FAN:
+		case base::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
+		case base::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
 			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
-		case crossplatform::PrimitiveTopology::PATCH_LIST:
+		case base::PrimitiveTopology::PATCH_LIST:
 			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
 		default:
 			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
@@ -103,15 +103,15 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_Scissors.push_back({ static_cast<LONG>(scissor.offset.x), static_cast<LONG>(scissor.offset.y), static_cast<LONG>(scissor.extent.width), static_cast<LONG>(scissor.extent.height) });
 
 		//Rasterisation
-		m_GPSD.RasterizerState.FillMode = m_CI.rasterisationState.polygonMode == crossplatform::PolygonMode::LINE ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+		m_GPSD.RasterizerState.FillMode = m_CI.rasterisationState.polygonMode == base::PolygonMode::LINE ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
 		m_GPSD.RasterizerState.CullMode = static_cast<D3D12_CULL_MODE>(static_cast<uint32_t>(m_CI.rasterisationState.cullMode) % 3 + 1); //%3 because d3d12 has no FRONT_AND_BACK
 		m_GPSD.RasterizerState.FrontCounterClockwise = !static_cast<bool>(m_CI.rasterisationState.frontFace);
 		m_GPSD.RasterizerState.DepthBias = static_cast<INT>(m_CI.rasterisationState.depthBiasConstantFactor);
 		m_GPSD.RasterizerState.DepthBiasClamp = m_CI.rasterisationState.depthBiasClamp;
 		m_GPSD.RasterizerState.SlopeScaledDepthBias = m_CI.rasterisationState.depthBiasSlopeFactor;
 		m_GPSD.RasterizerState.DepthClipEnable = m_CI.rasterisationState.depthClampEnable;
-		m_GPSD.RasterizerState.MultisampleEnable = m_CI.multisampleState.rasterisationSamples > crossplatform::Image::SampleCountBit::SAMPLE_COUNT_1_BIT; //Sets AA algorithm
-		m_GPSD.RasterizerState.AntialiasedLineEnable = m_CI.multisampleState.rasterisationSamples > crossplatform::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;//Sets AA algorithm
+		m_GPSD.RasterizerState.MultisampleEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT; //Sets AA algorithm
+		m_GPSD.RasterizerState.AntialiasedLineEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;//Sets AA algorithm
 		m_GPSD.RasterizerState.ForcedSampleCount = 0;
 		m_GPSD.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
@@ -246,7 +246,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&gpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
-	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
+	else if (m_CI.type == base::PipelineType::COMPUTE)
 	{
 		m_CPSD.pRootSignature = m_GlobalRootSignature.rootSignature;
 		m_CPSD.CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
@@ -263,7 +263,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&cpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
-	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	else if (m_CI.type == base::PipelineType::RAY_TRACING)
 	{
 		size_t totalShaderCount = 0;
 		for (auto& shader : m_CI.shaders)
@@ -276,7 +276,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Fill out DXIL Library and Exports
 		std::vector<D3D12_DXIL_LIBRARY_DESC> dxilLibDescs;
 		std::vector<D3D12_EXPORT_DESC> exportDescs;
-		std::vector<std::pair<crossplatform::Shader::StageBit, std::wstring>> exportStagesAndNames;
+		std::vector<std::pair<base::Shader::StageBit, std::wstring>> exportStagesAndNames;
 		dxilLibDescs.reserve(m_CI.shaders.size());
 		exportDescs.reserve(totalShaderCount);
 		exportStagesAndNames.reserve(totalShaderCount);
@@ -317,7 +317,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		UINT hitGroupCount = 0;
 		for (auto& shaderGroupInfo : m_CI.shaderGroupInfos)
 		{
-			if (shaderGroupInfo.type > crossplatform::ShaderGroupType::GENERAL)
+			if (shaderGroupInfo.type > base::ShaderGroupType::GENERAL)
 			{
 				D3D12_HIT_GROUP_DESC hitGroupDesc;
 				hitGroupNames.push_back(L"HitGroup_" + std::to_wstring(hitGroupCount));
@@ -357,7 +357,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION subobjectToExportAssociation;
 				subobjectToExportAssociation.pSubobjectToAssociate = &m_RayTracingPipelineSubDesc.back();
 				subobjectToExportAssociation.NumExports = 1;
-				if (shaderGroupInfo.type > crossplatform::ShaderGroupType::GENERAL)
+				if (shaderGroupInfo.type > base::ShaderGroupType::GENERAL)
 					subobjectToExportAssociation.pExports = &(hitGroupDescs.back().HitGroupExport);
 				else
 					subobjectToExportAssociation.pExports = &(exportDescs[shaderGroupInfo.generalShader].Name);
@@ -405,23 +405,23 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		ID3D12StateObjectProperties * rayTracingPipelineProperties = nullptr;
 		MIRU_ASSERT(m_RayTracingPipeline->QueryInterface(IID_PPV_ARGS(&rayTracingPipelineProperties)), "ERROR: D3D12: Failed to get Ray Tracing Pipeline Properties.");
 
-		std::map<crossplatform::ShaderGroupHandleType, std::vector<void*>>shaderIdentifiers;
+		std::map<base::ShaderGroupHandleType, std::vector<void*>>shaderIdentifiers;
 		for (auto& exportStageAndName : exportStagesAndNames)
 		{
-			crossplatform::Shader::StageBit stage = exportStageAndName.first;
+			base::Shader::StageBit stage = exportStageAndName.first;
 			std::wstring name = exportStageAndName.second;
 
-			if (stage == crossplatform::Shader::StageBit::RAYGEN_BIT)
-				shaderIdentifiers[crossplatform::ShaderGroupHandleType::RAYGEN].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
-			else if (stage == crossplatform::Shader::StageBit::MISS_BIT)
-				shaderIdentifiers[crossplatform::ShaderGroupHandleType::MISS].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
-			else if (stage == crossplatform::Shader::StageBit::CALLABLE_BIT)
-				shaderIdentifiers[crossplatform::ShaderGroupHandleType::CALLABLE].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
+			if (stage == base::Shader::StageBit::RAYGEN_BIT)
+				shaderIdentifiers[base::ShaderGroupHandleType::RAYGEN].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
+			else if (stage == base::Shader::StageBit::MISS_BIT)
+				shaderIdentifiers[base::ShaderGroupHandleType::MISS].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
+			else if (stage == base::Shader::StageBit::CALLABLE_BIT)
+				shaderIdentifiers[base::ShaderGroupHandleType::CALLABLE].push_back(rayTracingPipelineProperties->GetShaderIdentifier(name.c_str()));
 			else
 				continue;
 		}
 		for (auto& hitGroupName : hitGroupNames)
-			shaderIdentifiers[crossplatform::ShaderGroupHandleType::HIT_GROUP].push_back(rayTracingPipelineProperties->GetShaderIdentifier(hitGroupName.c_str()));
+			shaderIdentifiers[base::ShaderGroupHandleType::HIT_GROUP].push_back(rayTracingPipelineProperties->GetShaderIdentifier(hitGroupName.c_str()));
 
 		//ShaderHandleSize
 		const size_t& handleSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
@@ -433,10 +433,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Copy Shader handles to the new memory in order.
 		for (size_t type = 0; type < 4; type++)
 		{
-			for (auto& shaderIdentifier : shaderIdentifiers[crossplatform::ShaderGroupHandleType(type)])
+			for (auto& shaderIdentifier : shaderIdentifiers[base::ShaderGroupHandleType(type)])
 			{
 				m_ShaderGroupHandles.push_back({});
-				m_ShaderGroupHandles.back().first = crossplatform::ShaderGroupHandleType(type);
+				m_ShaderGroupHandles.back().first = base::ShaderGroupHandleType(type);
 				m_ShaderGroupHandles.back().second.resize(handleSize);
 				memcpy_s(m_ShaderGroupHandles.back().second.data(), handleSize,
 					shaderIdentifier, handleSize);
@@ -447,11 +447,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(true, "ERROR: D3D12: Unknown pipeline type.");
 }
 
-std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
+std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	if (m_CI.type == base::PipelineType::RAY_TRACING)
 	{
 		return m_ShaderGroupHandles;
 	}
@@ -459,7 +459,7 @@ std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>
 	{
 		MIRU_ASSERT(true, "ERROR: D3D12: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
 	}
-	return std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>>();
+	return std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>>();
 }
 
 Pipeline::~Pipeline()
@@ -480,173 +480,173 @@ Pipeline::~Pipeline()
 	}
 }
 
-D3D12_PRIMITIVE_TOPOLOGY Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(crossplatform::PrimitiveTopology topology)
+D3D12_PRIMITIVE_TOPOLOGY Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(base::PrimitiveTopology topology)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	switch(topology)
 	{
-	case crossplatform::PrimitiveTopology::POINT_LIST:
+	case base::PrimitiveTopology::POINT_LIST:
 		return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-	case crossplatform::PrimitiveTopology::LINE_LIST:
+	case base::PrimitiveTopology::LINE_LIST:
 		return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-	case crossplatform::PrimitiveTopology::LINE_STRIP:
+	case base::PrimitiveTopology::LINE_STRIP:
 		return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-	case crossplatform::PrimitiveTopology::TRIANGLE_LIST:
+	case base::PrimitiveTopology::TRIANGLE_LIST:
 		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	case crossplatform::PrimitiveTopology::TRIANGLE_STRIP:
+	case base::PrimitiveTopology::TRIANGLE_STRIP:
 		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-	case crossplatform::PrimitiveTopology::TRIANGLE_FAN:
+	case base::PrimitiveTopology::TRIANGLE_FAN:
 		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-	case crossplatform::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
+	case base::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
 		return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
-	case crossplatform::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
+	case base::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
 		return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
-	case crossplatform::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
+	case base::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
 		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
-	case crossplatform::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
+	case base::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
 		return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
-	case crossplatform::PrimitiveTopology::PATCH_LIST:
+	case base::PrimitiveTopology::PATCH_LIST:
 		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	default:
 		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	}
 }
 
-DXGI_FORMAT Pipeline::ToDXGI_FORMAT(crossplatform::VertexType type)
+DXGI_FORMAT Pipeline::ToDXGI_FORMAT(base::VertexType type)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	switch (type)
 	{
-	case crossplatform::VertexType::FLOAT:
+	case base::VertexType::FLOAT:
 		return DXGI_FORMAT_R32_FLOAT;
-	case crossplatform::VertexType::VEC2:
+	case base::VertexType::VEC2:
 		return DXGI_FORMAT_R32G32_FLOAT;
-	case crossplatform::VertexType::VEC3:
+	case base::VertexType::VEC3:
 		return DXGI_FORMAT_R32G32B32_FLOAT;
-	case crossplatform::VertexType::VEC4:
+	case base::VertexType::VEC4:
 		return DXGI_FORMAT_R32G32B32A32_FLOAT;
-	case crossplatform::VertexType::INT:
+	case base::VertexType::INT:
 		return DXGI_FORMAT_R32_SINT;
-	case crossplatform::VertexType::IVEC2:
+	case base::VertexType::IVEC2:
 		return DXGI_FORMAT_R32G32_SINT;
-	case crossplatform::VertexType::IVEC3:
+	case base::VertexType::IVEC3:
 		return DXGI_FORMAT_R32G32B32_SINT;
-	case crossplatform::VertexType::IVEC4:
+	case base::VertexType::IVEC4:
 		return DXGI_FORMAT_R32G32B32A32_SINT;
-	case crossplatform::VertexType::UINT:
+	case base::VertexType::UINT:
 		return DXGI_FORMAT_R32_UINT;
-	case crossplatform::VertexType::UVEC2:
+	case base::VertexType::UVEC2:
 		return DXGI_FORMAT_R32G32_UINT;
-	case crossplatform::VertexType::UVEC3:
+	case base::VertexType::UVEC3:
 		return DXGI_FORMAT_R32G32B32_UINT;
-	case crossplatform::VertexType::UVEC4:
+	case base::VertexType::UVEC4:
 		return DXGI_FORMAT_R32G32B32A32_UINT;
-	case crossplatform::VertexType::DOUBLE:
+	case base::VertexType::DOUBLE:
 		return DXGI_FORMAT_R32_FLOAT;
-	case crossplatform::VertexType::DVEC2:
+	case base::VertexType::DVEC2:
 		return DXGI_FORMAT_R32G32_FLOAT;
-	case crossplatform::VertexType::DVEC3:
+	case base::VertexType::DVEC3:
 		return DXGI_FORMAT_R32G32B32_FLOAT;
-	case crossplatform::VertexType::DVEC4:
+	case base::VertexType::DVEC4:
 		return DXGI_FORMAT_R32G32B32A32_FLOAT;
 	default:
 		return DXGI_FORMAT_UNKNOWN;
 	}
 }
 
-D3D12_BLEND Pipeline::ToD3D12_BLEND(crossplatform::BlendFactor blend)
+D3D12_BLEND Pipeline::ToD3D12_BLEND(base::BlendFactor blend)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	switch (blend)
 	{
 	default:
-	case crossplatform::BlendFactor::ZERO:
+	case base::BlendFactor::ZERO:
 		return D3D12_BLEND_ZERO;
-	case crossplatform::BlendFactor::ONE:
+	case base::BlendFactor::ONE:
 		return D3D12_BLEND_ONE;
-	case crossplatform::BlendFactor::SRC_COLOUR:
+	case base::BlendFactor::SRC_COLOUR:
 		return D3D12_BLEND_SRC_COLOR;
-	case crossplatform::BlendFactor::ONE_MINUS_SRC_COLOUR:
+	case base::BlendFactor::ONE_MINUS_SRC_COLOUR:
 		return D3D12_BLEND_INV_SRC_COLOR;
-	case crossplatform::BlendFactor::DST_COLOUR:
+	case base::BlendFactor::DST_COLOUR:
 		return D3D12_BLEND_DEST_COLOR;
-	case crossplatform::BlendFactor::ONE_MINUS_DST_COLOUR:
+	case base::BlendFactor::ONE_MINUS_DST_COLOUR:
 		return D3D12_BLEND_INV_DEST_COLOR;
-	case crossplatform::BlendFactor::SRC_ALPHA:
+	case base::BlendFactor::SRC_ALPHA:
 		return D3D12_BLEND_SRC_ALPHA;
-	case crossplatform::BlendFactor::ONE_MINUS_SRC_ALPHA:
+	case base::BlendFactor::ONE_MINUS_SRC_ALPHA:
 		return D3D12_BLEND_INV_SRC_ALPHA;
-	case crossplatform::BlendFactor::DST_ALPHA:
+	case base::BlendFactor::DST_ALPHA:
 		return D3D12_BLEND_DEST_ALPHA;
-	case crossplatform::BlendFactor::ONE_MINUS_DST_ALPHA:
+	case base::BlendFactor::ONE_MINUS_DST_ALPHA:
 		return D3D12_BLEND_INV_DEST_ALPHA;
-	case crossplatform::BlendFactor::CONSTANT_COLOUR:
+	case base::BlendFactor::CONSTANT_COLOUR:
 		return D3D12_BLEND_BLEND_FACTOR;
-	case crossplatform::BlendFactor::ONE_MINUS_CONSTANT_COLOUR:
+	case base::BlendFactor::ONE_MINUS_CONSTANT_COLOUR:
 		return D3D12_BLEND_INV_BLEND_FACTOR;
-	case crossplatform::BlendFactor::CONSTANT_ALPHA:
+	case base::BlendFactor::CONSTANT_ALPHA:
 		return D3D12_BLEND_SRC_ALPHA;
-	case crossplatform::BlendFactor::ONE_MINUS_CONSTANT_ALPHA:
+	case base::BlendFactor::ONE_MINUS_CONSTANT_ALPHA:
 		return D3D12_BLEND_INV_SRC_ALPHA;
-	case crossplatform::BlendFactor::SRC_ALPHA_SATURATE:
+	case base::BlendFactor::SRC_ALPHA_SATURATE:
 		return D3D12_BLEND_SRC_ALPHA_SAT;
-	case crossplatform::BlendFactor::SRC1_COLOUR:
+	case base::BlendFactor::SRC1_COLOUR:
 		return D3D12_BLEND_SRC1_COLOR;
-	case crossplatform::BlendFactor::ONE_MINUS_SRC1_COLOUR:
+	case base::BlendFactor::ONE_MINUS_SRC1_COLOUR:
 		return D3D12_BLEND_INV_SRC1_COLOR;
-	case crossplatform::BlendFactor::SRC1_ALPHA:
+	case base::BlendFactor::SRC1_ALPHA:
 		return D3D12_BLEND_SRC1_ALPHA;
-	case crossplatform::BlendFactor::ONE_MINUS_SRC1_ALPHA:
+	case base::BlendFactor::ONE_MINUS_SRC1_ALPHA:
 		return D3D12_BLEND_INV_SRC1_ALPHA;
 	}
 }
 
-D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(crossplatform::LogicOp logic)
+D3D12_LOGIC_OP Pipeline::ToD3D12_LOGIC_OP(base::LogicOp logic)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	switch (logic)
 	{
 	default:
-	case crossplatform::LogicOp::CLEAR:
+	case base::LogicOp::CLEAR:
 		return D3D12_LOGIC_OP_CLEAR;
-	case crossplatform::LogicOp::AND:
+	case base::LogicOp::AND:
 		return D3D12_LOGIC_OP_AND;
-	case crossplatform::LogicOp::AND_REVERSE:
+	case base::LogicOp::AND_REVERSE:
 		return D3D12_LOGIC_OP_AND_REVERSE;
-	case crossplatform::LogicOp::COPY:
+	case base::LogicOp::COPY:
 		return D3D12_LOGIC_OP_COPY;
-	case crossplatform::LogicOp::AND_INVERTED:
+	case base::LogicOp::AND_INVERTED:
 		return D3D12_LOGIC_OP_AND_INVERTED;
-	case crossplatform::LogicOp::NO_OP:
+	case base::LogicOp::NO_OP:
 		return D3D12_LOGIC_OP_NOOP;
-	case crossplatform::LogicOp::XOR:
+	case base::LogicOp::XOR:
 		return D3D12_LOGIC_OP_XOR;
-	case crossplatform::LogicOp::OR:
+	case base::LogicOp::OR:
 		return D3D12_LOGIC_OP_OR;
-	case crossplatform::LogicOp::NOR:
+	case base::LogicOp::NOR:
 		return D3D12_LOGIC_OP_NOR;
-	case crossplatform::LogicOp::EQUIVALENT:
+	case base::LogicOp::EQUIVALENT:
 		return D3D12_LOGIC_OP_EQUIV;
-	case crossplatform::LogicOp::INVERT:
+	case base::LogicOp::INVERT:
 		return D3D12_LOGIC_OP_INVERT;
-	case crossplatform::LogicOp::OR_REVERSE:
+	case base::LogicOp::OR_REVERSE:
 		return D3D12_LOGIC_OP_OR_REVERSE;
-	case crossplatform::LogicOp::COPY_INVERTED:
+	case base::LogicOp::COPY_INVERTED:
 		return D3D12_LOGIC_OP_COPY_INVERTED;
-	case crossplatform::LogicOp::OR_INVERTED:
+	case base::LogicOp::OR_INVERTED:
 		return D3D12_LOGIC_OP_OR_INVERTED;
-	case crossplatform::LogicOp::NAND:
+	case base::LogicOp::NAND:
 		return D3D12_LOGIC_OP_NAND;
-	case crossplatform::LogicOp::SET:
+	case base::LogicOp::SET:
 		return D3D12_LOGIC_OP_SET;
 	}
 }
 
-Pipeline::RootSignature Pipeline::CreateRootSignature(const crossplatform::Pipeline::PipelineLayout layout, uint32_t setNumOffset, bool localRootSignature)
+Pipeline::RootSignature Pipeline::CreateRootSignature(const base::Pipeline::PipelineLayout layout, uint32_t setNumOffset, bool localRootSignature)
 {
 	RootSignature result;
 	result.rootParameters.clear();

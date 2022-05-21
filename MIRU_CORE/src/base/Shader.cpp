@@ -11,7 +11,7 @@
 #include <dxcapi.h>
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 {
@@ -31,7 +31,7 @@ Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -53,7 +53,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 	arc::DynamicLibrary::LibraryHandle s_HModeuleDxil = LoadLibrary_dxil();
 	if (!s_HModeuleDxil)
 	{
-		std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DxilFullpath.generic_string() + "'.";
+		std::string error_str = "WARN: BASE: Unable to load '" + s_DxilFullpath.generic_string() + "'.";
 		MIRU_WARN(GetLastError(), error_str.c_str());
 
 	}
@@ -61,7 +61,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 	arc::DynamicLibrary::LibraryHandle s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
 	if (!s_HModeuleDxcompiler)
 	{
-		std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
+		std::string error_str = "WARN: BASE: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
 		MIRU_WARN(GetLastError(), error_str.c_str());
 
 	}
@@ -70,19 +70,19 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 		return;
 
 	IDxcCompiler3* compiler = nullptr;
-	MIRU_WARN(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)), "WARN: CROSSPLATFORM: DxcCreateInstance failed to create IDxcCompiler3.");
+	MIRU_WARN(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)), "WARN: BASE: DxcCreateInstance failed to create IDxcCompiler3.");
 
 	IDxcUtils* utils = nullptr;
-	MIRU_WARN(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils)), "WARN: CROSSPLATFORM: DxcCreateInstance failed to create IDxcUtils.");
+	MIRU_WARN(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils)), "WARN: BASE: DxcCreateInstance failed to create IDxcUtils.");
 
 	if (compiler && utils)
 	{
 		IDxcIncludeHandler* includeHandler = nullptr;
-		MIRU_WARN(utils->CreateDefaultIncludeHandler(&includeHandler), "WARN: CROSSPLATFORM: IDxcUtils::CreateDefaultIncludeHandler failed to create IDxcIncludeHandler.");
+		MIRU_WARN(utils->CreateDefaultIncludeHandler(&includeHandler), "WARN: BASE: IDxcUtils::CreateDefaultIncludeHandler failed to create IDxcIncludeHandler.");
 
 		std::string currentWorkingDir = std::filesystem::current_path().string() + "\\";
 		IDxcBlobEncoding* sourceBlob = nullptr;
-		MIRU_WARN(utils->LoadFile(arc::ToWString(currentWorkingDir + arguments.hlslFilepath).c_str(), nullptr, &sourceBlob), "WARN: CROSSPLATFORM: IDxcUtils::LoadFile failed to create IDxcBlobEncoding.");
+		MIRU_WARN(utils->LoadFile(arc::ToWString(currentWorkingDir + arguments.hlslFilepath).c_str(), nullptr, &sourceBlob), "WARN: BASE: IDxcUtils::LoadFile failed to create IDxcBlobEncoding.");
 
 		if (includeHandler && sourceBlob)
 		{
@@ -183,7 +183,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					wchar_arguments.push_back(arg.c_str());
 
 				IDxcResult* results = nullptr;
-				MIRU_WARN(compiler->Compile(&source, wchar_arguments.data(), static_cast<UINT32>(wchar_arguments.size()), includeHandler, IID_PPV_ARGS(&results)), "WARN: CROSSPLATFORM: IDxcCompiler3::Compile failed.");
+				MIRU_WARN(compiler->Compile(&source, wchar_arguments.data(), static_cast<UINT32>(wchar_arguments.size()), includeHandler, IID_PPV_ARGS(&results)), "WARN: BASE: IDxcCompiler3::Compile failed.");
 
 				IDxcBlobUtf8* errors = nullptr;
 				IDxcBlobUtf16* errorsName = nullptr;
@@ -200,7 +200,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				results->GetStatus(&complicationResults);
 				if (complicationResults != S_OK)
 				{
-					MIRU_WARN(true, "WARN: CROSSPLATFORM: Failed to Compile shader.");
+					MIRU_WARN(true, "WARN: BASE: Failed to Compile shader.");
 				}
 
 				IDxcBlob* shaderBinary = nullptr;
@@ -214,7 +214,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				}
 				else
 				{
-					MIRU_WARN(true, "WARN: CROSSPLATFORM: Failed to GetOutput for shader binary and/or shader name.");
+					MIRU_WARN(true, "WARN: BASE: Failed to GetOutput for shader binary and/or shader name.");
 				}
 				MIRU_D3D12_SAFE_RELEASE(shaderName);
 				MIRU_D3D12_SAFE_RELEASE(shaderBinary);
@@ -232,7 +232,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					}
 					else
 					{
-						MIRU_WARN(true, "WARN: CROSSPLATFORM: Failed to GetOutput for shader PDB binary and/or shader PDB name.");
+						MIRU_WARN(true, "WARN: BASE: Failed to GetOutput for shader PDB binary and/or shader PDB name.");
 					}
 					MIRU_D3D12_SAFE_RELEASE(pdbName);
 					MIRU_D3D12_SAFE_RELEASE(pdbBinary);
@@ -283,7 +283,7 @@ void Shader::GetShaderByteCode()
 		binFilepath = std::string(m_CI.binaryFilepath);
 
 	if (binFilepath.empty() && m_CI.binaryCode.empty())
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: No file path or binary code provided.");
+		MIRU_ASSERT(true, "ERROR: BASE: No file path or binary code provided.");
 
 	//Load from binary code if no binary filapath is provided
 	if (binFilepath.empty() && !m_CI.binaryCode.empty())
@@ -302,7 +302,7 @@ void Shader::GetShaderByteCode()
 		shaderBinaryFileExtension = ".spv"; break;
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return;
 	}
 	
 	binFilepath = binFilepath.replace(binFilepath.find_last_of('.'), 4, shaderBinaryFileExtension);
@@ -322,5 +322,5 @@ void Shader::GetShaderByteCode()
 	#endif
 
 	m_ShaderBinary = arc::ReadBinaryFile(binFilepath);
-	MIRU_ASSERT(m_ShaderBinary.empty(), "ERROR: CROSSPLATFORM: Unable to read shader binary file.");
+	MIRU_ASSERT(m_ShaderBinary.empty(), "ERROR: BASE: Unable to read shader binary file.");
 }

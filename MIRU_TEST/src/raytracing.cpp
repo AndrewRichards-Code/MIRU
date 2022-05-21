@@ -4,7 +4,7 @@
 #include "STBI/stb_image.h"
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 static HWND window;
 static bool g_WindowQuit = false;
@@ -312,7 +312,7 @@ void Raytracing()
 				GetBufferDeviceAddress(context->GetDevice(), ub1)
 	};
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
-	asbiGBI.scratchData = MIRU_NULL_DEVICE_OR_HOST_ADDRESS;
+	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
 	asbiGBI.maxPrimitiveCounts = _countof(indices) / 3;
 	AccelerationStructureBuildInfoRef blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
@@ -343,7 +343,7 @@ void Raytracing()
 	asCI.offset = 0;
 	asCI.size = asBufferCI.size;
 	asCI.type = AccelerationStructure::Type::BOTTOM_LEVEL;
-	asCI.deviceAddress = MIRU_NULL_DEVICE_ADDRESS;
+	asCI.deviceAddress = DeviceAddressNull;
 	AccelerationStructureRef blas = AccelerationStructure::Create(&asCI);
 
 	asbiGBI.dstAccelerationStructure = blas;
@@ -388,7 +388,7 @@ void Raytracing()
 	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::INSTANCES;
 	asbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(context->GetDevice(), idBuffer_TLAS) };
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
-	asbiGBI.scratchData = MIRU_NULL_DEVICE_OR_HOST_ADDRESS;
+	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
 	asbiGBI.maxPrimitiveCounts = 1;
 	AccelerationStructureBuildInfoRef tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
@@ -416,7 +416,7 @@ void Raytracing()
 	asCI.offset = 0;
 	asCI.size = asBufferCI.size;
 	asCI.type = AccelerationStructure::Type::TOP_LEVEL;
-	asCI.deviceAddress = MIRU_NULL_DEVICE_ADDRESS;
+	asCI.deviceAddress = DeviceAddressNull;
 	AccelerationStructureRef tlas = AccelerationStructure::Create(&asCI);
 
 	asbiGBI.dstAccelerationStructure = tlas;
@@ -690,7 +690,7 @@ void Raytracing()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
 			
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 

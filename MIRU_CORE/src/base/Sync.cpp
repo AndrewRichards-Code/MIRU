@@ -7,7 +7,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<Fence> Fence::Create(Fence::CreateInfo* pCreateInfo)
 {
@@ -27,7 +27,7 @@ Ref<Fence> Fence::Create(Fence::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -49,7 +49,7 @@ Ref<Semaphore> Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -71,7 +71,7 @@ Ref<TimelineSemaphore> TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* 
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -93,7 +93,7 @@ Ref<Event> Event::Create(Event::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -114,6 +114,6 @@ Ref<Barrier> Barrier::Create(Barrier::CreateInfo* pCreateInfo)
 		return nullptr;
 		#endif
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

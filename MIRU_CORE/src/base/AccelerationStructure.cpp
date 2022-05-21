@@ -9,7 +9,7 @@
 #endif
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 Ref<AccelerationStructureBuildInfo> AccelerationStructureBuildInfo::Create(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo)
 {
@@ -29,7 +29,7 @@ Ref<AccelerationStructureBuildInfo> AccelerationStructureBuildInfo::Create(Accel
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -51,11 +51,11 @@ Ref<AccelerationStructure> AccelerationStructure::Create(AccelerationStructure::
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return nullptr;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
-DeviceAddress miru::crossplatform::GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure)
+DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -71,17 +71,17 @@ DeviceAddress miru::crossplatform::GetAccelerationStructureDeviceAddress(void* d
 		info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
 		info.pNext = nullptr;
 		info.accelerationStructure = ref_cast<vulkan::AccelerationStructure>(accelerationStructure)->m_AS;
-		return vkGetAccelerationStructureDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
+		return vulkan::vkGetAccelerationStructureDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
 #else
 		return 0;
 #endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return 0;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
 	}
 }
 
-DeviceAddress miru::crossplatform::GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer)
+DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -97,12 +97,12 @@ DeviceAddress miru::crossplatform::GetBufferDeviceAddress(void* device, const Re
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 		info.pNext = nullptr;
 		info.buffer = ref_cast<vulkan::Buffer>(buffer)->m_Buffer;
-		return vkGetBufferDeviceAddress(*reinterpret_cast<VkDevice*>(device), &info);
+		return vulkan::vkGetBufferDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
 		#else
 		return 0;
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: CROSSPLATFORM: Unknown GraphicsAPI."); return 0;
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
 	}
 }

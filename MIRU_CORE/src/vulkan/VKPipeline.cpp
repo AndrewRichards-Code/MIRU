@@ -146,7 +146,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(vkCreatePipelineLayout(m_Device, &m_PLCI, nullptr, &m_PipelineLayout), "ERROR: VULKAN: Failed to create PipelineLayout.");
 	VKSetName<VkPipelineLayout>(m_Device, m_PipelineLayout, m_CI.debugName + " : PipelineLayout");
 
-	if (m_CI.type == crossplatform::PipelineType::GRAPHICS)
+	if (m_CI.type == base::PipelineType::GRAPHICS)
 	{
 		//ShaderStages
 		std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
@@ -346,7 +346,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &m_GPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Graphics Pipeline.");
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
-	else if (m_CI.type == crossplatform::PipelineType::COMPUTE)
+	else if (m_CI.type == base::PipelineType::COMPUTE)
 	{
 		m_CPCI.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 		m_CPCI.pNext = nullptr;
@@ -359,7 +359,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
-	else if (m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	else if (m_CI.type == base::PipelineType::RAY_TRACING)
 	{
 		//ShaderStages
 		std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
@@ -442,7 +442,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//We need to bundles the handles together by type.
 		//Get the indices per type.
 		size_t raygenCount = 0, missCount = 0, hitCount = 0, callableCount = 0;
-		std::map<crossplatform::ShaderGroupHandleType, std::vector<size_t>> shaderGroupIndicesPerType;
+		std::map<base::ShaderGroupHandleType, std::vector<size_t>> shaderGroupIndicesPerType;
 		size_t idx = 0;
 		for (auto& shaderGroupInfo : vkShaderGroupInfos)
 		{
@@ -451,17 +451,17 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				const VkShaderStageFlagBits& vkStage = vkShaderStages[shaderGroupInfo.generalShader].stage;
 				if (vkStage == VK_SHADER_STAGE_RAYGEN_BIT_KHR && raygenCount == 0)
 				{
-					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::RAYGEN].push_back(idx);
+					shaderGroupIndicesPerType[base::ShaderGroupHandleType::RAYGEN].push_back(idx);
 					raygenCount++;
 				}
 				else if (vkStage == VK_SHADER_STAGE_MISS_BIT_KHR)
 				{
-					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::MISS].push_back(idx);
+					shaderGroupIndicesPerType[base::ShaderGroupHandleType::MISS].push_back(idx);
 					missCount++;
 				}
 				else if (vkStage == VK_SHADER_STAGE_CALLABLE_BIT_KHR)
 				{
-					shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::CALLABLE].push_back(idx);
+					shaderGroupIndicesPerType[base::ShaderGroupHandleType::CALLABLE].push_back(idx);
 					callableCount++;
 				}
 				else
@@ -469,7 +469,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			}
 			else
 			{
-				shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType::HIT_GROUP].push_back(idx);
+				shaderGroupIndicesPerType[base::ShaderGroupHandleType::HIT_GROUP].push_back(idx);
 				hitCount++;
 			}
 			idx++;
@@ -481,10 +481,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Copy Shader handles to the new memory in order.
 		for (size_t type = 0; type < 4; type++)
 		{
-			for (size_t& shaderGroupIndexPerType : shaderGroupIndicesPerType[crossplatform::ShaderGroupHandleType(type)])
+			for (size_t& shaderGroupIndexPerType : shaderGroupIndicesPerType[base::ShaderGroupHandleType(type)])
 			{
 				m_ShaderGroupHandles.push_back({});
-				m_ShaderGroupHandles.back().first = crossplatform::ShaderGroupHandleType(type);
+				m_ShaderGroupHandles.back().first = base::ShaderGroupHandleType(type);
 				m_ShaderGroupHandles.back().second.resize(handleSize);
 				memcpy_s(m_ShaderGroupHandles.back().second.data(), handleSize,
 					&shaderGroupHandles[shaderGroupIndexPerType * handleSize], handleSize);
@@ -495,11 +495,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");
 }
 
-std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
+std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if(m_CI.type == crossplatform::PipelineType::RAY_TRACING)
+	if(m_CI.type == base::PipelineType::RAY_TRACING)
 	{
 		return m_ShaderGroupHandles;
 	}
@@ -507,7 +507,7 @@ std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>
 	{
 		MIRU_ASSERT(true, "ERROR: VULKAN: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
 	}
-	return std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>>();
+	return std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>>();
 }
 
 Pipeline::~Pipeline()
@@ -518,43 +518,43 @@ Pipeline::~Pipeline()
 	vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
 }
 
-VkFormat Pipeline::ToVkFormat(crossplatform::VertexType type)
+VkFormat Pipeline::ToVkFormat(base::VertexType type)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	switch (type)
 	{
-	case miru::crossplatform::VertexType::FLOAT:
+	case miru::base::VertexType::FLOAT:
 		return VK_FORMAT_R32_SFLOAT;
-	case miru::crossplatform::VertexType::VEC2:
+	case miru::base::VertexType::VEC2:
 		return VK_FORMAT_R32G32_SFLOAT;
-	case miru::crossplatform::VertexType::VEC3:
+	case miru::base::VertexType::VEC3:
 		return VK_FORMAT_R32G32B32_SFLOAT;
-	case miru::crossplatform::VertexType::VEC4:
+	case miru::base::VertexType::VEC4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
-	case miru::crossplatform::VertexType::INT:
+	case miru::base::VertexType::INT:
 		return VK_FORMAT_R32_SINT;
-	case miru::crossplatform::VertexType::IVEC2:
+	case miru::base::VertexType::IVEC2:
 		return VK_FORMAT_R32G32_SINT;
-	case miru::crossplatform::VertexType::IVEC3:
+	case miru::base::VertexType::IVEC3:
 		return VK_FORMAT_R32G32B32_SINT;
-	case miru::crossplatform::VertexType::IVEC4:
+	case miru::base::VertexType::IVEC4:
 		return VK_FORMAT_R32G32B32A32_SINT;
-	case miru::crossplatform::VertexType::UINT:
+	case miru::base::VertexType::UINT:
 		return VK_FORMAT_R32_UINT;
-	case miru::crossplatform::VertexType::UVEC2:
+	case miru::base::VertexType::UVEC2:
 		return VK_FORMAT_R32G32_UINT;
-	case miru::crossplatform::VertexType::UVEC3:
+	case miru::base::VertexType::UVEC3:
 		return VK_FORMAT_R32G32B32_UINT;
-	case miru::crossplatform::VertexType::UVEC4:
+	case miru::base::VertexType::UVEC4:
 		return VK_FORMAT_R32G32B32A32_UINT;
-	case miru::crossplatform::VertexType::DOUBLE:
+	case miru::base::VertexType::DOUBLE:
 		return VK_FORMAT_R64_SFLOAT;
-	case miru::crossplatform::VertexType::DVEC2:
+	case miru::base::VertexType::DVEC2:
 		return VK_FORMAT_R64G64_SFLOAT;
-	case miru::crossplatform::VertexType::DVEC3:
+	case miru::base::VertexType::DVEC3:
 		return VK_FORMAT_R64G64B64_SFLOAT;
-	case miru::crossplatform::VertexType::DVEC4:
+	case miru::base::VertexType::DVEC4:
 		return VK_FORMAT_R64G64B64A64_SFLOAT;
 	default:
 		return VK_FORMAT_UNDEFINED;

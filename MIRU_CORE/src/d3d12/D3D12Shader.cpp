@@ -2,7 +2,7 @@
 #if defined(MIRU_D3D12)
 #include "D3D12Shader.h"
 
-#include "crossplatform/DescriptorPoolSet.h"
+#include "base/DescriptorPoolSet.h"
 
 #include <d3d12shader.h>
 #include <dxcapi.h>
@@ -88,18 +88,18 @@ void Shader::D3D12ShaderReflection(
 					if (partIndex != 0) //No reflection available for non-DXIL shaders.
 					{
 						//General parsing functions:
-						auto D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType = [](D3D_SHADER_INPUT_TYPE type, D3D_SRV_DIMENSION dimension) -> crossplatform::DescriptorType
+						auto D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType = [](D3D_SHADER_INPUT_TYPE type, D3D_SRV_DIMENSION dimension) -> base::DescriptorType
 						{
 							switch (type)
 							{
 							case D3D_SIT_CBUFFER:
-								return crossplatform::DescriptorType::UNIFORM_BUFFER;
+								return base::DescriptorType::UNIFORM_BUFFER;
 							case D3D_SIT_TBUFFER:
-								return crossplatform::DescriptorType::UNIFORM_TEXEL_BUFFER;
+								return base::DescriptorType::UNIFORM_TEXEL_BUFFER;
 							case D3D_SIT_TEXTURE:
-								return crossplatform::DescriptorType::SAMPLED_IMAGE;
+								return base::DescriptorType::SAMPLED_IMAGE;
 							case D3D_SIT_SAMPLER:
-								return crossplatform::DescriptorType::SAMPLER;
+								return base::DescriptorType::SAMPLER;
 							case D3D_SIT_UAV_RWTYPED:
 							case D3D_SIT_STRUCTURED:
 							case D3D_SIT_UAV_RWSTRUCTURED:
@@ -109,15 +109,15 @@ void Shader::D3D12ShaderReflection(
 							case D3D_SIT_UAV_CONSUME_STRUCTURED:
 							case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 							case D3D_SIT_UAV_FEEDBACKTEXTURE:
-								return dimension > D3D_SRV_DIMENSION_BUFFER ? crossplatform::DescriptorType::STORAGE_IMAGE : crossplatform::DescriptorType::STORAGE_BUFFER;
+								return dimension > D3D_SRV_DIMENSION_BUFFER ? base::DescriptorType::STORAGE_IMAGE : base::DescriptorType::STORAGE_BUFFER;
 							case D3D_SIT_RTACCELERATIONSTRUCTURE:
-								return crossplatform::DescriptorType::ACCELERATION_STRUCTURE;
+								return base::DescriptorType::ACCELERATION_STRUCTURE;
 							default:
 								break;
 							}
 
 							MIRU_ASSERT(true, "ERROR: SHADER_CORE: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::crossplatform::DescriptorType.");
-							return static_cast<crossplatform::DescriptorType>(0);
+							return static_cast<base::DescriptorType>(0);
 						};
 						auto get_shader_stage = [](D3D12_SHADER_VERSION_TYPE type) -> Shader::StageBit
 						{
@@ -173,57 +173,57 @@ void Shader::D3D12ShaderReflection(
 									D3D_FEATURE_LEVEL featureLevel;
 									shader_reflection->GetMinFeatureLevel(&featureLevel);
 
-									auto D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> crossplatform::VertexType
+									auto D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> base::VertexType
 									{
 										switch (type)
 										{
 										case D3D_REGISTER_COMPONENT_UNKNOWN:
 											break;
 										case D3D_REGISTER_COMPONENT_UINT32:
-											return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT)
-												+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+											return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::UINT)
+												+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 										case D3D_REGISTER_COMPONENT_SINT32:
-											return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT)
-												+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+											return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::INT)
+												+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 										case D3D_REGISTER_COMPONENT_FLOAT32:
-											return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT)
-												+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+											return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::FLOAT)
+												+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 										default:
 											break;
 										}
 										MIRU_WARN(true, "ERROR: SHADER_CORE: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
-										return static_cast<crossplatform::VertexType>(0);
+										return static_cast<base::VertexType>(0);
 									};
 
 									if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
 									{
-										auto sizeof_miru_crossplatform_VertexType = [](crossplatform::VertexType type) -> uint32_t
+										auto sizeof_miru_crossplatform_VertexType = [](base::VertexType type) -> uint32_t
 										{
 											switch (type)
 											{
-											case miru::crossplatform::VertexType::FLOAT:
-											case miru::crossplatform::VertexType::INT:
-											case miru::crossplatform::VertexType::UINT:
+											case miru::base::VertexType::FLOAT:
+											case miru::base::VertexType::INT:
+											case miru::base::VertexType::UINT:
 												return 4;
-											case miru::crossplatform::VertexType::VEC2:
-											case miru::crossplatform::VertexType::IVEC2:
-											case miru::crossplatform::VertexType::UVEC2:
+											case miru::base::VertexType::VEC2:
+											case miru::base::VertexType::IVEC2:
+											case miru::base::VertexType::UVEC2:
 												return 8;
-											case miru::crossplatform::VertexType::VEC3:
-											case miru::crossplatform::VertexType::IVEC3:
-											case miru::crossplatform::VertexType::UVEC3:
+											case miru::base::VertexType::VEC3:
+											case miru::base::VertexType::IVEC3:
+											case miru::base::VertexType::UVEC3:
 												return 12;
-											case miru::crossplatform::VertexType::VEC4:
-											case miru::crossplatform::VertexType::IVEC4:
-											case miru::crossplatform::VertexType::UVEC4:
+											case miru::base::VertexType::VEC4:
+											case miru::base::VertexType::IVEC4:
+											case miru::base::VertexType::UVEC4:
 												return 16;
-											case miru::crossplatform::VertexType::DOUBLE:
+											case miru::base::VertexType::DOUBLE:
 												return 8;
-											case miru::crossplatform::VertexType::DVEC2:
+											case miru::base::VertexType::DVEC2:
 												return 16;
-											case miru::crossplatform::VertexType::DVEC3:
+											case miru::base::VertexType::DVEC3:
 												return 24;
-											case miru::crossplatform::VertexType::DVEC4:
+											case miru::base::VertexType::DVEC4:
 												return 32;
 											default:
 												return 0;
@@ -284,8 +284,8 @@ void Shader::D3D12ShaderReflection(
 										{
 											size_t structSize = 0;
 
-											crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
-											if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+											if (descType == base::DescriptorType::UNIFORM_BUFFER)
 											{
 												ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.
 												if (shader_reflection_constant_buffer)
@@ -320,7 +320,7 @@ void Shader::D3D12ShaderReflection(
 												}
 												else
 													cis_list.push_back(name.substr(0, name.find_last_of('_')));
-												descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
+												descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 											}
 
 											Shader::ResourceBindingDescription rbd;
@@ -379,8 +379,8 @@ void Shader::D3D12ShaderReflection(
 													{
 														size_t structSize = 0;
 
-														crossplatform::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
-														if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+														if (descType == base::DescriptorType::UNIFORM_BUFFER)
 														{
 															ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = function_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.
 															if (shader_reflection_constant_buffer)
@@ -415,7 +415,7 @@ void Shader::D3D12ShaderReflection(
 															}
 															else
 																cis_list.push_back(name.substr(0, name.find_last_of('_')));
-															descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
+															descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 														}
 
 														Shader::ResourceBindingDescription& rbd = RBDs[bindingDesc.Space][bindingDesc.BindPoint];

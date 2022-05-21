@@ -42,8 +42,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
 	{
-		s_DXILFullpath = crossplatform::Shader::GetLibraryFullpath_dxil();
-		s_HModeuleDXIL = crossplatform::Shader::LoadLibrary_dxil();
+		s_DXILFullpath = base::Shader::GetLibraryFullpath_dxil();
+		s_HModeuleDXIL = base::Shader::LoadLibrary_dxil();
 		if (!s_HModeuleDXIL)
 		{
 			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
@@ -166,7 +166,7 @@ void Context::DeviceWaitIdle()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	Ref<crossplatform::Fence> fence;
+	Ref<base::Fence> fence;
 	Fence::CreateInfo ci;
 	ci.debugName = "";
 	ci.device = m_Device;
@@ -205,8 +205,8 @@ Context::Features::Features(ID3D12Device* device)
 		formatSupports.push_back(formatSupport);
 
 		std::vector<D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS> _multisampleQualityLevels;
-		for (crossplatform::Image::SampleCountBit j = crossplatform::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
-			j <= crossplatform::Image::SampleCountBit::SAMPLE_COUNT_8_BIT; j = crossplatform::Image::SampleCountBit(uint32_t(j) * 2))
+		for (base::Image::SampleCountBit j = base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+			j <= base::Image::SampleCountBit::SAMPLE_COUNT_8_BIT; j = base::Image::SampleCountBit(uint32_t(j) * 2))
 		{
 			D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS multisampleQualityLevel = { DXGI_FORMAT(i), UINT(j) };
 			res = device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &multisampleQualityLevel, sizeof(multisampleQualityLevel));

@@ -21,13 +21,13 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	switch (m_CI.bpcColourSpace)
 	{
 	default:
-	case crossplatform::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
+	case base::Swapchain::BPC_ColourSpace::B8G8R8A8_UNORM_SRGB_NONLINEAR:
 		surfaceFormat = { DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR:
+	case base::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_SRGB_NONLINEAR:
 		surfaceFormat = { DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
+	case base::Swapchain::BPC_ColourSpace::A2B10G10R10_UNORM_PACK32_HDR10_ST2084:
 		surfaceFormat = { DXGI_FORMAT_R10G10B10A2_UNORM, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 }; break;
-	case crossplatform::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
+	case base::Swapchain::BPC_ColourSpace::R16G16B16A16_SFLOAT_EXTENDED_SRGB_LINEAR:
 		surfaceFormat = { DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 }; break;
 	}
 
@@ -170,14 +170,14 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_Resized = true;
 }
 
-void Swapchain::AcquireNextImage(const Ref<crossplatform::Semaphore>& acquire, uint32_t& imageIndex)
+void Swapchain::AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	imageIndex = static_cast<uint32_t>(m_Swapchain->GetCurrentBackBufferIndex());
 }
 
-void Swapchain::Present(const Ref<crossplatform::CommandPool>& cmdPool, const Ref<crossplatform::Semaphore>& submit, uint32_t& imageIndex)
+void Swapchain::Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

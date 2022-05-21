@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Image.h"
+#include "base/Image.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Image final : public crossplatform::Image
+	class Image final : public base::Image
 	{
 		//Methods
 	public:
@@ -36,7 +36,7 @@ namespace d3d12
 		D3D12MA::ALLOCATION_DESC m_D3D12MAllocationDesc;
 	};
 
-	class ImageView final : public crossplatform::ImageView
+	class ImageView final : public base::ImageView
 	{
 		//Methods
 	public:
@@ -59,7 +59,7 @@ namespace d3d12
 		D3D12_CPU_DESCRIPTOR_HANDLE m_UAVDescHandle = {};
 	};
 
-	class Sampler final : public crossplatform::Sampler
+	class Sampler final : public base::Sampler
 	{
 		//Methods
 	public:

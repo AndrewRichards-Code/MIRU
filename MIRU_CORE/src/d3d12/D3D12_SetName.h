@@ -15,7 +15,7 @@ namespace d3d12
 #if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
 	static inline void D3D12SetName(void* object, const std::string& name)
 	{
-		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
+		if (!base::GraphicsAPI::IsSetNameAllowed())
 			return;
 
 		std::wstring w_name = arc::ToWString(name);

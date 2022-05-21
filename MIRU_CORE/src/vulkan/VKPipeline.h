@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_VULKAN)
 #include "miru_core_common.h"
-#include "crossplatform/Pipeline.h"
+#include "base/Pipeline.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class RenderPass final : public crossplatform::RenderPass
+	class RenderPass final : public base::RenderPass
 	{
 		//Method
 	public:
@@ -30,16 +30,16 @@ namespace vulkan
 		#endif
 	};
 
-	class Pipeline final : public crossplatform::Pipeline
+	class Pipeline final : public base::Pipeline
 	{
 		//Methods
 	public:
 		Pipeline(Pipeline::CreateInfo* pCreateInfo);
 		~Pipeline();
 
-		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
+		std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> GetShaderGroupHandles() override;
 
-		static VkFormat ToVkFormat(crossplatform::VertexType type);
+		static VkFormat ToVkFormat(base::VertexType type);
 
 		//Members
 	public:
@@ -53,7 +53,7 @@ namespace vulkan
 		VkPipelineLayout m_PipelineLayout;
 		VkPipelineLayoutCreateInfo m_PLCI;
 
-		std::vector<std::pair<crossplatform::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
+		std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> m_ShaderGroupHandles;
 	};
 }
 }

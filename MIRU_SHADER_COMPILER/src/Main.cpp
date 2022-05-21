@@ -146,7 +146,7 @@ int main(int argc, const char** argv)
 	}
 
 	//Build binary
-	crossplatform::Shader::CompileArguments compileArgs;
+	base::Shader::CompileArguments compileArgs;
 	compileArgs.hlslFilepath = filepath;
 	compileArgs.outputDirectory = outputDir;
 	compileArgs.includeDirectories = includeDirs;
@@ -157,7 +157,7 @@ int main(int argc, const char** argv)
 	compileArgs.spv = spv;
 	compileArgs.dxcArguments = dxc_args;
 	compileArgs.dxcLocation = dxc_path;
-	crossplatform::Shader::CompileShaderFromSource(compileArgs);
+	base::Shader::CompileShaderFromSource(compileArgs);
 
 	if (pause)
 	{

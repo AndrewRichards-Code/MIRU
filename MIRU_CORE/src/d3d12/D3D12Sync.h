@@ -1,16 +1,16 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Sync.h"
+#include "base/Sync.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Fence final : public crossplatform::Fence
+	class Fence final : public base::Fence
 	{
 		//Methods
 	public:
-		Fence(crossplatform::Fence::CreateInfo* pCreateInfo);
+		Fence(base::Fence::CreateInfo* pCreateInfo);
 		~Fence();
 
 		void Reset() override;
@@ -31,11 +31,11 @@ namespace d3d12
 		HANDLE m_Event;
 	};
 
-	class Semaphore final : public crossplatform::Semaphore
+	class Semaphore final : public base::Semaphore
 	{
 		//Methods
 	public:
-		Semaphore(crossplatform::Semaphore::CreateInfo* pCreateInfo);
+		Semaphore(base::Semaphore::CreateInfo* pCreateInfo);
 		~Semaphore();
 
 		UINT64& GetValue() { return m_Value; }
@@ -49,7 +49,7 @@ namespace d3d12
 		UINT64 m_Value;
 	};
 
-	class TimelineSemaphore final : public crossplatform::TimelineSemaphore
+	class TimelineSemaphore final : public base::TimelineSemaphore
 	{
 		//Methods
 	public:
@@ -66,11 +66,11 @@ namespace d3d12
 		ID3D12Fence* m_Semaphore;
 	};
 
-	class Event final : public crossplatform::Event
+	class Event final : public base::Event
 	{
 		//Methods
 	public:
-		Event(crossplatform::Event::CreateInfo* pCreateInfo);
+		Event(base::Event::CreateInfo* pCreateInfo);
 		~Event();
 
 		void Set() override;
@@ -81,11 +81,11 @@ namespace d3d12
 	public:
 	};
 
-	class Barrier final : public crossplatform::Barrier
+	class Barrier final : public base::Barrier
 	{
 		//Methods
 	public:
-		Barrier(crossplatform::Barrier::CreateInfo* pCreateInfo);
+		Barrier(base::Barrier::CreateInfo* pCreateInfo);
 		~Barrier();
 
 	private:

@@ -3,7 +3,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	enum class VertexType : uint32_t;
 	enum class DescriptorType : uint32_t;

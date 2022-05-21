@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/AccelerationStructure.h"
+#include "base/AccelerationStructure.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class AccelerationStructureBuildInfo final : public crossplatform::AccelerationStructureBuildInfo
+	class AccelerationStructureBuildInfo final : public base::AccelerationStructureBuildInfo
 	{
 		//Methods
 	public:
@@ -22,7 +22,7 @@ namespace vulkan
 		VkAccelerationStructureBuildSizesInfoKHR m_ASBSI;
 	};
 
-	class AccelerationStructure final : public crossplatform::AccelerationStructure
+	class AccelerationStructure final : public base::AccelerationStructure
 	{
 		//Methods
 	public:

@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\crossplatform\Buffer.h">
+    <ClInclude Include="src\base\Buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Context.h">
+    <ClInclude Include="src\base\Context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\GraphicsAPI.h">
+    <ClInclude Include="src\base\GraphicsAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12Buffer.h">
@@ -30,7 +30,7 @@
     <ClInclude Include="src\d3d12\D3D12Context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Swapchain.h">
+    <ClInclude Include="src\base\Swapchain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12Swapchain.h">
@@ -39,13 +39,13 @@
     <ClInclude Include="src\miru_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\CommandPoolBuffer.h">
+    <ClInclude Include="src\base\CommandPoolBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12CommandPoolBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Sync.h">
+    <ClInclude Include="src\base\Sync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12Sync.h">
@@ -54,34 +54,34 @@
     <ClInclude Include="src\d3d12\D3D12Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Image.h">
+    <ClInclude Include="src\base\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Allocator.h">
+    <ClInclude Include="src\base\Allocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12Allocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\DescriptorPoolSet.h">
+    <ClInclude Include="src\base\DescriptorPoolSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12DescriptorPoolSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Shader.h">
+    <ClInclude Include="src\base\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\D3D12Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Pipeline.h">
+    <ClInclude Include="src\base\Pipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\PipelineHelper.h">
+    <ClInclude Include="src\base\PipelineHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\Framebuffer.h">
+    <ClInclude Include="src\base\Framebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\debug\RenderDoc.h">
@@ -135,7 +135,7 @@
     <ClInclude Include="src\vulkan\VKSync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\AccelerationStructure.h">
+    <ClInclude Include="src\base\AccelerationStructure.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vulkan\VKAccelerationStructure.h">
@@ -156,7 +156,7 @@
     <ClInclude Include="src\vulkan\VK_Include.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\crossplatform\ShaderBindingTable.h">
+    <ClInclude Include="src\base\ShaderBindingTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d12\d3dx12.h">
@@ -164,13 +164,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\crossplatform\Buffer.cpp">
+    <ClCompile Include="src\base\Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Context.cpp">
+    <ClCompile Include="src\base\Context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\GraphicsAPI.cpp">
+    <ClCompile Include="src\base\GraphicsAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12Buffer.cpp">
@@ -179,19 +179,19 @@
     <ClCompile Include="src\d3d12\D3D12Context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Swapchain.cpp">
+    <ClCompile Include="src\base\Swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12Swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\CommandPoolBuffer.cpp">
+    <ClCompile Include="src\base\CommandPoolBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12CommandPoolBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Sync.cpp">
+    <ClCompile Include="src\base\Sync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12Sync.cpp">
@@ -200,31 +200,31 @@
     <ClCompile Include="src\d3d12\D3D12Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Image.cpp">
+    <ClCompile Include="src\base\Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Allocator.cpp">
+    <ClCompile Include="src\base\Allocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12Allocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\DescriptorPoolSet.cpp">
+    <ClCompile Include="src\base\DescriptorPoolSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12DescriptorPoolSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Shader.cpp">
+    <ClCompile Include="src\base\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\d3d12\D3D12Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Pipeline.cpp">
+    <ClCompile Include="src\base\Pipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\Framebuffer.cpp">
+    <ClCompile Include="src\base\Framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\debug\RenderDoc.cpp">
@@ -275,7 +275,7 @@
     <ClCompile Include="src\vulkan\VKSync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\AccelerationStructure.cpp">
+    <ClCompile Include="src\base\AccelerationStructure.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkan\VKAccelerationStructure.cpp">
@@ -284,7 +284,7 @@
     <ClCompile Include="src\d3d12\D3D12AccelerationStructure.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\crossplatform\ShaderBindingTable.cpp">
+    <ClCompile Include="src\base\ShaderBindingTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.cpp">

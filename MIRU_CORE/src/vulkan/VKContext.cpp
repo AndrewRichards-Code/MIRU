@@ -43,7 +43,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
 		}
-		if (crossplatform::GraphicsAPI::IsSetNameAllowed())
+		if (base::GraphicsAPI::IsSetNameAllowed())
 			m_InstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
 		//Surface and Swapchain

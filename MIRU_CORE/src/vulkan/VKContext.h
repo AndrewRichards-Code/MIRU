@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/Context.h"
+#include "base/Context.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Context final : public crossplatform::Context
+	class Context final : public base::Context
 	{
 		//enum/structs
 	public:

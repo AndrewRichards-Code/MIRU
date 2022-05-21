@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/DescriptorPoolSet.h"
+#include "base/DescriptorPoolSet.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class DescriptorPool final : public crossplatform::DescriptorPool
+	class DescriptorPool final : public base::DescriptorPool
 	{
 		//Methods
 	public:
@@ -20,7 +20,7 @@ namespace d3d12
 		size_t m_AssignedSets = 0;
 	};
 
-	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
+	class DescriptorSetLayout final : public base::DescriptorSetLayout
 	{
 		//Methods
 	public:
@@ -36,7 +36,7 @@ namespace d3d12
 		std::array<D3D12_DESCRIPTOR_RANGE, 4> m_DescriptorRanges;
 	};
 
-	class DescriptorSet final : public crossplatform::DescriptorSet
+	class DescriptorSet final : public base::DescriptorSet
 	{
 		//Methods
 	public:
@@ -45,7 +45,7 @@ namespace d3d12
 
 		void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
-		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
+		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<base::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		void Update() override;
 
 		//Members

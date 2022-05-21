@@ -121,7 +121,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 			});
 	}
 
-	crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+	base::DescriptorType descriptorType = base::DescriptorType(0);
 	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 	{
 		if (descriptorSetLayoutBinding.binding == bindingIndex)
@@ -161,7 +161,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 			});
 	}
 
-	crossplatform::DescriptorType descriptorType = crossplatform::DescriptorType(0);
+	base::DescriptorType descriptorType = base::DescriptorType(0);
 	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 	{
 		if (descriptorSetLayoutBinding.binding == bindingIndex)
@@ -186,7 +186,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	m_WriteDescriptorSets.push_back(wds);
 }
 
-void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<base::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

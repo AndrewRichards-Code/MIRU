@@ -4,7 +4,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	typedef uint64_t DeviceAddress;
 	union DeviceOrHostAddress
@@ -17,9 +17,9 @@ namespace crossplatform
 		DeviceAddress	deviceAddress;
 		const void*		hostAddress;
 	};
-	#define MIRU_NULL_DEVICE_ADDRESS  0
-	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS { 0 }
-	#define MIRU_NULL_DEVICE_OR_HOST_ADDRESS_CONST MIRU_NULL_DEVICE_OR_HOST_ADDRESS
+	constexpr DeviceAddress DeviceAddressNull = 0;
+	constexpr DeviceOrHostAddress DeviceOrHostAddressNull = { 0 };
+	constexpr DeviceOrHostAddressConst DeviceOrHostAddressConstNull = { 0 };
 
 	struct StridedDeviceAddressRegion
 	{

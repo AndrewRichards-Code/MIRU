@@ -4,7 +4,7 @@
 #include "STBI/stb_image.h"
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 static HWND window;
 static bool g_WindowQuit = false;
@@ -607,7 +607,7 @@ void DynamicRendering()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
 
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 

@@ -2,7 +2,7 @@
 #if defined(MIRU_VULKAN)
 #include "VKShader.h"
 
-#include "crossplatform/DescriptorPoolSet.h"
+#include "base/DescriptorPoolSet.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -85,7 +85,7 @@ void Shader::VulkanShaderReflection(
 		stageBit |= stageAndEntryPoint.first;
 
 	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType =
-		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> crossplatform::VertexType
+		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> base::VertexType
 	{
 		switch (type)
 		{
@@ -104,11 +104,11 @@ void Shader::VulkanShaderReflection(
 		case spirv_cross::SPIRType::BaseType::UShort:
 			break;
 		case spirv_cross::SPIRType::BaseType::Int:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::INT)
-				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+			return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::INT)
+				+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::UInt:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::UINT)
-				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+			return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::UINT)
+				+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Int64:
 			break;
 		case spirv_cross::SPIRType::BaseType::UInt64:
@@ -118,11 +118,11 @@ void Shader::VulkanShaderReflection(
 		case spirv_cross::SPIRType::BaseType::Half:
 			break;
 		case spirv_cross::SPIRType::BaseType::Float:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::FLOAT)
-				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+			return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::FLOAT)
+				+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Double:
-			return static_cast<crossplatform::VertexType>(static_cast<uint32_t>(crossplatform::VertexType::DOUBLE)
-				+ static_cast<uint32_t>(crossplatform::VertexType(vector_count - 1)));
+			return static_cast<base::VertexType>(static_cast<uint32_t>(base::VertexType::DOUBLE)
+				+ static_cast<uint32_t>(base::VertexType(vector_count - 1)));
 		case spirv_cross::SPIRType::BaseType::Struct:
 			break;
 		case spirv_cross::SPIRType::BaseType::Image:
@@ -142,37 +142,37 @@ void Shader::VulkanShaderReflection(
 		}
 
 		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
-		return static_cast<crossplatform::VertexType>(0);
+		return static_cast<base::VertexType>(0);
 	};
 
 	auto sizeof_miru_crossplatform_VertexType =
-		[](crossplatform::VertexType type) -> uint32_t
+		[](base::VertexType type) -> uint32_t
 	{
 		switch (type)
 		{
-		case miru::crossplatform::VertexType::FLOAT:
-		case miru::crossplatform::VertexType::INT:
-		case miru::crossplatform::VertexType::UINT:
+		case miru::base::VertexType::FLOAT:
+		case miru::base::VertexType::INT:
+		case miru::base::VertexType::UINT:
 			return 4;
-		case miru::crossplatform::VertexType::VEC2:
-		case miru::crossplatform::VertexType::IVEC2:
-		case miru::crossplatform::VertexType::UVEC2:
+		case miru::base::VertexType::VEC2:
+		case miru::base::VertexType::IVEC2:
+		case miru::base::VertexType::UVEC2:
 			return 8;
-		case miru::crossplatform::VertexType::VEC3:
-		case miru::crossplatform::VertexType::IVEC3:
-		case miru::crossplatform::VertexType::UVEC3:
+		case miru::base::VertexType::VEC3:
+		case miru::base::VertexType::IVEC3:
+		case miru::base::VertexType::UVEC3:
 			return 12;
-		case miru::crossplatform::VertexType::VEC4:
-		case miru::crossplatform::VertexType::IVEC4:
-		case miru::crossplatform::VertexType::UVEC4:
+		case miru::base::VertexType::VEC4:
+		case miru::base::VertexType::IVEC4:
+		case miru::base::VertexType::UVEC4:
 			return 16;
-		case miru::crossplatform::VertexType::DOUBLE:
+		case miru::base::VertexType::DOUBLE:
 			return 8;
-		case miru::crossplatform::VertexType::DVEC2:
+		case miru::base::VertexType::DVEC2:
 			return 16;
-		case miru::crossplatform::VertexType::DVEC3:
+		case miru::base::VertexType::DVEC3:
 			return 24;
-		case miru::crossplatform::VertexType::DVEC4:
+		case miru::base::VertexType::DVEC4:
 			return 32;
 		default:
 			return 0;
@@ -225,7 +225,7 @@ void Shader::VulkanShaderReflection(
 
 	std::vector<std::string> cis_list;
 	auto push_back_ResourceBindingDescription =
-		[&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, crossplatform::DescriptorType descriptorType) -> void
+		[&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, base::DescriptorType descriptorType) -> void
 	{
 		for (auto& res : resources)
 		{
@@ -234,8 +234,8 @@ void Shader::VulkanShaderReflection(
 			std::string name = compiled_bin.get_name(res.id);
 
 			size_t structSize = 0;
-			crossplatform::DescriptorType descType = descriptorType;
-			if (descType == crossplatform::DescriptorType::UNIFORM_BUFFER)
+			base::DescriptorType descType = descriptorType;
+			if (descType == base::DescriptorType::UNIFORM_BUFFER)
 			{
 				structSize = compiled_bin.get_declared_struct_size(type);
 			}
@@ -261,7 +261,7 @@ void Shader::VulkanShaderReflection(
 				}
 				else
 					cis_list.push_back(res.name.substr(0, res.name.find_last_of('_')));
-				descType = crossplatform::DescriptorType::COMBINED_IMAGE_SAMPLER;
+				descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
 
 			Shader::ResourceBindingDescription rbd;
@@ -275,15 +275,15 @@ void Shader::VulkanShaderReflection(
 		}
 	};
 
-	push_back_ResourceBindingDescription(resources.uniform_buffers, crossplatform::DescriptorType::UNIFORM_BUFFER);
-	push_back_ResourceBindingDescription(resources.storage_buffers, crossplatform::DescriptorType::STORAGE_BUFFER);
-	push_back_ResourceBindingDescription(resources.subpass_inputs, crossplatform::DescriptorType::INPUT_ATTACHMENT);
-	push_back_ResourceBindingDescription(resources.storage_images, crossplatform::DescriptorType::STORAGE_IMAGE);
-	push_back_ResourceBindingDescription(resources.sampled_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
-	//push_back_ResourceBindingDescription(resources.atomic_counters, crossplatform::DescriptorType);
-	push_back_ResourceBindingDescription(resources.acceleration_structures, crossplatform::DescriptorType::ACCELERATION_STRUCTURE);
-	//push_back_ResourceBindingDescription(resources.push_constant_buffers, crossplatform::DescriptorType);
-	push_back_ResourceBindingDescription(resources.separate_images, crossplatform::DescriptorType::SAMPLED_IMAGE);
-	push_back_ResourceBindingDescription(resources.separate_samplers, crossplatform::DescriptorType::SAMPLER);
+	push_back_ResourceBindingDescription(resources.uniform_buffers, base::DescriptorType::UNIFORM_BUFFER);
+	push_back_ResourceBindingDescription(resources.storage_buffers, base::DescriptorType::STORAGE_BUFFER);
+	push_back_ResourceBindingDescription(resources.subpass_inputs, base::DescriptorType::INPUT_ATTACHMENT);
+	push_back_ResourceBindingDescription(resources.storage_images, base::DescriptorType::STORAGE_IMAGE);
+	push_back_ResourceBindingDescription(resources.sampled_images, base::DescriptorType::SAMPLED_IMAGE);
+	//push_back_ResourceBindingDescription(resources.atomic_counters, base::DescriptorType);
+	push_back_ResourceBindingDescription(resources.acceleration_structures, base::DescriptorType::ACCELERATION_STRUCTURE);
+	//push_back_ResourceBindingDescription(resources.push_constant_buffers, base::DescriptorType);
+	push_back_ResourceBindingDescription(resources.separate_images, base::DescriptorType::SAMPLED_IMAGE);
+	push_back_ResourceBindingDescription(resources.separate_samplers, base::DescriptorType::SAMPLER);
 }
 #endif

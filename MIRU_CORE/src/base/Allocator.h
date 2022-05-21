@@ -3,7 +3,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	typedef void* NativeAllocation;
 	typedef void* NativeAllocator;

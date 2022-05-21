@@ -4,7 +4,7 @@
 #include "D3D12Image.h"
 #include "D3D12DescriptorPoolSet.h"
 
-#include "crossplatform/Pipeline.h"
+#include "base/Pipeline.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -16,10 +16,10 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	std::vector<crossplatform::DescriptorPool::PoolSize> poolSizes(3);
-	poolSizes[0] = { crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW, 0 };
-	poolSizes[1] = { crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 0 };
-	poolSizes[2] = { crossplatform::DescriptorType::SAMPLED_IMAGE, 0 };
+	std::vector<base::DescriptorPool::PoolSize> poolSizes(3);
+	poolSizes[0] = { base::DescriptorType::D3D12_RENDER_TARGET_VIEW, 0 };
+	poolSizes[1] = { base::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 0 };
+	poolSizes[2] = { base::DescriptorType::SAMPLED_IMAGE, 0 };
 
 	size_t i = 0;
 	for (auto& imageView : m_CI.attachments)
@@ -90,7 +90,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorPoolCI.device = m_Device;
 	m_FramebufferDescriptorPoolCI.poolSizes = poolSizes;
 	m_FramebufferDescriptorPoolCI.maxSets = 1;
-	m_FramebufferDescriptorPool = crossplatform::DescriptorPool::Create(&m_FramebufferDescriptorPoolCI);
+	m_FramebufferDescriptorPool = base::DescriptorPool::Create(&m_FramebufferDescriptorPoolCI);
 
 	std::vector<DescriptorSetLayout::Binding> framebufferDescriptorBindings;
 	UINT binding = 0;
@@ -100,19 +100,19 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 		//RTV
 		if (imageView.NeedRTV && !imageView.HasRTV)
 		{
-			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::D3D12_RENDER_TARGET_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			framebufferDescriptorBindings.push_back({ binding, base::DescriptorType::D3D12_RENDER_TARGET_VIEW, 1, base::Shader::StageBit::ALL_GRAPHICS });
 			binding++;
 		}
 		//DSV
 		else if (imageView.NeedDSV && !imageView.HasDSV)
 		{
-			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			framebufferDescriptorBindings.push_back({ binding, base::DescriptorType::D3D12_DEPTH_STENCIL_VIEW, 1, base::Shader::StageBit::ALL_GRAPHICS });
 			binding++;
 		}
 		//SRV
 		else if (imageView.NeedSRV && !imageView.HasSRV)
 		{
-			framebufferDescriptorBindings.push_back({ binding, crossplatform::DescriptorType::SAMPLED_IMAGE, 1, crossplatform::Shader::StageBit::ALL_GRAPHICS });
+			framebufferDescriptorBindings.push_back({ binding, base::DescriptorType::SAMPLED_IMAGE, 1, base::Shader::StageBit::ALL_GRAPHICS });
 			binding++;
 		}
 	}
@@ -125,7 +125,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorSetCI.debugName = m_CI.debugName + " : Framebuffer DescriptorSet";
 	m_FramebufferDescriptorSetCI.pDescriptorPool = m_FramebufferDescriptorPool;
 	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
-	m_FramebufferDescriptorSet = crossplatform::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
+	m_FramebufferDescriptorSet = base::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
 
 	binding = 0;
 	for (auto& imageView : m_ImageView_RTV_DSV_SRVs)

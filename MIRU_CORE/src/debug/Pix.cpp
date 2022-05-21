@@ -43,7 +43,7 @@ void Pix::LoadWinPixEventRuntime()
 		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath.generic_string());
 		if (!s_WinPixEventRuntimeHandle)
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 		else
@@ -62,7 +62,7 @@ void Pix::UnloadWinPixEventRuntime()
 	{
 		if (!arc::DynamicLibrary::Unload(s_WinPixEventRuntimeHandle))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to free '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to free '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
@@ -100,7 +100,7 @@ void Pix::LoadWinPixGpuCapturer()
 		s_WinPixGpuCapturerHandle = arc::DynamicLibrary::Load(s_WinPixGpuCapturerFullpath.generic_string());
 		if (!s_WinPixGpuCapturerHandle)
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to load '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}
@@ -116,7 +116,7 @@ void Pix::UnloadWinPixGpuCapturer()
 	{
 		if (!arc::DynamicLibrary::Unload(s_WinPixGpuCapturerHandle))
 		{
-			std::string error_str = "WARN: CROSSPLATFORM: Unable to free '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
+			std::string error_str = "WARN: BASE: Unable to free '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
 			MIRU_WARN(GetLastError(), error_str.c_str());
 		}
 	}

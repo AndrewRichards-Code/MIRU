@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/Image.h"
+#include "base/Image.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Image final : public crossplatform::Image
+	class Image final : public base::Image
 	{
 		//Methods
 	public:
@@ -30,7 +30,7 @@ namespace vulkan
 		VmaAllocationInfo m_VmaAI;
 	};
 
-	class ImageView final : public crossplatform::ImageView
+	class ImageView final : public base::ImageView
 	{		
 		//Methods
 	public:
@@ -46,7 +46,7 @@ namespace vulkan
 		VkImageViewCreateInfo m_ImageViewCI = {};
 	};
 
-	class Sampler final : public crossplatform::Sampler
+	class Sampler final : public base::Sampler
 	{
 		//Methods
 	public:

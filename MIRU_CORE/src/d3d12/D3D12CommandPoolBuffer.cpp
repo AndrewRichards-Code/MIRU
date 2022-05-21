@@ -200,7 +200,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	}
 }
 
-void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<crossplatform::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
+void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<base::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -218,7 +218,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<cro
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<base::Fence>& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -251,7 +251,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence, bool unused)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<base::Fence>& fence, bool unused)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -283,22 +283,22 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::SetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::ResetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::ResetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatform::Event>>& events, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event>>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<Ref<base::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, crossplatform::DependencyBit dependencies, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<Ref<base::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -317,7 +317,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
 }
 
-void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -431,7 +431,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -531,7 +531,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
+void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -543,18 +543,18 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 	
 	//Transition resources to be begin render pass.
 	renderingResource.SubpassIndex = (uint32_t)-1;
-	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 
-	std::vector<Ref<crossplatform::Barrier>> barriers;
-	crossplatform::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	std::vector<Ref<base::Barrier>> barriers;
+	base::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 
 		//Set the initial layout from Image creation.
 		if (m_RenderPassAttachementImageLayouts.find(image) == m_RenderPassAttachementImageLayouts.end())
@@ -572,11 +572,11 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Fra
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 		i++;
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
+	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
 
 	//Begin first subpass
 	NextSubpass(index);
@@ -593,28 +593,28 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	ResolvePreviousSubpassAttachments(index);
 
 	//Transition resources to be end render pass.
-	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	renderingResource.SubpassIndex = (uint32_t)-1;
 
-	std::vector<Ref<crossplatform::Barrier>> barriers;
-	crossplatform::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	std::vector<Ref<base::Barrier>> barriers;
+	base::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 		i++;
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
+	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
 };
 
 void CommandBuffer::NextSubpass(uint32_t index)
@@ -628,73 +628,73 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	ResolvePreviousSubpassAttachments(index);
 
 	renderingResource.SubpassIndex++;
-	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
-	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
+	const std::vector<Ref<base::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
+	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	//Transition resources for the subpass.
-	std::vector<Ref<crossplatform::Barrier>> barriers;
-	crossplatform::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = crossplatform::Barrier::Type::IMAGE;
+	std::vector<Ref<base::Barrier>> barriers;
+	base::Barrier::CreateInfo barrierCI = {};
+	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	for (auto& input : subpassDesc.inputAttachments)
 	{
-		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = input.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& colour : subpassDesc.colourAttachments)
 	{
-		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = colour.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& resolve : subpassDesc.resolveAttachments)
 	{
-		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = resolve.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
 	{
-		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = depthStencil.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
 	for (auto& preseverse : subpassDesc.preseverseAttachments)
 	{
-		const Ref<crossplatform::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
-		const Ref<crossplatform::Image>& image = imageView->GetCreateInfo().pImage;
+		const Ref<base::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
+		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
 		barrierCI.pImage = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = preseverse.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(crossplatform::Barrier::Create(&barrierCI));
+		barriers.push_back(base::Barrier::Create(&barrierCI));
 		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
 	}
-	PipelineBarrier(index, crossplatform::PipelineStageBit::BOTTOM_OF_PIPE_BIT, crossplatform::PipelineStageBit::TOP_OF_PIPE_BIT, crossplatform::DependencyBit::NONE_BIT, barriers);
+	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
 
 	//Set RenderTargets
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;
@@ -739,7 +739,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 }
 
-void CommandBuffer::BeginRendering(uint32_t index, const crossplatform::RenderingInfo& renderingInfo)
+void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -820,15 +820,15 @@ void CommandBuffer::EndRendering(uint32_t index)
 	{
 		if (colourAttachment.resolveImageView)
 		{
-			const Ref<crossplatform::Image>& colourImage = ref_cast<ImageView>(colourAttachment.imageView)->GetCreateInfo().pImage;
-			const Ref<crossplatform::Image>& resolveImage = ref_cast<ImageView>(colourAttachment.resolveImageView)->GetCreateInfo().pImage;
-			const crossplatform::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
-			const crossplatform::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
+			const Ref<base::Image>& colourImage = ref_cast<ImageView>(colourAttachment.imageView)->GetCreateInfo().pImage;
+			const Ref<base::Image>& resolveImage = ref_cast<ImageView>(colourAttachment.resolveImageView)->GetCreateInfo().pImage;
+			const base::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
+			const base::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
 
 			Image::Resolve resolveRegion;
-			resolveRegion.srcSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers };
+			resolveRegion.srcSubresource = { base::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers };
 			resolveRegion.srcOffset = { 0, 0, 0 };
-			resolveRegion.dstSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
+			resolveRegion.dstSubresource = { base::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
 			resolveRegion.dstOffset = { 0, 0, 0 };
 			resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth };
 
@@ -837,20 +837,20 @@ void CommandBuffer::EndRendering(uint32_t index)
 	}
 }
 
-void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeline>& pipeline) 
+void CommandBuffer::BindPipeline(uint32_t index, const Ref<base::Pipeline>& pipeline) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
+	if (pipeline->GetCreateInfo().type == base::PipelineType::GRAPHICS)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
 
-		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), crossplatform::DynamicState::VIEWPORT) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), base::DynamicState::VIEWPORT) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
-		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), crossplatform::DynamicState::SCISSOR) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), base::DynamicState::SCISSOR) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		
 		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
@@ -858,12 +858,12 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 		else if (m_RenderingResources[index].RenderingInfo.viewMask > 0)
 			reinterpret_cast<ID3D12GraphicsCommandList2*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingResources[index].RenderingInfo.viewMask);
 	}
-	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+	else if (pipeline->GetCreateInfo().type == base::PipelineType::COMPUTE)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetPipelineState(ref_cast<Pipeline>(pipeline)->m_Pipeline);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 	}
-	else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
+	else if (pipeline->GetCreateInfo().type == base::PipelineType::RAY_TRACING)
 	{
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetPipelineState1(ref_cast<Pipeline>(pipeline)->m_RayTracingPipeline);
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->SetComputeRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
@@ -875,7 +875,7 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeli
 
 };
 
-void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews) 
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base::BufferView>>& vertexBufferViews) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -889,7 +889,7 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<cros
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetVertexBuffers(0, static_cast<UINT>(vbvs.size()), vbvs.data());
 
 };
-void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::BufferView>& indexBufferView) 
+void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>& indexBufferView) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -897,7 +897,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::Buf
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<crossplatform::Pipeline>& pipeline)
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<base::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<base::Pipeline>& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -987,15 +987,15 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<cro
 			CBV_SRV_UAV_GPUDescriptorHandleIndex++;
 		}
 
-		if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::GRAPHICS)
+		if (pipeline->GetCreateInfo().type == base::PipelineType::GRAPHICS)
 		{
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
-		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::COMPUTE)
+		else if (pipeline->GetCreateInfo().type == base::PipelineType::COMPUTE)
 		{
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
-		else if (pipeline->GetCreateInfo().type == crossplatform::PipelineType::RAY_TRACING)
+		else if (pipeline->GetCreateInfo().type == base::PipelineType::RAY_TRACING)
 		{
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetComputeRootDescriptorTable(static_cast<UINT>(rootParameterIndex), GPUDescriptorHandle);
 		}
@@ -1032,7 +1032,7 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
-void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<crossplatform::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<crossplatform::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<base::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1057,7 +1057,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	}
 }
 
-void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pMissShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pHitShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1090,7 +1090,7 @@ void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDevice
 	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->DispatchRays(&desc);
 }
 
-void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<crossplatform::Buffer::Copy>& copyRegions) 
+void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Buffer>& dstBuffer, const std::vector<base::Buffer::Copy>& copyRegions) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1101,7 +1101,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>&
 			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
 };
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Copy>& copyRegions)
+void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1135,7 +1135,7 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& s
 	}
 };
 
-void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1166,7 +1166,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::B
 	}	
 }
 
-void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& srcImage, const Ref<base::Buffer>& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1197,7 +1197,7 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::I
 	}
 }
 
-void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions)
+void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImage, Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1215,13 +1215,13 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		bCI.oldLayout = srcImageLayout;
 		bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
 		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		Ref<crossplatform::Barrier> preResolveBarrierSrc = Barrier::Create(&bCI);
+		Ref<base::Barrier> preResolveBarrierSrc = Barrier::Create(&bCI);
 		bCI.pImage = dstImage;
 		bCI.oldLayout = dstImageLayout;
 		bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
 		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		Ref<crossplatform::Barrier> preResolveBarrierDst = Barrier::Create(&bCI);
-		PipelineBarrier(index, crossplatform::PipelineStageBit::FRAGMENT_SHADER_BIT, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
+		Ref<base::Barrier> preResolveBarrierDst = Barrier::Create(&bCI);
+		PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
 
 		D3D12_RECT srcRect = {};
 		srcRect.left = static_cast<UINT>(resolveRegion.srcOffset.x);
@@ -1262,17 +1262,17 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>
 		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
 		bCI.newLayout = srcImageLayout;
 		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		Ref<crossplatform::Barrier> postResolveBarrierSrc = Barrier::Create(&bCI);
+		Ref<base::Barrier> postResolveBarrierSrc = Barrier::Create(&bCI);
 		bCI.pImage = dstImage;
 		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
 		bCI.newLayout = dstImageLayout;
 		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		Ref<crossplatform::Barrier> postResolveBarrierDst = Barrier::Create(&bCI);
-		PipelineBarrier(index, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::PipelineStageBit::TRANSFER_BIT, crossplatform::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
+		Ref<base::Barrier> postResolveBarrierDst = Barrier::Create(&bCI);
+		PipelineBarrier(index, base::PipelineStageBit::TRANSFER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
 	}
 }
 
-void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform::Viewport>& viewports)
+void CommandBuffer::SetViewport(uint32_t index, const std::vector<base::Viewport>& viewports)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1285,7 +1285,7 @@ void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform:
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(d3d12Viewports.size()), d3d12Viewports.data());
 }
 
-void CommandBuffer::SetScissor(uint32_t index, const std::vector<crossplatform::Rect2D>& scissors)
+void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& scissors)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1308,10 +1308,10 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 	if (renderingResource.SubpassIndex == RenderPass::SubpassExternal)
 		return;
 	
-	const Ref<crossplatform::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<Ref<crossplatform::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
-	const std::vector<crossplatform::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
+	const std::vector<Ref<base::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
+	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	if (subpassDesc.resolveAttachments.empty())
 		return;
@@ -1323,18 +1323,18 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 
 	for (size_t i = 0; i < subpassDesc.resolveAttachments.size(); i++)
 	{
-		const crossplatform::RenderPass::AttachmentReference& colour = subpassDesc.colourAttachments[i];
-		const crossplatform::RenderPass::AttachmentReference& resolve = subpassDesc.resolveAttachments[i];
+		const base::RenderPass::AttachmentReference& colour = subpassDesc.colourAttachments[i];
+		const base::RenderPass::AttachmentReference& resolve = subpassDesc.resolveAttachments[i];
 
-		const Ref<crossplatform::Image>& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().pImage;
-		const Ref<crossplatform::Image>& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().pImage;
-		const crossplatform::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
-		const crossplatform::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
+		const Ref<base::Image>& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().pImage;
+		const Ref<base::Image>& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().pImage;
+		const base::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
+		const base::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
 
 		Image::Resolve resolveRegion;
-		resolveRegion.srcSubresource = {crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers};
+		resolveRegion.srcSubresource = {base::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers};
 		resolveRegion.srcOffset = { 0, 0, 0 };
-		resolveRegion.dstSubresource = { crossplatform::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
+		resolveRegion.dstSubresource = { base::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
 		resolveRegion.dstOffset = { 0, 0, 0 };
 		resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth};
 

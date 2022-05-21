@@ -9,7 +9,7 @@ namespace vulkan
 	template<class T>
 	static inline void VKSetName(VkDevice& device, const T& objectHandle, const std::string& name)
 	{
-		if (!crossplatform::GraphicsAPI::IsSetNameAllowed())
+		if (!base::GraphicsAPI::IsSetNameAllowed())
 			return;
 	
 		VkObjectType objectType = VK_OBJECT_TYPE_UNKNOWN;

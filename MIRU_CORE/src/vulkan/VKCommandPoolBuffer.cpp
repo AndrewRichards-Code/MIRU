@@ -147,7 +147,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	MIRU_ASSERT(vkResetCommandBuffer(m_CmdBuffers[index], releaseResources ? VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandBuffer.");
 }
 
-void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<crossplatform::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
+void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<base::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -166,7 +166,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<cro
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<crossplatform::Semaphore>>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<crossplatform::Semaphore>>& signals, const Ref<crossplatform::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<base::Fence>& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -208,7 +208,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<crossplatform::TimelineSemaphoreWithValue>& waits, const std::vector<crossplatform::PipelineStageBit>& waitDstPipelineStages, const std::vector<crossplatform::TimelineSemaphoreWithValue>& signals, const Ref<crossplatform::Fence>& fence, bool unused)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<base::Fence>& fence, bool unused)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -266,7 +266,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::SetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -274,7 +274,7 @@ void CommandBuffer::SetEvent(uint32_t index, const Ref<crossplatform::Event>& ev
 	vkCmdSetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
-void CommandBuffer::ResetEvent(uint32_t index, const Ref<crossplatform::Event>& event, crossplatform::PipelineStageBit pipelineStage)
+void CommandBuffer::ResetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -282,7 +282,7 @@ void CommandBuffer::ResetEvent(uint32_t index, const Ref<crossplatform::Event>& 
 	vkCmdResetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
-void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatform::Event>>& events, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event>>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<Ref<base::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -321,7 +321,7 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<crossplatfo
 
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStageBit srcStage, crossplatform::PipelineStageBit dstStage, crossplatform::DependencyBit dependencies, const std::vector<Ref<crossplatform::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<Ref<base::Barrier>>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -353,7 +353,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, crossplatform::PipelineStage
 		static_cast<uint32_t>(vkImageBarriers.size()), vkImageBarriers.data());
 }
 
-void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearColourValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -374,7 +374,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<crossplatform::Im
 	vkCmdClearColorImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearColour, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
-void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatform::Image>& image, crossplatform::Image::Layout layout, const crossplatform::Image::ClearDepthStencilValue& clear, const std::vector<crossplatform::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -395,7 +395,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<crossplatfo
 	vkCmdClearDepthStencilImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<crossplatform::Framebuffer>& framebuffer, const std::vector<crossplatform::Image::ClearValue>& clearValues)
+void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -428,7 +428,7 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	vkCmdEndRenderPass(m_CmdBuffers[index]);
 }
 
-void CommandBuffer::BindPipeline(uint32_t index, const Ref<crossplatform::Pipeline>& pipeline)
+void CommandBuffer::BindPipeline(uint32_t index, const Ref<base::Pipeline>& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -444,13 +444,13 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	vkCmdNextSubpass(m_CmdBuffers[index], VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void CommandBuffer::BeginRendering(uint32_t index, const crossplatform::RenderingInfo& renderingInfo)
+void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	auto RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR = [](const crossplatform::RenderingAttachmentInfo& renderingAttachment) -> VkRenderingAttachmentInfoKHR
+	auto RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR = [](const base::RenderingAttachmentInfo& renderingAttachment) -> VkRenderingAttachmentInfoKHR
 	{
 		VkRenderingAttachmentInfoKHR vkRenderingAttachment;
 		vkRenderingAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
@@ -506,7 +506,7 @@ void CommandBuffer::EndRendering(uint32_t index)
 	vkCmdEndRenderingKHR(m_CmdBuffers[index]);
 }
 
-void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<crossplatform::BufferView>>& vertexBufferViews)
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base::BufferView>>& vertexBufferViews)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -522,7 +522,7 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<cros
 	vkCmdBindVertexBuffers(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkBuffers.size()), vkBuffers.data(), offsets.data());
 }
 
-void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::BufferView>& indexBufferView)
+void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>& indexBufferView)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -542,7 +542,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<crossplatform::Buf
 	vkCmdBindIndexBuffer(m_CmdBuffers[index], buffer, static_cast<VkDeviceSize>(ci.offset), type);
 }
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<crossplatform::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<crossplatform::Pipeline>& pipeline)
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<base::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<base::Pipeline>& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -585,7 +585,7 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	vkCmdDispatch(m_CmdBuffers[index], groupCountX, groupCountY, groupCountZ);
 }
 
-void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<crossplatform::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<crossplatform::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<base::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -648,7 +648,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 	}
 }
 
-void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pMissShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pHitShaderBindingTable, const crossplatform::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -665,7 +665,7 @@ void CommandBuffer::TraceRays(uint32_t index, const crossplatform::StridedDevice
 	vkCmdTraceRaysKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, width, height, depth);
 }
 
-void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
+void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -679,7 +679,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<crossplatform::Buffer>&
 	vkCmdCopyBuffer(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferCopy.size()), vkBufferCopy.data());
 }
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions)
+void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -701,7 +701,7 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<crossplatform::Image>& s
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
 
-void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::Buffer>& srcBuffer, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -722,7 +722,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<crossplatform::B
 	vkCmdCopyBufferToImage(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::Image>& srcImage, const Ref<crossplatform::Buffer>& dstBuffer, crossplatform::Image::Layout srcImageLayout, const std::vector<crossplatform::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& srcImage, const Ref<base::Buffer>& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -743,7 +743,7 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<crossplatform::I
 	vkCmdCopyImageToBuffer(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void CommandBuffer::ResolveImage(uint32_t index, const Ref<crossplatform::Image>& srcImage, crossplatform::Image::Layout srcImageLayout, const Ref<crossplatform::Image>& dstImage, crossplatform::Image::Layout dstImageLayout, const std::vector<crossplatform::Image::Resolve>& resolveRegions)
+void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -791,7 +791,7 @@ void CommandBuffer::EndDebugLabel(uint32_t index)
 		vkCmdEndDebugUtilsLabelEXT(m_CmdBuffers[index]);
 }
 
-void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform::Viewport>& viewports)
+void CommandBuffer::SetViewport(uint32_t index, const std::vector<base::Viewport>& viewports)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -804,7 +804,7 @@ void CommandBuffer::SetViewport(uint32_t index, const std::vector<crossplatform:
 	vkCmdSetViewport(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkViewports.size()), vkViewports.data());
 }
 
-void CommandBuffer::SetScissor(uint32_t index, const std::vector<crossplatform::Rect2D>& scissors)
+void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& scissors)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

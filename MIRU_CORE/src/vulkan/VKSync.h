@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/Sync.h"
+#include "base/Sync.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class Fence final : public crossplatform::Fence
+	class Fence final : public base::Fence
 	{
 		//Methods
 	public:
@@ -25,7 +25,7 @@ namespace vulkan
 		VkFenceCreateInfo m_FenceCI;
 	};
 
-	class Semaphore final : public crossplatform::Semaphore
+	class Semaphore final : public base::Semaphore
 	{
 		//Methods
 	public:
@@ -40,7 +40,7 @@ namespace vulkan
 		VkSemaphoreCreateInfo m_SemaphoreCI;
 	};
 
-	class TimelineSemaphore final : public crossplatform::TimelineSemaphore
+	class TimelineSemaphore final : public base::TimelineSemaphore
 	{
 		//Methods
 	public:
@@ -60,7 +60,7 @@ namespace vulkan
 		VkSemaphoreTypeCreateInfoKHR m_SemaphoreTypeCI;
 	};
 
-	class Event final : public crossplatform::Event
+	class Event final : public base::Event
 	{
 		//Methods
 	public:
@@ -79,7 +79,7 @@ namespace vulkan
 		VkEventCreateInfo m_EventCI;
 	};
 
-	class Barrier final : public crossplatform::Barrier
+	class Barrier final : public base::Barrier
 	{
 		//Methods
 	public:

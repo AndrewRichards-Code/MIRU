@@ -1,12 +1,12 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Context.h"
+#include "base/Context.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Context final : public crossplatform::Context
+	class Context final : public base::Context
 	{
 		//enum/structs
 	public:

@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_D3D12)
-#include "crossplatform/Framebuffer.h"
-#include "crossplatform/DescriptorPoolSet.h"
+#include "base/Framebuffer.h"
+#include "base/DescriptorPoolSet.h"
 
 namespace miru
 {
 namespace d3d12
 {
-	class Framebuffer final : public crossplatform::Framebuffer
+	class Framebuffer final : public base::Framebuffer
 	{
 		//Methods
 	public:
@@ -18,18 +18,18 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		Ref<crossplatform::DescriptorPool> m_FramebufferDescriptorPool;
-		crossplatform::DescriptorPool::CreateInfo m_FramebufferDescriptorPoolCI;
+		Ref<base::DescriptorPool> m_FramebufferDescriptorPool;
+		base::DescriptorPool::CreateInfo m_FramebufferDescriptorPoolCI;
 
-		Ref<crossplatform::DescriptorSetLayout> m_FramebufferDescriptorSetLayout;
-		crossplatform::DescriptorSetLayout::CreateInfo m_FramebufferDescriptorSetLayoutCI;
+		Ref<base::DescriptorSetLayout> m_FramebufferDescriptorSetLayout;
+		base::DescriptorSetLayout::CreateInfo m_FramebufferDescriptorSetLayoutCI;
 
-		Ref<crossplatform::DescriptorSet> m_FramebufferDescriptorSet;
-		crossplatform::DescriptorSet::CreateInfo m_FramebufferDescriptorSetCI;
+		Ref<base::DescriptorSet> m_FramebufferDescriptorSet;
+		base::DescriptorSet::CreateInfo m_FramebufferDescriptorSetCI;
 
 		struct ImageView_RTV_DSV_SRV 
 		{ 
-			Ref<crossplatform::ImageView> imageView; 
+			Ref<base::ImageView> imageView; 
 			bool HasRTV; bool HasDSV; bool HasSRV;
 			bool NeedRTV; bool NeedDSV; bool NeedSRV;
 		};

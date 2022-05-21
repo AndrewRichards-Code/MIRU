@@ -1,13 +1,13 @@
 #pragma once
 #if defined(MIRU_VULKAN)
-#include "crossplatform/DescriptorPoolSet.h"
-#include "crossplatform/Buffer.h"
+#include "base/DescriptorPoolSet.h"
+#include "base/Buffer.h"
 
 namespace miru
 {
 namespace vulkan
 {
-	class DescriptorPool final : public crossplatform::DescriptorPool
+	class DescriptorPool final : public base::DescriptorPool
 	{
 		//Methods
 	public:
@@ -23,7 +23,7 @@ namespace vulkan
 		std::vector<VkDescriptorPoolSize> m_PoolSizes;
 	};
 
-	class DescriptorSetLayout final : public crossplatform::DescriptorSetLayout
+	class DescriptorSetLayout final : public base::DescriptorSetLayout
 	{
 		//Methods
 	public:
@@ -39,7 +39,7 @@ namespace vulkan
 		std::vector<VkDescriptorSetLayoutBinding> m_DescriptorSetLayoutBindings;
 	};
 
-	class DescriptorSet final : public crossplatform::DescriptorSet
+	class DescriptorSet final : public base::DescriptorSet
 	{
 		//Methods
 	public:
@@ -48,7 +48,7 @@ namespace vulkan
 
 		void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
-		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<crossplatform::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
+		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<base::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void Update() override;
 
 		//Members

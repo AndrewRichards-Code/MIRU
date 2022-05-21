@@ -5,7 +5,7 @@
 
 namespace miru
 {
-namespace crossplatform
+namespace base
 {
 	struct StridedDeviceAddressRegion;
 	struct ShaderRecord

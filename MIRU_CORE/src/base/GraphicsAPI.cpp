@@ -2,7 +2,7 @@
 #include "GraphicsAPI.h"
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 GraphicsAPI::API GraphicsAPI::s_API = GraphicsAPI::API::UNKNOWN;
 bool GraphicsAPI::s_ApiInitialised = false;

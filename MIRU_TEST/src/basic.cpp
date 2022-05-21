@@ -4,7 +4,7 @@
 #include "STBI/stb_image.h"
 
 using namespace miru;
-using namespace crossplatform;
+using namespace base;
 
 static HWND window;
 static bool g_WindowQuit = false;
@@ -793,7 +793,7 @@ void Basic()
 			cmdBuffer->Draw(frameIndex, 3);
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { crossplatform::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 

@@ -59,7 +59,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 	D3D12SetName(m_Image, m_CI.debugName);
 
-	m_Allocation.nativeAllocation = (crossplatform::NativeAllocation)m_D3D12MAllocation;
+	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
 	m_Allocation.width = 0;
 	m_Allocation.height = 0;
 	m_Allocation.rowPitch = 0;
