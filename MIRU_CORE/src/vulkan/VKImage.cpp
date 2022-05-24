@@ -30,13 +30,13 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 	m_VmaACI.flags = 0;
 	m_VmaACI.usage = VMA_MEMORY_USAGE_UNKNOWN;
-	m_VmaACI.requiredFlags = static_cast<VkMemoryPropertyFlags>(m_CI.pAllocator->GetCreateInfo().properties);
+	m_VmaACI.requiredFlags = static_cast<VkMemoryPropertyFlags>(m_CI.allocator->GetCreateInfo().properties);
 	m_VmaACI.preferredFlags = 0;
 	m_VmaACI.memoryTypeBits = 0;
 	m_VmaACI.pool = VK_NULL_HANDLE;
 	m_VmaACI.pUserData = nullptr;
 
-	MIRU_ASSERT(vmaCreateImage(m_CI.pAllocator->GetVmaAllocator(), &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
+	MIRU_ASSERT(vmaCreateImage(m_CI.allocator->GetVmaAllocator(), &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
 	VKSetName<VkImage>(m_Device, m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
@@ -47,7 +47,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 	if (m_CI.data)
 	{
-		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
+		m_CI.allocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -57,7 +57,7 @@ Image::~Image()
 
 	if (!m_SwapchainImage)
 	{
-		vmaDestroyImage(m_CI.pAllocator->GetVmaAllocator(), m_Image, m_VmaAllocation);
+		vmaDestroyImage(m_CI.allocator->GetVmaAllocator(), m_Image, m_VmaAllocation);
 	}
 }
 
@@ -296,9 +296,9 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	m_ImageViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	m_ImageViewCI.pNext = nullptr;
 	m_ImageViewCI.flags = 0;
-	m_ImageViewCI.image = ref_cast<Image>(m_CI.pImage)->m_Image;
+	m_ImageViewCI.image = ref_cast<Image>(m_CI.image)->m_Image;
 	m_ImageViewCI.viewType = static_cast<VkImageViewType>(m_CI.viewType);
-	m_ImageViewCI.format = static_cast<VkFormat>(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format);
+	m_ImageViewCI.format = static_cast<VkFormat>(ref_cast<Image>(m_CI.image)->GetCreateInfo().format);
 	m_ImageViewCI.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	m_ImageViewCI.subresourceRange = {
 		static_cast<VkImageAspectFlags>(m_CI.subresourceRange.aspect),

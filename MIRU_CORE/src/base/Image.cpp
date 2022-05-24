@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Image> Image::Create(Image::CreateInfo* pCreateInfo)
+ImageRef Image::Create(Image::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<Image> Image::Create(Image::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<ImageView> ImageView::Create(ImageView::CreateInfo* pCreateInfo)
+ImageViewRef ImageView::Create(ImageView::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -53,7 +53,7 @@ Ref<ImageView> ImageView::Create(ImageView::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<Sampler> Sampler::Create(Sampler::CreateInfo* pCreateInfo)
+SamplerRef Sampler::Create(Sampler::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

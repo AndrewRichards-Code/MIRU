@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Buffer> Buffer::Create(Buffer::CreateInfo* pCreateInfo)
+BufferRef Buffer::Create(Buffer::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<Buffer> Buffer::Create(Buffer::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<BufferView> BufferView::Create(BufferView::CreateInfo* pCreateInfo)
+BufferViewRef BufferView::Create(BufferView::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

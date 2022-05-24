@@ -45,7 +45,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 		clear.DepthStencil = { 0.0f, 0 };
 	}
 
-	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.pAllocator)->GetHeapProperties().Type;
+	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.allocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 		m_InitialResourceState = ToD3D12ImageLayout(m_CI.layout);
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
@@ -56,7 +56,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
 	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
+	MIRU_ASSERT(m_CI.allocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 	D3D12SetName(m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
@@ -67,7 +67,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 	if (m_CI.data)
 	{
-		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
+		m_CI.allocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -400,8 +400,8 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(m_CI.pImage)->m_ResourceDesc;
-	ID3D12Resource* image = ref_cast<Image>(m_CI.pImage)->m_Image;
+	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(m_CI.image)->m_ResourceDesc;
+	ID3D12Resource* image = ref_cast<Image>(m_CI.image)->m_Image;
 
 	auto DepthToColourFormat = [](const DXGI_FORMAT& format) -> DXGI_FORMAT
 	{
@@ -485,7 +485,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 	}
 
 	//DSV
-	if(ref_cast<Image>(m_CI.pImage)->GetCreateInfo().format >= Image::Format::D16_UNORM)
+	if(ref_cast<Image>(m_CI.image)->GetCreateInfo().format >= Image::Format::D16_UNORM)
 	{
 		m_DSVDesc.Format = resourceDesc.Format;
 		m_DSVDesc.Flags = D3D12_DSV_FLAG_NONE; //D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;

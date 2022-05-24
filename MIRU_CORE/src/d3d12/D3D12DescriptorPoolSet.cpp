@@ -134,13 +134,13 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
+	:m_Device(reinterpret_cast<ID3D12Device*>(ref_cast<DescriptorPool>(pCreateInfo->descriptorPool)->GetCreateInfo().device))
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
 
-	const Ref<DescriptorPool>& descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool);
+	const DescriptorPoolRef& descriptorPool = ref_cast<DescriptorPool>(m_CI.descriptorPool);
 	DescriptorPool::CreateInfo descriptorPoolCI = descriptorPool->GetCreateInfo();
 	
 	UINT cbv_srv_uav_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -148,11 +148,11 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 	UINT rtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	UINT dsvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
-	MIRU_ASSERT(((m_CI.pDescriptorSetLayouts.size() + descriptorPool->m_AssignedSets) > descriptorPoolCI.maxSets),
+	MIRU_ASSERT(((m_CI.descriptorSetLayouts.size() + descriptorPool->m_AssignedSets) > descriptorPoolCI.maxSets),
 		"ERROR: D3D12: Exceeded max descriptor sets for this pool.");
 
 	uint32_t index = 0;
-	for (auto& descriptorSetLayouts : m_CI.pDescriptorSetLayouts)
+	for (auto& descriptorSetLayouts : m_CI.descriptorSetLayouts)
 	{
 		MIRU_ASSERT(((index >= descriptorPoolCI.maxSets) && index > 0), "ERROR: D3D12: Exceeded max descriptor sets for this pool.");
 
@@ -277,7 +277,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		}
 		index++;
 	}
-	descriptorPool->m_AssignedSets = m_CI.pDescriptorSetLayouts.size();
+	descriptorPool->m_AssignedSets = m_CI.descriptorSetLayouts.size();
 }
 
 DescriptorSet::~DescriptorSet()
@@ -291,7 +291,7 @@ DescriptorSet::~DescriptorSet()
 		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[2]);
 		MIRU_D3D12_SAFE_RELEASE(descriptorHeap[3]);
 	}
-	ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_AssignedSets -= m_CI.pDescriptorSetLayouts.size();
+	ref_cast<DescriptorPool>(m_CI.descriptorPool)->m_AssignedSets -= m_CI.descriptorSetLayouts.size();
 }
 
 void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex)
@@ -337,7 +337,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	for (auto& descriptorImageInfo : descriptorImageInfos)
 	{
 		base::DescriptorType descriptorType = base::DescriptorType(0);
-		for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+		for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 		{
 			if (descriptorSetLayoutBinding.binding == bindingIndex)
 			{
@@ -353,7 +353,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 			if (descriptorType == base::DescriptorType::D3D12_RENDER_TARGET_VIEW)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
-				m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+				m_Device->CreateRenderTargetView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().image)->m_Image,
 					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDesc, descriptorWriteLocation);
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_RTVDescHandle = descriptorWriteLocation;
 			}
@@ -361,7 +361,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 			if (descriptorType == base::DescriptorType::D3D12_DEPTH_STENCIL_VIEW)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
-				m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+				m_Device->CreateDepthStencilView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().image)->m_Image,
 					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDesc, descriptorWriteLocation);
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_DSVDescHandle = descriptorWriteLocation;
 			}
@@ -369,7 +369,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 			if (descriptorType == base::DescriptorType::STORAGE_IMAGE || descriptorType == base::DescriptorType::STORAGE_TEXEL_BUFFER)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-				m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image, nullptr,
+				m_Device->CreateUnorderedAccessView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().image)->m_Image, nullptr,
 					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDesc, descriptorWriteLocation);
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_UAVDescHandle = descriptorWriteLocation;
 			}
@@ -378,7 +378,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 				|| descriptorType == base::DescriptorType::INPUT_ATTACHMENT || descriptorType == base::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
 				descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-				m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().pImage)->m_Image,
+				m_Device->CreateShaderResourceView(ref_cast<Image>(ref_cast<ImageView>(descriptorImageInfo.imageView)->GetCreateInfo().image)->m_Image,
 					&ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDesc, descriptorWriteLocation);
 				ref_cast<ImageView>(descriptorImageInfo.imageView)->m_SRVDescHandle = descriptorWriteLocation;
 			}
@@ -398,7 +398,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	}
 }
 
-void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<base::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t desriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -409,7 +409,7 @@ void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingInd
 	for (auto& accelerationStructure : accelerationStructures)
 	{
 		base::DescriptorType descriptorType = base::DescriptorType(0);
-		for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+		for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 		{
 			if (descriptorSetLayoutBinding.binding == bindingIndex)
 			{

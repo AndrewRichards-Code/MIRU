@@ -5,9 +5,6 @@ namespace miru
 {
 namespace base
 {
-	class RenderPass;
-	class ImageView;
-
 	class MIRU_API Framebuffer
 	{
 		//enum/struct
@@ -16,8 +13,8 @@ namespace base
 		{
 			std::string					debugName;
 			void*						device;
-			Ref<RenderPass>				renderPass;
-			std::vector<Ref<ImageView>>	attachments;
+			RenderPassRef				renderPass;
+			std::vector<ImageViewRef>	attachments;
 			uint32_t					width;
 			uint32_t					height;
 			uint32_t					layers;
@@ -25,7 +22,7 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<Framebuffer> Create(CreateInfo* pCreateInfo);
+		static FramebufferRef Create(CreateInfo* pCreateInfo);
 		virtual ~Framebuffer() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -33,6 +30,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Framebuffer);
 }
 }

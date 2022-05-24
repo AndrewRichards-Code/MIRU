@@ -42,7 +42,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;				//How the resource is to be used
 	D3D12_CLEAR_VALUE* clear = nullptr;
 
-	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.pAllocator)->GetHeapProperties().Type;
+	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.allocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 	{
 		m_InitialResourceState = ToD3D12BufferType(m_CI.usage);
@@ -56,14 +56,14 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
 	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	MIRU_ASSERT(m_CI.pAllocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
+	MIRU_ASSERT(m_CI.allocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
 	D3D12SetName(m_Buffer, m_CI.debugName);
 	
 	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
 
 	if (m_CI.data)
 	{
-		m_CI.pAllocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
+		m_CI.allocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
 	}
 }
 
@@ -140,8 +140,8 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	auto resourceDesc = ref_cast<Buffer>(m_CI.pBuffer)->m_ResourceDesc;
-	auto buffer = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+	auto resourceDesc = ref_cast<Buffer>(m_CI.buffer)->m_ResourceDesc;
+	auto buffer = ref_cast<Buffer>(m_CI.buffer)->m_Buffer;
 
 	switch (m_CI.type)
 	{

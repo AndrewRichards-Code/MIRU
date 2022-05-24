@@ -72,18 +72,18 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(ref_cast<DescriptorPool>(pCreateInfo->pDescriptorPool)->GetCreateInfo().device))
+	:m_Device(*reinterpret_cast<VkDevice*>(ref_cast<DescriptorPool>(pCreateInfo->descriptorPool)->GetCreateInfo().device))
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
 
-	for (auto& descriptorSetLayout : m_CI.pDescriptorSetLayouts)
+	for (auto& descriptorSetLayout : m_CI.descriptorSetLayouts)
 		m_DescriptorSetLayouts.push_back(ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
 
 	m_DescriptorSetAI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	m_DescriptorSetAI.pNext = nullptr;
-	m_DescriptorSetAI.descriptorPool = ref_cast<DescriptorPool>(m_CI.pDescriptorPool)->m_DescriptorPool;
+	m_DescriptorSetAI.descriptorPool = ref_cast<DescriptorPool>(m_CI.descriptorPool)->m_DescriptorPool;
 	m_DescriptorSetAI.descriptorSetCount = static_cast<uint32_t>(m_DescriptorSetLayouts.size());
 	m_DescriptorSetAI.pSetLayouts = m_DescriptorSetLayouts.data();
 
@@ -115,14 +115,14 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	for (auto& descriptorBufferInfo : descriptorBufferInfos)
 	{
 		m_DescriptorBufferInfo[index][bindingIndex].push_back({
-			ref_cast<Buffer>(ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().pBuffer)->m_Buffer,
+			ref_cast<Buffer>(ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().buffer)->m_Buffer,
 			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.offset,
 			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_BufferViewCI.range
 			});
 	}
 
 	base::DescriptorType descriptorType = base::DescriptorType(0);
-	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+	for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 	{
 		if (descriptorSetLayoutBinding.binding == bindingIndex)
 		{
@@ -162,7 +162,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	}
 
 	base::DescriptorType descriptorType = base::DescriptorType(0);
-	for (auto& descriptorSetLayoutBinding : m_CI.pDescriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+	for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
 	{
 		if (descriptorSetLayoutBinding.binding == bindingIndex)
 		{
@@ -186,7 +186,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	m_WriteDescriptorSets.push_back(wds);
 }
 
-void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<base::AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t desriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

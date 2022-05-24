@@ -11,7 +11,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<AccelerationStructureBuildInfo> AccelerationStructureBuildInfo::Create(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo)
+AccelerationStructureBuildInfoRef AccelerationStructureBuildInfo::Create(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -33,7 +33,7 @@ Ref<AccelerationStructureBuildInfo> AccelerationStructureBuildInfo::Create(Accel
 	}
 }
 
-Ref<AccelerationStructure> AccelerationStructure::Create(AccelerationStructure::CreateInfo* pCreateInfo)
+AccelerationStructureRef AccelerationStructure::Create(AccelerationStructure::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -55,7 +55,7 @@ Ref<AccelerationStructure> AccelerationStructure::Create(AccelerationStructure::
 	}
 }
 
-DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure)
+DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, const AccelerationStructureRef& accelerationStructure)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -81,7 +81,7 @@ DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, co
 	}
 }
 
-DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer)
+DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const BufferRef& buffer)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

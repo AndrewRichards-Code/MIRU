@@ -166,7 +166,7 @@ void Context::DeviceWaitIdle()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	Ref<base::Fence> fence;
+	base::FenceRef fence;
 	Fence::CreateInfo ci;
 	ci.debugName = "";
 	ci.device = m_Device;

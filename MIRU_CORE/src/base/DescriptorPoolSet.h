@@ -7,9 +7,6 @@ namespace miru
 {
 namespace base
 {
-	class BufferView;
-	class AccelerationStructure;
-
 	enum class DescriptorType : uint32_t
 	{
 		SAMPLER = 0,
@@ -47,7 +44,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<DescriptorPool> Create(CreateInfo* pCreateInfo);
+		static DescriptorPoolRef Create(CreateInfo* pCreateInfo);
 		virtual ~DescriptorPool() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -55,7 +52,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(DescriptorPool);
 
 	class MIRU_API DescriptorSetLayout
 	{
@@ -76,7 +72,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<DescriptorSetLayout> Create(CreateInfo* pCreateInfo);
+		static DescriptorSetLayoutRef Create(CreateInfo* pCreateInfo);
 		virtual ~DescriptorSetLayout() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -84,7 +80,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(DescriptorSetLayout);
 
 	class MIRU_API DescriptorSet
 	{
@@ -92,40 +87,39 @@ namespace base
 	public:
 		struct DescriptorImageInfo
 		{
-			Ref<Sampler>   sampler;
-			Ref<ImageView> imageView;
-			Image::Layout  imageLayout;
+			SamplerRef		sampler;
+			ImageViewRef	imageView;
+			Image::Layout	imageLayout;
 		};
 		struct DescriptorBufferInfo
 		{
-			Ref<BufferView> bufferView;
+			BufferViewRef bufferView;
 		};
 		struct CreateInfo
 		{
-			std::string								debugName;
-			Ref<DescriptorPool>						pDescriptorPool;
-			std::vector<Ref<DescriptorSetLayout>>	pDescriptorSetLayouts; //One set is created for each DescriptorSetLayout provided.
+			std::string							debugName;
+			DescriptorPoolRef					descriptorPool;
+			std::vector<DescriptorSetLayoutRef>	descriptorSetLayouts; //One set is created for each DescriptorSetLayout provided.
 		};
 
 		//Methods
 	public:
-		static Ref<DescriptorSet> Create(CreateInfo* pCreateInfo);
+		static DescriptorSetRef Create(CreateInfo* pCreateInfo);
 		virtual ~DescriptorSet() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		virtual void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
-		virtual void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<Ref<AccelerationStructure>>& accelerationStructures, uint32_t desriptorArrayIndex = 0) = 0;
+		virtual void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<AccelerationStructureRef>& accelerationStructures, uint32_t desriptorArrayIndex = 0) = 0; //If descriptor is an array, desriptorArrayIndex is index offset into that array.
 		virtual void Update() = 0;
 
 	protected:
-		inline bool CheckValidIndex(uint32_t index) { return (index < static_cast<uint32_t>(m_CI.pDescriptorSetLayouts.size())); }
+		inline bool CheckValidIndex(uint32_t index) { return (index < static_cast<uint32_t>(m_CI.descriptorSetLayouts.size())); }
 		#define CHECK_VALID_INDEX_RETURN(index) if (!CheckValidIndex(index)) {return;}
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(DescriptorSet);
 }
 }

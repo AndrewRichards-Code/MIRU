@@ -189,7 +189,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+		barrier.Transition.pResource = ref_cast<Buffer>(m_CI.buffer)->m_Buffer;
 		barrier.Transition.StateBefore = ToD3D12ResourceState(m_CI.srcAccess);
 		barrier.Transition.StateAfter = ToD3D12ResourceState(m_CI.dstAccess);
 		barrier.Transition.Subresource = 0;
@@ -204,7 +204,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = ref_cast<Image>(m_CI.pImage)->m_Image;
+		barrier.Transition.pResource = ref_cast<Image>(m_CI.image)->m_Image;
 		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
 		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
 
@@ -238,14 +238,14 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		D3D12_RESOURCE_BARRIER barrier;
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		if (m_CI.pBuffer)
+		if (m_CI.buffer)
 		{
-			barrier.UAV.pResource = ref_cast<Buffer>(m_CI.pBuffer)->m_Buffer;
+			barrier.UAV.pResource = ref_cast<Buffer>(m_CI.buffer)->m_Buffer;
 			m_Barriers.push_back(barrier);
 		}	
-		else if (m_CI.pImage)
+		else if (m_CI.image)
 		{
-			barrier.UAV.pResource = ref_cast<Image>(m_CI.pImage)->m_Image;
+			barrier.UAV.pResource = ref_cast<Image>(m_CI.image)->m_Image;
 			m_Barriers.push_back(barrier);
 		}
 		else

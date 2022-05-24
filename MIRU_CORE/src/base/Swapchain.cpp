@@ -12,7 +12,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Swapchain> Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
+SwapchainRef Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -44,7 +44,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 
 	Image::CreateInfo swapchainImageCI;
 	swapchainImageCI.debugName = "SwapchainImage";
-	swapchainImageCI.device = m_CI.pContext->GetDevice();
+	swapchainImageCI.device = m_CI.context->GetDevice();
 	swapchainImageCI.type = Image::Type::TYPE_2D;
 	swapchainImageCI.format = Image::Format::B8G8R8A8_UNORM;
 	swapchainImageCI.width = width;
@@ -57,12 +57,12 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 	swapchainImageCI.layout = Image::Layout::UNKNOWN;
 	swapchainImageCI.size = 0;
 	swapchainImageCI.data = nullptr;
-	swapchainImageCI.pAllocator = nullptr;
+	swapchainImageCI.allocator = nullptr;
 
 	ImageView::CreateInfo swapchainImageViewCI;
 	swapchainImageViewCI.debugName = "SwapchainImageViewCI";
-	swapchainImageViewCI.device = m_CI.pContext->GetDevice();
-	swapchainImageViewCI.pImage = nullptr;
+	swapchainImageViewCI.device = m_CI.context->GetDevice();
+	swapchainImageViewCI.image = nullptr;
 	swapchainImageViewCI.viewType = Image::Type::TYPE_2D;
 	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 
@@ -78,7 +78,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			ref_cast<d3d12::Image>(swapchainImage)->m_Image = reinterpret_cast<ID3D12Resource*>(pImages[i]);
 			ref_cast<d3d12::Image>(swapchainImage)->m_InitialResourceState = D3D12_RESOURCE_STATE_COMMON;
 			
-			swapchainImageViewCI.pImage = swapchainImage;
+			swapchainImageViewCI.image = swapchainImage;
 			m_SwapchainImageViews[i] = CreateRef<d3d12::ImageView>();
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;
@@ -94,7 +94,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			swapchainImage->m_SwapchainImage = true;
 			ref_cast<vulkan::Image>(swapchainImage)->m_Image = *reinterpret_cast<VkImage*>(pImages[i]);
 			
-			swapchainImageViewCI.pImage = swapchainImage;
+			swapchainImageViewCI.image = swapchainImage;
 			m_SwapchainImageViews[i] = CreateRef<vulkan::ImageView>();
 			m_SwapchainImageViews[i]->m_CI = swapchainImageViewCI;
 			m_SwapchainImageViews[i]->m_SwapchainImageView = true;

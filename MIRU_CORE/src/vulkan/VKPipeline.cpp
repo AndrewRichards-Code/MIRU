@@ -427,7 +427,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
 		//Get ShaderHandles
-		const Ref<Context>& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.pAllocator->GetCreateInfo().pContext);
+		const ContextRef& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.allocator->GetCreateInfo().context);
 		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleSize;
 		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleAlignment;
 

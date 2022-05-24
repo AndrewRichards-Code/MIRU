@@ -14,8 +14,8 @@ namespace d3d12
 		~Swapchain();
 
 		void Resize(uint32_t width, uint32_t height) override;
-		void AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex) override;
-		void Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex) override;
+		void AcquireNextImage(const base::SemaphoreRef& acquire, uint32_t& imageIndex) override;
+		void Present(const base::CommandPoolRef& cmdPool, const base::SemaphoreRef& submit, uint32_t& imageIndex) override;
 
 		//Members
 	public:

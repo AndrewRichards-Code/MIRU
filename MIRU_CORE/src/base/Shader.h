@@ -91,7 +91,7 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<Shader> Create(CreateInfo* pCreateInfo);
+		static ShaderRef Create(CreateInfo* pCreateInfo);
 		virtual ~Shader() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -124,6 +124,5 @@ namespace base
 		//Key is the set number
 		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
 	};
-	MIRU_CLASS_REF_TYPEDEF(Shader);
 }
 }

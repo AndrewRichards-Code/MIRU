@@ -5,12 +5,6 @@ namespace miru
 {
 namespace base
 {
-	class Context;
-	class Image;
-	class ImageView;
-	class Semaphore;
-	class CommandPool;
-
 	class MIRU_API Swapchain
 	{
 		//enums/structs
@@ -25,7 +19,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			Ref<Context>	pContext;
+			ContextRef		context;
 			void*			pWindow;
 			uint32_t		width;
 			uint32_t		height;
@@ -36,27 +30,26 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<Swapchain> Create(CreateInfo* pCreateInfo);
+		static SwapchainRef Create(CreateInfo* pCreateInfo);
 		virtual ~Swapchain() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
-		virtual void AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex) = 0;
-		virtual void Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex) = 0;
+		virtual void AcquireNextImage(const SemaphoreRef& acquire, uint32_t& imageIndex) = 0;
+		virtual void Present(const CommandPoolRef& cmdPool, const SemaphoreRef& submit, uint32_t& imageIndex) = 0;
 
 	protected:
 		void FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);
 		
 		//Members
 	public:
-		std::vector<Ref<Image>> m_SwapchainImages;
-		std::vector<Ref<ImageView>> m_SwapchainImageViews;
+		std::vector<ImageRef> m_SwapchainImages;
+		std::vector<ImageViewRef> m_SwapchainImageViews;
 
 		bool m_Resized = false;
 
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Swapchain);
 }
 }

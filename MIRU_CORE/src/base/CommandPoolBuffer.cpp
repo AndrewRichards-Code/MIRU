@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<CommandPool> CommandPool::Create(CommandPool::CreateInfo* pCreateInfo)
+CommandPoolRef CommandPool::Create(CommandPool::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<CommandPool> CommandPool::Create(CommandPool::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<CommandBuffer> CommandBuffer::Create(CommandBuffer::CreateInfo* pCreateInfo)
+CommandBufferRef CommandBuffer::Create(CommandBuffer::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

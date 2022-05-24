@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<DescriptorPool> DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateInfo)
+DescriptorPoolRef DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<DescriptorPool> DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateIn
 	}
 }
 
-Ref<DescriptorSetLayout> DescriptorSetLayout::Create(DescriptorSetLayout::CreateInfo* pCreateInfo)
+DescriptorSetLayoutRef DescriptorSetLayout::Create(DescriptorSetLayout::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -53,7 +53,7 @@ Ref<DescriptorSetLayout> DescriptorSetLayout::Create(DescriptorSetLayout::Create
 	}
 }
 
-Ref<DescriptorSet> DescriptorSet::Create(DescriptorSet::CreateInfo* pCreateInfo)
+DescriptorSetRef DescriptorSet::Create(DescriptorSet::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

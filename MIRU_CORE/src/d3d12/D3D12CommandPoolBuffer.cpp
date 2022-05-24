@@ -16,12 +16,12 @@ using namespace d3d12;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device)
+	:m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Queue = ref_cast<Context>(pCreateInfo->pContext)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
+	m_Queue = ref_cast<Context>(pCreateInfo->context)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
 }
 
 CommandPool::~CommandPool()
@@ -55,7 +55,7 @@ void CommandPool::Reset(bool releaseResources)
 uint32_t CommandPool::GetCommandQueueIndex(const CommandPool::QueueType& type)
 {
 	uint32_t index = 0;
-	for (auto& queueDesc : ref_cast<Context>(m_CI.pContext)->m_QueueDescs)
+	for (auto& queueDesc : ref_cast<Context>(m_CI.context)->m_QueueDescs)
 	{
 		D3D12_COMMAND_LIST_TYPE flags = queueDesc.Type;
 		if (flags == D3D12_COMMAND_LIST_TYPE_DIRECT && type == QueueType::GRAPHICS)
@@ -77,7 +77,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	Ref<CommandPool> cmdPool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	CommandPoolRef cmdPool = ref_cast<CommandPool>(m_CI.commandPool);
 	m_Device = cmdPool->m_Device;
 	D3D12_COMMAND_QUEUE_DESC queueDesc = cmdPool->m_Queue->GetDesc();
 	std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = cmdPool->m_CmdPools;
@@ -95,7 +95,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 		End(static_cast<uint32_t>(i));
 	}
 
-	switch (ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext)->m_Features.d3d12Options.ResourceBindingTier)
+	switch (ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context)->m_Features.d3d12Options.ResourceBindingTier)
 	{
 	case D3D12_RESOURCE_BINDING_TIER_3:
 	{
@@ -110,7 +110,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	case D3D12_RESOURCE_BINDING_TIER_1:
 	default:
 	{
-		const auto& contextRI = m_CI.pCommandPool->GetCreateInfo().pContext->GetResultInfo();
+		const auto& contextRI = m_CI.commandPool->GetCreateInfo().context->GetResultInfo();
 		uint32_t maxUAVsPerStage = (contextRI.apiVersionMajor == 11 && contextRI.apiVersionMinor == 0) ? 8 : 64;
 		m_ResourceBindingCapabilities = { 1000000, 14, 128, maxUAVsPerStage, 16, 2048 };
 		break;
@@ -192,7 +192,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	CHECK_VALID_INDEX_RETURN(index);
 	if (m_RenderingResources[index].Resettable)
 	{
-		std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = ref_cast<CommandPool>(m_CI.pCommandPool)->m_CmdPools;
+		std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = ref_cast<CommandPool>(m_CI.commandPool)->m_CmdPools;
 
 		MIRU_ASSERT(d3d12CmdAllocators[index]->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
 		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(d3d12CmdAllocators[index], nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
@@ -200,7 +200,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	}
 }
 
-void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<base::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
+void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const base::CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -218,11 +218,11 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<bas
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<base::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::SemaphoreRef>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::SemaphoreRef>& signals, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.commandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
 
 	for (auto& index : cmdBufferIndices)
@@ -251,11 +251,11 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<base::Fence>& fence, bool unused)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const base::FenceRef& fence, bool unused)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.pCommandPool)->m_Queue;
+	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.commandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
 
 	for (auto& index : cmdBufferIndices)
@@ -283,22 +283,22 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::SetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
+void CommandBuffer::SetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::ResetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
+void CommandBuffer::ResetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event>>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<Ref<base::Barrier>>& barriers)
+void CommandBuffer::WaitEvents(uint32_t index, const std::vector<base::EventRef>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<base::BarrierRef>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<Ref<base::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<base::BarrierRef>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -317,7 +317,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
 }
 
-void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -431,7 +431,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& ima
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -531,7 +531,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
+void CommandBuffer::BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -543,9 +543,9 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>
 	
 	//Transition resources to be begin render pass.
 	renderingResource.SubpassIndex = (uint32_t)-1;
-	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 
-	std::vector<Ref<base::Barrier>> barriers;
+	std::vector<base::BarrierRef> barriers;
 	base::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
@@ -554,7 +554,7 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
 
 		//Set the initial layout from Image creation.
 		if (m_RenderPassAttachementImageLayouts.find(image) == m_RenderPassAttachementImageLayouts.end())
@@ -568,7 +568,7 @@ void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>
 				it++;
 		}
 
-		barrierCI.pImage = image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -593,10 +593,10 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	ResolvePreviousSubpassAttachments(index);
 
 	//Transition resources to be end render pass.
-	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	renderingResource.SubpassIndex = (uint32_t)-1;
 
-	std::vector<Ref<base::Barrier>> barriers;
+	std::vector<base::BarrierRef> barriers;
 	base::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
@@ -605,8 +605,8 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	size_t i = 0;
 	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
 	{
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -628,22 +628,22 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	ResolvePreviousSubpassAttachments(index);
 
 	renderingResource.SubpassIndex++;
-	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<Ref<base::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
+	const std::vector<base::ImageViewRef>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
 	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	//Transition resources for the subpass.
-	std::vector<Ref<base::Barrier>> barriers;
+	std::vector<base::BarrierRef> barriers;
 	base::Barrier::CreateInfo barrierCI = {};
 	barrierCI.type = base::Barrier::Type::IMAGE;
 	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 	for (auto& input : subpassDesc.inputAttachments)
 	{
-		const Ref<base::ImageView>& imageView = framebufferAttachments[input.attachmentIndex];
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageViewRef& imageView = framebufferAttachments[input.attachmentIndex];
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = input.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -652,9 +652,9 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& colour : subpassDesc.colourAttachments)
 	{
-		const Ref<base::ImageView>& imageView = framebufferAttachments[colour.attachmentIndex];
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageViewRef& imageView = framebufferAttachments[colour.attachmentIndex];
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = colour.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -663,9 +663,9 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& resolve : subpassDesc.resolveAttachments)
 	{
-		const Ref<base::ImageView>& imageView = framebufferAttachments[resolve.attachmentIndex];
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageViewRef& imageView = framebufferAttachments[resolve.attachmentIndex];
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = resolve.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -674,9 +674,9 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
 	{
-		const Ref<base::ImageView>& imageView = framebufferAttachments[depthStencil.attachmentIndex];
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageViewRef& imageView = framebufferAttachments[depthStencil.attachmentIndex];
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = depthStencil.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -685,9 +685,9 @@ void CommandBuffer::NextSubpass(uint32_t index)
 	}
 	for (auto& preseverse : subpassDesc.preseverseAttachments)
 	{
-		const Ref<base::ImageView>& imageView = framebufferAttachments[preseverse.attachmentIndex];
-		const Ref<base::Image>& image = imageView->GetCreateInfo().pImage;
-		barrierCI.pImage = image;
+		const base::ImageViewRef& imageView = framebufferAttachments[preseverse.attachmentIndex];
+		const base::ImageRef& image = imageView->GetCreateInfo().image;
+		barrierCI.image = image;
 		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
 		barrierCI.newLayout = preseverse.layout;
 		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
@@ -754,8 +754,8 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
 	for (auto& attachment : renderingResource.RenderingInfo.colourAttachments)
 	{
-		Ref<ImageView> imageView = ref_cast<ImageView>(attachment.imageView);
-		Ref<Image> image = ref_cast<Image>(imageView->GetCreateInfo().pImage);
+		ImageViewRef imageView = ref_cast<ImageView>(attachment.imageView);
+		ImageRef image = ref_cast<Image>(imageView->GetCreateInfo().image);
 		D3D12_CPU_DESCRIPTOR_HANDLE& RTVDescHandle = imageView->m_RTVDescHandle;
 		if (!RTVDescHandle.ptr)
 		{
@@ -767,8 +767,8 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 	}
 	if (renderingResource.RenderingInfo.pDepthAttachment)
 	{
-		Ref<ImageView> imageView = ref_cast<ImageView>(renderingResource.RenderingInfo.pDepthAttachment->imageView);
-		Ref<Image> image = ref_cast<Image>(imageView->GetCreateInfo().pImage);
+		ImageViewRef imageView = ref_cast<ImageView>(renderingResource.RenderingInfo.pDepthAttachment->imageView);
+		ImageRef image = ref_cast<Image>(imageView->GetCreateInfo().image);
 		D3D12_CPU_DESCRIPTOR_HANDLE& DSVDescHandle = imageView->m_DSVDescHandle;
 		if (!DSVDescHandle.ptr)
 		{
@@ -820,8 +820,8 @@ void CommandBuffer::EndRendering(uint32_t index)
 	{
 		if (colourAttachment.resolveImageView)
 		{
-			const Ref<base::Image>& colourImage = ref_cast<ImageView>(colourAttachment.imageView)->GetCreateInfo().pImage;
-			const Ref<base::Image>& resolveImage = ref_cast<ImageView>(colourAttachment.resolveImageView)->GetCreateInfo().pImage;
+			const base::ImageRef& colourImage = ref_cast<ImageView>(colourAttachment.imageView)->GetCreateInfo().image;
+			const base::ImageRef& resolveImage = ref_cast<ImageView>(colourAttachment.resolveImageView)->GetCreateInfo().image;
 			const base::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
 			const base::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
 
@@ -837,7 +837,7 @@ void CommandBuffer::EndRendering(uint32_t index)
 	}
 }
 
-void CommandBuffer::BindPipeline(uint32_t index, const Ref<base::Pipeline>& pipeline) 
+void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeline) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -875,7 +875,7 @@ void CommandBuffer::BindPipeline(uint32_t index, const Ref<base::Pipeline>& pipe
 
 };
 
-void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base::BufferView>>& vertexBufferViews) 
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<base::BufferViewRef>& vertexBufferViews) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -889,7 +889,7 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetVertexBuffers(0, static_cast<UINT>(vbvs.size()), vbvs.data());
 
 };
-void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>& indexBufferView) 
+void CommandBuffer::BindIndexBuffer(uint32_t index, const base::BufferViewRef& indexBufferView) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -897,7 +897,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>&
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetIndexBuffer(&ref_cast<BufferView>(indexBufferView)->m_IBVDesc);
 };
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<base::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<base::Pipeline>& pipeline)
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::DescriptorSetRef>& descriptorSets, uint32_t firstSet, const base::PipelineRef& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -927,10 +927,10 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<bas
 
 	for(auto& descriptorSet : descriptorSets)
 	{
-		Ref<DescriptorSet> d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
+		DescriptorSetRef d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
 		const auto& heap = d3d12DescriptorSet->m_DescriptorHeaps;
 		const auto& heapDesc = d3d12DescriptorSet->m_DescriptorHeapDescs;
-		totalDescriptorSets += static_cast<UINT>(descriptorSet->GetCreateInfo().pDescriptorSetLayouts.size());
+		totalDescriptorSets += static_cast<UINT>(descriptorSet->GetCreateInfo().descriptorSetLayouts.size());
 		
 		for (size_t i = 0; i < heap.size(); i++)
 		{
@@ -1032,7 +1032,7 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
-void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<base::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<base::AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1042,9 +1042,9 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		const AccelerationStructureBuildInfo::BuildGeometryInfo& bgi = buildGeometryInfo->GetBuildGeometryInfo();
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.pCommandPool->GetCreateInfo().pContext->GetDevice(), bgi.dstAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().context->GetDevice(), bgi.dstAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.Inputs = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfo)->m_BRASI;
-		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.pCommandPool->GetCreateInfo().pContext->GetDevice(), bgi.srcAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().context->GetDevice(), bgi.srcAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.ScratchAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.scratchData.deviceAddress);
 		
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
@@ -1090,7 +1090,7 @@ void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRe
 	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->DispatchRays(&desc);
 }
 
-void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Buffer>& dstBuffer, const std::vector<base::Buffer::Copy>& copyRegions) 
+void CommandBuffer::CopyBuffer(uint32_t index, const base::BufferRef& srcBuffer, const base::BufferRef& dstBuffer, const std::vector<base::Buffer::Copy>& copyRegions) 
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1101,7 +1101,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffe
 			ref_cast<Buffer>(srcBuffer)->m_Buffer, static_cast<UINT>(copyRegion.srcOffset), static_cast<UINT>(copyRegion.size));
 };
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Copy>& copyRegions)
+void CommandBuffer::CopyImage(uint32_t index, const base::ImageRef& srcImage, base::Image::Layout srcImageLayout, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1135,7 +1135,7 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, 
 	}
 };
 
-void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const base::BufferRef& srcBuffer, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1166,7 +1166,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& s
 	}	
 }
 
-void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& srcImage, const Ref<base::Buffer>& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const base::ImageRef& srcImage, const base::BufferRef& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1197,7 +1197,7 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& sr
 	}
 }
 
-void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImage, Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
+void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage, Image::Layout srcImageLayout, const base::ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -1211,16 +1211,16 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImag
 		bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
 		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.pImage = srcImage;
+		bCI.image = srcImage;
 		bCI.oldLayout = srcImageLayout;
 		bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
 		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		Ref<base::Barrier> preResolveBarrierSrc = Barrier::Create(&bCI);
-		bCI.pImage = dstImage;
+		base::BarrierRef preResolveBarrierSrc = Barrier::Create(&bCI);
+		bCI.image = dstImage;
 		bCI.oldLayout = dstImageLayout;
 		bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
 		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		Ref<base::Barrier> preResolveBarrierDst = Barrier::Create(&bCI);
+		base::BarrierRef preResolveBarrierDst = Barrier::Create(&bCI);
 		PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
 
 		D3D12_RECT srcRect = {};
@@ -1258,16 +1258,16 @@ void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImag
 			MIRU_ASSERT(true, "ERROR: D3D12: Source and Destination arrayLayerCount for resolve image subresources must match.");
 		}
 
-		bCI.pImage = srcImage;
+		bCI.image = srcImage;
 		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
 		bCI.newLayout = srcImageLayout;
 		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		Ref<base::Barrier> postResolveBarrierSrc = Barrier::Create(&bCI);
-		bCI.pImage = dstImage;
+		base::BarrierRef postResolveBarrierSrc = Barrier::Create(&bCI);
+		bCI.image = dstImage;
 		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
 		bCI.newLayout = dstImageLayout;
 		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		Ref<base::Barrier> postResolveBarrierDst = Barrier::Create(&bCI);
+		base::BarrierRef postResolveBarrierDst = Barrier::Create(&bCI);
 		PipelineBarrier(index, base::PipelineStageBit::TRANSFER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
 	}
 }
@@ -1308,9 +1308,9 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 	if (renderingResource.SubpassIndex == RenderPass::SubpassExternal)
 		return;
 	
-	const Ref<base::RenderPass>& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
+	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
 	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<Ref<base::ImageView>>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
+	const std::vector<base::ImageViewRef>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
 	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
 
 	if (subpassDesc.resolveAttachments.empty())
@@ -1326,8 +1326,8 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 		const base::RenderPass::AttachmentReference& colour = subpassDesc.colourAttachments[i];
 		const base::RenderPass::AttachmentReference& resolve = subpassDesc.resolveAttachments[i];
 
-		const Ref<base::Image>& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().pImage;
-		const Ref<base::Image>& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().pImage;
+		const base::ImageRef& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().image;
+		const base::ImageRef& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().image;
 		const base::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
 		const base::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
 

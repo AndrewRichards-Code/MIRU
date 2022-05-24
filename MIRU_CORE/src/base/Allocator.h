@@ -7,8 +7,6 @@ namespace base
 {
 	typedef void* NativeAllocation;
 	typedef void* NativeAllocator;
-	
-	class Context;
 
 	struct MIRU_API Allocation
 	{
@@ -54,14 +52,14 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			Ref<Context>	pContext;
+			ContextRef		context;
 			BlockSize		blockSize;
 			PropertiesBit	properties;
 		};
 
 		//Methods
 	public:
-		static Ref<Allocator> Create(Allocator::CreateInfo* pCreateInfo);
+		static AllocatorRef Create(Allocator::CreateInfo* pCreateInfo);
 		virtual ~Allocator() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -81,6 +79,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Allocator);
 }
 }

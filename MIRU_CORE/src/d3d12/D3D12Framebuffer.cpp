@@ -26,7 +26,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	{
 		bool HasRTV = false, HasDSV = false, HasSRV = false;
 		bool NeedRTV = false, NeedDSV = false, NeedSRV = false;
-		const Ref<ImageView>& d3d12ImageView = ref_cast<ImageView>(imageView);
+		const ImageViewRef& d3d12ImageView = ref_cast<ImageView>(imageView);
 		if (d3d12ImageView->m_RTVDescHandle.ptr)
 			HasRTV = true;
 		if (d3d12ImageView->m_DSVDescHandle.ptr)
@@ -123,8 +123,8 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferDescriptorSetLayout = DescriptorSetLayout::Create(&m_FramebufferDescriptorSetLayoutCI);
 
 	m_FramebufferDescriptorSetCI.debugName = m_CI.debugName + " : Framebuffer DescriptorSet";
-	m_FramebufferDescriptorSetCI.pDescriptorPool = m_FramebufferDescriptorPool;
-	m_FramebufferDescriptorSetCI.pDescriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
+	m_FramebufferDescriptorSetCI.descriptorPool = m_FramebufferDescriptorPool;
+	m_FramebufferDescriptorSetCI.descriptorSetLayouts = { m_FramebufferDescriptorSetLayout };
 	m_FramebufferDescriptorSet = base::DescriptorSet::Create(&m_FramebufferDescriptorSetCI);
 
 	binding = 0;

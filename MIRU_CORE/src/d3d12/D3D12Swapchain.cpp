@@ -7,14 +7,14 @@ using namespace miru;
 using namespace d3d12;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Factory(ref_cast<Context>(pCreateInfo->pContext)->m_Factory),
-	m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device),
+	:m_Factory(ref_cast<Context>(pCreateInfo->context)->m_Factory),
+	m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device),
 	m_Swapchain(nullptr)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.pContext)->m_Queues[0];
+	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.context)->m_Queues[0];
 
 	//Create Swapchain
 	std::pair<DXGI_FORMAT, DXGI_COLOR_SPACE_TYPE> surfaceFormat;
@@ -126,7 +126,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_CI.pContext->DeviceWaitIdle();
+	m_CI.context->DeviceWaitIdle();
 
 	m_Width = width;
 	m_Height = height;
@@ -170,14 +170,14 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_Resized = true;
 }
 
-void Swapchain::AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex)
+void Swapchain::AcquireNextImage(const base::SemaphoreRef& acquire, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	imageIndex = static_cast<uint32_t>(m_Swapchain->GetCurrentBackBufferIndex());
 }
 
-void Swapchain::Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex)
+void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::SemaphoreRef& submit, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

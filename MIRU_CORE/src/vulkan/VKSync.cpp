@@ -244,7 +244,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_BMB.dstAccessMask = static_cast<VkAccessFlagBits>(m_CI.dstAccess);
 		m_BMB.srcQueueFamilyIndex = m_CI.srcQueueFamilyIndex;
 		m_BMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
-		m_BMB.buffer = ref_cast<vulkan::Buffer>(m_CI.pBuffer)->m_Buffer;
+		m_BMB.buffer = ref_cast<vulkan::Buffer>(m_CI.buffer)->m_Buffer;
 		m_BMB.offset = m_CI.offset;
 		m_BMB.size = m_CI.size;
 	}
@@ -258,7 +258,7 @@ Barrier::Barrier(Barrier::CreateInfo* pCreateInfo)
 		m_IMB.dstQueueFamilyIndex = m_CI.dstQueueFamilyIndex;
 		m_IMB.oldLayout = static_cast<VkImageLayout>(m_CI.oldLayout);
 		m_IMB.newLayout = static_cast<VkImageLayout>(m_CI.newLayout);
-		m_IMB.image = ref_cast<vulkan::Image>(m_CI.pImage)->m_Image;
+		m_IMB.image = ref_cast<vulkan::Image>(m_CI.image)->m_Image;
 		m_IMB.subresourceRange.aspectMask = static_cast<VkImageAspectFlagBits>(m_CI.subresourceRange.aspect);
 		m_IMB.subresourceRange.baseMipLevel = m_CI.subresourceRange.baseMipLevel;
 		m_IMB.subresourceRange.levelCount = m_CI.subresourceRange.mipLevelCount;

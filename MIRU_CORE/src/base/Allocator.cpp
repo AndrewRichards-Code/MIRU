@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Allocator> Allocator::Create(Allocator::CreateInfo* pCreateInfo)
+AllocatorRef Allocator::Create(Allocator::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

@@ -9,10 +9,6 @@ namespace miru
 {
 namespace base
 {
-	class Context;
-	class Swapchain;
-	class Framebuffer;
-
 	class MIRU_API CommandPool
 	{
 		//enums/structs
@@ -31,14 +27,14 @@ namespace base
 		};
 		struct CreateInfo
 		{
-			std::string		debugName;
-			Ref<Context>	pContext;
-			FlagBit			flags;
-			QueueType		queueType;
+			std::string	debugName;
+			ContextRef	context;
+			FlagBit		flags;
+			QueueType	queueType;
 		};
 		//Methods
 	public:
-		static Ref<CommandPool> Create(CreateInfo* pCreateInfo);
+		static CommandPoolRef Create(CreateInfo* pCreateInfo);
 		virtual ~CommandPool() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -51,7 +47,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(CommandPool);
 
 	class MIRU_API CommandBuffer
 	{
@@ -70,61 +65,61 @@ namespace base
 		};
 		struct CreateInfo
 		{
-			std::string			debugName;
-			Ref<CommandPool>	pCommandPool;
-			Level				level;
-			uint32_t			commandBufferCount;
+			std::string		debugName;
+			CommandPoolRef	commandPool;
+			Level			level;
+			uint32_t		commandBufferCount;
 		};
 
 		//Methods
 	public:
-		static Ref<CommandBuffer> Create(CreateInfo* pCreateInfo);
+		static CommandBufferRef Create(CreateInfo* pCreateInfo);
 		virtual ~CommandBuffer() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Begin(uint32_t index, UsageBit usage) = 0;
 		virtual void End(uint32_t index) = 0;
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
-		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<Fence>& fence) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<Fence>& fence, bool unused) = 0;
+		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, const CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
+		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<SemaphoreRef>& waits, const std::vector<PipelineStageBit>& waitDstPipelineStages, const std::vector<SemaphoreRef>& signals, const FenceRef& fence) = 0;
+		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<TimelineSemaphoreWithValue>& waits, const std::vector<PipelineStageBit>& waitDstPipelineStages, const std::vector<TimelineSemaphoreWithValue>& signals, const FenceRef& fence, bool unused) = 0;
 
-		virtual void SetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;
-		virtual void ResetEvent(uint32_t index, const Ref<Event>& event, PipelineStageBit pipelineStage) = 0;
-		virtual void WaitEvents(uint32_t index, const std::vector<Ref<Event>>& events, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<Ref<Barrier>>& barriers) = 0;
-		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, DependencyBit dependencies, const std::vector<Ref<Barrier>>& barriers) = 0;
+		virtual void SetEvent(uint32_t index, const EventRef& event, PipelineStageBit pipelineStage) = 0;
+		virtual void ResetEvent(uint32_t index, const EventRef& event, PipelineStageBit pipelineStage) = 0;
+		virtual void WaitEvents(uint32_t index, const std::vector<EventRef>& events, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<BarrierRef>& barriers) = 0;
+		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, DependencyBit dependencies, const std::vector<BarrierRef>& barriers) = 0;
 
-		virtual void ClearColourImage(uint32_t index, const Ref<Image>& image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
-		virtual void ClearDepthStencilImage(uint32_t index, const Ref<Image>& image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
+		virtual void ClearColourImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
+		virtual void ClearDepthStencilImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
 
-		virtual void BeginRenderPass(uint32_t index, const Ref<Framebuffer>& framebuffer, const std::vector<Image::ClearValue>& clearValues) = 0;
+		virtual void BeginRenderPass(uint32_t index, const FramebufferRef& framebuffer, const std::vector<Image::ClearValue>& clearValues) = 0;
 		virtual void EndRenderPass(uint32_t index) = 0;
 		virtual void NextSubpass(uint32_t index) = 0;
 
 		virtual void BeginRendering(uint32_t index, const RenderingInfo& renderingInfo) = 0;
 		virtual void EndRendering(uint32_t index) = 0;
 
-		virtual void BindPipeline(uint32_t index, const Ref<Pipeline>& pipeline) = 0;
+		virtual void BindPipeline(uint32_t index, const PipelineRef& pipeline) = 0;
 
-		virtual void BindVertexBuffers(uint32_t index, const std::vector<Ref<BufferView>>& vertexBufferViews) = 0;
-		virtual void BindIndexBuffer(uint32_t index, const Ref<BufferView>& indexBufferView) = 0;
+		virtual void BindVertexBuffers(uint32_t index, const std::vector<BufferViewRef>& vertexBufferViews) = 0;
+		virtual void BindIndexBuffer(uint32_t index, const BufferViewRef& indexBufferView) = 0;
 
-		virtual void BindDescriptorSets(uint32_t index, const std::vector<Ref<DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<Pipeline>& pipeline) = 0;
+		virtual void BindDescriptorSets(uint32_t index, const std::vector<DescriptorSetRef>& descriptorSets, uint32_t firstSet, const PipelineRef& pipeline) = 0;
 
 		virtual void DrawIndexed(uint32_t index, uint32_t indexCount, uint32_t instanceCount = 1, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) = 0;
 		virtual void Draw(uint32_t index, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t firstInstance = 0) = 0;
 
 		virtual void Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
-		virtual void BuildAccelerationStructure(uint32_t index, const std::vector<Ref<AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
+		virtual void BuildAccelerationStructure(uint32_t index, const std::vector<AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
 		virtual void TraceRays(uint32_t index, const StridedDeviceAddressRegion* pRaygenShaderBindingTable, const StridedDeviceAddressRegion* pMissShaderBindingTable, const StridedDeviceAddressRegion* pHitShaderBindingTable, const StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
 
-		virtual void CopyBuffer(uint32_t index, const Ref<Buffer>& srcBuffer, const Ref<Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
-		virtual void CopyImage(uint32_t index, const Ref<Image>& srcImage, Image::Layout srcImageLayout, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions) = 0;
-		virtual void CopyBufferToImage(uint32_t index, const Ref<Buffer>& srcBuffer, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
-		virtual void CopyImageToBuffer(uint32_t index, const Ref<Image>& srcImage, const Ref<Buffer>& dstBuffer, Image::Layout srcImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
+		virtual void CopyBuffer(uint32_t index, const BufferRef& srcBuffer, const BufferRef& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
+		virtual void CopyImage(uint32_t index, const ImageRef& srcImage, Image::Layout srcImageLayout, const ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions) = 0;
+		virtual void CopyBufferToImage(uint32_t index, const BufferRef& srcBuffer, const ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
+		virtual void CopyImageToBuffer(uint32_t index, const ImageRef& srcImage, const BufferRef& dstBuffer, Image::Layout srcImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;
 
-		virtual void ResolveImage(uint32_t index, const Ref<Image>& srcImage, Image::Layout srcImageLayout, const Ref<Image>& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Resolve>& resolveRegions) = 0;
+		virtual void ResolveImage(uint32_t index, const ImageRef& srcImage, Image::Layout srcImageLayout, const ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Resolve>& resolveRegions) = 0;
 
 		virtual void BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba = {0.0f, 0.0f , 0.0f, 0.0f }) = 0;
 		virtual void EndDebugLabel(uint32_t index) = 0;
@@ -140,6 +135,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(CommandBuffer);
 }
 }

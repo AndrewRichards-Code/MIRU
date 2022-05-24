@@ -18,18 +18,18 @@ namespace d3d12
 	public:
 		ID3D12Device* m_Device;
 
-		Ref<base::DescriptorPool> m_FramebufferDescriptorPool;
+		base::DescriptorPoolRef m_FramebufferDescriptorPool;
 		base::DescriptorPool::CreateInfo m_FramebufferDescriptorPoolCI;
 
-		Ref<base::DescriptorSetLayout> m_FramebufferDescriptorSetLayout;
+		base::DescriptorSetLayoutRef m_FramebufferDescriptorSetLayout;
 		base::DescriptorSetLayout::CreateInfo m_FramebufferDescriptorSetLayoutCI;
 
-		Ref<base::DescriptorSet> m_FramebufferDescriptorSet;
+		base::DescriptorSetRef m_FramebufferDescriptorSet;
 		base::DescriptorSet::CreateInfo m_FramebufferDescriptorSetCI;
 
 		struct ImageView_RTV_DSV_SRV 
 		{ 
-			Ref<base::ImageView> imageView; 
+			base::ImageViewRef imageView; 
 			bool HasRTV; bool HasDSV; bool HasSRV;
 			bool NeedRTV; bool NeedDSV; bool NeedSRV;
 		};

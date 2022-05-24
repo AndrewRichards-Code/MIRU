@@ -22,7 +22,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<Fence> Create(Fence::CreateInfo* pCreateInfo);
+		static FenceRef Create(Fence::CreateInfo* pCreateInfo);
 		virtual ~Fence() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -36,7 +36,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Fence);
 
 	//Inter/Intra-Queue Synchronisation
 	class MIRU_API Semaphore
@@ -50,7 +49,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<Semaphore> Create(Semaphore::CreateInfo* pCreateInfo);
+		static SemaphoreRef Create(Semaphore::CreateInfo* pCreateInfo);
 		virtual ~Semaphore() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -58,7 +57,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Semaphore);
 
 	//Host-Device and Inter/Intra-Queue Synchronisation
 	class MIRU_API TimelineSemaphore
@@ -72,7 +70,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<TimelineSemaphore> Create(TimelineSemaphore::CreateInfo* pCreateInfo);
+		static TimelineSemaphoreRef Create(TimelineSemaphore::CreateInfo* pCreateInfo);
 		virtual ~TimelineSemaphore() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -85,8 +83,7 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(TimelineSemaphore);
-	typedef std::pair<Ref<TimelineSemaphore>, uint64_t> TimelineSemaphoreWithValue;
+	typedef std::pair<TimelineSemaphoreRef, uint64_t> TimelineSemaphoreWithValue;
 
 	//Inter/Intra-Command Buffer Synchronisation
 	class MIRU_API Event
@@ -100,7 +97,7 @@ namespace base
 		};
 		//Methods
 	public:
-		static Ref<Event> Create(Event::CreateInfo* pCreateInfo);
+		static EventRef Create(Event::CreateInfo* pCreateInfo);
 		virtual ~Event() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -113,7 +110,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Event);
 
 	//Inter/Intra-Command Buffer Resource Synchronisation
 	class MIRU_API Barrier
@@ -176,17 +172,17 @@ namespace base
 			AccessBit					dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			Ref<Buffer>					pBuffer;				//For Type::BUFFER
+			BufferRef					buffer;				//For Type::BUFFER
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
-			Ref<Image>					pImage;					//For Type::IMAGE
+			ImageRef					image;					//For Type::IMAGE
 			Image::Layout				oldLayout;				//For Type::IMAGE
 			Image::Layout				newLayout;				//For Type::IMAGE
 			Image::SubresourceRange		subresourceRange;		//For Type::IMAGE
 		};
 		//Methods
 	public:
-		static Ref<Barrier> Create(Barrier::CreateInfo* pCreateInfo);
+		static BarrierRef Create(Barrier::CreateInfo* pCreateInfo);
 		virtual ~Barrier() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -198,7 +194,6 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Barrier);
 
 	//Inter/Intra-Command Buffer Resource Synchronisation
 	class MIRU_API Barrier2
@@ -214,17 +209,17 @@ namespace base
 			Barrier::AccessBit			dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			Ref<Buffer>					pBuffer;				//For Type::BUFFER
+			BufferRef					buffer;				//For Type::BUFFER
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
-			Ref<Image>					pImage;					//For Type::IMAGE
+			ImageRef					image;					//For Type::IMAGE
 			Image::Layout				oldLayout;				//For Type::IMAGE
 			Image::Layout				newLayout;				//For Type::IMAGE
 			Image::SubresourceRange		subresourceRange;		//For Type::IMAGE
 		};
 		//Methods
 	public:
-		static Ref<Barrier2> Create(Barrier2::CreateInfo* pCreateInfo);
+		static Barrier2Ref Create(Barrier2::CreateInfo* pCreateInfo);
 		virtual ~Barrier2() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -236,6 +231,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Barrier2);
 }
 }

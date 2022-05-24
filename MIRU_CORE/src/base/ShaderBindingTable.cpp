@@ -5,7 +5,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<ShaderBindingTable> ShaderBindingTable::Create(ShaderBindingTable::CreateInfo* pCreateInfo)
+ShaderBindingTableRef ShaderBindingTable::Create(ShaderBindingTable::CreateInfo* pCreateInfo)
 {
 	return CreateRef<ShaderBindingTable>(pCreateInfo);
 }
@@ -80,7 +80,7 @@ ShaderBindingTable::ShaderBindingTable(ShaderBindingTable::CreateInfo* pCreateIn
 			bufferCI.usage = base::Buffer::UsageBit::SHADER_BINDING_TABLE_BIT | base::Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 			bufferCI.size = static_cast<uint32_t>(shaderBindingTableData[type].size());
 			bufferCI.data = shaderBindingTableData[type].data();
-			bufferCI.pAllocator = m_CI.pAllocator;
+			bufferCI.allocator = m_CI.allocator;
 			sbt.second = base::Buffer::Create(&bufferCI);
 
 			m_SDARs[type] = {

@@ -24,12 +24,12 @@ namespace base
 			std::string					debugName;
 			void*						device;
 			std::vector<ShaderRecord>	shaderRecords;
-			Ref<Allocator>				pAllocator;
+			AllocatorRef				allocator;
 		};
 
 		//Methods
 	public:
-		static Ref<ShaderBindingTable> Create(ShaderBindingTable::CreateInfo* pCreateInfo);
+		static ShaderBindingTableRef Create(ShaderBindingTable::CreateInfo* pCreateInfo);
 		~ShaderBindingTable() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -42,9 +42,8 @@ namespace base
 		CreateInfo m_CI = {};
 
 	private:
-		std::map<ShaderGroupHandleType, Ref<Buffer>> m_SBTs;
+		std::map<ShaderGroupHandleType, BufferRef> m_SBTs;
 		std::map<ShaderGroupHandleType, StridedDeviceAddressRegion> m_SDARs;
 	};
-	MIRU_CLASS_REF_TYPEDEF(ShaderBindingTable);
 }
 }

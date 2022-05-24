@@ -59,7 +59,6 @@ namespace base
 		DeviceAddress		accelerationStructureReference;
 	};
 
-	class AccelerationStructure;
 	class MIRU_API AccelerationStructureBuildInfo
 	{
 		//enums/structs
@@ -142,8 +141,8 @@ namespace base
 			Type						type;
 			FlagBit						flags;
 			Mode						mode;
-			Ref<AccelerationStructure>	srcAccelerationStructure;
-			Ref<AccelerationStructure>	dstAccelerationStructure;
+			AccelerationStructureRef	srcAccelerationStructure;
+			AccelerationStructureRef	dstAccelerationStructure;
 			std::vector<Geometry>		geometries;
 			DeviceOrHostAddress			scratchData;
 			BuildType					buildType;
@@ -165,19 +164,17 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<AccelerationStructureBuildInfo> Create(BuildGeometryInfo* pBuildGeometryInfo);
+		static AccelerationStructureBuildInfoRef Create(BuildGeometryInfo* pBuildGeometryInfo);
 		virtual ~AccelerationStructureBuildInfo() = default;
 		const BuildSizesInfo& GetBuildSizesInfo() { return m_BSI; }
 		const BuildGeometryInfo& GetBuildGeometryInfo() { return m_BGI; }
 
 		//Members
 	protected:
-		BuildSizesInfo m_BSI= {};
+		BuildSizesInfo m_BSI = {};
 		BuildGeometryInfo m_BGI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(AccelerationStructureBuildInfo);
 
-	class Buffer;
 	class MIRU_API AccelerationStructure
 	{
 		//enums/structs
@@ -196,19 +193,19 @@ namespace base
 		
 		struct CreateInfo
 		{
-			std::string			debugName;
-			void*				device;
-			FlagBit				flags;
-			Ref<Buffer>			buffer;
-			size_t				offset;
-			size_t				size;
-			Type				type;
-			DeviceAddress		deviceAddress;
+			std::string		debugName;
+			void*			device;
+			FlagBit			flags;
+			BufferRef		buffer;
+			size_t			offset;
+			size_t			size;
+			Type			type;
+			DeviceAddress	deviceAddress;
 		};
 
 		//Methods
 	public:
-		static Ref<AccelerationStructure> Create(CreateInfo* pCreateInfo);
+		static AccelerationStructureRef Create(CreateInfo* pCreateInfo);
 		virtual ~AccelerationStructure() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -216,9 +213,8 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(AccelerationStructure);
 
-	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const Ref<AccelerationStructure>& accelerationStructure);
-	MIRU_API DeviceAddress GetBufferDeviceAddress(void* device, const Ref<Buffer>& buffer);
+	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const AccelerationStructureRef& accelerationStructure);
+	MIRU_API DeviceAddress GetBufferDeviceAddress(void* device, const BufferRef& buffer);
 }
 }

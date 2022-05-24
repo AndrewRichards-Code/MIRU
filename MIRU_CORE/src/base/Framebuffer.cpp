@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Framebuffer> Framebuffer::Create(Framebuffer::CreateInfo* pCreateInfo)
+FramebufferRef Framebuffer::Create(Framebuffer::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

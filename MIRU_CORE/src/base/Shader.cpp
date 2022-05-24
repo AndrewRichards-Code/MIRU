@@ -13,7 +13,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Shader> Shader::Create(Shader::CreateInfo* pCreateInfo)
+ShaderRef Shader::Create(Shader::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

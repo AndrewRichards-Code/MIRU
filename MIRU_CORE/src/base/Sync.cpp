@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Fence> Fence::Create(Fence::CreateInfo* pCreateInfo)
+FenceRef Fence::Create(Fence::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<Fence> Fence::Create(Fence::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<Semaphore> Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
+SemaphoreRef Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -53,7 +53,7 @@ Ref<Semaphore> Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<TimelineSemaphore> TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* pCreateInfo)
+TimelineSemaphoreRef TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -75,7 +75,7 @@ Ref<TimelineSemaphore> TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* 
 	}
 }
 
-Ref<Event> Event::Create(Event::CreateInfo* pCreateInfo)
+EventRef Event::Create(Event::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -97,7 +97,7 @@ Ref<Event> Event::Create(Event::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<Barrier> Barrier::Create(Barrier::CreateInfo* pCreateInfo)
+BarrierRef Barrier::Create(Barrier::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

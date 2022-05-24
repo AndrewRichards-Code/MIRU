@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<Context> Context::Create(Context::CreateInfo* pCreateInfo)
+ContextRef Context::Create(Context::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

@@ -9,7 +9,7 @@
 using namespace miru;
 using namespace base;
 
-Ref<RenderPass> RenderPass::Create(RenderPass::CreateInfo* pCreateInfo)
+RenderPassRef RenderPass::Create(RenderPass::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -31,7 +31,7 @@ Ref<RenderPass> RenderPass::Create(RenderPass::CreateInfo* pCreateInfo)
 	}
 }
 
-Ref<Pipeline> Pipeline::Create(Pipeline::CreateInfo* pCreateInfo)
+PipelineRef Pipeline::Create(Pipeline::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
 	{

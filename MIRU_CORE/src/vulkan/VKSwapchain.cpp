@@ -9,13 +9,13 @@ using namespace miru;
 using namespace vulkan;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Instance(ref_cast<Context>(pCreateInfo->pContext)->m_Instance),
-	m_Device(ref_cast<Context>(pCreateInfo->pContext)->m_Device)
+	:m_Instance(ref_cast<Context>(pCreateInfo->context)->m_Instance),
+	m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->pContext)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
+	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->context)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
 	uint32_t queueFamilyIndex = 0;
 
 	//Surface
@@ -190,7 +190,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_CI.pContext->DeviceWaitIdle();
+	m_CI.context->DeviceWaitIdle();
 
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
@@ -243,7 +243,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_Resized = true;
 }
 
-void Swapchain::AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& imageIndex)
+void Swapchain::AcquireNextImage(const base::SemaphoreRef& acquire, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -258,12 +258,12 @@ void Swapchain::AcquireNextImage(const Ref<base::Semaphore>& acquire, uint32_t& 
 	}
 }
 
-void Swapchain::Present(const Ref<base::CommandPool>& cmdPool, const Ref<base::Semaphore>& submit, uint32_t& imageIndex)
+void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::SemaphoreRef& submit, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	const Ref<Context>& context = ref_cast<Context>(m_CI.pContext);
-	const Ref<CommandPool>& pool = ref_cast<CommandPool>(cmdPool);
+	const ContextRef& context = ref_cast<Context>(m_CI.context);
+	const CommandPoolRef& pool = ref_cast<CommandPool>(cmdPool);
 
 	VkQueue vkQueue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 

@@ -49,12 +49,12 @@ namespace base
 			ImageDimension	imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for an image.
 			size_t			size;
 			void*			data;
-			Ref<Allocator>	pAllocator;
+			AllocatorRef	allocator;
 		};
 
 		//Methods
 	public:
-		static Ref<Buffer> Create(CreateInfo* pCreateInfo);
+		static BufferRef Create(CreateInfo* pCreateInfo);
 		virtual ~Buffer() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		const Allocation& GetAllocation() { return m_Allocation; }
@@ -64,7 +64,6 @@ namespace base
 		CreateInfo m_CI = {};
 		Allocation m_Allocation;
 	};
-	MIRU_CLASS_REF_TYPEDEF(Buffer);
 	
 	class MIRU_API BufferView
 	{
@@ -85,7 +84,7 @@ namespace base
 			std::string	debugName;
 			void*		device;
 			Type		type;
-			Ref<Buffer>	pBuffer;
+			BufferRef	buffer;
 			size_t		offset;
 			size_t		size;
 			size_t		stride;
@@ -93,7 +92,7 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<BufferView> Create(CreateInfo* pCreateInfo);
+		static BufferViewRef Create(CreateInfo* pCreateInfo);
 		virtual ~BufferView() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -101,6 +100,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(BufferView);
 }
 }

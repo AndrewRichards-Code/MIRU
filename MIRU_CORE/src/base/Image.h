@@ -7,8 +7,6 @@ namespace miru
 {
 namespace base
 {
-	class Swapchain;
-
 	class MIRU_API Image
 	{
 		//enums/structs
@@ -280,12 +278,12 @@ namespace base
 			Layout				layout;
 			size_t				size;
 			void*				data;
-			Ref<Allocator>		pAllocator;
+			AllocatorRef		allocator;
 		};
 
 		//Methods
 	public:
-		static Ref<Image> Create(CreateInfo* pCreateInfo);
+		static ImageRef Create(CreateInfo* pCreateInfo);
 		virtual ~Image() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		const Allocation& GetAllocation() { return m_Allocation; }
@@ -297,7 +295,6 @@ namespace base
 		Allocation m_Allocation;
 		bool m_SwapchainImage = false;
 	};
-	MIRU_CLASS_REF_TYPEDEF(Image);
 
 	class MIRU_API ImageView
 	{
@@ -307,14 +304,14 @@ namespace base
 		{
 			std::string				debugName;
 			void*					device;
-			Ref<Image>				pImage;
+			ImageRef				image;
 			Image::Type				viewType;
 			Image::SubresourceRange subresourceRange;
 		};
 
 		//Methods
 	public:
-		static Ref<ImageView> Create(CreateInfo* pCreateInfo);
+		static ImageViewRef Create(CreateInfo* pCreateInfo);
 		virtual ~ImageView() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		friend Swapchain;
@@ -324,7 +321,6 @@ namespace base
 		CreateInfo m_CI = {};
 		bool m_SwapchainImageView = false;
 	};
-	MIRU_CLASS_REF_TYPEDEF(ImageView);
 
 	class MIRU_API Sampler
 	{
@@ -380,7 +376,7 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<Sampler> Create(CreateInfo* pCreateInfo);
+		static SamplerRef Create(CreateInfo* pCreateInfo);
 		virtual ~Sampler() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -388,6 +384,5 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Sampler);
 }
 }

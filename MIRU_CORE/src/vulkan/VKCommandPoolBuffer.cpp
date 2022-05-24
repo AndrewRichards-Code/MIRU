@@ -17,7 +17,7 @@ using namespace vulkan;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->pContext->GetDevice()))
+	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->context->GetDevice()))
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -56,7 +56,7 @@ void CommandPool::Reset(bool releaseResources)
 uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
 {
 	uint32_t index = 0;
-	for (auto& queueFamilyProperty : ref_cast<Context>(m_CI.pContext)->m_QueueFamilyProperties)
+	for (auto& queueFamilyProperty : ref_cast<Context>(m_CI.context)->m_QueueFamilyProperties)
 	{
 		VkQueueFlagBits flags = static_cast<VkQueueFlagBits>(queueFamilyProperty.queueFlags);
 		if (arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
@@ -84,8 +84,8 @@ uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
 
 //CmdBuffer
 CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_Device),
-	m_CmdPool(ref_cast<CommandPool>(pCreateInfo->pCommandPool)->m_CmdPool)
+	:m_Device(ref_cast<CommandPool>(pCreateInfo->commandPool)->m_Device),
+	m_CmdPool(ref_cast<CommandPool>(pCreateInfo->commandPool)->m_CmdPool)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -147,7 +147,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	MIRU_ASSERT(vkResetCommandBuffer(m_CmdBuffers[index], releaseResources ? VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandBuffer.");
 }
 
-void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<base::CommandBuffer>& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
+void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const base::CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -166,7 +166,7 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const Ref<bas
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<Ref<base::Semaphore>>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<Ref<base::Semaphore>>& signals, const Ref<base::Fence>& fence)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::SemaphoreRef>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::SemaphoreRef>& signals, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -191,8 +191,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
 
-	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
-	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	const ContextRef& context = ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context);
+	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -208,7 +208,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const Ref<base::Fence>& fence, bool unused)
+void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const base::FenceRef& fence, bool unused)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -249,8 +249,8 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	timelineSemaphoreSI.signalSemaphoreValueCount = static_cast<uint32_t>(vkSignalValues.size());
 	timelineSemaphoreSI.pSignalSemaphoreValues = vkSignalValues.data();
 
-	const Ref<Context>& context = ref_cast<Context>(m_CI.pCommandPool->GetCreateInfo().pContext);
-	const Ref<CommandPool>& pool = ref_cast<CommandPool>(m_CI.pCommandPool);
+	const ContextRef& context = ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context);
+	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -266,7 +266,7 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::SetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
+void CommandBuffer::SetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -274,7 +274,7 @@ void CommandBuffer::SetEvent(uint32_t index, const Ref<base::Event>& event, base
 	vkCmdSetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
-void CommandBuffer::ResetEvent(uint32_t index, const Ref<base::Event>& event, base::PipelineStageBit pipelineStage)
+void CommandBuffer::ResetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -282,7 +282,7 @@ void CommandBuffer::ResetEvent(uint32_t index, const Ref<base::Event>& event, ba
 	vkCmdResetEvent(m_CmdBuffers[index], ref_cast<Event>(event)->m_Event, static_cast<VkPipelineStageFlags>(pipelineStage));
 }
 
-void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event>>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<Ref<base::Barrier>>& barriers)
+void CommandBuffer::WaitEvents(uint32_t index, const std::vector<base::EventRef>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<base::BarrierRef>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -298,7 +298,7 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event
 	std::vector<VkImageMemoryBarrier>vkImageBarriers;
 	for (auto& barrier : barriers)
 	{
-		const Ref<Barrier>& _barrier = ref_cast<Barrier>(barrier);
+		const BarrierRef& _barrier = ref_cast<Barrier>(barrier);
 		switch (_barrier->GetCreateInfo().type)
 		{
 		case Barrier::Type::MEMORY:
@@ -321,7 +321,7 @@ void CommandBuffer::WaitEvents(uint32_t index, const std::vector<Ref<base::Event
 
 }
 
-void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<Ref<base::Barrier>>& barriers)
+void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<base::BarrierRef>& barriers)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -332,7 +332,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 	std::vector<VkImageMemoryBarrier>vkImageBarriers;
 	for (auto& barrier : barriers)
 	{
-		const Ref<Barrier>& _barrier = ref_cast<Barrier>(barrier);
+		const BarrierRef& _barrier = ref_cast<Barrier>(barrier);
 		switch (_barrier->GetCreateInfo().type)
 		{
 		case Barrier::Type::MEMORY:
@@ -353,7 +353,7 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 		static_cast<uint32_t>(vkImageBarriers.size()), vkImageBarriers.data());
 }
 
-void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -374,7 +374,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const Ref<base::Image>& ima
 	vkCmdClearColorImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearColour, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
-void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image>& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
+void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -395,7 +395,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const Ref<base::Image
 	vkCmdClearDepthStencilImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const Ref<base::Framebuffer>& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
+void CommandBuffer::BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -428,7 +428,7 @@ void CommandBuffer::EndRenderPass(uint32_t index)
 	vkCmdEndRenderPass(m_CmdBuffers[index]);
 }
 
-void CommandBuffer::BindPipeline(uint32_t index, const Ref<base::Pipeline>& pipeline)
+void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -506,7 +506,7 @@ void CommandBuffer::EndRendering(uint32_t index)
 	vkCmdEndRenderingKHR(m_CmdBuffers[index]);
 }
 
-void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base::BufferView>>& vertexBufferViews)
+void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<base::BufferViewRef>& vertexBufferViews)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -515,20 +515,20 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<Ref<base
 	std::vector<VkDeviceSize> offsets;
 	for (auto& vetexBufferView : vertexBufferViews)
 	{
-		vkBuffers.push_back(ref_cast<Buffer>(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().pBuffer)->m_Buffer);
+		vkBuffers.push_back(ref_cast<Buffer>(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().buffer)->m_Buffer);
 		offsets.push_back(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().offset);
 	}
 
 	vkCmdBindVertexBuffers(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkBuffers.size()), vkBuffers.data(), offsets.data());
 }
 
-void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>& indexBufferView)
+void CommandBuffer::BindIndexBuffer(uint32_t index, const base::BufferViewRef& indexBufferView)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	VkBuffer& buffer = ref_cast<Buffer>(ref_cast<BufferView>(indexBufferView)->GetCreateInfo().pBuffer)->m_Buffer;
+	VkBuffer& buffer = ref_cast<Buffer>(ref_cast<BufferView>(indexBufferView)->GetCreateInfo().buffer)->m_Buffer;
 	const BufferView::CreateInfo& ci = indexBufferView->GetCreateInfo();
 
 	VkIndexType type = VK_INDEX_TYPE_UINT16;
@@ -542,7 +542,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const Ref<base::BufferView>&
 	vkCmdBindIndexBuffer(m_CmdBuffers[index], buffer, static_cast<VkDeviceSize>(ci.offset), type);
 }
 
-void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<Ref<base::DescriptorSet>>& descriptorSets, uint32_t firstSet, const Ref<base::Pipeline>& pipeline)
+void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::DescriptorSetRef>& descriptorSets, uint32_t firstSet, const base::PipelineRef& pipeline)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -585,7 +585,7 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	vkCmdDispatch(m_CmdBuffers[index], groupCountX, groupCountY, groupCountZ);
 }
 
-void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<Ref<base::AccelerationStructureBuildInfo>>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<base::AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -665,7 +665,7 @@ void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRe
 	vkCmdTraceRaysKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, width, height, depth);
 }
 
-void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Buffer>& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
+void CommandBuffer::CopyBuffer(uint32_t index, const base::BufferRef& srcBuffer, const base::BufferRef& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -679,7 +679,7 @@ void CommandBuffer::CopyBuffer(uint32_t index, const Ref<base::Buffer>& srcBuffe
 	vkCmdCopyBuffer(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferCopy.size()), vkBufferCopy.data());
 }
 
-void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions)
+void CommandBuffer::CopyImage(uint32_t index, const base::ImageRef& srcImage, base::Image::Layout srcImageLayout, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -701,7 +701,7 @@ void CommandBuffer::CopyImage(uint32_t index, const Ref<base::Image>& srcImage, 
 		ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkImageCopy.size()), vkImageCopy.data());
 }
 
-void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& srcBuffer, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyBufferToImage(uint32_t index, const base::BufferRef& srcBuffer, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -722,7 +722,7 @@ void CommandBuffer::CopyBufferToImage(uint32_t index, const Ref<base::Buffer>& s
 	vkCmdCopyBufferToImage(m_CmdBuffers[index], ref_cast<Buffer>(srcBuffer)->m_Buffer, ref_cast<Image>(dstImage)->m_Image, static_cast<VkImageLayout>(dstImageLayout), static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& srcImage, const Ref<base::Buffer>& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
+void CommandBuffer::CopyImageToBuffer(uint32_t index, const base::ImageRef& srcImage, const base::BufferRef& dstBuffer, base::Image::Layout srcImageLayout, const std::vector<base::Image::BufferImageCopy>& regions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -743,7 +743,7 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const Ref<base::Image>& sr
 	vkCmdCopyImageToBuffer(m_CmdBuffers[index], ref_cast<Image>(srcImage)->m_Image, static_cast<VkImageLayout>(srcImageLayout), ref_cast<Buffer>(dstBuffer)->m_Buffer, static_cast<uint32_t>(vkBufferImageCopy.size()), vkBufferImageCopy.data());
 }
 
-void CommandBuffer::ResolveImage(uint32_t index, const Ref<base::Image>& srcImage, base::Image::Layout srcImageLayout, const Ref<base::Image>& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
+void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage, base::Image::Layout srcImageLayout, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

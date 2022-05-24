@@ -80,16 +80,14 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<RenderPass> Create(CreateInfo* pCreateInfo);
+		static RenderPassRef Create(CreateInfo* pCreateInfo);
 		virtual ~RenderPass() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		//Members
 	protected:
 		CreateInfo m_CI = {};
-
 	};
-	MIRU_CLASS_REF_TYPEDEF(RenderPass);
 
 	class MIRU_API Pipeline
 	{
@@ -162,7 +160,7 @@ namespace base
 		};
 		struct PipelineLayout
 		{
-			std::vector<Ref<DescriptorSetLayout>> descriptorSetLayouts;
+			std::vector<DescriptorSetLayoutRef> descriptorSetLayouts;
 			std::vector<PushConstantRange>		  pushConstantRanges;
 		};
 
@@ -182,7 +180,7 @@ namespace base
 			uint32_t		maxRecursionDepth;
 			uint32_t		maxPayloadSize;
 			uint32_t		maxHitAttributeSize;
-			Ref<Allocator>	pAllocator;							//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
+			AllocatorRef	allocator;							//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
 
 		struct DynamicRenderingCreateInfo
@@ -198,7 +196,7 @@ namespace base
 			std::string						debugName;
 			void*							device;
 			PipelineType					type;
-			std::vector<Ref<Shader>>		shaders;			//One shader only for compute; multiple for Graphics and Ray Tracing.
+			std::vector<ShaderRef>			shaders;			//One shader only for compute; multiple for Graphics and Ray Tracing.
 			VertexInputState				vertexInputState;	//Graphics only.
 			InputAssemblyState				inputAssemblyState;	//Graphics only.
 			TessellationState				tessellationState;	//Graphics only.
@@ -211,14 +209,14 @@ namespace base
 			std::vector<ShaderGroupInfo>	shaderGroupInfos;	//Ray Tracing only.
 			RayTracingInfo					rayTracingInfo;		//Ray Tracing only.
 			PipelineLayout					layout;				//All.
-			Ref<RenderPass>					renderPass;			//Graphics only.
+			RenderPassRef					renderPass;			//Graphics only.
 			uint32_t						subpassIndex;		//Graphics only.
 			DynamicRenderingCreateInfo		dynamicRendering;	//Graphics only. Use this if not using a RenderPass.
 		};
 
 		//Methods
 	public:
-		static Ref<Pipeline> Create(CreateInfo* pCreateInfo);
+		static PipelineRef Create(CreateInfo* pCreateInfo);
 		virtual ~Pipeline() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
@@ -228,14 +226,13 @@ namespace base
 	protected:
 		CreateInfo m_CI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Pipeline);
 
 	struct RenderingAttachmentInfo
 	{
-		Ref<ImageView>					imageView;
+		ImageViewRef					imageView;
 		Image::Layout					imageLayout;
 		ResolveModeBits					resolveMode;
-		Ref<ImageView>					resolveImageView;
+		ImageViewRef					resolveImageView;
 		Image::Layout					resolveImageLayout;
 		RenderPass::AttachmentLoadOp	loadOp;
 		RenderPass::AttachmentStoreOp	storeOp;

@@ -95,7 +95,7 @@ namespace base
 
 		//Methods
 	public:
-		static Ref<Context> Create(CreateInfo* pCreateInfo);
+		static ContextRef Create(CreateInfo* pCreateInfo);
 		virtual ~Context() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		const ResultInfo& GetResultInfo() { return m_RI; }
@@ -108,6 +108,5 @@ namespace base
 		CreateInfo m_CI = {};
 		ResultInfo m_RI = {};
 	};
-	MIRU_CLASS_REF_TYPEDEF(Context);
 }
 }

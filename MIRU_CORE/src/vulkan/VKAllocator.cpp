@@ -11,8 +11,8 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Device = *reinterpret_cast<VkDevice*>(m_CI.pContext->GetDevice());
-	const Ref<vulkan::Context>& context = ref_cast<vulkan::Context>(m_CI.pContext);
+	m_Device = *reinterpret_cast<VkDevice*>(m_CI.context->GetDevice());
+	const ContextRef& context = ref_cast<Context>(m_CI.context);
 	
 	bool buffer_device_address = false;
 	buffer_device_address |= context->IsActive(context->m_ActiveDeviceExtensions, "VK_KHR_buffer_device_address");
