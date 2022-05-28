@@ -287,6 +287,7 @@ namespace base
 		virtual ~Image() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		const Allocation& GetAllocation() { return m_Allocation; }
+		const bool& IsSwapchainImage() { return m_SwapchainImage; }
 		friend Swapchain;
 
 		//Members
@@ -314,6 +315,7 @@ namespace base
 		static ImageViewRef Create(CreateInfo* pCreateInfo);
 		virtual ~ImageView() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
+		const bool& IsSwapchainImageView() { return m_SwapchainImageView; }
 		friend Swapchain;
 
 		//Members
