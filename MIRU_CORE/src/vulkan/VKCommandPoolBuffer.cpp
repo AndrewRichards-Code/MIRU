@@ -191,7 +191,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 
 		vkWaits.push_back({});
 		for (auto& wait : submitInfo.waits)
-				vkWaits.back().push_back(ref_cast<Semaphore>(wait)->m_Semaphore);
+			vkWaits.back().push_back(ref_cast<Semaphore>(wait)->m_Semaphore);
 
 		vkCmdBuffers.push_back({});
 		for (auto& index : submitInfo.indices)
@@ -202,7 +202,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 
 		vkSignals.push_back({});
 		for (auto& signal : submitInfo.signals)
-				vkSignals.back().push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
+			vkSignals.back().push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
 		
 		void* pNext = nullptr;
 		if (!submitInfo.waitValues.empty() || !submitInfo.signalValues.empty())
