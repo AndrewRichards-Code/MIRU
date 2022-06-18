@@ -86,15 +86,15 @@ void Raytracing()
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
-	swapchainCI.pContext = context;
+	swapchainCI.context = context;
 	swapchainCI.pWindow = window;
 	swapchainCI.width = width;
 	swapchainCI.height = height;
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	SwapchainRef swapchain = Swapchain::Create(&swapchainCI);
-	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
-	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
+	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().width;
+	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Ray Tracing library
 	Shader::CreateInfo shaderCI;
@@ -125,7 +125,7 @@ void Raytracing()
 	//CmdPool and CmdBuffer
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
-	cmdPoolCI.pContext = context;
+	cmdPoolCI.context = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
@@ -134,12 +134,12 @@ void Raytracing()
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
 	cmdBufferCI.debugName = "CmdBuffer";
-	cmdBufferCI.pCommandPool = cmdPool;
+	cmdBufferCI.commandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
 	CommandBufferRef cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
-	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
+	cmdCopyBufferCI.commandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
 	CommandBufferRef cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
@@ -147,7 +147,7 @@ void Raytracing()
 	//Allocator
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
-	allocCI.pContext = context;
+	allocCI.context = context;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
 	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
@@ -182,11 +182,11 @@ void Raytracing()
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
-	verticesBufferCI.pAllocator = cpu_alloc_0;
+	verticesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
 	verticesBufferCI.data = nullptr;
-	verticesBufferCI.pAllocator = gpu_alloc_0;
+	verticesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
@@ -195,11 +195,11 @@ void Raytracing()
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
-	indicesBufferCI.pAllocator = cpu_alloc_0;
+	indicesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
 	indicesBufferCI.data = nullptr;
-	indicesBufferCI.pAllocator = gpu_alloc_0;
+	indicesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
 
 	//Uniform buffers
@@ -217,14 +217,14 @@ void Raytracing()
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub1 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewMdlCI;
 	ubViewMdlCI.debugName = "Model UBView";
 	ubViewMdlCI.device = context->GetDevice();
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
-	ubViewMdlCI.pBuffer = ub1;
+	ubViewMdlCI.buffer = ub1;
 	ubViewMdlCI.offset = 0;
 	ubViewMdlCI.size = sizeof(Mat4);
 	ubViewMdlCI.stride = 0;
@@ -249,14 +249,14 @@ void Raytracing()
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(SceneConstants);
 	ubCI.data = &ubSceneConstantsData;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ubSceneConstants = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubSceneConstantsCI;
 	ubSceneConstantsCI.debugName = "RTShaderConstants UBView";
 	ubSceneConstantsCI.device = context->GetDevice();
 	ubSceneConstantsCI.type = BufferView::Type::UNIFORM;
-	ubSceneConstantsCI.pBuffer = ubSceneConstants;
+	ubSceneConstantsCI.buffer = ubSceneConstants;
 	ubSceneConstantsCI.offset = 0;
 	ubSceneConstantsCI.size = sizeof(SceneConstants);
 	ubSceneConstantsCI.stride = 0;
@@ -278,13 +278,13 @@ void Raytracing()
 	RT_RWImageCI.layout = Image::Layout::UNKNOWN;
 	RT_RWImageCI.size = width * height * 4;
 	RT_RWImageCI.data = nullptr;
-	RT_RWImageCI.pAllocator = gpu_alloc_0;
+	RT_RWImageCI.allocator = gpu_alloc_0;
 	ImageRef RT_RWImage = Image::Create(&RT_RWImageCI);
 
 	ImageView::CreateInfo RT_RWImageViewCI;
 	RT_RWImageViewCI.debugName = "RT_RWImageView";
 	RT_RWImageViewCI.device = context->GetDevice();
-	RT_RWImageViewCI.pImage = RT_RWImage;
+	RT_RWImageViewCI.image = RT_RWImage;
 	RT_RWImageViewCI.viewType = Image::Type::TYPE_2D;
 	RT_RWImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 	ImageViewRef RT_RWImageView = ImageView::Create(&RT_RWImageViewCI);
@@ -323,7 +323,7 @@ void Raytracing()
 	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
 	asBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
-	asBufferCI.pAllocator = gpu_alloc_0;
+	asBufferCI.allocator = gpu_alloc_0;
 	BufferRef asBuffer_BLAS = Buffer::Create(&asBufferCI);
 
 	Buffer::CreateInfo scratchBufferCI;
@@ -332,7 +332,7 @@ void Raytracing()
 	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	scratchBufferCI.size = blas_asbi->GetBuildSizesInfo().buildScratchSize;
 	scratchBufferCI.data = nullptr;
-	scratchBufferCI.pAllocator = gpu_alloc_0;
+	scratchBufferCI.allocator = gpu_alloc_0;
 	BufferRef scratchBuffer_BLAS = Buffer::Create(&scratchBufferCI);
 
 	AccelerationStructure::CreateInfo asCI;
@@ -374,7 +374,7 @@ void Raytracing()
 	idBufferCI.usage = Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	idBufferCI.size = sizeof(InstanceData);
 	idBufferCI.data = &id;
-	idBufferCI.pAllocator = cpu_alloc_0;
+	idBufferCI.allocator = cpu_alloc_0;
 	BufferRef idBuffer_TLAS = Buffer::Create(&idBufferCI);
 
 	asbiGBI.device = context->GetDevice();
@@ -398,7 +398,7 @@ void Raytracing()
 	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
 	asBufferCI.size = tlas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
-	asBufferCI.pAllocator = gpu_alloc_0;
+	asBufferCI.allocator = gpu_alloc_0;
 	BufferRef asBuffer_TLAS = Buffer::Create(&asBufferCI);
 
 	scratchBufferCI.debugName = "TLASScratchBuffer";
@@ -406,7 +406,7 @@ void Raytracing()
 	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	scratchBufferCI.size = tlas_asbi->GetBuildSizesInfo().buildScratchSize;
 	scratchBufferCI.data = nullptr;
-	scratchBufferCI.pAllocator = gpu_alloc_0;
+	scratchBufferCI.allocator = gpu_alloc_0;
 	BufferRef scratchBuffer_TLAS = Buffer::Create(&scratchBufferCI);
 
 	asCI.debugName = "TLAS";
@@ -441,7 +441,7 @@ void Raytracing()
 		bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
 		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.pImage = RT_RWImage;
+		bCI.image = RT_RWImage;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -473,8 +473,8 @@ void Raytracing()
 	DescriptorSetLayoutRef setLayout1RT = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetRTCI;
 	descriptorSetRTCI.debugName = "RayTracing: DescSet1";
-	descriptorSetRTCI.pDescriptorPool = descriptorPoolRT;
-	descriptorSetRTCI.pDescriptorSetLayouts = { setLayout1RT };
+	descriptorSetRTCI.descriptorPool = descriptorPoolRT;
+	descriptorSetRTCI.descriptorSetLayouts = { setLayout1RT };
 	DescriptorSetRef descriptorSetRT_Global = DescriptorSet::Create(&descriptorSetRTCI);
 	descriptorSetRT_Global->AddBuffer(0, 0, { { ubViewSceneConstants } });
 	descriptorSetRT_Global->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
@@ -506,7 +506,7 @@ void Raytracing()
 		{ handles[1].first, handles[1].second, {} },
 		{ handles[2].first, handles[2].second, {} }
 	};
-	sbtCI.pAllocator = cpu_alloc_0;
+	sbtCI.allocator = cpu_alloc_0;
 	ShaderBindingTableRef sbt = ShaderBindingTable::Create(&sbtCI);
 
 	//Render Synchronisation
@@ -562,7 +562,7 @@ void Raytracing()
 			RT_RWImageCI.width = width;
 			RT_RWImageCI.height = height;
 			RT_RWImage = Image::Create(&RT_RWImageCI);
-			RT_RWImageViewCI.pImage = RT_RWImage;
+			RT_RWImageViewCI.image = RT_RWImage;
 			RT_RWImageView = ImageView::Create(&RT_RWImageViewCI);
 
 			descriptorSetRT_Global = nullptr;
@@ -592,7 +592,7 @@ void Raytracing()
 				bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
 				bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 				bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-				bCI.pImage = RT_RWImage;
+				bCI.image = RT_RWImage;
 				bCI.oldLayout = Image::Layout::UNKNOWN;
 				bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
 				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -641,7 +641,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.pImage = RT_RWImage;
+			bCI.image = RT_RWImage;
 			bCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
 			bCI.newLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -652,7 +652,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			bCI.image = swapchain->m_SwapchainImages[frameIndex];
 			bCI.oldLayout = Image::Layout::UNKNOWN;
 			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -670,7 +670,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::SHADER_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.pImage = RT_RWImage;
+			bCI.image = RT_RWImage;
 			bCI.oldLayout = Image::Layout::TRANSFER_SRC_OPTIMAL;
 			bCI.newLayout = GraphicsAPI::IsD3D12() ? Image::Layout::D3D12_UNORDERED_ACCESS : Image::Layout::GENERAL;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -681,7 +681,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			bCI.image = swapchain->m_SwapchainImages[frameIndex];
 			bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.newLayout = Image::Layout::PRESENT_SRC;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };

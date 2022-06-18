@@ -86,15 +86,15 @@ void Basic()
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
-	swapchainCI.pContext = context;
+	swapchainCI.context = context;
 	swapchainCI.pWindow = window;
 	swapchainCI.width = width;
 	swapchainCI.height = height;
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	SwapchainRef swapchain = Swapchain::Create(&swapchainCI);
-	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
-	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
+	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().width;
+	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Basic shader
 	Shader::CreateInfo shaderCI;
@@ -140,7 +140,7 @@ void Basic()
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
-	cmdPoolCI.pContext = context;
+	cmdPoolCI.context = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
@@ -149,19 +149,19 @@ void Basic()
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
 	cmdBufferCI.debugName = "CmdBuffer";
-	cmdBufferCI.pCommandPool = cmdPool;
+	cmdBufferCI.commandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
 	CommandBufferRef cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
-	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
+	cmdCopyBufferCI.commandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
 	CommandBufferRef cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
-	allocCI.pContext = context;
+	allocCI.context = context;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
 	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
@@ -200,11 +200,11 @@ void Basic()
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
-	verticesBufferCI.pAllocator = cpu_alloc_0;
+	verticesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
 	verticesBufferCI.data = nullptr;
-	verticesBufferCI.pAllocator = gpu_alloc_0;
+	verticesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
@@ -213,11 +213,11 @@ void Basic()
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
-	indicesBufferCI.pAllocator = cpu_alloc_0;
+	indicesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
 	indicesBufferCI.data = nullptr;
-	indicesBufferCI.pAllocator = gpu_alloc_0;
+	indicesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
@@ -226,7 +226,7 @@ void Basic()
 	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	imageBufferCI.size = img_width * img_height * 4;
 	imageBufferCI.data = imageData;
-	imageBufferCI.pAllocator = cpu_alloc_0;
+	imageBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
 
 	Image::CreateInfo imageCI;
@@ -244,7 +244,7 @@ void Basic()
 	imageCI.layout = Image::Layout::UNKNOWN;
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
-	imageCI.pAllocator = gpu_alloc_0;
+	imageCI.allocator = gpu_alloc_0;
 	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -261,21 +261,21 @@ void Basic()
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = 2 * sizeof(Mat4);
 	ubCI.data = ubData;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub2 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewCamCI;
 	ubViewCamCI.debugName = "Camera UBView";
 	ubViewCamCI.device = context->GetDevice();
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
-	ubViewCamCI.pBuffer = ub1;
+	ubViewCamCI.buffer = ub1;
 	ubViewCamCI.offset = 0;
 	ubViewCamCI.size = 2 * sizeof(Mat4);
 	ubViewCamCI.stride = 0;
@@ -285,7 +285,7 @@ void Basic()
 	ubViewMdlCI.debugName = "Model UBView";
 	ubViewMdlCI.device = context->GetDevice();
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
-	ubViewMdlCI.pBuffer = ub2;
+	ubViewMdlCI.buffer = ub2;
 	ubViewMdlCI.offset = 0;
 	ubViewMdlCI.size = sizeof(Mat4);
 	ubViewMdlCI.stride = 0;
@@ -308,7 +308,7 @@ void Basic()
 		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		bCI.srcQueueFamilyIndex =Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.pImage = image;
+		bCI.image = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -335,7 +335,7 @@ void Basic()
 		bCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
 		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.pImage = image;
+		bCI.image = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -351,7 +351,7 @@ void Basic()
 	vbViewCI.debugName = "VerticesBufferView";
 	vbViewCI.device = context->GetDevice();
 	vbViewCI.type = BufferView::Type::VERTEX;
-	vbViewCI.pBuffer = g_vb;
+	vbViewCI.buffer = g_vb;
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
 	vbViewCI.stride = 4 * sizeof(float);
@@ -361,7 +361,7 @@ void Basic()
 	ibViewCI.debugName = "IndicesBufferView";
 	ibViewCI.device = context->GetDevice();
 	ibViewCI.type = BufferView::Type::INDEX;
-	ibViewCI.pBuffer = g_ib;
+	ibViewCI.buffer = g_ib;
 	ibViewCI.offset = 0;
 	ibViewCI.size = sizeof(indices);
 	ibViewCI.stride = sizeof(uint32_t);
@@ -370,7 +370,7 @@ void Basic()
 	ImageView::CreateInfo imageViewCI;
 	imageViewCI.debugName = "MIRU logo ImageView";
 	imageViewCI.device = context->GetDevice();
-	imageViewCI.pImage = image;
+	imageViewCI.image = image;
 	imageViewCI.viewType = Image::Type::TYPE_CUBE;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 	ImageViewRef imageView = ImageView::Create(&imageViewCI);
@@ -411,13 +411,13 @@ void Basic()
 	colourCI.layout = Image::Layout::UNKNOWN;
 	colourCI.size = 0;
 	colourCI.data = nullptr;
-	colourCI.pAllocator = gpu_alloc_0;
+	colourCI.allocator = gpu_alloc_0;
 	ImageRef colourImage = Image::Create(&colourCI);
 
 	ImageView::CreateInfo colourImageViewCI;
 	colourImageViewCI.debugName = "Colour ImageView";
 	colourImageViewCI.device = context->GetDevice();
-	colourImageViewCI.pImage = colourImage;
+	colourImageViewCI.image = colourImage;
 	colourImageViewCI.viewType = Image::Type::TYPE_2D;
 	colourImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 	ImageViewRef colourImageView = ImageView::Create(&colourImageViewCI);
@@ -438,13 +438,13 @@ void Basic()
 	depthCI.layout = Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
-	depthCI.pAllocator = gpu_alloc_0;
+	depthCI.allocator = gpu_alloc_0;
 	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
 	depthImageViewCI.debugName = "Depth ImageView";
 	depthImageViewCI.device = context->GetDevice();
-	depthImageViewCI.pImage = depthImage;
+	depthImageViewCI.image = depthImage;
 	depthImageViewCI.viewType = Image::Type::TYPE_2D;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
 	ImageViewRef depthImageView = ImageView::Create(&depthImageViewCI);
@@ -465,13 +465,13 @@ void Basic()
 	resolveAndInputImageCI.layout = Image::Layout::UNKNOWN;
 	resolveAndInputImageCI.size = 0;
 	resolveAndInputImageCI.data = nullptr;
-	resolveAndInputImageCI.pAllocator = gpu_alloc_0;
+	resolveAndInputImageCI.allocator = gpu_alloc_0;
 	ImageRef resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
 
 	ImageView::CreateInfo resolveAndInputImageViewCI;
 	resolveAndInputImageViewCI.debugName = "Resolve and Input ImageView";
 	resolveAndInputImageViewCI.device = context->GetDevice();
-	resolveAndInputImageViewCI.pImage = resolveAndInputImage;
+	resolveAndInputImageViewCI.image = resolveAndInputImage;
 	resolveAndInputImageViewCI.viewType = Image::Type::TYPE_2D;
 	resolveAndInputImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 	ImageViewRef resolveAndInputImageView = ImageView::Create(&resolveAndInputImageViewCI);
@@ -501,11 +501,11 @@ void Basic()
 	DescriptorSetLayoutRef setLayout3 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Basic: Descriptor Set 0";
-	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout1 };
+	descriptorSetCI.descriptorPool = descriptorPool;
+	descriptorSetCI.descriptorSetLayouts = { setLayout1 };
 	DescriptorSetRef descriptorSet_p0 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSetCI.debugName = "Basic: Descriptor Set 1";
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout2 };
+	descriptorSetCI.descriptorSetLayouts = { setLayout2 };
 	DescriptorSetRef descriptorSet_p1 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet_p0->AddBuffer(0, 0, { { ubViewCam } });
 	descriptorSet_p1->AddBuffer(0, 0, { { ubViewMdl } });
@@ -513,8 +513,8 @@ void Basic()
 	descriptorSet_p0->Update();
 	descriptorSet_p1->Update();
 	descriptorSetCI.debugName = "PostProcess: Descriptor Set";
-	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout3 };
+	descriptorSetCI.descriptorPool = descriptorPool;
+	descriptorSetCI.descriptorSetLayouts = { setLayout3 };
 	DescriptorSetRef descriptorSet1 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet1->AddImage(0, 0, { { nullptr, resolveAndInputImageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descriptorSet1->Update();
@@ -689,7 +689,7 @@ void Basic()
 				bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
 				bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 				bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-				bCI.pImage = resolveAndInputImage;
+				bCI.image = resolveAndInputImage;
 				bCI.oldLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 				bCI.newLayout = Image::Layout::UNKNOWN;
 				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -715,19 +715,19 @@ void Basic()
 			colourCI.width = width;
 			colourCI.height = height;
 			colourImage = Image::Create(&colourCI);
-			colourImageViewCI.pImage = colourImage;
+			colourImageViewCI.image = colourImage;
 			colourImageView = ImageView::Create(&colourImageViewCI);
 
 			depthCI.width = width;
 			depthCI.height = height;
 			depthImage = Image::Create(&depthCI);
-			depthImageViewCI.pImage = depthImage;
+			depthImageViewCI.image = depthImage;
 			depthImageView = ImageView::Create(&depthImageViewCI);
 
 			resolveAndInputImageCI.width = width;
 			resolveAndInputImageCI.height = height;
 			resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
-			resolveAndInputImageViewCI.pImage = resolveAndInputImage;
+			resolveAndInputImageViewCI.image = resolveAndInputImage;
 			resolveAndInputImageView = ImageView::Create(&resolveAndInputImageViewCI);
 
 			descriptorSet1 = nullptr;

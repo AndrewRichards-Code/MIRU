@@ -86,15 +86,15 @@ void DynamicRendering()
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
-	swapchainCI.pContext = context;
+	swapchainCI.context = context;
 	swapchainCI.pWindow = window;
 	swapchainCI.width = width;
 	swapchainCI.height = height;
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	SwapchainRef swapchain = Swapchain::Create(&swapchainCI);
-	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().width;
-	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().pImage->GetCreateInfo().height;
+	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().width;
+	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Basic shader
 	Shader::CreateInfo shaderCI;
@@ -125,7 +125,7 @@ void DynamicRendering()
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
-	cmdPoolCI.pContext = context;
+	cmdPoolCI.context = context;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
@@ -134,19 +134,19 @@ void DynamicRendering()
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
 	cmdBufferCI.debugName = "CmdBuffer";
-	cmdBufferCI.pCommandPool = cmdPool;
+	cmdBufferCI.commandPool = cmdPool;
 	cmdBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdBufferCI.commandBufferCount = 3;
 	CommandBufferRef cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 	cmdCopyBufferCI.debugName = "CmdCopyBuffer";
-	cmdCopyBufferCI.pCommandPool = cmdCopyPool;
+	cmdCopyBufferCI.commandPool = cmdCopyPool;
 	cmdCopyBufferCI.level = CommandBuffer::Level::PRIMARY;
 	cmdCopyBufferCI.commandBufferCount = 1;
 	CommandBufferRef cmdCopyBuffer = CommandBuffer::Create(&cmdCopyBufferCI);
 
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
-	allocCI.pContext = context;
+	allocCI.context = context;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
 	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
@@ -185,11 +185,11 @@ void DynamicRendering()
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
-	verticesBufferCI.pAllocator = cpu_alloc_0;
+	verticesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
 	verticesBufferCI.data = nullptr;
-	verticesBufferCI.pAllocator = gpu_alloc_0;
+	verticesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
 
 	Buffer::CreateInfo indicesBufferCI;
@@ -198,11 +198,11 @@ void DynamicRendering()
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
-	indicesBufferCI.pAllocator = cpu_alloc_0;
+	indicesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
 	indicesBufferCI.data = nullptr;
-	indicesBufferCI.pAllocator = gpu_alloc_0;
+	indicesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
@@ -211,7 +211,7 @@ void DynamicRendering()
 	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	imageBufferCI.size = img_width * img_height * 4;
 	imageBufferCI.data = imageData;
-	imageBufferCI.pAllocator = cpu_alloc_0;
+	imageBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
 
 	Image::CreateInfo imageCI;
@@ -229,7 +229,7 @@ void DynamicRendering()
 	imageCI.layout = Image::Layout::UNKNOWN;
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
-	imageCI.pAllocator = gpu_alloc_0;
+	imageCI.allocator = gpu_alloc_0;
 	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -246,21 +246,21 @@ void DynamicRendering()
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = 2 * sizeof(Mat4);
 	ubCI.data = ubData;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
 	ubCI.device = context->GetDevice();
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
-	ubCI.pAllocator = cpu_alloc_0;
+	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub2 = Buffer::Create(&ubCI);
 
 	BufferView::CreateInfo ubViewCamCI;
 	ubViewCamCI.debugName = "Camera UBView";
 	ubViewCamCI.device = context->GetDevice();
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
-	ubViewCamCI.pBuffer = ub1;
+	ubViewCamCI.buffer = ub1;
 	ubViewCamCI.offset = 0;
 	ubViewCamCI.size = 2 * sizeof(Mat4);
 	ubViewCamCI.stride = 0;
@@ -270,7 +270,7 @@ void DynamicRendering()
 	ubViewMdlCI.debugName = "Model UBView";
 	ubViewMdlCI.device = context->GetDevice();
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
-	ubViewMdlCI.pBuffer = ub2;
+	ubViewMdlCI.buffer = ub2;
 	ubViewMdlCI.offset = 0;
 	ubViewMdlCI.size = sizeof(Mat4);
 	ubViewMdlCI.stride = 0;
@@ -293,7 +293,7 @@ void DynamicRendering()
 		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.pImage = image;
+		bCI.image = image;
 		bCI.oldLayout = Image::Layout::UNKNOWN;
 		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -320,7 +320,7 @@ void DynamicRendering()
 		bCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
 		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.pImage = image;
+		bCI.image = image;
 		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -336,7 +336,7 @@ void DynamicRendering()
 	vbViewCI.debugName = "VerticesBufferView";
 	vbViewCI.device = context->GetDevice();
 	vbViewCI.type = BufferView::Type::VERTEX;
-	vbViewCI.pBuffer = g_vb;
+	vbViewCI.buffer = g_vb;
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
 	vbViewCI.stride = 4 * sizeof(float);
@@ -346,7 +346,7 @@ void DynamicRendering()
 	ibViewCI.debugName = "IndicesBufferView";
 	ibViewCI.device = context->GetDevice();
 	ibViewCI.type = BufferView::Type::INDEX;
-	ibViewCI.pBuffer = g_ib;
+	ibViewCI.buffer = g_ib;
 	ibViewCI.offset = 0;
 	ibViewCI.size = sizeof(indices);
 	ibViewCI.stride = sizeof(uint32_t);
@@ -355,7 +355,7 @@ void DynamicRendering()
 	ImageView::CreateInfo imageViewCI;
 	imageViewCI.debugName = "MIRU logo ImageView";
 	imageViewCI.device = context->GetDevice();
-	imageViewCI.pImage = image;
+	imageViewCI.image = image;
 	imageViewCI.viewType = Image::Type::TYPE_CUBE;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 	ImageViewRef imageView = ImageView::Create(&imageViewCI);
@@ -396,13 +396,13 @@ void DynamicRendering()
 	depthCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
-	depthCI.pAllocator = gpu_alloc_0;
+	depthCI.allocator = gpu_alloc_0;
 	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
 	depthImageViewCI.debugName = "Depth ImageView";
 	depthImageViewCI.device = context->GetDevice();
-	depthImageViewCI.pImage = depthImage;
+	depthImageViewCI.image = depthImage;
 	depthImageViewCI.viewType = Image::Type::TYPE_2D;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
 	ImageViewRef depthImageView = ImageView::Create(&depthImageViewCI);
@@ -427,11 +427,11 @@ void DynamicRendering()
 	DescriptorSetLayoutRef setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetCI;
 	descriptorSetCI.debugName = "Basic: Descriptor Set 0";
-	descriptorSetCI.pDescriptorPool = descriptorPool;
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout1 };
+	descriptorSetCI.descriptorPool = descriptorPool;
+	descriptorSetCI.descriptorSetLayouts = { setLayout1 };
 	DescriptorSetRef descriptorSet_p0 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSetCI.debugName = "Basic: Descriptor Set 1";
-	descriptorSetCI.pDescriptorSetLayouts = { setLayout2 };
+	descriptorSetCI.descriptorSetLayouts = { setLayout2 };
 	DescriptorSetRef descriptorSet_p1 = DescriptorSet::Create(&descriptorSetCI);
 	descriptorSet_p0->AddBuffer(0, 0, { { ubViewCam } });
 	descriptorSet_p1->AddBuffer(0, 0, { { ubViewMdl } });
@@ -514,7 +514,7 @@ void DynamicRendering()
 			depthCI.width = width;
 			depthCI.height = height;
 			depthImage = Image::Create(&depthCI);
-			depthImageViewCI.pImage = depthImage;
+			depthImageViewCI.image = depthImage;
 			depthImageView = ImageView::Create(&depthImageViewCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
@@ -561,7 +561,7 @@ void DynamicRendering()
 			barrierColourCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			barrierColourCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			barrierColourCI.image = swapchain->m_SwapchainImages[frameIndex];
 			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -574,7 +574,7 @@ void DynamicRendering()
 			barrierDepthCI.dstAccess = Barrier::AccessBit::DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			barrierDepthCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierDepthCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			barrierDepthCI.pImage = depthImage;
+			barrierDepthCI.image = depthImage;
 			barrierDepthCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierDepthCI.newLayout = Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			barrierDepthCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
@@ -599,7 +599,7 @@ void DynamicRendering()
 			barrierPresentCI.dstAccess = Barrier::AccessBit::NONE_BIT;
 			barrierPresentCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierPresentCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			barrierPresentCI.pImage = swapchain->m_SwapchainImages[frameIndex];
+			barrierPresentCI.image = swapchain->m_SwapchainImages[frameIndex];
 			barrierPresentCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierPresentCI.newLayout = Image::Layout::PRESENT_SRC;
 			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
