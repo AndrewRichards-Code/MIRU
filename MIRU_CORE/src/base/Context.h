@@ -23,12 +23,12 @@ namespace base
 			//Vulkan: VK_EXT_descriptor_indexing: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_EXT_descriptor_indexing
 			DESCRIPTOR_INDEXING			= 0x00000002,
 			
-			//STATUS: 0
+			//STATUS: O
 			//D3D12: Core
 			//Vulkan: VK_KHR_timeline_semaphore: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_KHR_timeline_semaphore
 			TIMELINE_SEMAPHORE			= 0x00000004,
 			
-			//STATUS: X
+			//STATUS: O - Excluding D3D12 Enhanced Barriers and Events2.
 			//D3D12: Enhanced Barriers?
 			//Vulkan: VK_KHR_synchronization2: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap50.html#VK_KHR_synchronization2
 			SYNCHRONISATION_2			= 0x00000008,

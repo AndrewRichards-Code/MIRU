@@ -36,13 +36,14 @@ namespace d3d12
 		void End(uint32_t index) override;
 		void Reset(uint32_t index, bool releaseResources) override;
 		void ExecuteSecondaryCommandBuffers(uint32_t index, const base::CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) override;
-		void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::SemaphoreRef>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::SemaphoreRef>& signals, const base::FenceRef& fence) override;
-		void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const base::FenceRef& fence, bool unused) override;
+		void Submit(const std::vector<base::CommandBuffer::SubmitInfo>& submitInfos, const base::FenceRef& fence) override;
+		void Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>& submitInfo2s, const base::FenceRef& fence) override;
 
 		void SetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage) override;
 		void ResetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage) override;
 		void WaitEvents(uint32_t, const std::vector<base::EventRef>& events, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, const std::vector<base::BarrierRef>& barriers) override;
 		void PipelineBarrier(uint32_t index, base::PipelineStageBit srcStage, base::PipelineStageBit dstStage, base::DependencyBit dependencies, const std::vector<base::BarrierRef>& barriers) override;
+		void PipelineBarrier2(uint32_t index, const base::CommandBuffer::DependencyInfo& dependencyInfo) override;
 
 		void ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;
 		void ClearDepthStencilImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;

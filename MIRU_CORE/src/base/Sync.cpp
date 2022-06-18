@@ -53,28 +53,6 @@ SemaphoreRef Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 	}
 }
 
-TimelineSemaphoreRef TimelineSemaphore::Create(TimelineSemaphore::CreateInfo* pCreateInfo)
-{
-	switch (GraphicsAPI::GetAPI())
-	{
-	case GraphicsAPI::API::D3D12:
-		#if defined (MIRU_D3D12)
-		return CreateRef<d3d12::TimelineSemaphore>(pCreateInfo);
-		#else
-		return nullptr;
-		#endif
-	case GraphicsAPI::API::VULKAN:
-		#if defined (MIRU_VULKAN)
-		return CreateRef<vulkan::TimelineSemaphore>(pCreateInfo);
-		#else
-		return nullptr;
-		#endif
-	case GraphicsAPI::API::UNKNOWN:
-	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
-	}
-}
-
 EventRef Event::Create(Event::CreateInfo* pCreateInfo)
 {
 	switch (GraphicsAPI::GetAPI())
@@ -110,6 +88,27 @@ BarrierRef Barrier::Create(Barrier::CreateInfo* pCreateInfo)
 	case GraphicsAPI::API::VULKAN:
 		#if defined (MIRU_VULKAN)
 		return CreateRef<vulkan::Barrier>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
+	default:
+		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+	}
+}
+
+Barrier2Ref Barrier2::Create(Barrier2::CreateInfo* pCreateInfo)
+{
+	switch (GraphicsAPI::GetAPI())
+	{
+	case GraphicsAPI::API::D3D12:
+		#if defined (MIRU_D3D12)
+		return CreateRef<d3d12::Barrier2>(pCreateInfo);
+		#else
+		return nullptr;
+		#endif
+	case GraphicsAPI::API::VULKAN:
+		#if defined (MIRU_VULKAN)
+		return CreateRef<vulkan::Barrier2>(pCreateInfo);
 		#else
 		return nullptr;
 		#endif

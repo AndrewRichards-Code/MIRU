@@ -218,30 +218,37 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const base::C
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::SemaphoreRef>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::SemaphoreRef>& signals, const base::FenceRef& fence)
+void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& submitInfos, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.commandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
 
-	for (auto& index : cmdBufferIndices)
+	for (const auto& submitInfo : submitInfos)
 	{
-		if (index < m_CI.commandBufferCount)
-			submitCmdBuffers.push_back(m_CmdBuffers[index]);
-	}
+		size_t waitIndex = 0;
+		for (auto& wait : submitInfo.waits)
+		{
+			const uint64_t& value = wait->GetCreateInfo().type == Semaphore::Type::TIMELINE ? submitInfo.waitValues[waitIndex] : ref_cast<Semaphore>(wait)->GetValue();
+			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+			waitIndex++;
+		}
 
-	for (auto& wait : waits)
-	{
-		MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, ref_cast<Semaphore>(wait)->GetValue()), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
-	}
-	
-	queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
-	
-	for (auto& signal : signals)
-	{
-		ref_cast<Semaphore>(signal)->GetValue()++;
-		MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, ref_cast<Semaphore>(signal)->GetValue()), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
+		for (auto& index : submitInfo.indices)
+		{
+			if (index < m_CI.commandBufferCount)
+				submitCmdBuffers.push_back(m_CmdBuffers[index]);
+		}
+		queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
+
+		size_t signalIndex = 0;
+		for (auto& signal : submitInfo.signals)
+		{
+			const uint64_t& value = signal->GetCreateInfo().type == Semaphore::Type::TIMELINE ? submitInfo.signalValues[signalIndex] : ref_cast<Semaphore>(signal)->GetValue()++;
+			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
+			signalIndex++;
+		}
 	}
 
 	if (fence)
@@ -251,29 +258,35 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	}
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const base::FenceRef& fence, bool unused)
+void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>& submitInfo2s, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	ID3D12CommandQueue* queue = ref_cast<CommandPool>(m_CI.commandPool)->m_Queue;
 	std::vector<ID3D12CommandList*>submitCmdBuffers;
 
-	for (auto& index : cmdBufferIndices)
+	for (const auto& submitInfo : submitInfo2s)
 	{
-		if (index < m_CI.commandBufferCount)
-			submitCmdBuffers.push_back(m_CmdBuffers[index]);
-	}
+		for (auto& waitSemaphoreInfo : submitInfo.waitSemaphoreInfos)
+		{
+			const base::SemaphoreRef& wait = waitSemaphoreInfo.semaphore;
+			const uint64_t& value = wait->GetCreateInfo().type == Semaphore::Type::TIMELINE ? waitSemaphoreInfo.value : ref_cast<Semaphore>(wait)->GetValue();
+			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+		}
 
-	for (auto& wait : waits)
-	{
-		MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait.first)->m_Semaphore, wait.second), "ERROR: D3D12: Failed to Wait on the wait TimelineSemaphore.");
-	}
+		for (auto& commandBufferInfo : submitInfo.commandBufferInfos)
+		{
+			if (commandBufferInfo.index < m_CI.commandBufferCount)
+				submitCmdBuffers.push_back(m_CmdBuffers[commandBufferInfo.index]);
+		}
+		queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
 
-	queue->ExecuteCommandLists(static_cast<uint32_t>(submitCmdBuffers.size()), submitCmdBuffers.data());
-
-	for (auto& signal : signals)
-	{
-		MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal.first)->m_Semaphore, signal.second), "ERROR: D3D12: Failed to Signal the signal TimelineSemaphore.");
+		for (auto& signalSemaphoreInfo : submitInfo.signalSemaphoreInfos)
+		{
+			const base::SemaphoreRef& signal = signalSemaphoreInfo.semaphore;
+			const uint64_t& value = signal->GetCreateInfo().type == Semaphore::Type::TIMELINE ? signalSemaphoreInfo.value : ref_cast<Semaphore>(signal)->GetValue()++;
+			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
+		}
 	}
 
 	if (fence)
@@ -308,6 +321,25 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 	for (auto& barrier : barriers)
 	{
 		for (auto& _barrier : ref_cast<Barrier>(barrier)->m_Barriers)
+			_barriers.push_back(_barrier);
+
+	}
+	if (_barriers.empty())
+		return;
+
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
+}
+
+void CommandBuffer::PipelineBarrier2(uint32_t index, const base::CommandBuffer::DependencyInfo& dependencyInfo)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	std::vector<D3D12_RESOURCE_BARRIER> _barriers;
+	for (auto& barrier : dependencyInfo.barriers)
+	{
+		for (auto& _barrier : ref_cast<Barrier2>(barrier)->m_Barriers)
 			_barriers.push_back(_barrier);
 
 	}

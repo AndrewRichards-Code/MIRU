@@ -31,25 +31,10 @@ namespace vulkan
 	public:
 		Semaphore(Semaphore::CreateInfo* pCreateInfo);
 		~Semaphore();
-
-		//Members
-	public:
-		VkDevice m_Device;
-
-		VkSemaphore m_Semaphore;
-		VkSemaphoreCreateInfo m_SemaphoreCI;
-	};
-
-	class TimelineSemaphore final : public base::TimelineSemaphore
-	{
-		//Methods
-	public:
-		TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo);
-		~TimelineSemaphore();
-
+		
 		void Signal(uint64_t value) override;
 		bool Wait(uint64_t value, uint64_t timeout) override;
-		uint64_t GetValue() override;
+		uint64_t GetCurrentValue() override;
 
 		//Members
 	public:
@@ -91,6 +76,20 @@ namespace vulkan
 		VkMemoryBarrier m_MB = {};
 		VkBufferMemoryBarrier m_BMB = {};
 		VkImageMemoryBarrier m_IMB = {};
+	};
+
+	class Barrier2 final : public base::Barrier2
+	{
+		//Methods
+	public:
+		Barrier2(Barrier2::CreateInfo* pCreateInfo);
+		~Barrier2();
+
+		//Members
+	public:
+		VkMemoryBarrier2 m_MB = {};
+		VkBufferMemoryBarrier2 m_BMB = {};
+		VkImageMemoryBarrier2 m_IMB = {};
 	};
 }
 }

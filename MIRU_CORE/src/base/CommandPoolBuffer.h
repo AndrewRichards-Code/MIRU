@@ -52,6 +52,48 @@ namespace base
 	{
 		//enums/structs
 	public:
+		
+		//Submit
+
+		struct SubmitInfo
+		{
+			std::vector<uint32_t>				indices;
+			std::vector<base::SemaphoreRef>		waits;
+			std::vector<uint64_t>				waitValues;				//For Semaphore::Type::TIMELINE only.
+			std::vector<base::PipelineStageBit> waitDstPipelineStages;
+			std::vector<uint64_t>				signalValues;			//For Semaphore::Type::TIMELINE only.
+			std::vector<base::SemaphoreRef>		signals;
+		};
+
+		//Submit2
+
+		struct SemaphoreSubmitInfo
+		{
+			SemaphoreRef		semaphore;
+			uint64_t			value;		//Ignored if semaphore is not Type::TIMELINE
+			PipelineStageBit	stage;
+			uint32_t			deviceIndex;
+		};
+		struct CommandBufferSubmitInfo
+		{
+			uint32_t index;
+			uint32_t deviceMask;
+		};
+		struct SubmitInfo2
+		{
+			std::vector<SemaphoreSubmitInfo>		waitSemaphoreInfos;
+			std::vector<CommandBufferSubmitInfo>	commandBufferInfos;
+			std::vector<SemaphoreSubmitInfo>		signalSemaphoreInfos;
+		};
+
+		//PipelineBarrier2
+
+		struct DependencyInfo
+		{
+			DependencyBit				dependencies;
+			std::vector<Barrier2Ref>	barriers;
+		};
+
 		enum class UsageBit : uint32_t
 		{
 			ONE_TIME_SUBMIT			= 0x00000001,
@@ -81,13 +123,14 @@ namespace base
 		virtual void End(uint32_t index) = 0;
 		virtual void Reset(uint32_t index, bool releaseResources) = 0;
 		virtual void ExecuteSecondaryCommandBuffers(uint32_t index, const CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<SemaphoreRef>& waits, const std::vector<PipelineStageBit>& waitDstPipelineStages, const std::vector<SemaphoreRef>& signals, const FenceRef& fence) = 0;
-		virtual void Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<TimelineSemaphoreWithValue>& waits, const std::vector<PipelineStageBit>& waitDstPipelineStages, const std::vector<TimelineSemaphoreWithValue>& signals, const FenceRef& fence, bool unused) = 0;
+		virtual void Submit(const std::vector<SubmitInfo>& submitInfos, const FenceRef& fence) = 0;
+		virtual void Submit2(const std::vector<SubmitInfo2>& submitInfo2s, const FenceRef& fence) = 0;
 
 		virtual void SetEvent(uint32_t index, const EventRef& event, PipelineStageBit pipelineStage) = 0;
 		virtual void ResetEvent(uint32_t index, const EventRef& event, PipelineStageBit pipelineStage) = 0;
 		virtual void WaitEvents(uint32_t index, const std::vector<EventRef>& events, PipelineStageBit srcStage, PipelineStageBit dstStage, const std::vector<BarrierRef>& barriers) = 0;
 		virtual void PipelineBarrier(uint32_t index, PipelineStageBit srcStage, PipelineStageBit dstStage, DependencyBit dependencies, const std::vector<BarrierRef>& barriers) = 0;
+		virtual void PipelineBarrier2(uint32_t index, const DependencyInfo& dependencyInfo) = 0;
 
 		virtual void ClearColourImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
 		virtual void ClearDepthStencilImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;

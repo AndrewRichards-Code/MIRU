@@ -166,28 +166,70 @@ void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const base::C
 	vkCmdExecuteCommands(m_CmdBuffers[index], static_cast<uint32_t>(secondaryCmdBuffers.size()), secondaryCmdBuffers.data());
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::SemaphoreRef>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::SemaphoreRef>& signals, const base::FenceRef& fence)
+void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& submitInfos, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
+	
+	std::vector<VkSubmitInfo> vkSubmitInfos;
+	std::vector<VkTimelineSemaphoreSubmitInfoKHR> vkTimelineSemaphoreSubmitInfos;
+	vkSubmitInfos.reserve(submitInfos.size());
+	vkTimelineSemaphoreSubmitInfos.reserve(submitInfos.size());
 
-	if (waits.size() != waitDstPipelineStages.size())
+	std::vector<std::vector<VkSemaphore>> vkWaits;
+	std::vector<std::vector<VkCommandBuffer>> vkCmdBuffers;
+	std::vector<std::vector<VkSemaphore>> vkSignals;
+	vkWaits.reserve(submitInfos.size());
+	vkCmdBuffers.reserve(submitInfos.size());
+	vkSignals.reserve(submitInfos.size());
+
+	for (const auto& submitInfo : submitInfos)
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait Semaphores and Wait Destination PipelineStages does not match.");
-	}
+		if (submitInfo.waits.size() != submitInfo.waitDstPipelineStages.size())
+		{
+			MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait Semaphores and Wait Destination PipelineStages does not match.");
+		}
 
-	std::vector<VkCommandBuffer>submitCmdBuffers;
-	for (auto& index : cmdBufferIndices)
-	{
-		if (index < m_CI.commandBufferCount)
-			submitCmdBuffers.push_back(m_CmdBuffers[index]);
-	}
-	std::vector<VkSemaphore> vkWaits;
-	for (auto& wait : waits)
-		vkWaits.push_back(ref_cast<Semaphore>(wait)->m_Semaphore);
+		vkWaits.push_back({});
+		for (auto& wait : submitInfo.waits)
+				vkWaits.back().push_back(ref_cast<Semaphore>(wait)->m_Semaphore);
 
-	std::vector<VkSemaphore> vkSignals;
-	for (auto& signal : signals)
-		vkSignals.push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
+		vkCmdBuffers.push_back({});
+		for (auto& index : submitInfo.indices)
+		{
+			if (index < m_CI.commandBufferCount)
+				vkCmdBuffers.back().push_back(m_CmdBuffers[index]);
+		}
+
+		vkSignals.push_back({});
+		for (auto& signal : submitInfo.signals)
+				vkSignals.back().push_back(ref_cast<Semaphore>(signal)->m_Semaphore);
+		
+		void* pNext = nullptr;
+		if (!submitInfo.waitValues.empty() || !submitInfo.signalValues.empty())
+		{
+			VkTimelineSemaphoreSubmitInfoKHR vkTimelineSemaphoreSubmitInfo;
+			vkTimelineSemaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR;
+			vkTimelineSemaphoreSubmitInfo.pNext = nullptr;
+			vkTimelineSemaphoreSubmitInfo.waitSemaphoreValueCount = !submitInfo.waitValues.empty() ? static_cast<uint32_t>(submitInfo.waitValues.size()) : 0;
+			vkTimelineSemaphoreSubmitInfo.pWaitSemaphoreValues = !submitInfo.waitValues.empty() ? submitInfo.waitValues.data() : nullptr;
+			vkTimelineSemaphoreSubmitInfo.signalSemaphoreValueCount = !submitInfo.signalValues.empty() ? static_cast<uint32_t>(submitInfo.signalValues.size()) : 0;
+			vkTimelineSemaphoreSubmitInfo.pSignalSemaphoreValues = !submitInfo.signalValues.empty() ? submitInfo.signalValues.data() : nullptr;
+			vkTimelineSemaphoreSubmitInfos.push_back(vkTimelineSemaphoreSubmitInfo);
+			pNext = &vkTimelineSemaphoreSubmitInfos.back();
+		}
+
+		VkSubmitInfo vkSubmitInfo;
+		vkSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		vkSubmitInfo.pNext = pNext;
+		vkSubmitInfo.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.back().size());
+		vkSubmitInfo.pWaitSemaphores = vkWaits.back().data();
+		vkSubmitInfo.pWaitDstStageMask = (VkPipelineStageFlags*)(submitInfo.waitDstPipelineStages.data());
+		vkSubmitInfo.commandBufferCount = static_cast<uint32_t>(vkCmdBuffers.back().size());
+		vkSubmitInfo.pCommandBuffers = vkCmdBuffers.back().data();
+		vkSubmitInfo.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.back().size());
+		vkSubmitInfo.pSignalSemaphores = vkSignals.back().data();
+		vkSubmitInfos.push_back(vkSubmitInfo);
+	}
 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
 
@@ -195,75 +237,80 @@ void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const 
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
-	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	m_CmdBufferSI.pNext = nullptr;
-	m_CmdBufferSI.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.size());
-	m_CmdBufferSI.pWaitSemaphores = vkWaits.data();
-	m_CmdBufferSI.pWaitDstStageMask = (VkPipelineStageFlags*)(waitDstPipelineStages.data());
-	m_CmdBufferSI.commandBufferCount = static_cast<uint32_t>(submitCmdBuffers.size());
-	m_CmdBufferSI.pCommandBuffers = submitCmdBuffers.data();
-	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
-	m_CmdBufferSI.pSignalSemaphores = vkSignals.data();
-
-	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
+	MIRU_ASSERT(vkQueueSubmit(queue, static_cast<uint32_t>(vkSubmitInfos.size()), vkSubmitInfos.data(), vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
-void CommandBuffer::Submit(const std::vector<uint32_t>& cmdBufferIndices, const std::vector<base::TimelineSemaphoreWithValue>& waits, const std::vector<base::PipelineStageBit>& waitDstPipelineStages, const std::vector<base::TimelineSemaphoreWithValue>& signals, const base::FenceRef& fence, bool unused)
+void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>& submitInfo2s, const base::FenceRef& fence)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (waits.size() != waitDstPipelineStages.size())
-	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait TimelineSemaphores and Wait Destination PipelineStages does not match.");
-	}
+	std::vector<VkSubmitInfo2KHR> vkSubmitInfo2s;
+	std::vector<std::vector<VkSemaphoreSubmitInfoKHR>> vkWaitSemaphoreInfos;
+	std::vector<std::vector<VkCommandBufferSubmitInfoKHR>> vkCommandBufferInfos;
+	std::vector<std::vector<VkSemaphoreSubmitInfoKHR>> vkSignalSemaphoreInfos;
+	vkSubmitInfo2s.reserve(submitInfo2s.size());
+	vkWaitSemaphoreInfos.reserve(submitInfo2s.size());
+	vkCommandBufferInfos.reserve(submitInfo2s.size());
+	vkSignalSemaphoreInfos.reserve(submitInfo2s.size());
 
-	std::vector<VkCommandBuffer>submitCmdBuffers;
-	for (auto& index : cmdBufferIndices)
+	for (const auto& submitInfo2 : submitInfo2s)
 	{
-		if (index < m_CI.commandBufferCount)
-			submitCmdBuffers.push_back(m_CmdBuffers[index]);
-	}
-	std::vector<VkSemaphore> vkWaits;
-	std::vector<uint64_t> vkWaitsValues;
-	for (auto& wait : waits)
-	{
-		vkWaits.push_back(ref_cast<TimelineSemaphore>(wait.first)->m_Semaphore);
-		vkWaitsValues.push_back(wait.second);
-	}
+		vkWaitSemaphoreInfos.push_back({});
+		for (const auto& waitInfo : submitInfo2.waitSemaphoreInfos)
+		{
+			VkSemaphoreSubmitInfoKHR semaphoreSubmitInfo;
+			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR;
+			semaphoreSubmitInfo.pNext = nullptr;
+			semaphoreSubmitInfo.semaphore = ref_cast<Semaphore>(waitInfo.semaphore)->m_Semaphore;
+			semaphoreSubmitInfo.value = waitInfo.value;
+			semaphoreSubmitInfo.stageMask = static_cast<VkPipelineStageFlags2>(waitInfo.stage);
+			semaphoreSubmitInfo.deviceIndex = waitInfo.deviceIndex;
+			vkWaitSemaphoreInfos.back().push_back(semaphoreSubmitInfo);
 
-	std::vector<VkSemaphore> vkSignals;
-	std::vector<uint64_t>  vkSignalValues;
-	for (auto& signal : signals)
-	{
-		vkSignals.push_back(ref_cast<Semaphore>(signal.first)->m_Semaphore);
-		vkSignalValues.push_back(signal.second);
+		}
+		vkCommandBufferInfos.push_back({});
+		for (const auto& commandBufferInfo : submitInfo2.commandBufferInfos)
+		{
+			VkCommandBufferSubmitInfoKHR commandBufferSubmitInfo;
+			commandBufferSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO_KHR;
+			commandBufferSubmitInfo.pNext = nullptr;
+			commandBufferSubmitInfo.commandBuffer = m_CmdBuffers[commandBufferInfo.index];
+			commandBufferSubmitInfo.deviceMask = commandBufferInfo.deviceMask;
+			vkCommandBufferInfos.back().push_back(commandBufferSubmitInfo);
+		}
+		vkSignalSemaphoreInfos.push_back({});
+		for (const auto& signalInfo : submitInfo2.signalSemaphoreInfos)
+		{
+			VkSemaphoreSubmitInfoKHR semaphoreSubmitInfo;
+			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR;
+			semaphoreSubmitInfo.pNext = nullptr;
+			semaphoreSubmitInfo.semaphore = ref_cast<Semaphore>(signalInfo.semaphore)->m_Semaphore;
+			semaphoreSubmitInfo.value = signalInfo.value;
+			semaphoreSubmitInfo.stageMask = static_cast<VkPipelineStageFlags2>(signalInfo.stage);
+			semaphoreSubmitInfo.deviceIndex = signalInfo.deviceIndex;
+			vkSignalSemaphoreInfos.back().push_back(semaphoreSubmitInfo);
+		}
+
+		VkSubmitInfo2KHR vkSubmitInfo2;
+		vkSubmitInfo2.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR;
+		vkSubmitInfo2.pNext = nullptr;
+		vkSubmitInfo2.flags = 0;
+		vkSubmitInfo2.waitSemaphoreInfoCount = static_cast<uint32_t>(vkWaitSemaphoreInfos.back().size());
+		vkSubmitInfo2.pWaitSemaphoreInfos = vkWaitSemaphoreInfos.back().data();
+		vkSubmitInfo2.commandBufferInfoCount = static_cast<uint32_t>(vkCommandBufferInfos.back().size());
+		vkSubmitInfo2.pCommandBufferInfos = vkCommandBufferInfos.back().data();
+		vkSubmitInfo2.signalSemaphoreInfoCount = static_cast<uint32_t>(vkSignalSemaphoreInfos.back().size());
+		vkSubmitInfo2.pSignalSemaphoreInfos = vkSignalSemaphoreInfos.back().data();
+		vkSubmitInfo2s.push_back(vkSubmitInfo2);
 	}
 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
-
-	VkTimelineSemaphoreSubmitInfoKHR timelineSemaphoreSI;
-	timelineSemaphoreSI.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR;
-	timelineSemaphoreSI.pNext = nullptr;
-	timelineSemaphoreSI.waitSemaphoreValueCount = static_cast<uint32_t>(vkWaitsValues.size());;
-	timelineSemaphoreSI.pWaitSemaphoreValues = vkWaitsValues.data();
-	timelineSemaphoreSI.signalSemaphoreValueCount = static_cast<uint32_t>(vkSignalValues.size());
-	timelineSemaphoreSI.pSignalSemaphoreValues = vkSignalValues.data();
 
 	const ContextRef& context = ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context);
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
-	m_CmdBufferSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	m_CmdBufferSI.pNext = &timelineSemaphoreSI;
-	m_CmdBufferSI.waitSemaphoreCount = static_cast<uint32_t>(vkWaits.size());
-	m_CmdBufferSI.pWaitSemaphores = vkWaits.data();
-	m_CmdBufferSI.pWaitDstStageMask = (VkPipelineStageFlags*)(waitDstPipelineStages.data());
-	m_CmdBufferSI.commandBufferCount = static_cast<uint32_t>(submitCmdBuffers.size());
-	m_CmdBufferSI.pCommandBuffers = submitCmdBuffers.data();
-	m_CmdBufferSI.signalSemaphoreCount = static_cast<uint32_t>(vkSignals.size());
-	m_CmdBufferSI.pSignalSemaphores = vkSignals.data();
-
-	MIRU_ASSERT(vkQueueSubmit(queue, 1, &m_CmdBufferSI, vkFence), "ERROR: VULKAN: Failed to submit Queue.");
+	vkQueueSubmit2KHR(queue, static_cast<uint32_t>(vkSubmitInfo2s.size()), vkSubmitInfo2s.data(), vkFence);
 }
 
 void CommandBuffer::SetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
@@ -327,9 +374,9 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	std::vector<VkMemoryBarrier>vkMemoryBarriers;
-	std::vector<VkBufferMemoryBarrier>vkBufferBarriers;
-	std::vector<VkImageMemoryBarrier>vkImageBarriers;
+	std::vector<VkMemoryBarrier> vkMemoryBarriers;
+	std::vector<VkBufferMemoryBarrier> vkBufferBarriers;
+	std::vector<VkImageMemoryBarrier> vkImageBarriers;
 	for (auto& barrier : barriers)
 	{
 		const BarrierRef& _barrier = ref_cast<Barrier>(barrier);
@@ -351,6 +398,45 @@ void CommandBuffer::PipelineBarrier(uint32_t index, base::PipelineStageBit srcSt
 		static_cast<uint32_t>(vkMemoryBarriers.size()), vkMemoryBarriers.data(),
 		static_cast<uint32_t>(vkBufferBarriers.size()), vkBufferBarriers.data(),
 		static_cast<uint32_t>(vkImageBarriers.size()), vkImageBarriers.data());
+}
+
+void CommandBuffer::PipelineBarrier2(uint32_t index, const base::CommandBuffer::DependencyInfo& dependencyInfo)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+
+	std::vector<VkMemoryBarrier2> vkMemoryBarriers;
+	std::vector<VkBufferMemoryBarrier2> vkBufferBarriers;
+	std::vector<VkImageMemoryBarrier2> vkImageBarriers;
+	for (auto& barrier : dependencyInfo.barriers)
+	{
+		const Barrier2Ref& _barrier = ref_cast<Barrier2>(barrier);
+		switch (_barrier->GetCreateInfo().type)
+		{
+		case Barrier::Type::MEMORY:
+			vkMemoryBarriers.push_back(_barrier->m_MB); continue;
+		case Barrier::Type::BUFFER:
+			vkBufferBarriers.push_back(_barrier->m_BMB); continue;
+		case Barrier::Type::IMAGE:
+			vkImageBarriers.push_back(_barrier->m_IMB); continue;
+		default:
+			continue;
+		}
+	}
+
+	VkDependencyInfoKHR vkDependencyInfo;
+	vkDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR;
+	vkDependencyInfo.pNext = nullptr;
+	vkDependencyInfo.dependencyFlags = static_cast<VkDependencyFlags>(dependencyInfo.dependencies);
+	vkDependencyInfo.memoryBarrierCount = static_cast<uint32_t>(vkMemoryBarriers.size());
+	vkDependencyInfo.pMemoryBarriers = vkMemoryBarriers.data();
+	vkDependencyInfo.bufferMemoryBarrierCount = static_cast<uint32_t>(vkBufferBarriers.size());
+	vkDependencyInfo.pBufferMemoryBarriers = vkBufferBarriers.data();
+	vkDependencyInfo.imageMemoryBarrierCount = static_cast<uint32_t>(vkImageBarriers.size());
+	vkDependencyInfo.pImageMemoryBarriers = vkImageBarriers.data();
+	
+	vkCmdPipelineBarrier2KHR(m_CmdBuffers[index], &vkDependencyInfo);
 }
 
 void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)

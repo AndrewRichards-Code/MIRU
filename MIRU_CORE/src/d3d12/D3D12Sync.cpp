@@ -59,7 +59,7 @@ bool Fence::Wait()
 			return false;
 		else
 		{
-			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait of Fence.");
+			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait for Fence.");
 			return false;
 		}
 	}
@@ -93,59 +93,64 @@ Semaphore::~Semaphore()
 	MIRU_D3D12_SAFE_RELEASE(m_Semaphore);
 }
 
-//TimelineSemaphore
-TimelineSemaphore::TimelineSemaphore(TimelineSemaphore::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+void Semaphore::Signal(uint64_t value)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
-
-	m_CI = *pCreateInfo;
-	MIRU_ASSERT(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create TimelineSemaphore.");
-	D3D12SetName(m_Semaphore, m_CI.debugName + " : TimelineSemaphore");
-}
-
-TimelineSemaphore::~TimelineSemaphore()
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	MIRU_D3D12_SAFE_RELEASE(m_Semaphore);
-}
-
-void TimelineSemaphore::Signal(uint64_t value)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	MIRU_ASSERT(m_Semaphore->Signal(value), "ERROR: D3D12: Failed to a signal TimelineSemaphore.");
-}
-
-bool TimelineSemaphore::Wait(uint64_t value, uint64_t timeout)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	UINT64 currentValue = m_Semaphore->GetCompletedValue();
-	if (currentValue < value)
+	
+	if (m_CI.type == Type::TIMELINE)
 	{
-		HANDLE _event = CreateEvent(NULL, FALSE, FALSE, NULL);
-		MIRU_ASSERT(m_Semaphore->SetEventOnCompletion(value, _event), "ERROR: D3D12: Failed to wait for Fence.");
-		DWORD result = WaitForSingleObject(_event, static_cast<DWORD>(timeout / 1000));
-		if (result == WAIT_OBJECT_0)
-			return true;
-		else if (result == WAIT_TIMEOUT)
-			return false;
-		else
-		{
-			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait of Fence.");
-			return false;
-		}
+		MIRU_ASSERT(m_Semaphore->Signal(value), "ERROR: D3D12: Failed to a signal Semaphore.");
 	}
-	return true;
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Failed to a signal Semaphore, because it's not Type::TIMELINE.")
+	}
 }
 
-uint64_t TimelineSemaphore::GetValue()
+bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	return m_Semaphore->GetCompletedValue();
+	if (m_CI.type == Type::TIMELINE)
+	{
+		UINT64 currentValue = m_Semaphore->GetCompletedValue();
+		if (currentValue < value)
+		{
+			HANDLE _event = CreateEvent(NULL, FALSE, FALSE, NULL);
+			MIRU_ASSERT(m_Semaphore->SetEventOnCompletion(value, _event), "ERROR: D3D12: Failed to wait for Semaphore.");
+			DWORD result = WaitForSingleObject(_event, static_cast<DWORD>(timeout / 1000));
+			if (result == WAIT_OBJECT_0)
+				return true;
+			else if (result == WAIT_TIMEOUT)
+				return false;
+			else
+			{
+				MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait for Semaphore.");
+				return false;
+			}
+		}
+		return true;
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Failed to wait for Semaphore, because it's not Type::TIMELINE.")
+		return false;
+	}
+}
+
+uint64_t Semaphore::GetCurrentValue()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	if (m_CI.type == Type::TIMELINE)
+	{
+		return m_Semaphore->GetCompletedValue();
+	}
+	else
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Failed to a get Semaphore's counter value, because it's not Type::TIMELINE.")
+		return 0;
+	}
 }
 
 //Event - Split Barrier
@@ -302,12 +307,119 @@ D3D12_RESOURCE_STATES Barrier::ToD3D12ResourceState(Barrier::AccessBit access)
 		case Barrier::AccessBit::TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT:
 			return D3D12_RESOURCE_STATE_STREAM_OUT;
 		case Barrier::AccessBit::CONDITIONAL_RENDERING_READ_BIT:
+			return D3D12_RESOURCE_STATE_PREDICATION;
+		case Barrier::AccessBit::FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT:
 			return D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE;
 		case Barrier::AccessBit::ACCELERATION_STRUCTURE_READ_BIT:
 		case Barrier::AccessBit::ACCELERATION_STRUCTURE_WRITE_BIT:
 			return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+		case Barrier::AccessBit::FRAGMENT_DENSITY_MAP_READ_BIT:
+			return D3D12_RESOURCE_STATE_COMMON;
+		case Barrier::AccessBit::VIDEO_DECODE_READ_BIT:
+			return D3D12_RESOURCE_STATE_VIDEO_DECODE_READ;
+		case Barrier::AccessBit::VIDEO_DECODE_WRITE_BIT:
+			return D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE;
+		case Barrier::AccessBit::VIDEO_ENCODE_READ_BIT:
+			return D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ;
+		case Barrier::AccessBit::VIDEO_ENCODE_WRITE_BIT:
+			return D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE;
+		case Barrier::AccessBit::SHADER_BINDING_TABLE_READ_BIT:
+			return D3D12_RESOURCE_STATE_COMMON;
+		case Barrier::AccessBit::SHADER_SAMPLED_READ_BIT:
+			return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		case Barrier::AccessBit::SHADER_STORAGE_READ_BIT:
+			return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		case Barrier::AccessBit::SHADER_STORAGE_WRITE_BIT:
+			return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		default:
 			return D3D12_RESOURCE_STATE_COMMON | D3D12_RESOURCE_STATE_PRESENT;
 	};
+
+
+}
+
+//Barrier2
+Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	m_CI = *pCreateInfo;
+
+	m_Barriers.reserve(1);
+	if (m_CI.type == Barrier::Type::BUFFER)
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = ref_cast<Buffer>(m_CI.buffer)->m_Buffer;
+		barrier.Transition.StateBefore = Barrier::ToD3D12ResourceState(m_CI.srcAccess);
+		barrier.Transition.StateAfter = Barrier::ToD3D12ResourceState(m_CI.dstAccess);
+		barrier.Transition.Subresource = 0;
+
+		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
+			return;
+
+		m_Barriers.push_back(barrier);
+	}
+	else if (m_CI.type == Barrier::Type::IMAGE)
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = ref_cast<Image>(m_CI.image)->m_Image;
+		barrier.Transition.StateBefore = Image::ToD3D12ImageLayout(m_CI.oldLayout);
+		barrier.Transition.StateAfter = Image::ToD3D12ImageLayout(m_CI.newLayout);
+
+		if (barrier.Transition.StateBefore == barrier.Transition.StateAfter) //Check a transition barrier is actaully needed.
+			return;
+		if (m_CI.newLayout == Image::Layout::UNKNOWN) //Only transition resource to defined a layout.
+			return;
+
+		D3D12_RESOURCE_DESC resDesc = barrier.Transition.pResource->GetDesc();
+		if (resDesc.DepthOrArraySize == m_CI.subresourceRange.arrayLayerCount
+			&& resDesc.MipLevels == m_CI.subresourceRange.mipLevelCount)
+		{
+			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			m_Barriers.push_back(barrier);
+		}
+		else
+		{
+			m_Barriers.reserve(static_cast<size_t>(m_CI.subresourceRange.mipLevelCount) * static_cast<size_t>(m_CI.subresourceRange.arrayLayerCount));
+			for (uint32_t i = 0; i < m_CI.subresourceRange.arrayLayerCount; i++)
+			{
+				for (uint32_t j = 0; j < m_CI.subresourceRange.mipLevelCount; j++)
+				{
+					barrier.Transition.Subresource = Image::D3D12CalculateSubresource(j + m_CI.subresourceRange.baseMipLevel, i + m_CI.subresourceRange.baseArrayLayer, 0, resDesc.MipLevels, resDesc.DepthOrArraySize);
+					m_Barriers.push_back(barrier);
+				}
+			}
+		}
+	}
+	else if (m_CI.type == Barrier::Type::MEMORY)
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		if (m_CI.buffer)
+		{
+			barrier.UAV.pResource = ref_cast<Buffer>(m_CI.buffer)->m_Buffer;
+			m_Barriers.push_back(barrier);
+		}
+		else if (m_CI.image)
+		{
+			barrier.UAV.pResource = ref_cast<Image>(m_CI.image)->m_Image;
+			m_Barriers.push_back(barrier);
+		}
+		else
+			m_Barriers[0] = D3D12_RESOURCE_BARRIER();
+	}
+	else
+		m_Barriers[0] = D3D12_RESOURCE_BARRIER();
+
+}
+
+Barrier2::~Barrier2()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
 }
 #endif

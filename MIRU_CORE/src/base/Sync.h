@@ -27,9 +27,9 @@ namespace base
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		virtual void Reset() = 0;
-		//Returns true if Fence is signaled.
+		//Returns true if Fence is signaled
 		virtual bool GetStatus() = 0;
-		//Returns false if the wait times out.
+		//Returns false if the wait times out
 		virtual bool Wait() = 0;
 
 		//Members
@@ -42,10 +42,16 @@ namespace base
 	{
 		//enum/struct
 	public:
+		enum class Type : uint32_t
+		{
+			BINARY,
+			TIMELINE
+		};
 		struct CreateInfo
 		{
 			std::string debugName;
 			void*		device;
+			Type		type;
 		};
 		//Methods
 	public:
@@ -53,37 +59,15 @@ namespace base
 		virtual ~Semaphore() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
-		//Members
-	protected:
-		CreateInfo m_CI = {};
-	};
-
-	//Host-Device and Inter/Intra-Queue Synchronisation
-	class MIRU_API TimelineSemaphore
-	{
-		//enum/struct
-	public:
-		struct CreateInfo
-		{
-			std::string debugName;
-			void*		device;
-		};
-		//Methods
-	public:
-		static TimelineSemaphoreRef Create(TimelineSemaphore::CreateInfo* pCreateInfo);
-		virtual ~TimelineSemaphore() = default;
-		const CreateInfo& GetCreateInfo() { return m_CI; }
-
 		virtual void Signal(uint64_t value) = 0;
-		//Parameter: timeout is in nanoseconds.
+		//Parameter: timeout is in nanoseconds
 		virtual bool Wait(uint64_t value, uint64_t timeout) = 0;
-		virtual uint64_t GetValue() = 0;
-
+		virtual uint64_t GetCurrentValue() = 0;
+		
 		//Members
 	protected:
 		CreateInfo m_CI = {};
 	};
-	typedef std::pair<TimelineSemaphoreRef, uint64_t> TimelineSemaphoreWithValue;
 
 	//Inter/Intra-Command Buffer Synchronisation
 	class MIRU_API Event
@@ -103,7 +87,7 @@ namespace base
 
 		virtual void Set() = 0;
 		virtual void Reset() = 0;
-		//Returns false if Event is signaled.
+		//Returns false if Event is signaled
 		virtual bool GetStatus() = 0;
 
 		//Members
@@ -172,7 +156,7 @@ namespace base
 			AccessBit					dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			BufferRef					buffer;				//For Type::BUFFER
+			BufferRef					buffer;					//For Type::BUFFER
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
 			ImageRef					image;					//For Type::IMAGE
@@ -209,7 +193,7 @@ namespace base
 			Barrier::AccessBit			dstAccess;				//For Type::MEMORY, Type::BUFFER and Type::IMAGE
 			uint32_t					srcQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
 			uint32_t					dstQueueFamilyIndex;	//For Type::BUFFER and Type::IMAGE
-			BufferRef					buffer;				//For Type::BUFFER
+			BufferRef					buffer;					//For Type::BUFFER
 			uint64_t					offset;					//For Type::BUFFER
 			uint64_t					size;					//For Type::BUFFER
 			ImageRef					image;					//For Type::IMAGE
