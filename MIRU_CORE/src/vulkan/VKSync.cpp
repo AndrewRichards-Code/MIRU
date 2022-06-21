@@ -284,7 +284,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	if (m_CI.type == Barrier::Type::MEMORY)
 	{
 
-		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2_KHR;
 		m_MB.pNext = nullptr;
 		m_MB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_MB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -293,7 +293,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == Barrier::Type::BUFFER)
 	{
-		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2_KHR;
 		m_BMB.pNext = nullptr;
 		m_BMB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_BMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -307,7 +307,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == Barrier::Type::IMAGE)
 	{
-		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2_KHR;
 		m_IMB.pNext = nullptr;
 		m_IMB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_IMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
