@@ -87,9 +87,9 @@ namespace vulkan
 
 		//Members
 	public:
-		VkMemoryBarrier2 m_MB = {};
-		VkBufferMemoryBarrier2 m_BMB = {};
-		VkImageMemoryBarrier2 m_IMB = {};
+		VkMemoryBarrier2KHR m_MB = {};
+		VkBufferMemoryBarrier2KHR m_BMB = {};
+		VkImageMemoryBarrier2KHR m_IMB = {};
 	};
 }
 }
