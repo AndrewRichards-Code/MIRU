@@ -59,8 +59,8 @@ static void WindowUpdate()
 
 void Raytracing()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
@@ -452,7 +452,8 @@ void Raytracing()
 
 		cmdBuffer->End(2);
 	}
-	cmdBuffer->Submit({ 2 }, {}, {}, {}, transferFence);
+	CommandBuffer::SubmitInfo copySI = { { 2 }, {}, {}, {}, {}, {} };
+	cmdBuffer->Submit({ copySI }, transferFence);
 	transferFence->Wait();
 
 	//Ray tracing descriptor sets and pipeline
@@ -601,7 +602,8 @@ void Raytracing()
 
 				cmdBuffer->End(2);
 			}
-			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
+			CommandBuffer::SubmitInfo si = { { 2 }, {}, {}, {}, {}, {}, };
+			cmdBuffer->Submit({ si }, nullptr);
 		}
 
 		{
@@ -688,9 +690,10 @@ void Raytracing()
 			b2 = Barrier::Create(&bCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b1 });
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
-			
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+			
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 

@@ -310,7 +310,8 @@ void DynamicRendering()
 
 		cmdCopyBuffer->End(0);
 	}
-	cmdCopyBuffer->Submit({ 0 }, {}, {}, { transferSemaphore }, nullptr);
+	CommandBuffer::SubmitInfo copySI = { { 0 }, {}, {}, {}, { transferSemaphore }, {} };
+	cmdCopyBuffer->Submit({ copySI }, nullptr);
 	{
 		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 
@@ -329,7 +330,8 @@ void DynamicRendering()
 
 		cmdBuffer->End(2);
 	}
-	cmdBuffer->Submit({ 2 }, { transferSemaphore }, { PipelineStageBit::TRANSFER_BIT }, {}, transferFence);
+	CommandBuffer::SubmitInfo copy2SI = { { 2 }, { transferSemaphore }, {}, { PipelineStageBit::TRANSFER_BIT }, {}, {} };
+	cmdBuffer->Submit({ copy2SI }, transferFence);
 	transferFence->Wait();
 
 	BufferView::CreateInfo vbViewCI;
@@ -605,9 +607,10 @@ void DynamicRendering()
 			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			BarrierRef barrierPresent = Barrier::Create(&barrierPresentCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
-
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 

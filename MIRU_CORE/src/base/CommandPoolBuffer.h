@@ -61,8 +61,8 @@ namespace base
 			std::vector<base::SemaphoreRef>		waits;
 			std::vector<uint64_t>				waitValues;				//For Semaphore::Type::TIMELINE only.
 			std::vector<base::PipelineStageBit> waitDstPipelineStages;
-			std::vector<uint64_t>				signalValues;			//For Semaphore::Type::TIMELINE only.
 			std::vector<base::SemaphoreRef>		signals;
+			std::vector<uint64_t>				signalValues;			//For Semaphore::Type::TIMELINE only.
 		};
 
 		//Submit2

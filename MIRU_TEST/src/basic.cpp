@@ -325,7 +325,8 @@ void Basic()
 
 		cmdCopyBuffer->End(0);
 	}
-	cmdCopyBuffer->Submit({ 0 }, {}, {}, { transferSemaphore }, nullptr);
+	CommandBuffer::SubmitInfo copySI = { { 0 }, {}, {}, {}, { transferSemaphore }, {} };
+	cmdCopyBuffer->Submit({ copySI }, nullptr);
 	{
 		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 
@@ -344,7 +345,8 @@ void Basic()
 
 		cmdBuffer->End(2);
 	}
-	cmdBuffer->Submit({ 2 }, { transferSemaphore }, { PipelineStageBit::TRANSFER_BIT }, {}, transferFence);
+	CommandBuffer::SubmitInfo copy2SI = { { 2 }, { transferSemaphore }, {}, { PipelineStageBit::TRANSFER_BIT }, {}, {} };
+	cmdBuffer->Submit({ copy2SI }, transferFence);
 	transferFence->Wait();
 
 	BufferView::CreateInfo vbViewCI;
@@ -698,7 +700,8 @@ void Basic()
 
 				cmdBuffer->End(2);
 			}
-			cmdBuffer->Submit({ 2 }, {}, {}, {}, nullptr);
+			CommandBuffer::SubmitInfo si = { { 2 }, {}, {}, {}, {}, {}, };
+			cmdBuffer->Submit({ si }, nullptr);
 		}
 		if (swapchain->m_Resized || windowResize)
 		{
@@ -793,7 +796,9 @@ void Basic()
 			cmdBuffer->Draw(frameIndex, 3);
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
-			cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
 			swapchain->Present(cmdPool, submit, frameIndex);
 
