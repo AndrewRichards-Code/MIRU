@@ -19,35 +19,35 @@ namespace vulkan
 				VkPhysicalDeviceProperties m_Properties;
 				VkPhysicalDeviceMemoryProperties m_MemoryProperties;
 
-				#if defined(VK_KHR_get_physical_device_properties2)
+				//VK_KHR_get_physical_device_properties2
 				VkPhysicalDeviceFeatures2 m_Features2;
 				VkPhysicalDeviceProperties2 m_Properties2;
-				#endif
-				#if defined(VK_KHR_multiview)
-				VkPhysicalDeviceMultiviewFeaturesKHR m_MultivewFeatures;
-				VkPhysicalDeviceMultiviewPropertiesKHR m_MultivewProperties;
-				#endif
-				#if defined(VK_KHR_buffer_device_address)
-				VkPhysicalDeviceBufferDeviceAddressFeatures m_BufferDeviceAddressFeatures;
-				#endif
-				#if defined(VK_KHR_ray_tracing_pipeline)
+				
+				//VK_KHR_ray_tracing_pipeline
 				VkPhysicalDeviceRayTracingPipelineFeaturesKHR m_RayTracingPipelineFeatures;
 				VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_RayTracingPipelineProperties;
-				#endif
-				#if defined(VK_KHR_acceleration_structure)
+				
+				//VK_KHR_acceleration_structure
 				VkPhysicalDeviceAccelerationStructureFeaturesKHR m_AccelerationStructureFeatures;
 				VkPhysicalDeviceAccelerationStructurePropertiesKHR m_AccelerationStructureProperties;
-				#endif
-				#if defined(VK_KHR_timeline_semaphore)
-				VkPhysicalDeviceTimelineSemaphoreFeaturesKHR m_TimelineSemaphoreFeatures;
-				VkPhysicalDeviceTimelineSemaphorePropertiesKHR m_TimelineSemaphoreProperties;
-				#endif
-				#if defined(VK_KHR_synchronization2)
-				VkPhysicalDeviceSynchronization2FeaturesKHR m_Synchronization2Features;
-				#endif
-				#if defined(VK_KHR_dynamic_rendering)
-				VkPhysicalDeviceDynamicRenderingFeaturesKHR m_DynamicRenderingFeatures;
-				#endif
+				
+				//VK_KHR_buffer_device_address
+				VkPhysicalDeviceBufferDeviceAddressFeatures m_BufferDeviceAddressFeatures;
+				
+				//VK_KHR_timeline_semaphore
+				VkPhysicalDeviceTimelineSemaphoreFeatures m_TimelineSemaphoreFeatures;
+				VkPhysicalDeviceTimelineSemaphoreProperties m_TimelineSemaphoreProperties;
+				
+				//VK_KHR_synchronization2
+				VkPhysicalDeviceSynchronization2Features m_Synchronization2Features;
+				
+				//VK_KHR_dynamic_rendering
+				VkPhysicalDeviceDynamicRenderingFeatures m_DynamicRenderingFeatures;
+				
+				//VK_KHR_multiview
+				VkPhysicalDeviceMultiviewFeatures m_MultivewFeatures;
+				VkPhysicalDeviceMultiviewProperties m_MultivewProperties;
+				
 			};
 			std::vector<PhysicalDeviceInfo> m_PDIs;
 
@@ -77,7 +77,8 @@ namespace vulkan
 	private:
 		void AddExtensions();
 		void SetResultInfo();
-		void LoadExtensionPFNs();
+		void LoadInstanceExtensionPFNs();
+		void LoadDeviceExtensionPFNs();
 
 		//Members
 	public:

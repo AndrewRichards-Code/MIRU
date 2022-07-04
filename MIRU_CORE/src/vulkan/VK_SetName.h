@@ -79,11 +79,9 @@ namespace vulkan
 		nameInfo.objectHandle = reinterpret_cast<uint64_t>(objectHandle);
 		nameInfo.pObjectName = name.c_str();
 	
-		if (vkSetDebugUtilsObjectNameEXT)
-			vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
+		vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
 	}
 #else
-	inline PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 	template<class T>
 	static inline void VKSetName(VkDevice& device, const T& objectHandle, const std::string& name) { return; }
 #endif

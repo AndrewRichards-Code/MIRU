@@ -171,7 +171,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 	MIRU_CPU_PROFILE_FUNCTION();
 	
 	std::vector<VkSubmitInfo> vkSubmitInfos;
-	std::vector<VkTimelineSemaphoreSubmitInfoKHR> vkTimelineSemaphoreSubmitInfos;
+	std::vector<VkTimelineSemaphoreSubmitInfo> vkTimelineSemaphoreSubmitInfos;
 	vkSubmitInfos.reserve(submitInfos.size());
 	vkTimelineSemaphoreSubmitInfos.reserve(submitInfos.size());
 
@@ -207,8 +207,8 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 		void* pNext = nullptr;
 		if (!submitInfo.waitValues.empty() || !submitInfo.signalValues.empty())
 		{
-			VkTimelineSemaphoreSubmitInfoKHR vkTimelineSemaphoreSubmitInfo;
-			vkTimelineSemaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR;
+			VkTimelineSemaphoreSubmitInfo vkTimelineSemaphoreSubmitInfo;
+			vkTimelineSemaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
 			vkTimelineSemaphoreSubmitInfo.pNext = nullptr;
 			vkTimelineSemaphoreSubmitInfo.waitSemaphoreValueCount = !submitInfo.waitValues.empty() ? static_cast<uint32_t>(submitInfo.waitValues.size()) : 0;
 			vkTimelineSemaphoreSubmitInfo.pWaitSemaphoreValues = !submitInfo.waitValues.empty() ? submitInfo.waitValues.data() : nullptr;
@@ -244,10 +244,10 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	std::vector<VkSubmitInfo2KHR> vkSubmitInfo2s;
-	std::vector<std::vector<VkSemaphoreSubmitInfoKHR>> vkWaitSemaphoreInfos;
-	std::vector<std::vector<VkCommandBufferSubmitInfoKHR>> vkCommandBufferInfos;
-	std::vector<std::vector<VkSemaphoreSubmitInfoKHR>> vkSignalSemaphoreInfos;
+	std::vector<VkSubmitInfo2> vkSubmitInfo2s;
+	std::vector<std::vector<VkSemaphoreSubmitInfo>> vkWaitSemaphoreInfos;
+	std::vector<std::vector<VkCommandBufferSubmitInfo>> vkCommandBufferInfos;
+	std::vector<std::vector<VkSemaphoreSubmitInfo>> vkSignalSemaphoreInfos;
 	vkSubmitInfo2s.reserve(submitInfo2s.size());
 	vkWaitSemaphoreInfos.reserve(submitInfo2s.size());
 	vkCommandBufferInfos.reserve(submitInfo2s.size());
@@ -258,8 +258,8 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 		vkWaitSemaphoreInfos.push_back({});
 		for (const auto& waitInfo : submitInfo2.waitSemaphoreInfos)
 		{
-			VkSemaphoreSubmitInfoKHR semaphoreSubmitInfo;
-			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR;
+			VkSemaphoreSubmitInfo semaphoreSubmitInfo;
+			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 			semaphoreSubmitInfo.pNext = nullptr;
 			semaphoreSubmitInfo.semaphore = ref_cast<Semaphore>(waitInfo.semaphore)->m_Semaphore;
 			semaphoreSubmitInfo.value = waitInfo.value;
@@ -271,8 +271,8 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 		vkCommandBufferInfos.push_back({});
 		for (const auto& commandBufferInfo : submitInfo2.commandBufferInfos)
 		{
-			VkCommandBufferSubmitInfoKHR commandBufferSubmitInfo;
-			commandBufferSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO_KHR;
+			VkCommandBufferSubmitInfo commandBufferSubmitInfo;
+			commandBufferSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
 			commandBufferSubmitInfo.pNext = nullptr;
 			commandBufferSubmitInfo.commandBuffer = m_CmdBuffers[commandBufferInfo.index];
 			commandBufferSubmitInfo.deviceMask = commandBufferInfo.deviceMask;
@@ -281,8 +281,8 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 		vkSignalSemaphoreInfos.push_back({});
 		for (const auto& signalInfo : submitInfo2.signalSemaphoreInfos)
 		{
-			VkSemaphoreSubmitInfoKHR semaphoreSubmitInfo;
-			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR;
+			VkSemaphoreSubmitInfo semaphoreSubmitInfo;
+			semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 			semaphoreSubmitInfo.pNext = nullptr;
 			semaphoreSubmitInfo.semaphore = ref_cast<Semaphore>(signalInfo.semaphore)->m_Semaphore;
 			semaphoreSubmitInfo.value = signalInfo.value;
@@ -291,8 +291,8 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 			vkSignalSemaphoreInfos.back().push_back(semaphoreSubmitInfo);
 		}
 
-		VkSubmitInfo2KHR vkSubmitInfo2;
-		vkSubmitInfo2.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR;
+		VkSubmitInfo2 vkSubmitInfo2;
+		vkSubmitInfo2.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
 		vkSubmitInfo2.pNext = nullptr;
 		vkSubmitInfo2.flags = 0;
 		vkSubmitInfo2.waitSemaphoreInfoCount = static_cast<uint32_t>(vkWaitSemaphoreInfos.back().size());
@@ -310,7 +310,7 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
-	vkQueueSubmit2KHR(queue, static_cast<uint32_t>(vkSubmitInfo2s.size()), vkSubmitInfo2s.data(), vkFence);
+	vkQueueSubmit2(queue, static_cast<uint32_t>(vkSubmitInfo2s.size()), vkSubmitInfo2s.data(), vkFence);
 }
 
 void CommandBuffer::SetEvent(uint32_t index, const base::EventRef& event, base::PipelineStageBit pipelineStage)
@@ -425,8 +425,8 @@ void CommandBuffer::PipelineBarrier2(uint32_t index, const base::CommandBuffer::
 		}
 	}
 
-	VkDependencyInfoKHR vkDependencyInfo;
-	vkDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR;
+	VkDependencyInfo vkDependencyInfo;
+	vkDependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
 	vkDependencyInfo.pNext = nullptr;
 	vkDependencyInfo.dependencyFlags = static_cast<VkDependencyFlags>(dependencyInfo.dependencies);
 	vkDependencyInfo.memoryBarrierCount = static_cast<uint32_t>(vkMemoryBarriers.size());
@@ -436,7 +436,7 @@ void CommandBuffer::PipelineBarrier2(uint32_t index, const base::CommandBuffer::
 	vkDependencyInfo.imageMemoryBarrierCount = static_cast<uint32_t>(vkImageBarriers.size());
 	vkDependencyInfo.pImageMemoryBarriers = vkImageBarriers.data();
 	
-	vkCmdPipelineBarrier2KHR(m_CmdBuffers[index], &vkDependencyInfo);
+	vkCmdPipelineBarrier2(m_CmdBuffers[index], &vkDependencyInfo);
 }
 
 void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
@@ -536,10 +536,10 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	auto RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR = [](const base::RenderingAttachmentInfo& renderingAttachment) -> VkRenderingAttachmentInfoKHR
+	auto RenderingAttachmentInfo_To_VkRenderingAttachmentInfo = [](const base::RenderingAttachmentInfo& renderingAttachment) -> VkRenderingAttachmentInfo
 	{
-		VkRenderingAttachmentInfoKHR vkRenderingAttachment;
-		vkRenderingAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		VkRenderingAttachmentInfo vkRenderingAttachment;
+		vkRenderingAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 		vkRenderingAttachment.pNext = nullptr;
 		vkRenderingAttachment.imageView = ref_cast<ImageView>(renderingAttachment.imageView)->m_ImageView;
 		vkRenderingAttachment.imageLayout = static_cast<VkImageLayout>(renderingAttachment.imageLayout);
@@ -553,23 +553,23 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 		return vkRenderingAttachment;
 	};
 
-	std::vector<VkRenderingAttachmentInfoKHR> vkColourAttachments;
+	std::vector<VkRenderingAttachmentInfo> vkColourAttachments;
 	vkColourAttachments.reserve(renderingInfo.colourAttachments.size());
 	for (const auto& colourAttachment : renderingInfo.colourAttachments)
-		vkColourAttachments.push_back(RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(colourAttachment));
+		vkColourAttachments.push_back(RenderingAttachmentInfo_To_VkRenderingAttachmentInfo(colourAttachment));
 
-	VkRenderingAttachmentInfoKHR vkDepthAttachment;
+	VkRenderingAttachmentInfo vkDepthAttachment;
 	if (renderingInfo.pDepthAttachment)
-		vkDepthAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(*renderingInfo.pDepthAttachment);
+		vkDepthAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfo(*renderingInfo.pDepthAttachment);
 
-	VkRenderingAttachmentInfoKHR vkStencilAttachment;
+	VkRenderingAttachmentInfo vkStencilAttachment;
 	if (renderingInfo.pStencilAttachment)
-		vkStencilAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfoKHR(*renderingInfo.pStencilAttachment);
+		vkStencilAttachment = RenderingAttachmentInfo_To_VkRenderingAttachmentInfo(*renderingInfo.pStencilAttachment);
 
-	VkRenderingInfoKHR vkRenderingInfo;
-	vkRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+	VkRenderingInfo vkRenderingInfo;
+	vkRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 	vkRenderingInfo.pNext = nullptr;
-	vkRenderingInfo.flags = static_cast<VkRenderingFlagsKHR>(renderingInfo.flags);
+	vkRenderingInfo.flags = static_cast<VkRenderingFlags>(renderingInfo.flags);
 	vkRenderingInfo.renderArea.offset.x = renderingInfo.renderArea.offset.x;
 	vkRenderingInfo.renderArea.offset.y = renderingInfo.renderArea.offset.y;
 	vkRenderingInfo.renderArea.extent.width = renderingInfo.renderArea.extent.width;
@@ -581,7 +581,7 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 	vkRenderingInfo.pDepthAttachment = renderingInfo.pDepthAttachment ? &vkDepthAttachment : nullptr;
 	vkRenderingInfo.pStencilAttachment = renderingInfo.pStencilAttachment ? &vkStencilAttachment : nullptr;
 
-	vkCmdBeginRenderingKHR(m_CmdBuffers[index], &vkRenderingInfo);
+	vkCmdBeginRendering(m_CmdBuffers[index], &vkRenderingInfo);
 }
 
 void CommandBuffer::EndRendering(uint32_t index)
@@ -589,7 +589,7 @@ void CommandBuffer::EndRendering(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdEndRenderingKHR(m_CmdBuffers[index]);
+	vkCmdEndRendering(m_CmdBuffers[index]);
 }
 
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<base::BufferViewRef>& vertexBufferViews)
