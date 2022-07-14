@@ -72,9 +72,9 @@ DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, co
 		info.pNext = nullptr;
 		info.accelerationStructure = ref_cast<vulkan::AccelerationStructure>(accelerationStructure)->m_AS;
 		return vulkan::vkGetAccelerationStructureDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
-#else
+		#else
 		return 0;
-#endif
+		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
 		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
@@ -97,7 +97,7 @@ DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const BufferRef& 
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 		info.pNext = nullptr;
 		info.buffer = ref_cast<vulkan::Buffer>(buffer)->m_Buffer;
-		return vulkan::vkGetBufferDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
+		return vulkan::vkGetBufferDeviceAddress(*reinterpret_cast<VkDevice*>(device), &info);
 		#else
 		return 0;
 		#endif

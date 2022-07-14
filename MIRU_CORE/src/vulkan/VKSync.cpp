@@ -78,7 +78,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	m_SemaphoreTypeCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO_KHR;
+	m_SemaphoreTypeCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
 	m_SemaphoreTypeCI.pNext = nullptr;
 	m_SemaphoreTypeCI.semaphoreType = static_cast<VkSemaphoreType>(m_CI.type);
 	m_SemaphoreTypeCI.initialValue = 0;
@@ -104,8 +104,8 @@ void Semaphore::Signal(uint64_t value)
 
 	if (m_CI.type == Type::TIMELINE)
 	{
-		VkSemaphoreSignalInfoKHR signalInfo;
-		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO_KHR;
+		VkSemaphoreSignalInfo signalInfo;
+		signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO;
 		signalInfo.pNext = nullptr;
 		signalInfo.semaphore = m_Semaphore;
 		signalInfo.value = value;
@@ -124,8 +124,8 @@ bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 
 	if (m_CI.type == Type::TIMELINE)
 	{
-		VkSemaphoreWaitInfoKHR waitInfo;
-		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO_KHR;
+		VkSemaphoreWaitInfo waitInfo;
+		waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
 		waitInfo.pNext = nullptr;
 		waitInfo.flags = 0;
 		waitInfo.semaphoreCount = 1;
@@ -284,7 +284,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	if (m_CI.type == Barrier::Type::MEMORY)
 	{
 
-		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2_KHR;
+		m_MB.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2;
 		m_MB.pNext = nullptr;
 		m_MB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_MB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -293,7 +293,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == Barrier::Type::BUFFER)
 	{
-		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2_KHR;
+		m_BMB.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
 		m_BMB.pNext = nullptr;
 		m_BMB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_BMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);
@@ -307,7 +307,7 @@ Barrier2::Barrier2(Barrier2::CreateInfo* pCreateInfo)
 	}
 	else if (m_CI.type == Barrier::Type::IMAGE)
 	{
-		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2_KHR;
+		m_IMB.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
 		m_IMB.pNext = nullptr;
 		m_IMB.srcStageMask = static_cast<VkPipelineStageFlags2>(m_CI.srcStageMask);
 		m_IMB.srcAccessMask = static_cast<VkAccessFlagBits>(m_CI.srcAccess);

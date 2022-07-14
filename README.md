@@ -20,6 +20,11 @@ This repository is under active development and is not currently intended for co
 - Built-in support for graphics debuggers.
 - Assign debug names to low level primitives.
 - Ray Tracing support via DXR for D3D12 and via VK_KHR_acceleration_structure/VK_KHR_ray_tracing_pipeline for Vulkan.
+- Dynamic Rendering for executing render commands without RenderPasses and Framebuffers (D3D12: Core, Vulkan: VK_KHR_dynamic_rendering).
+- Timeline Semaphores for D3D12 style sychronisation primitives (D3D12: Core, Vulkan: VK_KHR_timeline_semaphore).
+- Synchronisation 2 for easier management of resource transitions and submissions (D3D12: Core(Enhanced Barriers), Vulkan: VK_KHR_synchronization2) - WIP.
+- ViewInstancing/Multiview supports rendering to multiple views in a single draw call, through the use of SV_ViewID in shaders (D3D12 is limited to a maximum of 4 views).
+- Shader Viewport Index Layer allows the usage of SV_RenderTargetArrayIndex and SV_ViewportArrayIndex from the vertex shader stage.
 
 ## Known issues and features to test/implement:
 - Draw/Dispatch commands using indirect buffers.
@@ -35,13 +40,12 @@ This repository is under active development and is not currently intended for co
 - Sparse and Aliased resources?
 - Other idiosyncratic differences between D3D12 and Vulkan.
 - Video Encode and Decode.
-- VK_KHR_dynamic_rendering for rendering without RenderPasses and Framebuffers.
 
 ## Supports:
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2108.18, RenderDoc v1.16
+- Graphics Debuggers: Pix 2203.30, RenderDoc v1.20
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
@@ -71,6 +75,7 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Toolset: v143 
 - Windows SDK: 10.0.22000.0
 - ISO C++ 20
+- Vulkan SDK 1.3
 - Microsoft.Windows.CppWinRT NuGet package (For MIRU_TEST_UWP only)
 
 ### Linux x64:

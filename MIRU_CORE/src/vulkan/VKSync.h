@@ -42,7 +42,7 @@ namespace vulkan
 
 		VkSemaphore m_Semaphore;
 		VkSemaphoreCreateInfo m_SemaphoreCI;
-		VkSemaphoreTypeCreateInfoKHR m_SemaphoreTypeCI;
+		VkSemaphoreTypeCreateInfo m_SemaphoreTypeCI;
 	};
 
 	class Event final : public base::Event
@@ -87,9 +87,9 @@ namespace vulkan
 
 		//Members
 	public:
-		VkMemoryBarrier2KHR m_MB = {};
-		VkBufferMemoryBarrier2KHR m_BMB = {};
-		VkImageMemoryBarrier2KHR m_IMB = {};
+		VkMemoryBarrier2 m_MB = {};
+		VkBufferMemoryBarrier2 m_BMB = {};
+		VkImageMemoryBarrier2 m_IMB = {};
 	};
 }
 }

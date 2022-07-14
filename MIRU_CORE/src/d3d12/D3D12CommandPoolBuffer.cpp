@@ -230,7 +230,15 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 		size_t waitIndex = 0;
 		for (auto& wait : submitInfo.waits)
 		{
-			const uint64_t& value = wait->GetCreateInfo().type == Semaphore::Type::TIMELINE ? submitInfo.waitValues[waitIndex] : ref_cast<Semaphore>(wait)->GetValue();
+			uint64_t value = 0;
+			if (wait->GetCreateInfo().type == Semaphore::Type::TIMELINE)
+			{
+				value = submitInfo.waitValues[waitIndex];
+			}
+			else
+			{
+				value = ref_cast<Semaphore>(wait)->GetValue();
+			}
 			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
 			waitIndex++;
 		}
@@ -245,7 +253,16 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 		size_t signalIndex = 0;
 		for (auto& signal : submitInfo.signals)
 		{
-			const uint64_t& value = signal->GetCreateInfo().type == Semaphore::Type::TIMELINE ? submitInfo.signalValues[signalIndex] : ref_cast<Semaphore>(signal)->GetValue()++;
+			uint64_t value = 0;
+			if (signal->GetCreateInfo().type == Semaphore::Type::TIMELINE)
+			{
+				value = submitInfo.signalValues[waitIndex];
+			}
+			else
+			{
+				ref_cast<Semaphore>(signal)->GetValue()++;
+				value = ref_cast<Semaphore>(signal)->GetValue();
+			}
 			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 			signalIndex++;
 		}
@@ -270,7 +287,15 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 		for (auto& waitSemaphoreInfo : submitInfo.waitSemaphoreInfos)
 		{
 			const base::SemaphoreRef& wait = waitSemaphoreInfo.semaphore;
-			const uint64_t& value = wait->GetCreateInfo().type == Semaphore::Type::TIMELINE ? waitSemaphoreInfo.value : ref_cast<Semaphore>(wait)->GetValue();
+			uint64_t value = 0;
+			if (wait->GetCreateInfo().type == Semaphore::Type::TIMELINE)
+			{
+				value = waitSemaphoreInfo.value;
+			}
+			else
+			{
+				value = ref_cast<Semaphore>(wait)->GetValue();
+			}
 			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
 		}
 
@@ -284,7 +309,16 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 		for (auto& signalSemaphoreInfo : submitInfo.signalSemaphoreInfos)
 		{
 			const base::SemaphoreRef& signal = signalSemaphoreInfo.semaphore;
-			const uint64_t& value = signal->GetCreateInfo().type == Semaphore::Type::TIMELINE ? signalSemaphoreInfo.value : ref_cast<Semaphore>(signal)->GetValue()++;
+			uint64_t value = 0;
+			if (signal->GetCreateInfo().type == Semaphore::Type::TIMELINE)
+			{
+				value = signalSemaphoreInfo.value;
+			}
+			else
+			{
+				ref_cast<Semaphore>(signal)->GetValue()++;
+				value = ref_cast<Semaphore>(signal)->GetValue();
+			}
 			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 		}
 	}
