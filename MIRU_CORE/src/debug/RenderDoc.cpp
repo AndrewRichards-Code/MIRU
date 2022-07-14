@@ -37,6 +37,7 @@ void RenderDoc::LoadRenderDoc()
 		LPWSTR programFilesPath;
 		SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, 0, &programFilesPath);
 		s_RenderDocFullpath = arc::ToString(programFilesPath);
+		CoTaskMemFree(programFilesPath);
 		s_RenderDocFullpath /= "RenderDoc";
 		s_RenderDocFullpath /= "renderdoc.dll";
 	#elif defined(__ANDROID__)

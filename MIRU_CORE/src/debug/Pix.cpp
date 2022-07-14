@@ -76,6 +76,7 @@ void Pix::LoadWinPixGpuCapturer()
 		LPWSTR programFilesPath;
 		SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, 0, &programFilesPath);
 		s_WinPixGpuCapturerFullpath = arc::ToString(programFilesPath);
+		CoTaskMemFree(programFilesPath);
 		s_WinPixGpuCapturerFullpath /= "Microsoft PIX";
 		std::filesystem::path pixVersionFolder;
 		for (auto const& directory : std::filesystem::directory_iterator(s_WinPixGpuCapturerFullpath))
