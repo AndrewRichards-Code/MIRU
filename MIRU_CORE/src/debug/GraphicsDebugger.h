@@ -15,7 +15,7 @@ namespace debug
 		};
 
 	public:
-		~GraphicsDebugger() = default;
+		virtual ~GraphicsDebugger() = default;
 
 		const DebuggerType& GetDebuggerType() { return m_Debugger; }
 
