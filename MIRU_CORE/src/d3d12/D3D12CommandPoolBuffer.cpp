@@ -838,7 +838,7 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 		D3D12_CPU_DESCRIPTOR_HANDLE& DSVDescHandle = imageView->m_DSVDescHandle;
 		if (!DSVDescHandle.ptr)
 		{
-			DSVDescHandle.ptr = renderingResource.DSV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + renderingResource.RTV_DescriptorOffset;
+			DSVDescHandle.ptr = renderingResource.DSV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + renderingResource.DSV_DescriptorOffset;
 			m_Device->CreateDepthStencilView(image->m_Image, &(imageView->m_DSVDesc), DSVDescHandle);
 			renderingResource.DSV_DescriptorOffset += DSV_DescriptorSize;
 		}
