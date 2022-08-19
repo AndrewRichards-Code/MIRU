@@ -191,7 +191,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				if (errors != nullptr && errors->GetStringLength() != 0)
 				{
 					char* s = (char*)errors->GetStringPointer();
-					MIRU_PRINTF("%s", s);
+					MIRU_WARN(true, s);
 				}
 				MIRU_D3D12_SAFE_RELEASE(errorsName);
 				MIRU_D3D12_SAFE_RELEASE(errors);

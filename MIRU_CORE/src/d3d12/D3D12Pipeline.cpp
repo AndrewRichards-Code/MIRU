@@ -731,7 +731,8 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const base::Pipeline::Pipe
 	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, rootSignatureData.HighestVersion, &result.serializedRootSignature, &result.serializedRootSignatureError);
 	if (result.serializedRootSignatureError)
 	{
-		MIRU_PRINTF("ERROR: D3D12: Error in serialising RootSignature: %s", (char*)result.serializedRootSignatureError->GetBufferPointer());
+		std::string errorStr = std::string((char*)result.serializedRootSignatureError->GetBufferPointer());
+		MIRU_ERROR(true, "ERROR: D3D12: Error in serialising RootSignature: " + errorStr);
 	}
 	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
 	MIRU_ASSERT(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");

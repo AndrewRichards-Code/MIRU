@@ -271,7 +271,6 @@ namespace miru
 #include "ARC/src/DebugMacros.h"
 
 #include "ARC/src/Log.h"
-#define MIRU_PRINTF ARC_PRINTF
 
 inline arc::Log MiruCoreLog("MIRU_CORE");
 #ifdef ARC_LOG_INSTANCE
