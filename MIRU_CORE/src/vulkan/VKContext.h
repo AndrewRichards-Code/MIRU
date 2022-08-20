@@ -74,6 +74,8 @@ namespace vulkan
 
 		static bool IsActive(std::vector<const char*> list, const char* name);
 
+		static VkBool32 MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+
 	private:
 		void AddExtensions();
 		void SetResultInfo();
@@ -90,6 +92,10 @@ namespace vulkan
 		std::vector<std::string> m_InstanceExtensions;
 		std::vector<const char*> m_ActiveInstanceLayers;
 		std::vector<const char*> m_ActiveInstanceExtensions;
+
+		//DebugMessenger
+		VkDebugUtilsMessengerCreateInfoEXT m_DebugUtilsMessengerCI;
+		VkDebugUtilsMessengerEXT m_DebugUtilsMessenger;
 
 		//Device
 		VkDevice m_Device;

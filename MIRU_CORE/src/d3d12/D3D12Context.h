@@ -77,11 +77,18 @@ namespace d3d12
 		void* GetDevice() override { return m_Device; }
 		void DeviceWaitIdle() override;
 
+		static void MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext);
+
+		static std::string D3D12_MESSAGE_CATEGORY_ToString(D3D12_MESSAGE_CATEGORY Category);
+		static std::string D3D12_MESSAGE_SEVERITY_ToString(D3D12_MESSAGE_SEVERITY Severity);
+		static std::string D3D12_MESSAGE_ID_ToString(D3D12_MESSAGE_ID ID);
+
 		//Member
 	public:
 		//Debug
 		ID3D12Debug* m_Debug;
 		ID3D12InfoQueue* m_InfoQueue;
+		DWORD m_CallbackCookie;
 
 		//Factory
 		IDXGIFactory4* m_Factory;

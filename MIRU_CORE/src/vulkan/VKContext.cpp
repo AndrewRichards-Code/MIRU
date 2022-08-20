@@ -102,6 +102,20 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Load Instance Extension PFN
 	LoadInstanceExtensionPFNs();
 
+	//Debug Messenger Callback
+	if (IsActive(m_ActiveInstanceExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+	{
+		m_DebugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		m_DebugUtilsMessengerCI.pNext = nullptr;
+		m_DebugUtilsMessengerCI.flags = 0;
+		m_DebugUtilsMessengerCI.messageSeverity = /*VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |*/ VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		m_DebugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		m_DebugUtilsMessengerCI.pfnUserCallback = MessageCallbackFunction;
+		m_DebugUtilsMessengerCI.pUserData = this;
+
+		vkCreateDebugUtilsMessengerEXT(m_Instance, &m_DebugUtilsMessengerCI, nullptr, &m_DebugUtilsMessenger);
+	}
+
 	//PhysicalDevice
 	m_PhysicalDevices = PhysicalDevices(m_Instance, apiVersion);
 	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice; //We only use the first PhysicalDevice
@@ -216,6 +230,9 @@ Context::~Context()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	if (IsActive(m_ActiveInstanceExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
+		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugUtilsMessenger, nullptr);
+
 	vkDestroyDevice(m_Device, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 }
@@ -232,6 +249,77 @@ bool Context::IsActive(std::vector<const char*> list, const char* name)
 		}
 	}
 	return found;
+}
+
+VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+{
+	auto GetMessageSeverityString = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity)->std::string
+	{
+		bool separator = false;
+
+		std::string msg_flags;
+		if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT))
+		{
+			msg_flags += "VERBOSE";
+			separator = true;
+		}
+		if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT))
+		{
+			if (separator) 
+				msg_flags += ",";
+			msg_flags += "INFO";
+			separator = true;
+		}
+		if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
+		{
+			if (separator) 
+				msg_flags += ",";
+			msg_flags += "WARN";
+			separator = true;
+		}
+		if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
+		{
+			if (separator) 
+				msg_flags += ",";
+			msg_flags += "ERROR";
+		}
+		return msg_flags;
+	};
+	auto GetMessageTypeString = [](VkDebugUtilsMessageTypeFlagBitsEXT messageType)->std::string
+	{
+		bool separator = false;
+
+		std::string msg_flags;
+		if (arc::BitwiseCheck(messageType, VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT))
+		{
+			msg_flags += "GEN";
+			separator = true;
+		}
+		if (arc::BitwiseCheck(messageType, VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT))
+		{
+			if (separator)
+				msg_flags += ",";
+			msg_flags += "SPEC";
+			separator = true;
+		}
+		if (arc::BitwiseCheck(messageType, VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+		{
+			if (separator)
+				msg_flags += ",";
+			msg_flags += "PERF";
+		}
+		return msg_flags;
+	};
+
+	std::string messageSeverityStr = GetMessageSeverityString(messageSeverity);
+	std::string messageTypeStr = GetMessageTypeString(VkDebugUtilsMessageTypeFlagBitsEXT(messageType));
+
+	std::stringstream errorMessage;
+	errorMessage << pCallbackData->pMessageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessage;
+	std::string errorMessageStr = errorMessage.str();
+
+	MIRU_ASSERT(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	return VkBool32();
 }
 
 void Context::AddExtensions()
