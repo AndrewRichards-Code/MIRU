@@ -318,7 +318,7 @@ VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT
 	errorMessage << pCallbackData->pMessageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessage;
 	std::string errorMessageStr = errorMessage.str();
 
-	MIRU_ASSERT(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	MIRU_ERROR(pCallbackData->messageIdNumber, errorMessageStr.c_str());
 	return VkBool32();
 }
 

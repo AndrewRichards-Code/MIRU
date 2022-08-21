@@ -202,7 +202,7 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 	errorMessage << "D3D12 " << severity << ": " << description << " [ " << severity << " " << category << " #" << uint32_t(ID) << ": " << id << " ]";
 	std::string errorMessageStr = errorMessage.str();
 
-	MIRU_ASSERT(uint32_t(ID), errorMessageStr.c_str());
+	MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
 }
 
 std::string Context::D3D12_MESSAGE_CATEGORY_ToString(D3D12_MESSAGE_CATEGORY Category)
@@ -224,6 +224,7 @@ std::string Context::D3D12_MESSAGE_CATEGORY_ToString(D3D12_MESSAGE_CATEGORY Cate
 
 	return D3D12_MESSAGE_CATEGORY_ToStringMapping[size_t(Category)];
 }
+
 std::string Context::D3D12_MESSAGE_SEVERITY_ToString(D3D12_MESSAGE_SEVERITY Severity)
 {
 	std::vector<std::string> D3D12_MESSAGE_SEVERITY_ToStringMapping =
@@ -237,6 +238,7 @@ std::string Context::D3D12_MESSAGE_SEVERITY_ToString(D3D12_MESSAGE_SEVERITY Seve
 
 	return D3D12_MESSAGE_SEVERITY_ToStringMapping[size_t(Severity)];
 }
+
 std::string Context::D3D12_MESSAGE_ID_ToString(D3D12_MESSAGE_ID ID)
 {
 	std::map<size_t, std::string> D3D12_MESSAGE_ID_ToStringMapping =
