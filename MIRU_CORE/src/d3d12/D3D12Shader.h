@@ -21,6 +21,7 @@ namespace d3d12
 			const std::vector<std::pair<base::Shader::StageBit, std::string>>& stageAndEntryPoints,
 			std::vector<base::Shader::VertexShaderInputAttributeDescription>& VSIADs,
 			std::vector<base::Shader::PixelShaderOutputAttributeDescription>& PSOADs,
+			std::array<uint32_t, 3>& ThreadGroupSizeXYZ,
 			std::map<uint32_t, std::map<uint32_t, base::Shader::ResourceBindingDescription>>& RBDs);
 
 		//Members

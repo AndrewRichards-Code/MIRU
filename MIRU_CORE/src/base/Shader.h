@@ -120,6 +120,7 @@ namespace base
 
 		std::vector<VertexShaderInputAttributeDescription> m_VSIADs;
 		std::vector<PixelShaderOutputAttributeDescription> m_PSOADs;
+		std::array<uint32_t, 3> m_ThreadGroupSizeXYZ;
 
 		//Key is the set number
 		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
