@@ -100,6 +100,7 @@ namespace base
 		virtual void GetShaderResources() = 0;
 		const std::vector<VertexShaderInputAttributeDescription>& GetVSIADs() const { return m_VSIADs; };
 		const std::vector<PixelShaderOutputAttributeDescription>& GetPSOADs() const { return m_PSOADs; };
+		const std::array<uint32_t, 3>& GetThreadGroupSizeXYZ() const { return m_ThreadGroupSizeXYZ; };
 		const std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
 
 	public:

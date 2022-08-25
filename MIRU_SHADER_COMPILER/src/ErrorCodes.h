@@ -52,7 +52,7 @@ namespace shader_compiler
 }
 
 //MIRU printf
-#define MIRU_SHADER_COMPILER_PRINTF(fmt, ...) if(output) { ARC_PRINTF(fmt, __VA_ARGS__); }
+#define MIRU_SHADER_COMPILER_PRINTF(fmt, ...) if(output) { printf(fmt, __VA_ARGS__); }
 
 //Log error code
 inline arc::Log MiruShaderCompilerLog("MIRU_SHADER_COMPILER");
