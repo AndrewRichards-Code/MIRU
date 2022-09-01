@@ -1,0 +1,40 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion "28.0.1"
+    ndkVersion MSBUILD_NDK_VERSION
+    defaultConfig {
+        applicationId "com.miru.mirutest"
+        minSdkVersion MSBUILD_MIN_SDK_VERSION
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            debuggable true
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs += [MSBUILD_JNI_LIBS_SRC_DIR]
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = MSBUILD_ANDROID_OUTPUT_APK_NAME
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+}
+
+buildDir = MSBUILD_ANDROID_GRADLE_BUILD_OUTPUT_DIR

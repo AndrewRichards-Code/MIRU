@@ -1,5 +1,0 @@
-NOTICE OF MODICATIONS:
-File: vulkan_wrapper.cpp
-Modification: Remove references to VK_NV_ray_tracing
-Reason: Failure to compiled.
-Licence: Apache 2.0
