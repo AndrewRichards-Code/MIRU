@@ -3,11 +3,16 @@
 //Platform usage
 #if defined(_WIN64)
 #define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
+#if defined(__ANDROID__)
+#define VK_USE_PLATFORM_ANDROID_KHR
+#endif
 
 //Vulkan Header
 #include "vulkan/vulkan.h"
 
-#if !defined(VK_VERSION_1_3)
+#if defined(VK_USE_PLATFORM_WIN32_KHR) && !defined(VK_VERSION_1_3)
 #error Please update Vulkan SDK to version 1.3 or later. Download from https://vulkan.lunarg.com/sdk/home.
 #endif
 
@@ -17,22 +22,22 @@
 //SPIR-V Cross Core
 #include "SPIRV-Cross/spirv_cross.hpp"
 
-#elif defined(__ANDROID__)
-#if !defined( VK_USE_PLATFORM_ANDROID_KHR)
-#define VK_USE_PLATFORM_ANDROID_KHR
-#endif
-
-//Header and Library
-#include "vulkan_wrapper.h"
-
-//Spirv-cross Header and Library
-#include "spirv_cross/Include/spirv_cross.hpp"
-
+//Internal Version
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+#define MIRU_VK_API_VERSION_1_3 1
+#define MIRU_VK_API_VERSION_1_2	1
+#define MIRU_VK_API_VERSION_1_1	1
+#define MIRU_VK_API_VERSION_1_0	1
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
+#define MIRU_VK_API_VERSION_1_3 0
+#define MIRU_VK_API_VERSION_1_2	0
+#define MIRU_VK_API_VERSION_1_1	1
+#define MIRU_VK_API_VERSION_1_0	1
 #endif
 
 //Vulkan Extension
-#define MIRU_PFN_DEFINITION(fn) inline PFN_##fn fn = ::fn
-#define MIRU_PFN_DEFINITION_NO_INIT(fn) inline PFN_##fn fn
+#define MIRU_PFN_DEFINITION_LOAD(fn) inline PFN_##fn fn = ::fn
+#define MIRU_PFN_DEFINITION_NULL(fn) inline PFN_##fn fn = nullptr
 #define MIRU_PFN_VK_GET_INSTANCE_PROC_ADDR(fn)\
 if(!fn)\
 {\
@@ -55,15 +60,23 @@ namespace miru
 		//Current Extensions
 
 		//VK_KHR_get_physical_device_properties2 - Promoted to Vulkan 1.1
-
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceFeatures2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceFormatProperties2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceImageFormatProperties2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceMemoryProperties2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceProperties2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceQueueFamilyProperties2);
-		MIRU_PFN_DEFINITION(vkGetPhysicalDeviceSparseImageFormatProperties2);
-
+#if !defined(MIRU_VK_API_VERSION_1_1)
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFeatures2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFormatProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceImageFormatProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceMemoryProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceQueueFamilyProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceSparseImageFormatProperties2);
+#else
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFeatures2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFormatProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceImageFormatProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceMemoryProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceQueueFamilyProperties2);
+		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceSparseImageFormatProperties2);
+#endif
 		inline bool LoadPFN_VK_KHR_get_physical_device_properties2(VkInstance& instance)
 		{
 			MIRU_PFN_VK_GET_INSTANCE_PROC_ADDR(vkGetPhysicalDeviceFeatures2);
@@ -79,17 +92,17 @@ namespace miru
 
 		//VK_EXT_debug_utils - Requires support for Vulkan 1.0
 
-		MIRU_PFN_DEFINITION_NO_INIT(vkSetDebugUtilsObjectNameEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkSetDebugUtilsObjectTagEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkQueueBeginDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkQueueEndDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkQueueInsertDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdBeginDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdEndDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdInsertDebugUtilsLabelEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCreateDebugUtilsMessengerEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkDestroyDebugUtilsMessengerEXT);
-		MIRU_PFN_DEFINITION_NO_INIT(vkSubmitDebugUtilsMessageEXT);
+		MIRU_PFN_DEFINITION_NULL(vkSetDebugUtilsObjectNameEXT);
+		MIRU_PFN_DEFINITION_NULL(vkSetDebugUtilsObjectTagEXT);
+		MIRU_PFN_DEFINITION_NULL(vkQueueBeginDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkQueueEndDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkQueueInsertDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCmdBeginDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCmdEndDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCmdInsertDebugUtilsLabelEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCreateDebugUtilsMessengerEXT);
+		MIRU_PFN_DEFINITION_NULL(vkDestroyDebugUtilsMessengerEXT);
+		MIRU_PFN_DEFINITION_NULL(vkSubmitDebugUtilsMessageEXT);
 
 		inline bool LoadPFN_VK_EXT_debug_utils(VkInstance& instance)
 		{
@@ -110,13 +123,13 @@ namespace miru
 
 		//VK_KHR_ray_tracing_pipeline - Requires support for Vulkan 1.1
 
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdTraceRaysKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCreateRayTracingPipelinesKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdTraceRaysIndirectKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetRayTracingShaderGroupStackSizeKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdSetRayTracingPipelineStackSizeKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetRayTracingShaderGroupHandlesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdTraceRaysKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCreateRayTracingPipelinesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdTraceRaysIndirectKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetRayTracingShaderGroupStackSizeKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdSetRayTracingPipelineStackSizeKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetRayTracingShaderGroupHandlesKHR);
 
 		inline bool LoadPFN_VK_KHR_ray_tracing_pipeline(VkDevice& device)
 		{
@@ -133,22 +146,22 @@ namespace miru
 
 		//VK_KHR_acceleration_structure - Requires support for Vulkan 1.1
 
-		MIRU_PFN_DEFINITION_NO_INIT(vkCreateAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkDestroyAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdBuildAccelerationStructuresKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdBuildAccelerationStructuresIndirectKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkBuildAccelerationStructuresKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCopyAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCopyAccelerationStructureToMemoryKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCopyMemoryToAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkWriteAccelerationStructuresPropertiesKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdCopyAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdCopyAccelerationStructureToMemoryKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdCopyMemoryToAccelerationStructureKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetAccelerationStructureDeviceAddressKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkCmdWriteAccelerationStructuresPropertiesKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetDeviceAccelerationStructureCompatibilityKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetAccelerationStructureBuildSizesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCreateAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkDestroyAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdBuildAccelerationStructuresKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdBuildAccelerationStructuresIndirectKHR);
+		MIRU_PFN_DEFINITION_NULL(vkBuildAccelerationStructuresKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCopyAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCopyAccelerationStructureToMemoryKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCopyMemoryToAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkWriteAccelerationStructuresPropertiesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdCopyAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdCopyAccelerationStructureToMemoryKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdCopyMemoryToAccelerationStructureKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetAccelerationStructureDeviceAddressKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCmdWriteAccelerationStructuresPropertiesKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetDeviceAccelerationStructureCompatibilityKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetAccelerationStructureBuildSizesKHR);
 
 		inline bool LoadPFN_VK_KHR_acceleration_structure(VkDevice& device)
 		{
@@ -173,11 +186,15 @@ namespace miru
 		}
 
 		//VK_KHR_buffer_device_address - Promoted to Vulkan 1.2
-
-		MIRU_PFN_DEFINITION(vkGetBufferDeviceAddress);
-		MIRU_PFN_DEFINITION(vkGetBufferOpaqueCaptureAddress);
-		MIRU_PFN_DEFINITION(vkGetDeviceMemoryOpaqueCaptureAddress);
-
+#if !defined(MIRU_VK_API_VERSION_1_2)
+		MIRU_PFN_DEFINITION_LOAD(vkGetBufferDeviceAddress);
+		MIRU_PFN_DEFINITION_LOAD(vkGetBufferOpaqueCaptureAddress);
+		MIRU_PFN_DEFINITION_LOAD(vkGetDeviceMemoryOpaqueCaptureAddress);
+#else
+		MIRU_PFN_DEFINITION_NULL(vkGetBufferDeviceAddress);
+		MIRU_PFN_DEFINITION_NULL(vkGetBufferOpaqueCaptureAddress);
+		MIRU_PFN_DEFINITION_NULL(vkGetDeviceMemoryOpaqueCaptureAddress);
+#endif
 		inline bool LoadPFN_VK_KHR_buffer_device_address(VkDevice& device)
 		{
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkGetBufferDeviceAddress);
@@ -189,11 +206,11 @@ namespace miru
 
 		//VK_KHR_deferred_host_operations- Requires support for Vulkan 1.0
 
-		MIRU_PFN_DEFINITION_NO_INIT(vkCreateDeferredOperationKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkDestroyDeferredOperationKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetDeferredOperationMaxConcurrencyKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkGetDeferredOperationResultKHR);
-		MIRU_PFN_DEFINITION_NO_INIT(vkDeferredOperationJoinKHR);
+		MIRU_PFN_DEFINITION_NULL(vkCreateDeferredOperationKHR);
+		MIRU_PFN_DEFINITION_NULL(vkDestroyDeferredOperationKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetDeferredOperationMaxConcurrencyKHR);
+		MIRU_PFN_DEFINITION_NULL(vkGetDeferredOperationResultKHR);
+		MIRU_PFN_DEFINITION_NULL(vkDeferredOperationJoinKHR);
 
 		inline bool LoadPFN_VK_KHR_deferred_host_operations(VkDevice& device)
 		{
@@ -207,11 +224,15 @@ namespace miru
 		}
 
 		//VK_KHR_timeline_semaphore - Promoted to Vulkan 1.2
-
-		MIRU_PFN_DEFINITION(vkGetSemaphoreCounterValue);
-		MIRU_PFN_DEFINITION(vkSignalSemaphore);
-		MIRU_PFN_DEFINITION(vkWaitSemaphores);
-
+#if !defined(MIRU_VK_API_VERSION_1_2)
+		MIRU_PFN_DEFINITION_LOAD(vkGetSemaphoreCounterValue);
+		MIRU_PFN_DEFINITION_LOAD(vkSignalSemaphore);
+		MIRU_PFN_DEFINITION_LOAD(vkWaitSemaphores);
+#else
+		MIRU_PFN_DEFINITION_NULL(vkGetSemaphoreCounterValue);
+		MIRU_PFN_DEFINITION_NULL(vkSignalSemaphore);
+		MIRU_PFN_DEFINITION_NULL(vkWaitSemaphores);
+#endif
 		inline bool LoadPFN_VK_KHR_timeline_semaphore(VkDevice& device)
 		{
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkGetSemaphoreCounterValue);
@@ -222,14 +243,21 @@ namespace miru
 		}
 
 		//VK_KHR_synchronization2 - Promoted to Vulkan 1.3
-
-		MIRU_PFN_DEFINITION(vkCmdPipelineBarrier2);
-		MIRU_PFN_DEFINITION(vkCmdResetEvent2);
-		MIRU_PFN_DEFINITION(vkCmdSetEvent2);
-		MIRU_PFN_DEFINITION(vkCmdWaitEvents2);
-		MIRU_PFN_DEFINITION(vkCmdWriteTimestamp2);
-		MIRU_PFN_DEFINITION(vkQueueSubmit2);
-
+#if !defined(MIRU_VK_API_VERSION_1_3)
+		MIRU_PFN_DEFINITION_LOAD(vkCmdPipelineBarrier2);
+		MIRU_PFN_DEFINITION_LOAD(vkCmdResetEvent2);
+		MIRU_PFN_DEFINITION_LOAD(vkCmdSetEvent2);
+		MIRU_PFN_DEFINITION_LOAD(vkCmdWaitEvents2);
+		MIRU_PFN_DEFINITION_LOAD(vkCmdWriteTimestamp2);
+		MIRU_PFN_DEFINITION_LOAD(vkQueueSubmit2);
+#else
+		MIRU_PFN_DEFINITION_NULL(vkCmdPipelineBarrier2);
+		MIRU_PFN_DEFINITION_NULL(vkCmdResetEvent2);
+		MIRU_PFN_DEFINITION_NULL(vkCmdSetEvent2);
+		MIRU_PFN_DEFINITION_NULL(vkCmdWaitEvents2);
+		MIRU_PFN_DEFINITION_NULL(vkCmdWriteTimestamp2);
+		MIRU_PFN_DEFINITION_NULL(vkQueueSubmit2);
+#endif
 		inline bool LoadPFN_VK_KHR_synchronization2(VkDevice& device)
 		{
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdPipelineBarrier2);
@@ -243,10 +271,13 @@ namespace miru
 		}
 
 		//VK_KHR_dynamic_rendering - Promoted to Vulkan 1.3
-
-		MIRU_PFN_DEFINITION(vkCmdBeginRendering);
-		MIRU_PFN_DEFINITION(vkCmdEndRendering);
-
+#if !defined(MIRU_VK_API_VERSION_1_3)
+		MIRU_PFN_DEFINITION_LOAD(vkCmdBeginRendering);
+		MIRU_PFN_DEFINITION_LOAD(vkCmdEndRendering);
+#else
+		MIRU_PFN_DEFINITION_NULL(vkCmdBeginRendering);
+		MIRU_PFN_DEFINITION_NULL(vkCmdEndRendering);
+#endif
 		inline bool LoadPFN_VK_KHR_dynamic_rendering(VkDevice& device)
 		{
 			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdBeginRendering);

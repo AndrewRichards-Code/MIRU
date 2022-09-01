@@ -1,3 +1,4 @@
+#if defined(_WIN64)
 #include "miru_core.h"
 #include "maths.h"
 
@@ -716,3 +717,4 @@ void Raytracing()
 	}
 	context->DeviceWaitIdle();
 }
+#endif

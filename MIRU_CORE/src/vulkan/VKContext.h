@@ -51,7 +51,7 @@ namespace vulkan
 			};
 			std::vector<PhysicalDeviceInfo> m_PDIs;
 
-			PhysicalDevices(const VkInstance& instance, uint32_t apiVersion);
+			PhysicalDevices(const VkInstance& instance);
 			PhysicalDevices() {};
 			PhysicalDevices(const PhysicalDevices& physicalDevice) 
 			{

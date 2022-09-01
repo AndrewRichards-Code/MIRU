@@ -32,14 +32,9 @@
 #include <Windows.h>
 
 #elif defined (__ANDROID__) && (__ANDROID_API__ >= 24)
-#include <dlfcn.h>
-#include <jni.h>
-#include <errno.h>
-#include <sys/resource.h>
-#include <android/log.h>
-#include <android/sensor.h>
 #include <android/window.h>
-#include <android_native_app_glue.h>
+#define memcpy_s(dst, dstSize, src, srcSize) memcpy(dst, src, srcSize)
+
 #endif
 
 //GRAPHICS API

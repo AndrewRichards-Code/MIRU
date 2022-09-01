@@ -2,8 +2,10 @@
 #include "ARC/src/DynamicLibrary.h"
 #include "GraphicsDebugger.h"
 
+#if defined(MIRU_D3D12)
 #define USE_PIX
 #include "pix/Include/WinPixEventRuntime/pix3.h"
+#endif
 
 namespace miru
 {

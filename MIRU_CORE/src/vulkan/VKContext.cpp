@@ -13,13 +13,14 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Instance
 	uint32_t apiVersion = VK_API_VERSION_1_0;
-	if (vkEnumerateInstanceVersion != nullptr)
-		vkEnumerateInstanceVersion(&apiVersion);
+	PFN_vkEnumerateInstanceVersion _vkEnumerateInstanceVersion = (PFN_vkEnumerateInstanceVersion)vkGetInstanceProcAddr(VK_NULL_HANDLE, "vkEnumerateInstanceVersion");
+	if (_vkEnumerateInstanceVersion != nullptr)
+		_vkEnumerateInstanceVersion(&apiVersion);
 	
 	#if defined(VK_USE_PLATFORM_WIN32_KHR)
 	const char* engineName = "MIRU - x64";
 	#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
-	engineName = "MIRU - ARM64";
+	const char* engineName = "MIRU - ARM64";
 	#endif
 
 	m_AI.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -49,8 +50,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		#if defined(VK_USE_PLATFORM_WIN32_KHR)
 		m_InstanceExtensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-		#elif defined(VK_USE_PLATFORM_ANDROIOD_KHR)
-		instanceExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+		#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
+		m_InstanceExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 		#endif
 
 		//Extensions
@@ -117,7 +118,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	}
 
 	//PhysicalDevice
-	m_PhysicalDevices = PhysicalDevices(m_Instance, apiVersion);
+	m_PhysicalDevices = PhysicalDevices(m_Instance);
 	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice; //We only use the first PhysicalDevice
 
 	//Device
@@ -172,11 +173,13 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	}
 
 	//PhysicalDevice Features
-	VkPhysicalDeviceFeatures physicalDeviceFeatures = m_PhysicalDevices.m_PDIs[0].m_Features;
 	m_PhysicalDevices.FillOutFeaturesAndProperties(this);
+	VkPhysicalDeviceFeatures* physicalDeviceFeatures = &m_PhysicalDevices.m_PDIs[0].m_Features;
 	void* deviceCI_pNext = nullptr;
-	if (IsActive(m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+#if !defined(VK_USE_PLATFORM_ANDROID_KHR)
+	if (IsActive(m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || m_AI.apiVersion >= VK_API_VERSION_1_1)
 		deviceCI_pNext = &m_PhysicalDevices.m_PDIs[0].m_Features2;
+#endif
 
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	m_DeviceCI.pNext = deviceCI_pNext;
@@ -187,7 +190,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_DeviceCI.ppEnabledLayerNames = m_ActiveDeviceLayers.data();
 	m_DeviceCI.enabledExtensionCount = static_cast<uint32_t>(m_ActiveDeviceExtensions.size());
 	m_DeviceCI.ppEnabledExtensionNames = m_ActiveDeviceExtensions.data();
-	m_DeviceCI.pEnabledFeatures = deviceCI_pNext ? nullptr : &physicalDeviceFeatures;;
+	m_DeviceCI.pEnabledFeatures = deviceCI_pNext ? nullptr : physicalDeviceFeatures;
 
 	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
@@ -326,34 +329,34 @@ void Context::AddExtensions()
 {
 	if (m_AI.apiVersion >= VK_API_VERSION_1_0)
 	{
-		if (static_cast<uint32_t>(m_CI.extensions) != 0)
+		if (m_AI.apiVersion < VK_API_VERSION_1_1)
 		{
-			if (m_AI.apiVersion < VK_API_VERSION_1_1)
-				m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); //Promoted to Vulkan 1.1
+			m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); 
+			//Promoted to Vulkan 1.1
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::TIMELINE_SEMAPHORE))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-			//Required by VK_KHR_timeline_semaphore. 
-			//VK_KHR_get_physical_device_properties2 already if needed.
+			//Required by VK_KHR_timeline_semaphore.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SYNCHRONISATION_2))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
-			//Required by VK_KHR_synchronization2. 
-			//VK_KHR_get_physical_device_properties2 already if needed.
+			//Required by VK_KHR_synchronization2.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DYNAMIC_RENDERING))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
-			//Required by VK_KHR_dynamic_rendering. 
-			//VK_KHR_get_physical_device_properties2 already if needed.
+			//Required by VK_KHR_dynamic_rendering.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::MULTIVIEW))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_MULTIVIEW_EXTENSION_NAME);
-			//Required by VK_KHR_multiview. 
-			//VK_KHR_get_physical_device_properties2 already if needed.
+			//Required by VK_KHR_multiview.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER))
 		{
@@ -369,14 +372,14 @@ void Context::AddExtensions()
 			m_DeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
 			m_DeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
 
-			//Required by VK_KHR_acceleration_structure
+			//Required by VK_KHR_acceleration_structure.
 			if (m_AI.apiVersion < VK_API_VERSION_1_2)
 				m_DeviceExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME); //Promoted to Vulkan 1.2
 			if (m_AI.apiVersion < VK_API_VERSION_1_2)
 				m_DeviceExtensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME); //Promoted to Vulkan 1.2
 			m_DeviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 
-			//Required for VK_KHR_ray_tracing_pipeline
+			//Required for VK_KHR_ray_tracing_pipeline.
 			if (m_AI.apiVersion < VK_API_VERSION_1_2)
 				m_DeviceExtensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME); //Promoted to Vulkan 1.2
 
@@ -455,7 +458,7 @@ void Context::LoadDeviceExtensionPFNs()
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_dynamic_rendering);
 }
 
-Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance, uint32_t apiVersion)
+Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -489,8 +492,11 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 		vkGetPhysicalDeviceFeatures(pdi.m_PhysicalDevice, &pdi.m_Features);
 		vkGetPhysicalDeviceProperties(pdi.m_PhysicalDevice, &pdi.m_Properties);
 		vkGetPhysicalDeviceMemoryProperties(pdi.m_PhysicalDevice, &pdi.m_MemoryProperties);
+		uint32_t instanceApiVersion = pContext->m_AI.apiVersion;
+		uint32_t deviceApiVersion = pdi.m_Properties.apiVersion;
 		
-		if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+#if !defined(VK_USE_PLATFORM_ANDROID_KHR)
+		if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || instanceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 		{
 			//Features2
 			void** nextPropsAddr = nullptr;
@@ -508,31 +514,31 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_AccelerationStructureFeatures;
 				nextPropsAddr = &pdi.m_AccelerationStructureFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_BufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
 				*nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures;
 				nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_TimelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
 				*nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures;
 				nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_Synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
 				*nextPropsAddr = &pdi.m_Synchronization2Features;
 				nextPropsAddr = &pdi.m_Synchronization2Features.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_DynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
 				*nextPropsAddr = &pdi.m_DynamicRenderingFeatures;
 				nextPropsAddr = &pdi.m_DynamicRenderingFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 			{
 				pdi.m_MultivewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
 				*nextPropsAddr = &pdi.m_MultivewFeatures;
@@ -557,13 +563,13 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_AccelerationStructureProperties;
 				nextPropsAddr = &pdi.m_AccelerationStructureProperties.pNext;
 			}
-			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_TimelineSemaphoreProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES;
 				*nextPropsAddr = &pdi.m_TimelineSemaphoreProperties;
 				nextPropsAddr = &pdi.m_TimelineSemaphoreProperties.pNext;
 			}
-			if (IsActive(pContext->m_ActiveInstanceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || pContext->m_AI.apiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 			{
 				pdi.m_MultivewProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES;
 				*nextPropsAddr = &pdi.m_MultivewProperties;
@@ -572,6 +578,7 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			pdi.m_Properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 			vkGetPhysicalDeviceProperties2(pdi.m_PhysicalDevice, &pdi.m_Properties2);
 		}
+#endif
 	}
 }
 #endif

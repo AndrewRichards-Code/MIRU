@@ -38,7 +38,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SurfaceCI.window = reinterpret_cast<ANativeWindow*>(m_CI.pWindow);
 
 	MIRU_ASSERT(vkCreateAndroidSurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create AndroidSurface.");
-	VKSetName<VkSurfaceKHR>(m_Device, m_Surface, (m_CI.debugName + ": Surface").c_str());
+	VKSetName<VkSurfaceKHR>(m_Device, m_Surface, m_CI.debugName + ": Surface");
 
 #else
 	MIRU_ASSERT(true, "ERROR: VULKAN: Unknown Platform.");

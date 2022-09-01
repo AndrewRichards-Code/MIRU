@@ -59,11 +59,6 @@ public:
 
 	void Transpose()
 	{
-		a = a;
-		f = f;
-		k = k;
-		p = p;
-
 		float temp_b = b;
 		float temp_c = c;
 		float temp_d = d;

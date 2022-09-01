@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Android-arm64-v8a">
+      <Configuration>Debug</Configuration>
+      <Platform>Android-arm64-v8a</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Gaming.Desktop.x64">
       <Configuration>Debug</Configuration>
       <Platform>Gaming.Desktop.x64</Platform>
@@ -8,6 +12,10 @@
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android-arm64-v8a">
+      <Configuration>Release</Configuration>
+      <Platform>Android-arm64-v8a</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Gaming.Desktop.x64">
       <Configuration>Release</Configuration>
@@ -51,6 +59,16 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Android-arm64-v8a'">
+    <PlatformToolset>Clang</PlatformToolset>
+    <AndroidMinSdkVersion>28</AndroidMinSdkVersion>
+    <CppLanguageStandard>cpp17</CppLanguageStandard>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">
+    <PlatformToolset>Clang</PlatformToolset>
+    <AndroidMinSdkVersion>28</AndroidMinSdkVersion>
+    <CppLanguageStandard>cpp17</CppLanguageStandard>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -84,6 +102,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Android-arm64-v8a'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName>libMIRU_CORE</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\int\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <TargetName>libMIRU_CORE</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -201,6 +229,40 @@
       <AdditionalLibraryDirectories>$(SolutionDir)MIRU_SHADER_CORE;$(ProjectDir)redist;$(VULKAN_SDK)\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Android-arm64-v8a'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Android-arm64-v8a'">
+    <ClCompile>
+      <PrecompiledHeaderCompileAs>
+      </PrecompiledHeaderCompileAs>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <LibraryDependencies>atomic;android;log;vulkan;spirv-cross-core</LibraryDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Platform)\$(Configuration)\;$(AndroidNdkToolchain)\sysroot\usr\lib\$(AndroidTargetArchToolPrefix)-linux-android$(AndroidToolchainSuffix)\$(AndroidMinSdkVersion)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">
+    <ClCompile>
+      <PrecompiledHeaderCompileAs>
+      </PrecompiledHeaderCompileAs>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))"</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <LibraryDependencies>atomic;android;log;vulkan;spirv-cross-core</LibraryDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\$(Platform)\$(Configuration)\;$(AndroidNdkToolchain)\sysroot\usr\lib\$(AndroidTargetArchToolPrefix)-linux-android$(AndroidToolchainSuffix)\$(AndroidMinSdkVersion)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\base\AccelerationStructure.h" />
     <ClInclude Include="src\base\Allocator.h" />
@@ -304,6 +366,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Gaming.Desktop.x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Android-arm64-v8a'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

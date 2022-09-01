@@ -6,7 +6,6 @@
 using namespace miru;
 using namespace base;
 
-static HWND window;
 static bool g_WindowQuit = false;
 static uint32_t width = 800;
 static uint32_t height = 600;
@@ -14,6 +13,8 @@ static bool windowResize = false;
 static bool shaderRecompile = false;
 static int var_x, var_y, var_z = 0;
 
+#if defined(_WIN64)
+static HWND window;
 static LRESULT CALLBACK WindProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	if (msg == WM_DESTROY || msg == WM_CLOSE)
@@ -56,23 +57,47 @@ static void WindowUpdate()
 		DispatchMessage(&msg);
 	}
 }
+#elif defined(__ANDROID__)
+#include "ARC/src/FileLoader.h"
+#include "android_native_app_glue.h"
+#include "android/log.h"
+
+extern android_app* g_App;
+ANativeWindow* window;
+
+static void handle_cmd(android_app* app, int32_t cmd)
+{
+	switch (cmd) 
+	{
+	case APP_CMD_INIT_WINDOW:
+		window = app->window;
+		g_WindowQuit = false;
+		break;
+	case APP_CMD_TERM_WINDOW:
+		g_WindowQuit = true;
+		break;
+	default:
+		__android_log_write(ANDROID_LOG_INFO, "MIRU_TEST", "Event not handled");
+	}
+}
+
+static void WindowUpdate()
+{
+	int events;
+	android_poll_source* source;
+	if (ALooper_pollAll(1, nullptr, &events, (void**)&source) >= 0)
+	{
+		if (source != NULL)
+			source->process(g_App, source);
+	}
+}
+
+#endif
+
 
 void Basic()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
-
-	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
-
-	Context::CreateInfo contextCI;
-	contextCI.applicationName = "MIRU_TEST";
-	contextCI.extensions = Context::ExtensionsBit::NONE;
-	contextCI.debugValidationLayers = true;
-	contextCI.deviceDebugName = "GPU Device";
-	ContextRef context = Context::Create(&contextCI);
-
+#if defined(_WIN64)
 	//Creates the windows
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -83,6 +108,41 @@ void Basic()
 
 	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
 	ShowWindow(window, SW_SHOW);
+
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::AllowSetName();
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+
+#elif defined(__ANDROID__)
+	
+	g_App->onAppCmd = handle_cmd;
+	int events;
+	android_poll_source* source;
+	// wait for the main window:
+	while (g_App->window == nullptr)
+	{
+		if (ALooper_pollAll(1, nullptr, &events, (void**)&source) >= 0)
+		{
+			if (source != NULL)
+				source->process(g_App, source);
+		}
+	}
+	arc::AndroidAssetManager = g_App->activity->assetManager;
+
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::AllowSetName(false);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
+
+#endif
+	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
+
+	Context::CreateInfo contextCI;
+	contextCI.applicationName = "MIRU_TEST";
+	contextCI.extensions = Context::ExtensionsBit::NONE;
+	contextCI.debugValidationLayers = true;
+	contextCI.deviceDebugName = "GPU Device";
+	ContextRef context = Context::Create(&contextCI);
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
@@ -655,7 +715,7 @@ void Basic()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
-	MSG msg = { 0 };
+	
 	//Main Render Loop
 	while (!g_WindowQuit)
 	{

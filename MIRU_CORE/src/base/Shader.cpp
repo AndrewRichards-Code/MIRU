@@ -8,7 +8,10 @@
 
 #include "ARC/src/FileSaver.h"
 #include "ARC/src/FileLoader.h"
+
+#if defined(_WIN64)
 #include <dxcapi.h>
+#endif
 
 using namespace miru;
 using namespace base;
@@ -49,6 +52,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	#if defined(_WIN64)
 	std::filesystem::path s_DxilFullpath = GetLibraryFullpath_dxil();
 	arc::DynamicLibrary::LibraryHandle s_HModeuleDxil = LoadLibrary_dxil();
 	if (!s_HModeuleDxil)
@@ -249,6 +253,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 
 	arc::DynamicLibrary::Unload(s_HModeuleDxcompiler);
 	arc::DynamicLibrary::Unload(s_HModeuleDxil);
+	#endif
 
 	return;
 }

@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "STBI/stb_image.h"
 
+#if defined(_WIN64)
 //Forward Declaration from other cpp files.
 void Basic();
 void Raytracing();
@@ -20,3 +21,20 @@ int main()
 #endif
 
 }
+#elif defined(__ANDROID__)
+#include "android_native_app_glue.h"
+
+//Externs
+android_app* g_App = nullptr;
+
+//Forward Declaration from other cpp files.
+void Basic();
+
+extern "C" { void android_main(struct android_app* app); }
+void android_main(struct android_app* app)
+{
+	g_App = app;
+	Basic();
+}
+
+#endif
