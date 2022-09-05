@@ -97,3 +97,6 @@
 #define MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl) parameter_decl
 #endif
 #define MIRU_SHADER_RECORD(parameter_decl) MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl)
+
+//NDC for D3D12 and Vulkan
+//https://github.com/gpuweb/gpuweb/issues/416

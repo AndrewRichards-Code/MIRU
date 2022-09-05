@@ -222,16 +222,13 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
 		{
-			const RenderPass::MultiviewCreateInfo& multiview = m_CI.renderPass->GetCreateInfo().multiview;
-			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)] - 1);
-
+			const RenderPass::Multiview& multiview = m_CI.renderPass->GetCreateInfo().multiview;
+			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)]);
 			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
-			for (auto& viewInstanceLocation : m_ViewInstanceLocations)
-				viewInstanceLocation = { 0, 0 };
-			for (size_t i = 0; i < std::min(m_ViewInstanceLocations.size(), multiview.viewOffsets.size()); i++)
+			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
 			{
-				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(multiview.viewOffsets[i]);
-				m_ViewInstanceLocations[i].ViewportArrayIndex = static_cast<UINT>(multiview.viewOffsets[i]);
+				m_ViewInstanceLocations[i].RenderTargetArrayIndex = 0; //static_cast<UINT>(i);
+				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
 			}
 			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
 			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;

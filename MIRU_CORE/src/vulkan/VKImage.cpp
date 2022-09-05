@@ -14,8 +14,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 
 	m_ImageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	m_ImageCI.pNext = nullptr;
-	m_ImageCI.flags = (m_CI.type == Image::Type::TYPE_CUBE || m_CI.type == Image::Type::TYPE_CUBE_ARRAY) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : (m_CI.type == Image::Type::TYPE_2D_ARRAY) ? VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT : 0;
-	m_ImageCI.imageType = (m_CI.type == Image::Type::TYPE_1D) ? VK_IMAGE_TYPE_1D : (m_CI.type == Image::Type::TYPE_2D || m_CI.type == Image::Type::TYPE_CUBE || m_CI.type == Image::Type::TYPE_1D_ARRAY) ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+	m_ImageCI.flags = (m_CI.type == Image::Type::TYPE_CUBE || m_CI.type == Image::Type::TYPE_CUBE_ARRAY) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : (m_CI.type == Image::Type::TYPE_3D) ? VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT : 0;
+	m_ImageCI.imageType = (m_CI.type == Image::Type::TYPE_1D) ? VK_IMAGE_TYPE_1D : (m_CI.type == Image::Type::TYPE_2D || m_CI.type == Image::Type::TYPE_2D_ARRAY || m_CI.type == Image::Type::TYPE_CUBE || m_CI.type == Image::Type::TYPE_1D_ARRAY) ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
 	m_ImageCI.format = static_cast<VkFormat>(m_CI.format);
 	m_ImageCI.extent = { m_CI.width, m_CI.height, m_CI.depth };
 	m_ImageCI.mipLevels = m_CI.mipLevels;

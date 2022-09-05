@@ -34,9 +34,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Add additional instance/device layers/extensions
 	{
 		//Debug
-		#if defined(_DEBUG)
-		m_CI.debugValidationLayers = true;
-		#endif
 		if (m_CI.debugValidationLayers)
 		{
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
@@ -321,7 +318,7 @@ VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT
 	errorMessage << pCallbackData->pMessageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessage;
 	std::string errorMessageStr = errorMessage.str();
 
-	MIRU_ERROR(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	MIRU_ASSERT(pCallbackData->messageIdNumber, errorMessageStr.c_str());
 	return VkBool32();
 }
 

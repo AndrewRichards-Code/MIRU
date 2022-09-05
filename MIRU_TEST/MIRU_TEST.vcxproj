@@ -232,6 +232,7 @@
     <ClCompile Include="src\basic.cpp" />
     <ClCompile Include="src\dynamic_rendering.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\multiview.cpp" />
     <ClCompile Include="src\raytracing.cpp" />
   </ItemGroup>
   <ItemGroup>

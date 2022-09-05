@@ -914,9 +914,9 @@ void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeli
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->SetGraphicsRootSignature(ref_cast<Pipeline>(pipeline)->m_GlobalRootSignature.rootSignature);
 		reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->IASetPrimitiveTopology(Pipeline::ToD3D12_PRIMITIVE_TOPOLOGY(ref_cast<Pipeline>(pipeline)->GetCreateInfo().inputAssemblyState.topology));
 
-		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), base::DynamicState::VIEWPORT) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+		if (!arc::FindInVector(pipeline->GetCreateInfo().dynamicStates.dynamicStates, base::DynamicState::VIEWPORT))
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetViewports(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Viewports.size()), ref_cast<Pipeline>(pipeline)->m_Viewports.data());
-		if (std::find(pipeline->GetCreateInfo().dynamicStates.dynamicStates.begin(), pipeline->GetCreateInfo().dynamicStates.dynamicStates.end(), base::DynamicState::SCISSOR) == pipeline->GetCreateInfo().dynamicStates.dynamicStates.end())
+		if (!arc::FindInVector(pipeline->GetCreateInfo().dynamicStates.dynamicStates, base::DynamicState::SCISSOR))
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		
 		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())

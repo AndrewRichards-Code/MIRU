@@ -6,9 +6,11 @@
 void Basic();
 void Raytracing();
 void DynamicRendering();
+void Multiview();
 
 #define MIRU_TEST_RAYTRACING 0
 #define MIRU_TEST_DYNAMIC_RENDERING 0
+#define MIRU_TEST_MULTIVIEW 1
 
 int main()
 {
@@ -16,6 +18,8 @@ int main()
 	Raytracing();
 #elif MIRU_TEST_DYNAMIC_RENDERING
 	DynamicRendering();
+#elif MIRU_TEST_MULTIVIEW
+	Multiview();
 #else
 	Basic();
 #endif

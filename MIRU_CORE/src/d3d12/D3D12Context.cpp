@@ -18,9 +18,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_CI = *pCreateInfo;
 
 	//Setup Debug
-	#if defined(_DEBUG)
-	m_CI.debugValidationLayers = true;
-	#endif
 	if (m_CI.debugValidationLayers)
 	{
 		MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
@@ -130,7 +127,8 @@ Context::~Context()
 		}
 	}
 
-	reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->UnregisterMessageCallback(m_CallbackCookie);
+	if (m_InfoQueue)
+		reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->UnregisterMessageCallback(m_CallbackCookie);
 
 	ID3D12DebugDevice* debugDevice = nullptr;
 	m_Device->QueryInterface(&debugDevice);

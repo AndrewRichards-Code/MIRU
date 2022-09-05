@@ -30,6 +30,9 @@
     <ClCompile Include="..\..\..\..\AppData\Local\Android\Sdk\ndk\23.1.7779620\sources\android\native_app_glue\android_native_app_glue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\multiview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\shadertoolsconfig.json" />
