@@ -183,7 +183,7 @@ namespace base
 			AllocatorRef	allocator;							//Needed for allocating SBT buffers. Allocator::CreateInfo::properties must be Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT.
 		};
 
-		struct DynamicRenderingCreateInfo
+		struct DynamicRendering
 		{
 			uint32_t					viewMask;
 			std::vector<Image::Format>	colourAttachmentFormats;
@@ -211,7 +211,7 @@ namespace base
 			PipelineLayout					layout;				//All.
 			RenderPassRef					renderPass;			//Graphics only.
 			uint32_t						subpassIndex;		//Graphics only.
-			DynamicRenderingCreateInfo		dynamicRendering;	//Graphics only. Use this if not using a RenderPass.
+			DynamicRendering				dynamicRendering;	//Graphics only. Use this if not using a RenderPass.
 		};
 
 		//Methods

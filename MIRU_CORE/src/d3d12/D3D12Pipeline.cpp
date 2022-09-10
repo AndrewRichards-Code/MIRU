@@ -227,7 +227,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
 			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
 			{
-				m_ViewInstanceLocations[i].RenderTargetArrayIndex = 0; //static_cast<UINT>(i);
+				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(i);
 				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
 			}
 			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
