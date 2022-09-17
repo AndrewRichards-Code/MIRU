@@ -37,6 +37,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		if (m_CI.debugValidationLayers)
 		{
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
+			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
 			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
 		}
 		if (base::GraphicsAPI::IsSetNameAllowed())
@@ -328,7 +329,7 @@ void Context::AddExtensions()
 	{
 		if (m_AI.apiVersion < VK_API_VERSION_1_1)
 		{
-			m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); 
+			m_InstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 			//Promoted to Vulkan 1.1
 		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::TIMELINE_SEMAPHORE))

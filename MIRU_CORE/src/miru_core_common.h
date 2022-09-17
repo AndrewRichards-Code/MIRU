@@ -247,7 +247,9 @@ namespace miru
 #if defined(_DEBUG)
 #define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath) miru::Timer::BeginSession(filepath);
 #define MIRU_CPU_PROFILE_END_SESSION() miru::Timer::EndSession();
-#define MIRU_CPU_PROFILE_SCOPE(name) miru::Timer timer##__LINE__(name)
+#define MIRU_CPU_PROFILE_SCOPE_LINE2(name, line) miru::Timer timer##line(name)
+#define MIRU_CPU_PROFILE_SCOPE_LINE(name, line) MIRU_CPU_PROFILE_SCOPE_LINE2(name, line)
+#define MIRU_CPU_PROFILE_SCOPE(name) MIRU_CPU_PROFILE_SCOPE_LINE(name, __LINE__)
 #define MIRU_CPU_PROFILE_FUNCTION() MIRU_CPU_PROFILE_SCOPE(ARC_FUNCSIG)
 #else
 #define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath);
