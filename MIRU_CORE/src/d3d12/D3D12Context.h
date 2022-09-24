@@ -61,6 +61,8 @@ namespace d3d12
 			D3D12_FEATURE_DATA_D3D12_OPTIONS9										d3d12Options9 = {};
 			D3D12_FEATURE_DATA_D3D12_OPTIONS10										d3d12Options10 = {};
 			D3D12_FEATURE_DATA_D3D12_OPTIONS11										d3d12Options11 = {};
+			D3D12_FEATURE_DATA_D3D12_OPTIONS12										d3d12Options12 = {};
+			D3D12_FEATURE_DATA_D3D12_OPTIONS13										d3d12Options13 = {};
 
 			D3D_FEATURE_LEVEL featureLevelsList[5] = { D3D_FEATURE_LEVEL_12_2, D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
 			std::vector<GUID> protectedResourceSessionTypesGuids;

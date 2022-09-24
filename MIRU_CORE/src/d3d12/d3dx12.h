@@ -3330,9 +3330,9 @@ inline bool operator==(const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC& a, const D3D1
 //
 //================================================================================================
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 #ifndef D3DX12_USE_ATL
 #include <wrl/client.h>
 #define D3DX12_COM_PTR Microsoft::WRL::ComPtr
@@ -3455,16 +3455,16 @@ private:
     typedef struct SUBOBJECT_WRAPPER : public D3D12_STATE_SUBOBJECT
     {
         D3D12_STATE_SUBOBJECT* pSubobjectArrayLocation; // new location when flattened into array
-                                                        // for repointing pointers in subobjects
+        // for repointing pointers in subobjects
     } SUBOBJECT_WRAPPER;
     D3D12_STATE_OBJECT_DESC m_Desc;
     std::list<SUBOBJECT_WRAPPER>   m_SubobjectList; // Pointers to list nodes handed out so
-                                                    // these can be edited live
+    // these can be edited live
     std::vector<D3D12_STATE_SUBOBJECT> m_SubobjectArray; // Built at the end, copying list contents
 
     std::list<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION>
         m_RepointedAssociations; // subobject type that contains pointers to other subobjects,
-                                 // repointed to flattened array
+    // repointed to flattened array
 
     class StringContainer
     {
@@ -4088,7 +4088,14 @@ private:
     D3D12_NODE_MASK m_Desc;
 };
 
-/*class CD3DX12_BARRIER_SUBRESOURCE_RANGE : public D3D12_BARRIER_SUBRESOURCE_RANGE
+#endif // !D3DX12_NO_STATE_OBJECT_HELPERS
+
+
+//================================================================================================
+// D3DX12 Enhanced Barrier Helpers
+//================================================================================================
+
+class CD3DX12_BARRIER_SUBRESOURCE_RANGE : public D3D12_BARRIER_SUBRESOURCE_RANGE
 {
 public:
     CD3DX12_BARRIER_SUBRESOURCE_RANGE() = default;
@@ -4104,7 +4111,7 @@ public:
         UINT FirstArraySlice,
         UINT NumArraySlices,
         UINT FirstPlane = 0,
-        UINT NumPlanes = UINT_MAX) noexcept :
+        UINT NumPlanes = 1) noexcept :
         D3D12_BARRIER_SUBRESOURCE_RANGE
     {
         FirstMipLevel,
@@ -4207,14 +4214,15 @@ public:
         NumBarriers = numBarriers;
         pGlobalBarriers = pBarriers;
     }
-};*/
+};
 
-
-#endif // #ifndef D3DX12_NO_STATE_OBJECT_HELPERS
 
 #ifndef D3DX12_NO_CHECK_FEATURE_SUPPORT_CLASS
 
-//------------------------------------------------------------------------------------------------
+//================================================================================================
+// D3DX12 Check Feature Support
+//================================================================================================
+
 #include <vector>
 
 class CD3DX12FeatureSupport
@@ -4365,8 +4373,17 @@ public: // Function declaration
     BOOL AtomicInt64OnDescriptorHeapResourceSupported() const noexcept;
 
     // D3D12_OPTIONS12
-    //D3D12_TRI_STATE MSPrimitivesPipelineStatisticIncludesCulledPrimitives() const noexcept;
-    //BOOL EnhancedBarriersSupported() const noexcept;
+    D3D12_TRI_STATE MSPrimitivesPipelineStatisticIncludesCulledPrimitives() const noexcept;
+    BOOL EnhancedBarriersSupported() const noexcept;
+    BOOL RelaxedFormatCastingSupported() const noexcept;
+
+    // D3D12_OPTIONS13
+    BOOL UnrestrictedBufferTextureCopyPitchSupported() const noexcept;
+    BOOL UnrestrictedVertexElementAlignmentSupported() const noexcept;
+    BOOL InvertedViewportHeightFlipsYSupported() const noexcept;
+    BOOL InvertedViewportDepthFlipsZSupported() const noexcept;
+    BOOL TextureCopyBetweenDimensionsSupported() const noexcept;
+    BOOL AlphaBlendFactorSupported() const noexcept;
 
 private: // Private structs and helpers declaration
     struct ProtectedResourceSessionTypesLocal : D3D12_FEATURE_DATA_PROTECTED_RESOURCE_SESSION_TYPES
@@ -4423,7 +4440,8 @@ private: // Member data
     D3D12_FEATURE_DATA_D3D12_OPTIONS9 m_dOptions9;
     D3D12_FEATURE_DATA_D3D12_OPTIONS10 m_dOptions10;
     D3D12_FEATURE_DATA_D3D12_OPTIONS11 m_dOptions11;
-   // D3D12_FEATURE_DATA_D3D12_OPTIONS12 m_dOptions12;
+    D3D12_FEATURE_DATA_D3D12_OPTIONS12 m_dOptions12;
+    D3D12_FEATURE_DATA_D3D12_OPTIONS13 m_dOptions13;
 };
 
 // Implementations for CD3DX12FeatureSupport functions
@@ -4484,6 +4502,8 @@ inline CD3DX12FeatureSupport::CD3DX12FeatureSupport() noexcept
     , m_dOptions9{}
     , m_dOptions10{}
     , m_dOptions11{}
+    , m_dOptions12{}
+    , m_dOptions13{}
 {}
 
 inline HRESULT CD3DX12FeatureSupport::Init(ID3D12Device* pDevice)
@@ -4624,11 +4644,22 @@ inline HRESULT CD3DX12FeatureSupport::Init(ID3D12Device* pDevice)
         m_dOptions11.AtomicInt64OnDescriptorHeapResourceSupported = false;
     }
 
-    /*if (FAILED(m_pDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &m_dOptions12, sizeof(m_dOptions12))))
+    if (FAILED(m_pDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &m_dOptions12, sizeof(m_dOptions12))))
     {
-        m_dOptions12.MSPrimitivesPipelineStatisticIncludesCulledPrimitives = D3D12_TRI_STATE_UNKNOWN;
+        m_dOptions12.MSPrimitivesPipelineStatisticIncludesCulledPrimitives = D3D12_TRI_STATE::D3D12_TRI_STATE_UNKNOWN;
         m_dOptions12.EnhancedBarriersSupported = false;
-    }*/
+        m_dOptions12.RelaxedFormatCastingSupported = false;
+    }
+
+    if (FAILED(m_pDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS13, &m_dOptions13, sizeof(m_dOptions13))))
+    {
+        m_dOptions13.UnrestrictedBufferTextureCopyPitchSupported = false;
+        m_dOptions13.UnrestrictedVertexElementAlignmentSupported = false;
+        m_dOptions13.InvertedViewportHeightFlipsYSupported = false;
+        m_dOptions13.InvertedViewportDepthFlipsZSupported = false;
+        m_dOptions13.TextureCopyBetweenDimensionsSupported = false;
+        m_dOptions13.AlphaBlendFactorSupported = false;
+    }
 
     // Initialize per-node feature support data structures
     const UINT uNodeCount = m_pDevice->GetNodeCount();
@@ -4937,8 +4968,17 @@ FEATURE_SUPPORT_GET(BOOL, m_dOptions10, MeshShaderPerPrimitiveShadingRateSupport
 FEATURE_SUPPORT_GET(BOOL, m_dOptions11, AtomicInt64OnDescriptorHeapResourceSupported);
 
 // 41: Options12
-//FEATURE_SUPPORT_GET(D3D12_TRI_STATE, m_dOptions12, MSPrimitivesPipelineStatisticIncludesCulledPrimitives);
-//FEATURE_SUPPORT_GET(BOOL, m_dOptions12, EnhancedBarriersSupported);
+FEATURE_SUPPORT_GET(D3D12_TRI_STATE, m_dOptions12, MSPrimitivesPipelineStatisticIncludesCulledPrimitives);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions12, EnhancedBarriersSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions12, RelaxedFormatCastingSupported);
+
+// 42: Options13
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, UnrestrictedBufferTextureCopyPitchSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, UnrestrictedVertexElementAlignmentSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, InvertedViewportHeightFlipsYSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, InvertedViewportDepthFlipsZSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, TextureCopyBetweenDimensionsSupported);
+FEATURE_SUPPORT_GET(BOOL, m_dOptions13, AlphaBlendFactorSupported);
 
 // Helper function to decide the highest shader model supported by the system
 // Stores the result in m_dShaderModel
@@ -5087,7 +5127,7 @@ inline HRESULT CD3DX12FeatureSupport::QueryProtectedResourceSessionTypes(UINT No
 
 // end CD3DX12FeatureSupport
 
-#endif // #ifndef D3DX12_NO_CHECK_FEATURE_SUPPORT_CLASS
+#endif // !D3DX12_NO_CHECK_FEATURE_SUPPORT_CLASS
 
 #undef D3DX12_COM_PTR
 #undef D3DX12_COM_PTR_GET
