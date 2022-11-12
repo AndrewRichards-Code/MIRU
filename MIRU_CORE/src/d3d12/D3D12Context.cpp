@@ -74,7 +74,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_RI.activeExtensions = ExtensionsBit::DYNAMIC_RENDERING;
 	if (m_Features.d3d12Options5.RaytracingTier > D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
 		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
-	if (m_Features.d3d12Options3.ViewInstancingTier > D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
+	if (m_Features.d3d12Options3.ViewInstancingTier > D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED)
 		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
 	if (m_Features.d3d12Options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
