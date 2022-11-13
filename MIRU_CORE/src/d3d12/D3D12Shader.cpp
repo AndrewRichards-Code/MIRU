@@ -45,7 +45,7 @@ void Shader::GetShaderResources()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	D3D12ShaderReflection(m_ShaderBinary, m_CI.stageAndEntryPoints, m_VSIADs, m_PSOADs, m_ThreadGroupSizeXYZ, m_RBDs);
+	D3D12ShaderReflection(m_ShaderBinary, m_CI.stageAndEntryPoints, m_VSIADs, m_PSOADs, m_GroupCountXYZ, m_RBDs);
 }
 
 void Shader::D3D12ShaderReflection(
@@ -53,7 +53,7 @@ void Shader::D3D12ShaderReflection(
 	const std::vector<std::pair<Shader::StageBit, std::string>>& stageAndEntryPoints,
 	std::vector<Shader::VertexShaderInputAttributeDescription>& VSIADs,
 	std::vector<Shader::PixelShaderOutputAttributeDescription>& PSOADs,
-	std::array<uint32_t, 3>& ThreadGroupSizeXYZ,
+	std::array<uint32_t, 3>& GroupCountXYZ,
 	std::map<uint32_t, std::map<uint32_t, Shader::ResourceBindingDescription>>& RBDs)
 {
 	std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
@@ -272,7 +272,7 @@ void Shader::D3D12ShaderReflection(
 									if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_COMPUTE_SHADER)
 									{
 
-										UINT totalThread = shader_reflection->GetThreadGroupSize(&ThreadGroupSizeXYZ[0], &ThreadGroupSizeXYZ[1], &ThreadGroupSizeXYZ[2]);
+										UINT totalThread = shader_reflection->GetThreadGroupSize(&GroupCountXYZ[0], &GroupCountXYZ[1], &GroupCountXYZ[2]);
 										if (totalThread == 0)
 										{
 											MIRU_WARN(true, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetThreadGroupSize returned zero total threads for the ThreadGroupSize.");

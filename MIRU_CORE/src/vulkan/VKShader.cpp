@@ -65,7 +65,7 @@ void Shader::GetShaderResources()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	VulkanShaderReflection(m_ShaderBinary, m_CI.stageAndEntryPoints, m_VSIADs, m_PSOADs, m_ThreadGroupSizeXYZ, m_RBDs);
+	VulkanShaderReflection(m_ShaderBinary, m_CI.stageAndEntryPoints, m_VSIADs, m_PSOADs, m_GroupCountXYZ, m_RBDs);
 }
 
 void Shader::VulkanShaderReflection(
@@ -73,7 +73,7 @@ void Shader::VulkanShaderReflection(
 	const std::vector<std::pair<Shader::StageBit, std::string>>& stageAndEntryPoints,
 	std::vector<Shader::VertexShaderInputAttributeDescription>& VSIADs,
 	std::vector<Shader::PixelShaderOutputAttributeDescription>& PSOADs,
-	std::array<uint32_t, 3>& ThreadGroupSizeXYZ,
+	std::array<uint32_t, 3>& GroupCountXYZ,
 	std::map<uint32_t, std::map<uint32_t, Shader::ResourceBindingDescription>>& RBDs)
 {
 	const uint32_t* spv_bin = reinterpret_cast<const uint32_t*>(shaderBinary.data());
@@ -219,9 +219,9 @@ void Shader::VulkanShaderReflection(
 	}
 	if (executionModel == spv::ExecutionModel::ExecutionModelGLCompute)
 	{
-		ThreadGroupSizeXYZ[0] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 0);
-		ThreadGroupSizeXYZ[1] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 1);
-		ThreadGroupSizeXYZ[2] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 2);
+		GroupCountXYZ[0] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 0);
+		GroupCountXYZ[1] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 1);
+		GroupCountXYZ[2] = compiled_bin.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 2);
 	}
 	for (auto& rbds : RBDs)
 	{
