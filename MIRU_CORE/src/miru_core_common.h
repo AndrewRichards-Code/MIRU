@@ -81,6 +81,9 @@
 #include "ARC/src/DynamicLibrary.h"
 #include "ARC/src/ScopeAndRef.h"
 #include "ARC/src/Helpers.h"
+#define MAGIC_ENUM_RANGE_MIN 0
+#define MAGIC_ENUM_RANGE_MAX 1536
+#include "ARC/External/magic_enum/include/magic_enum.hpp"
 namespace miru
 {
 	inline auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t
