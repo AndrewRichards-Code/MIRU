@@ -50,6 +50,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				m_GPSD.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			case Shader::StageBit::GEOMETRY_BIT:
 				m_GPSD.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+			case Shader::StageBit::TASK_BIT_EXT:
+				AS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+			case Shader::StageBit::MESH_BIT_EXT:
+				MS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			default:
 				continue;
 			}
@@ -218,8 +222,10 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.CachedPSO = {};
 		m_GPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
+		//Pipeline Extensions
 		CD3DX12_PIPELINE_STATE_STREAM2 gpss2(m_GPSD);
 
+		//ViewInstancing TODO: DynamicRendering
 		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
 		{
 			const RenderPass::Multiview& multiview = m_CI.renderPass->GetCreateInfo().multiview;
@@ -236,6 +242,14 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			gpss2.ViewInstancingDesc = CD3DX12_VIEW_INSTANCING_DESC(m_ViewInstancingDesc);
 		}
 		
+		//Amplification and Mesh Shaders
+		if (MS.BytecodeLength > 0)
+		{
+			gpss2.MS = MS;
+			if (AS.BytecodeLength > 0)
+				gpss2.AS = AS;
+		}
+
 		D3D12_PIPELINE_STATE_STREAM_DESC gpssd;
 		gpssd.SizeInBytes = sizeof(gpss2);
 		gpssd.pPipelineStateSubobjectStream = &gpss2;

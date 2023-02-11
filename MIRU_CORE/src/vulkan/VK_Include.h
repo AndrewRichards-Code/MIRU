@@ -270,6 +270,20 @@ namespace miru
 			return true;
 		}
 
+		//VK_EXT_mesh_shader - Promoted to Vulkan 1.3
+		MIRU_PFN_DEFINITION_NULL(vkCmdDrawMeshTasksEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCmdDrawMeshTasksIndirectCountEXT);
+		MIRU_PFN_DEFINITION_NULL(vkCmdDrawMeshTasksIndirectEXT);
+
+		inline bool LoadPFN_VK_EXT_mesh_shader(VkDevice& device)
+		{
+			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdDrawMeshTasksEXT);
+			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdDrawMeshTasksIndirectCountEXT);
+			MIRU_PFN_VK_GET_DEVICE_PROC_ADDR(vkCmdDrawMeshTasksIndirectEXT);
+
+			return true;
+		}
+
 		//VK_KHR_dynamic_rendering - Promoted to Vulkan 1.3
 #if !defined(MIRU_VK_API_VERSION_1_3)
 		MIRU_PFN_DEFINITION_LOAD(vkCmdBeginRendering);

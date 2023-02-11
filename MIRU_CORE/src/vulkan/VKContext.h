@@ -41,6 +41,10 @@ namespace vulkan
 				//VK_KHR_synchronization2
 				VkPhysicalDeviceSynchronization2Features m_Synchronization2Features;
 				
+				//VK_EXT_mesh_shader
+				VkPhysicalDeviceMeshShaderFeaturesEXT m_DeviceMeshShaderFeatures;
+				VkPhysicalDeviceMeshShaderPropertiesEXT m_DeviceMeshShaderProperties;
+				
 				//VK_KHR_dynamic_rendering
 				VkPhysicalDeviceDynamicRenderingFeatures m_DynamicRenderingFeatures;
 				

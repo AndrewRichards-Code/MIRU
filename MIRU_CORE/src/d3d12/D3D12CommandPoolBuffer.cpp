@@ -1090,6 +1090,14 @@ void CommandBuffer::Draw(uint32_t index, uint32_t vertexCount, uint32_t instance
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->DrawInstanced(vertexCount, instanceCount, firstVertex, firstInstance);
 };
 
+void CommandBuffer::DrawMeshTasks(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	reinterpret_cast<ID3D12GraphicsCommandList6*>(m_CmdBuffers[index])->DispatchMesh(groupCountX, groupCountY, groupCountZ);
+}
+
 void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

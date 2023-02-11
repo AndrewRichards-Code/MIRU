@@ -72,6 +72,9 @@ namespace d3d12
 
 		D3D12_VIEW_INSTANCING_DESC m_ViewInstancingDesc;
 		std::vector<D3D12_VIEW_INSTANCE_LOCATION> m_ViewInstanceLocations;
+
+		D3D12_SHADER_BYTECODE AS;
+		D3D12_SHADER_BYTECODE MS;
 	};
 }
 }

@@ -23,6 +23,13 @@
 #endif
 #define MIRU_STORAGE_BUFFER(set_num, bind_num, type, name) MIRU_RW_STRUCTURED_BUFFER(set_num, bind_num, type, name)
 
+//Structured Buffers 
+#if defined MIRU_VULKAN
+#define MIRU_STRUCTURED_BUFFER(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] StructuredBuffer<type> name
+#else
+#define MIRU_STRUCTURED_BUFFER(set_num, bind_num, type, name) StructuredBuffer<type> name : register(t##bind_num, space##set_num)
+#endif
+
 //Images and Samplers
 #if defined MIRU_VULKAN
 #define MIRU_IMAGE_1D(set_num, bind_num, type, name) [[vk::binding(bind_num, set_num)]] Texture1D<type> name 
@@ -97,6 +104,11 @@
 #define MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl) parameter_decl
 #endif
 #define MIRU_SHADER_RECORD(parameter_decl) MIRU_LOCAL_ROOT_SIGNATURE_PARAMETER(parameter_decl)
+
+//Mesh Shaders
+
+//Define the Output Topology for the rasteriser. For use only "line" or "triangle".
+#define MIRU_OUTPUT_TOPOLOGY(type) [outputtopology(type)]
 
 //NDC for D3D12 and Vulkan
 //https://github.com/gpuweb/gpuweb/issues/416

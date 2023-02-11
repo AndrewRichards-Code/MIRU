@@ -7,10 +7,12 @@ void Basic();
 void Raytracing();
 void DynamicRendering();
 void Multiview();
+void MeshShader();
 
 #define MIRU_TEST_RAYTRACING 0
 #define MIRU_TEST_DYNAMIC_RENDERING 0
-#define MIRU_TEST_MULTIVIEW 1
+#define MIRU_TEST_MULTIVIEW 0
+#define MIRU_TEST_MESH_SHADER 1
 
 int main()
 {
@@ -20,6 +22,8 @@ int main()
 	DynamicRendering();
 #elif MIRU_TEST_MULTIVIEW
 	Multiview();
+#elif MIRU_TEST_MESH_SHADER
+	MeshShader();
 #else
 	Basic();
 #endif

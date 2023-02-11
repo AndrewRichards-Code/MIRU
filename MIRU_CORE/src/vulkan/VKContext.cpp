@@ -344,6 +344,12 @@ void Context::AddExtensions()
 			//Required by VK_KHR_synchronization2.
 			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::MESH_SHADER))
+		{
+			m_DeviceExtensions.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+			//Required by VK_EXT_mesh_shader.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
+		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DYNAMIC_RENDERING))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
@@ -398,6 +404,10 @@ void Context::SetResultInfo()
 	//VK_KHR_timeline_semaphore
 	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
 		m_RI.activeExtensions |= ExtensionsBit::TIMELINE_SEMAPHORE;
+
+	//VK_EXT_mesh_shader
+	if (IsActive(m_ActiveDeviceExtensions, VK_EXT_MESH_SHADER_EXTENSION_NAME))
+		m_RI.activeExtensions |= ExtensionsBit::MESH_SHADER;
 	
 	//VK_KHR_synchronization2
 	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
@@ -448,6 +458,9 @@ void Context::LoadDeviceExtensionPFNs()
 
 	//VK_KHR_timeline_semaphore
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_timeline_semaphore);
+
+	//VK_EXT_mesh_shader
+	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(EXT_mesh_shader);
 
 	//VK_KHR_synchronization2
 	MIRU_VULKAN_LOAD_DEVICE_EXTENSION(KHR_synchronization2);
@@ -530,6 +543,12 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_Synchronization2Features;
 				nextPropsAddr = &pdi.m_Synchronization2Features.pNext;
 			}
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_EXT_MESH_SHADER_EXTENSION_NAME))
+			{
+				pdi.m_DeviceMeshShaderFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+				*nextPropsAddr = &pdi.m_DeviceMeshShaderFeatures;
+				nextPropsAddr = &pdi.m_DeviceMeshShaderFeatures.pNext;
+			}
 			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_DynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
@@ -566,6 +585,12 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				pdi.m_TimelineSemaphoreProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES;
 				*nextPropsAddr = &pdi.m_TimelineSemaphoreProperties;
 				nextPropsAddr = &pdi.m_TimelineSemaphoreProperties.pNext;
+			}
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_EXT_MESH_SHADER_EXTENSION_NAME))
+			{
+				pdi.m_DeviceMeshShaderProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT;
+				*nextPropsAddr = &pdi.m_DeviceMeshShaderProperties;
+				nextPropsAddr = &pdi.m_DeviceMeshShaderProperties.pNext;
 			}
 			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 			{

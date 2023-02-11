@@ -663,6 +663,14 @@ void CommandBuffer::Draw(uint32_t index, uint32_t vertexCount, uint32_t instance
 	vkCmdDraw(m_CmdBuffers[index], vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
+void CommandBuffer::DrawMeshTasks(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDrawMeshTasksEXT(m_CmdBuffers[index], groupCountX, groupCountY, groupCountZ);
+}
+
 void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

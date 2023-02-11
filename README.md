@@ -24,7 +24,8 @@ This repository is under active development and is not currently intended for co
 - Timeline Semaphores for D3D12 style sychronisation primitives (D3D12: Core, Vulkan: VK_KHR_timeline_semaphore).
 - Synchronisation 2 for easier management of resource transitions and submissions (D3D12: Core(Enhanced Barriers), Vulkan: VK_KHR_synchronization2) - WIP.
 - ViewInstancing/Multiview supports rendering to multiple views in a single draw call, through the use of SV_ViewID in shaders (D3D12 is limited to a maximum of 4 views).
-- Shader Viewport Index Layer allows the usage of SV_RenderTargetArrayIndex and SV_ViewportArrayIndex from the vertex shader stage.
+- Shader Viewport Index Layer allows the usage of SV_RenderTargetArrayIndex and SV_ViewportArrayIndex from pre-rasterisation stages.
+- Mesh and Task/Amplification shader support for D3D12 and Vulkan with VK_EXT_mesh_shader.
 
 ## Known issues and features to test/implement:
 - Draw/Dispatch commands using indirect buffers.
