@@ -191,6 +191,12 @@ void Context::DeviceWaitIdle()
 	}
 }
 
+template <>
+struct magic_enum::customize::enum_range<D3D12_MESSAGE_ID> {
+	static constexpr int min = static_cast<int>(D3D12_MESSAGE_ID::D3D12_MESSAGE_ID_UNKNOWN);
+	static constexpr int max = static_cast<int>(D3D12_MESSAGE_ID::D3D12_MESSAGE_ID_D3D12_MESSAGES_END);
+};
+
 void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
 {
 	std::string category = std::string(magic_enum::enum_name<D3D12_MESSAGE_CATEGORY>(Category));

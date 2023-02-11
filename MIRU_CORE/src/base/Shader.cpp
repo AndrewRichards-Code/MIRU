@@ -157,6 +157,10 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 							std::string absoluteDstPDBDir = absoluteDstDir.replace(absoluteDstDir.find_last_of('.'), 4, ".pdb");
 							c_arguments.push_back(currentWorkingDir + absoluteDstPDBDir);
 						}
+						if (arg.find("-Zi") != std::string::npos && spv)
+						{
+							c_arguments.push_back("-fspv-debug=line");
+						}
 					}
 					if (cso)
 					{
