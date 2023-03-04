@@ -92,7 +92,7 @@ namespace base
 		//Methods
 	public:
 		static ShaderRef Create(CreateInfo* pCreateInfo);
-		virtual ~Shader() = default;
+		virtual ~Shader();
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
 		void Recompile();
@@ -114,6 +114,8 @@ namespace base
 		void GetShaderByteCode();
 		virtual void Reconstruct() = 0;
 
+		static const arc::DynamicLibrary::LibraryHandle GetHModeuleDxcompiler() { return s_HModeuleDxcompiler; };
+
 		//Members
 	protected:
 		CreateInfo m_CI = {};
@@ -125,6 +127,10 @@ namespace base
 
 		//Key is the set number
 		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
+
+		static arc::DynamicLibrary::LibraryHandle s_HModeuleDxil;
+		static arc::DynamicLibrary::LibraryHandle s_HModeuleDxcompiler;
+		static uint32_t s_RefCount;
 	};
 }
 }

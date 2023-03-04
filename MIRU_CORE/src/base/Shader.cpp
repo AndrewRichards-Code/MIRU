@@ -16,8 +16,26 @@
 using namespace miru;
 using namespace base;
 
+arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDxil;
+arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDxcompiler;
+uint32_t Shader::s_RefCount = 0;
+
+Shader::~Shader()
+{
+	s_RefCount--;
+	if (s_RefCount == 0)
+	{
+		if (s_HModeuleDxcompiler)
+			arc::DynamicLibrary::Unload(s_HModeuleDxcompiler);
+		if (s_HModeuleDxil)
+			arc::DynamicLibrary::Unload(s_HModeuleDxil);
+	}
+}
+
 ShaderRef Shader::Create(Shader::CreateInfo* pCreateInfo)
 {
+	s_RefCount++;
+
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
@@ -53,21 +71,26 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	#if defined(_WIN64)
-	std::filesystem::path s_DxilFullpath = GetLibraryFullpath_dxil();
-	arc::DynamicLibrary::LibraryHandle s_HModeuleDxil = LoadLibrary_dxil();
 	if (!s_HModeuleDxil)
 	{
-		std::string error_str = "WARN: BASE: Unable to load '" + s_DxilFullpath.generic_string() + "'.";
-		MIRU_WARN(GetLastError(), error_str.c_str());
+		s_HModeuleDxil = LoadLibrary_dxil();
+		if (!s_HModeuleDxil)
+		{
+			std::filesystem::path s_DxilFullpath = GetLibraryFullpath_dxil();
+			std::string error_str = "WARN: BASE: Unable to load '" + s_DxilFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
 
+		}
 	}
-	std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
-	arc::DynamicLibrary::LibraryHandle s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
 	if (!s_HModeuleDxcompiler)
 	{
-		std::string error_str = "WARN: BASE: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
-		MIRU_WARN(GetLastError(), error_str.c_str());
-
+		s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
+		if (!s_HModeuleDxcompiler)
+		{
+			std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
+			std::string error_str = "WARN: BASE: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
 	}
 	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)arc::DynamicLibrary::LoadFunction(s_HModeuleDxcompiler, "DxcCreateInstance");
 	if (!DxcCreateInstance)
@@ -259,9 +282,6 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 	}
 	MIRU_D3D12_SAFE_RELEASE(utils);
 	MIRU_D3D12_SAFE_RELEASE(compiler);
-
-	arc::DynamicLibrary::Unload(s_HModeuleDxcompiler);
-	arc::DynamicLibrary::Unload(s_HModeuleDxil);
 	#endif
 
 	return;

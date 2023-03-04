@@ -56,36 +56,39 @@ void Shader::D3D12ShaderReflection(
 	std::array<uint32_t, 3>& GroupCountXYZ,
 	std::map<uint32_t, std::map<uint32_t, Shader::ResourceBindingDescription>>& RBDs)
 {
-	std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
-	arc::DynamicLibrary::LibraryHandle s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
 	if (!s_HModeuleDxcompiler)
 	{
-		std::string error_str = "WARN: SHADER_CORE: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
-		MIRU_WARN(GetLastError(), error_str.c_str());
+		s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
+		if (!s_HModeuleDxcompiler)
+		{
+			std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
+			std::string error_str = "WARN: D3D12: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
+			MIRU_WARN(GetLastError(), error_str.c_str());
+		}
 	}
 	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)arc::DynamicLibrary::LoadFunction(s_HModeuleDxcompiler, "DxcCreateInstance");
 	if (!DxcCreateInstance)
 		return;
 
 	IDxcLibrary* dxc_library = nullptr;
-	MIRU_WARN(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library)), "WARN: SHADER_CORE: DxcCreateInstance failed to create IDxcLibrary.");
+	MIRU_WARN(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library)), "WARN: D3D12: DxcCreateInstance failed to create IDxcLibrary.");
 	if (dxc_library)
 	{
 		IDxcBlobEncoding* dxc_shader_bin = nullptr;
-		MIRU_WARN(dxc_library->CreateBlobWithEncodingFromPinned(shaderBinary.data(), static_cast<UINT32>(shaderBinary.size()), 0, &dxc_shader_bin), "WARN: SHADER_CORE: IDxcLibrary::CreateBlobWithEncodingFromPinned failed to create IDxcBlobEncoding."); //binary, no code page
+		MIRU_WARN(dxc_library->CreateBlobWithEncodingFromPinned(shaderBinary.data(), static_cast<UINT32>(shaderBinary.size()), 0, &dxc_shader_bin), "WARN: D3D12: IDxcLibrary::CreateBlobWithEncodingFromPinned failed to create IDxcBlobEncoding."); //binary, no code page
 		if (dxc_shader_bin)
 		{
 			IDxcContainerReflection* dxc_container_reflection = nullptr;
-			MIRU_WARN(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(&dxc_container_reflection)), "WARN: SHADER_CORE: DxcCreateInstance failed to create IDxcContainerReflection.");
+			MIRU_WARN(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(&dxc_container_reflection)), "WARN: D3D12: DxcCreateInstance failed to create IDxcContainerReflection.");
 			if (dxc_container_reflection)
 			{
 				HRESULT res = dxc_container_reflection->Load(dxc_shader_bin);
-				MIRU_WARN(res, "WARN: SHADER_CORE: IDxcContainerReflection::Load failed.");
+				MIRU_WARN(res, "WARN: D3D12: IDxcContainerReflection::Load failed.");
 				if (res == S_OK)
 				{
 					uint32_t partIndex;
 					uint32_t dxil_kind = DXC_PART_DXIL;
-					MIRU_WARN(dxc_container_reflection->FindFirstPartKind(dxil_kind, &partIndex), "WARN: SHADER_CORE: IDxcContainerReflection::FindFirstPartKind failed.");
+					MIRU_WARN(dxc_container_reflection->FindFirstPartKind(dxil_kind, &partIndex), "WARN: D3D12: IDxcContainerReflection::FindFirstPartKind failed.");
 					if (partIndex != 0) //No reflection available for non-DXIL shaders.
 					{
 						//General parsing functions:
@@ -117,7 +120,7 @@ void Shader::D3D12ShaderReflection(
 								break;
 							}
 
-							MIRU_ASSERT(true, "ERROR: SHADER_CORE: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::crossplatform::DescriptorType.");
+							MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::crossplatform::DescriptorType.");
 							return static_cast<base::DescriptorType>(0);
 						};
 						auto get_shader_stage = [](D3D12_SHADER_VERSION_TYPE type) -> Shader::StageBit
@@ -159,12 +162,12 @@ void Shader::D3D12ShaderReflection(
 						{
 							//Shader Reflection
 							ID3D12ShaderReflection* shader_reflection = nullptr;
-							MIRU_WARN(dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection)), "WARN: SHADER_CORE: IDxcContainerReflection::GetPartReflection failed.");
+							MIRU_WARN(dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&shader_reflection)), "WARN: D3D12: IDxcContainerReflection::GetPartReflection failed.");
 							if (shader_reflection)
 							{
 								D3D12_SHADER_DESC shaderDesc;
 								res = shader_reflection->GetDesc(&shaderDesc);
-								MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetDesc failed.");
+								MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetDesc failed.");
 								if (res == S_OK)
 								{
 									D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(shaderDesc.Version);
@@ -192,7 +195,7 @@ void Shader::D3D12ShaderReflection(
 										default:
 											break;
 										}
-										MIRU_WARN(true, "ERROR: SHADER_CORE: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
+										MIRU_WARN(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
 										return static_cast<base::VertexType>(0);
 									};
 
@@ -236,7 +239,7 @@ void Shader::D3D12ShaderReflection(
 										{
 											D3D12_SIGNATURE_PARAMETER_DESC input_parameter;
 											shader_reflection->GetInputParameterDesc(i, &input_parameter);
-											MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetInputParameterDesc failed.");
+											MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetInputParameterDesc failed.");
 											if (res == S_OK)
 											{
 												Shader::VertexShaderInputAttributeDescription vsiad;
@@ -257,7 +260,7 @@ void Shader::D3D12ShaderReflection(
 										{
 											D3D12_SIGNATURE_PARAMETER_DESC out_parameter;
 											res = shader_reflection->GetOutputParameterDesc(i, &out_parameter);
-											MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetOutputParameterDesc failed.");
+											MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetOutputParameterDesc failed.");
 											if (res == S_OK)
 											{
 												Shader::PixelShaderOutputAttributeDescription psoad;
@@ -275,7 +278,7 @@ void Shader::D3D12ShaderReflection(
 										UINT totalThread = shader_reflection->GetThreadGroupSize(&GroupCountXYZ[0], &GroupCountXYZ[1], &GroupCountXYZ[2]);
 										if (totalThread == 0)
 										{
-											MIRU_WARN(true, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetThreadGroupSize returned zero total threads for the ThreadGroupSize.");
+											MIRU_WARN(true, "WARN: D3D12: ID3D12ShaderReflection::GetThreadGroupSize returned zero total threads for the ThreadGroupSize.");
 										}
 									}
 
@@ -290,7 +293,7 @@ void Shader::D3D12ShaderReflection(
 									{
 										D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
 										res = shader_reflection->GetResourceBindingDesc(i, &bindingDesc);
-										MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetResourceBindingDesc failed.");
+										MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetResourceBindingDesc failed.");
 										if (res == S_OK)
 										{
 											size_t structSize = 0;
@@ -303,13 +306,13 @@ void Shader::D3D12ShaderReflection(
 												{
 													_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
 													res = shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
-													MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflectionConstantBuffer::GetDesc failed.");
+													MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflectionConstantBuffer::GetDesc failed.");
 													if (res == S_OK)
 														structSize = static_cast<size_t>(shaderBufferDesc.Size);
 												}
 												else
 												{
-													MIRU_WARN(true, "WARN: SHADER_CORE: ID3D12ShaderReflection::GetConstantBufferByName failed.");
+													MIRU_WARN(true, "WARN: D3D12: ID3D12ShaderReflection::GetConstantBufferByName failed.");
 												}
 											}
 
@@ -352,7 +355,7 @@ void Shader::D3D12ShaderReflection(
 						{
 							//Library Refelection
 							ID3D12LibraryReflection* library_reflection = nullptr;
-							MIRU_WARN(dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&library_reflection)), "WARN: SHADER_CORE: IDxcContainerReflection::GetPartReflection failed.");
+							MIRU_WARN(dxc_container_reflection->GetPartReflection(partIndex, IID_PPV_ARGS(&library_reflection)), "WARN: D3D12: IDxcContainerReflection::GetPartReflection failed.");
 							if (library_reflection)
 							{
 								for (auto& rbds : RBDs)
@@ -363,7 +366,7 @@ void Shader::D3D12ShaderReflection(
 
 								D3D12_LIBRARY_DESC libraryDesc;
 								res = library_reflection->GetDesc(&libraryDesc);
-								MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12LibraryReflection::GetDesc failed.");
+								MIRU_WARN(res, "WARN: D3D12: ID3D12LibraryReflection::GetDesc failed.");
 								if (res == S_OK)
 								{
 									for (UINT i = 0; i < libraryDesc.FunctionCount; i++)
@@ -373,7 +376,7 @@ void Shader::D3D12ShaderReflection(
 										{
 											D3D12_FUNCTION_DESC functionDesc;
 											res = function_reflection->GetDesc(&functionDesc);
-											MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12FunctionReflection::GetDesc failed.");
+											MIRU_WARN(res, "WARN: D3D12: ID3D12FunctionReflection::GetDesc failed.");
 											if (res == S_OK)
 											{
 												D3D12_SHADER_VERSION_TYPE stage = (D3D12_SHADER_VERSION_TYPE)D3D12_SHVER_GET_TYPE(functionDesc.Version);
@@ -385,7 +388,7 @@ void Shader::D3D12ShaderReflection(
 												{
 													D3D12_SHADER_INPUT_BIND_DESC bindingDesc;
 													function_reflection->GetResourceBindingDesc(j, &bindingDesc);
-													MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12FunctionReflection::GetResourceBindingDesc failed.");
+													MIRU_WARN(res, "WARN: D3D12: ID3D12FunctionReflection::GetResourceBindingDesc failed.");
 													if (res == S_OK)
 													{
 														size_t structSize = 0;
@@ -398,13 +401,13 @@ void Shader::D3D12ShaderReflection(
 															{
 																_D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
 																res = shader_reflection_constant_buffer->GetDesc(&shaderBufferDesc);
-																MIRU_WARN(res, "WARN: SHADER_CORE: ID3D12ShaderReflectionConstantBuffer::GetDesc failed.");
+																MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflectionConstantBuffer::GetDesc failed.");
 																if (res == S_OK)
 																	structSize = static_cast<size_t>(shaderBufferDesc.Size);
 															}
 															else
 															{
-																MIRU_WARN(true, "WARN: SHADER_CORE: ID3D12FunctionReflection::GetConstantBufferByName failed.");
+																MIRU_WARN(true, "WARN: D3D12: ID3D12FunctionReflection::GetConstantBufferByName failed.");
 															}
 														}
 
@@ -442,7 +445,7 @@ void Shader::D3D12ShaderReflection(
 										}
 										else
 										{
-											MIRU_WARN(true, "WARN: SHADER_CORE: ID3D12LibraryReflection::GetFunctionByIndex failed.");
+											MIRU_WARN(true, "WARN: D3D12: ID3D12LibraryReflection::GetFunctionByIndex failed.");
 										}
 									}
 								}
@@ -457,7 +460,5 @@ void Shader::D3D12ShaderReflection(
 		MIRU_D3D12_SAFE_RELEASE(dxc_shader_bin);
 	}
 	MIRU_D3D12_SAFE_RELEASE(dxc_library);
-
-	arc::DynamicLibrary::Unload(s_HModeuleDxcompiler);
 }
 #endif
