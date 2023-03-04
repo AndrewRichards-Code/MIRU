@@ -22,7 +22,7 @@ This repository is under active development and is not currently intended for co
 - Ray Tracing support via DXR for D3D12 and via VK_KHR_acceleration_structure/VK_KHR_ray_tracing_pipeline for Vulkan.
 - Dynamic Rendering for executing render commands without RenderPasses and Framebuffers (D3D12: Core, Vulkan: VK_KHR_dynamic_rendering).
 - Timeline Semaphores for D3D12 style sychronisation primitives (D3D12: Core, Vulkan: VK_KHR_timeline_semaphore).
-- Synchronisation 2 for easier management of resource transitions and submissions (D3D12: Core(Enhanced Barriers), Vulkan: VK_KHR_synchronization2) - WIP.
+- Synchronisation 2 for easier management of resource transitions and submissions (D3D12: Enhanced Barriers, Vulkan: VK_KHR_synchronization2).
 - ViewInstancing/Multiview supports rendering to multiple views in a single draw call, through the use of SV_ViewID in shaders (D3D12 is limited to a maximum of 4 views).
 - Shader Viewport Index Layer allows the usage of SV_RenderTargetArrayIndex and SV_ViewportArrayIndex from pre-rasterisation stages.
 - Mesh and Task/Amplification shader support for D3D12 and Vulkan with VK_EXT_mesh_shader.
@@ -46,7 +46,7 @@ This repository is under active development and is not currently intended for co
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2208.10, RenderDoc v1.24
+- Graphics Debuggers: Pix 2303.02, RenderDoc v1.25
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
@@ -77,7 +77,8 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Windows SDK: 10.0.22621.0
 - ISO C++ 20
 - Vulkan SDK 1.3
-- Microsoft.Windows.CppWinRT NuGet package (For MIRU_TEST_UWP only)
+- Microsoft.Direct3D.D3D12.1.608.3 NuGet package
+- Microsoft.Windows.CppWinRT.2.0.201217.4 NuGet package (For MIRU_TEST_UWP only)
 
 ### Linux x64:
 - No project available to build.

@@ -1,6 +1,8 @@
 #pragma once
 #if defined(MIRU_D3D12)
 #include "base/Sync.h"
+#include "base/PipelineHelper.h"
+#include "base/Image.h"
 
 namespace miru
 {
@@ -90,10 +92,15 @@ namespace d3d12
 		Barrier2(base::Barrier2::CreateInfo* pCreateInfo);
 		~Barrier2();
 
+		static D3D12_BARRIER_SYNC ToD3D12BarrierSync(base::PipelineStageBit pipelineStageBit);
+		static D3D12_BARRIER_ACCESS ToD3D12BarrierAccess(Barrier::AccessBit access);
+		static D3D12_BARRIER_LAYOUT ToD3D12BarrierLayout(base::Image::Layout layout);
+
 		//Members
 	public:
-		//Index via arrayIndex * mipCount + mipIndex https://docs.microsoft.com/en-us/windows/win32/direct3d12/subresources#multiple-subresources
-		std::vector<D3D12_RESOURCE_BARRIER> m_Barriers;
+		std::vector<D3D12_GLOBAL_BARRIER> m_GlobalBarriers;
+		std::vector<D3D12_BUFFER_BARRIER> m_BufferBarriers;
+		std::vector<D3D12_TEXTURE_BARRIER> m_TextureBarriers;
 	};
 }
 }

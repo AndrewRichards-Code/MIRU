@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Android-arm64-v8a">
       <Configuration>Debug</Configuration>
@@ -31,6 +32,22 @@
     <ProjectGuid>{A85CAE6B-D45E-46B3-9FAF-CC609220443E}</ProjectGuid>
     <ProjectName>MIRU_CORE</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Microsoft_Direct3D_D3D12_D3D12SDKPath>.\D3D12\</Microsoft_Direct3D_D3D12_D3D12SDKPath>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|Gaming.Desktop.x64'">
+    <Microsoft_Direct3D_D3D12_D3D12SDKPath>.\D3D12\</Microsoft_Direct3D_D3D12_D3D12SDKPath>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Release|Gaming.Desktop.x64'">
+    <Microsoft_Direct3D_D3D12_D3D12SDKPath>.\D3D12\</Microsoft_Direct3D_D3D12_D3D12SDKPath>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Microsoft_Direct3D_D3D12_D3D12SDKPath>.\D3D12\</Microsoft_Direct3D_D3D12_D3D12SDKPath>
+    <Microsoft_Direct3D_D3D12_SkipLibraryCopy>
+    </Microsoft_Direct3D_D3D12_SkipLibraryCopy>
+    <Microsoft_Direct3D_D3D12_SkipIncludeDir>
+    </Microsoft_Direct3D_D3D12_SkipIncludeDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -119,7 +136,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\packages;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -147,7 +164,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\packages;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -176,7 +193,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\packages;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -207,7 +224,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\packages;$(ProjectDir)..\External;$(ProjectDir)src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MIRU_BUILD_DLL;PROJECT_DIR=R"($(ProjectDir))";_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>miru_core_common.h</PrecompiledHeaderFile>
@@ -371,7 +388,18 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Android-arm64-v8a'">NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.608.3\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+  </Target>
 </Project>

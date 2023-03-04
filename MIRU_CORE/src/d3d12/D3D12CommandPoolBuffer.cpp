@@ -370,17 +370,37 @@ void CommandBuffer::PipelineBarrier2(uint32_t index, const base::CommandBuffer::
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	std::vector<D3D12_RESOURCE_BARRIER> _barriers;
+	std::vector<D3D12_BARRIER_GROUP> barrierGroups;
 	for (auto& barrier : dependencyInfo.barriers)
 	{
-		for (auto& _barrier : ref_cast<Barrier2>(barrier)->m_Barriers)
-			_barriers.push_back(_barrier);
-
+		D3D12_BARRIER_GROUP barrierGroup;
+		if (barrier->GetCreateInfo().type == Barrier::Type::MEMORY)
+		{
+			const std::vector<D3D12_GLOBAL_BARRIER>& globalBarrier = ref_cast<Barrier2>(barrier)->m_GlobalBarriers;
+			barrierGroup.Type = D3D12_BARRIER_TYPE_GLOBAL;
+			barrierGroup.NumBarriers = static_cast<UINT>(globalBarrier.size());
+			barrierGroup.pGlobalBarriers = globalBarrier.data();
+		}
+		else if (barrier->GetCreateInfo().type == Barrier::Type::BUFFER)
+		{
+			const std::vector<D3D12_BUFFER_BARRIER>& bufferBarrier = ref_cast<Barrier2>(barrier)->m_BufferBarriers;
+			barrierGroup.Type = D3D12_BARRIER_TYPE_BUFFER;
+			barrierGroup.NumBarriers = static_cast<UINT>(bufferBarrier.size());
+			barrierGroup.pBufferBarriers = bufferBarrier.data();
+		}
+		else if (barrier->GetCreateInfo().type == Barrier::Type::IMAGE)
+		{
+			const std::vector<D3D12_TEXTURE_BARRIER>& textureBarrier = ref_cast<Barrier2>(barrier)->m_TextureBarriers;
+			barrierGroup.Type = D3D12_BARRIER_TYPE_TEXTURE;
+			barrierGroup.NumBarriers = static_cast<UINT>(textureBarrier.size());
+			barrierGroup.pTextureBarriers = textureBarrier.data();
+		}
+		barrierGroups.push_back(barrierGroup);
 	}
-	if (_barriers.empty())
+	if (barrierGroups.empty())
 		return;
 
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResourceBarrier(static_cast<UINT>(_barriers.size()), _barriers.data());
+	reinterpret_cast<ID3D12GraphicsCommandList7*>(m_CmdBuffers[index])->Barrier(static_cast<UINT>(barrierGroups.size()), barrierGroups.data());
 }
 
 void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges)
