@@ -593,7 +593,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 	}
 
 	handle = heap->GetCPUDescriptorHandleForHeapStart();
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, ShrinkUint32ToUint8(clear.stencil), 0, nullptr);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, static_cast<UINT8>(clear.stencil), 0, nullptr);
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
@@ -796,7 +796,7 @@ void CommandBuffer::NextSubpass(uint32_t index)
 			if (renderpassAttachments[attachId].stencilLoadOp == RenderPass::AttachmentLoadOp::CLEAR)
 			{
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
-				stencilClearValue = ShrinkUint32ToUint8(renderingResource.ClearValues[attachId].depthStencil.stencil);
+				stencilClearValue = static_cast<UINT8>(renderingResource.ClearValues[attachId].depthStencil.stencil);
 			}
 
 			if(flags)
@@ -867,7 +867,7 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 		if (renderingResource.RenderingInfo.pStencilAttachment && renderingResource.RenderingInfo.pStencilAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 		{	
 			flags |= D3D12_CLEAR_FLAG_STENCIL;
-			stencilClearValue = ShrinkUint32ToUint8(renderingResource.RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil);
+			stencilClearValue = static_cast<UINT8>(renderingResource.RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil);
 		}
 
 		if (flags)
