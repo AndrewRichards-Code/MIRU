@@ -4,8 +4,8 @@
 
 #include "base/DescriptorPoolSet.h"
 
-#include <d3d12shader.h>
-#include <dxcapi.h>
+#include "dxc/inc/d3d12shader.h"
+#include "dxc/inc/dxcapi.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -17,7 +17,7 @@ Shader::Shader(CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
-	m_ShaderModelData.HighestShaderModel = D3D_SHADER_MODEL_6_6;
+	m_ShaderModelData.HighestShaderModel = D3D_HIGHEST_SHADER_MODEL;
 	MIRU_WARN(m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &m_ShaderModelData, sizeof(m_ShaderModelData)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_SHADER_MODEL.");
 
 	Reconstruct();

@@ -99,20 +99,13 @@ void Basic()
 {
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
-	Context::CreateInfo contextCI;
-	contextCI.applicationName = "MIRU_TEST";
-	contextCI.extensions = Context::ExtensionsBit::NONE;
-	contextCI.debugValidationLayers = true;
-	contextCI.deviceDebugName = "GPU Device";
-	ContextRef context = Context::Create(&contextCI);
-
 #if defined(_WIN64)
 	//Creates the windows
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindProc;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpszClassName = contextCI.applicationName.c_str();
+	wc.lpszClassName = "MIRU_TEST";
 	RegisterClass(&wc);
 
 	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
@@ -144,6 +137,13 @@ void Basic()
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
 #endif
+
+	Context::CreateInfo contextCI;
+	contextCI.applicationName = "MIRU_TEST";
+	contextCI.extensions = Context::ExtensionsBit::NONE;
+	contextCI.debugValidationLayers = true;
+	contextCI.deviceDebugName = "GPU Device";
+	ContextRef context = Context::Create(&contextCI);
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";

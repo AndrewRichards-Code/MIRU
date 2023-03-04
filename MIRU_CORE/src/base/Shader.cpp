@@ -10,7 +10,7 @@
 #include "ARC/src/FileLoader.h"
 
 #if defined(_WIN64)
-#include <dxcapi.h>
+#include "dxc/inc/dxcapi.h"
 #endif
 
 using namespace miru;
