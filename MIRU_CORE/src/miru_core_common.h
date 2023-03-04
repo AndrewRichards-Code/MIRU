@@ -84,21 +84,6 @@
 
 #include "ARC/External/magic_enum/include/magic_enum.hpp"
 
-namespace miru
-{
-	inline uint8_t ShrinkUint32ToUint8(uint32_t value)
-	{
-		double result = (static_cast<double>(value) / static_cast<double>(UINT32_MAX)) * static_cast<double>(UINT8_MAX);
-		return static_cast<uint8_t>(result);
-	};
-
-	template<typename T>
-	inline T Align(T value, T alignment)
-	{
-		return (value + (alignment - 1)) & ~(alignment - 1);
-	};
-}
-
 //MIRU Class Forward Decalaration and Ref types
 #define MIRU_FORWARD_DECLARE_CLASS_AND_REF(_class) class _class; typedef Ref<_class> _class##Ref
 
