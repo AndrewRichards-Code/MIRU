@@ -430,7 +430,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleAlignment;
 
 		const uint32_t& handleSize = vkHandleSize;
-		const size_t handleSizeAligned = Align(vkHandleSize, vkHandleSizeAligned);
+		const size_t handleSizeAligned = arc::Align(vkHandleSize, vkHandleSizeAligned);
 		const size_t shaderGroupHandleDataSize = static_cast<size_t>(m_RTPCI.groupCount * handleSizeAligned);
 
 		//Get ShaderGroupHandle - Handles should return in the order specific in VkRayTracingPipelineCreateInfoKHR::pStages.
