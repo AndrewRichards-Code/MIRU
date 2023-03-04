@@ -107,7 +107,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_DebugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		m_DebugUtilsMessengerCI.pNext = nullptr;
 		m_DebugUtilsMessengerCI.flags = 0;
-		m_DebugUtilsMessengerCI.messageSeverity = /*VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |*/ VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		m_DebugUtilsMessengerCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		m_DebugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		m_DebugUtilsMessengerCI.pfnUserCallback = MessageCallbackFunction;
 		m_DebugUtilsMessengerCI.pUserData = this;
@@ -319,8 +319,20 @@ VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT
 	errorMessage << pCallbackData->pMessageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessage;
 	std::string errorMessageStr = errorMessage.str();
 
-	MIRU_ASSERT(pCallbackData->messageIdNumber, errorMessageStr.c_str());
-	return VkBool32();
+	if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
+	{
+		MIRU_ERROR(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	}
+	else if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
+	{
+		MIRU_WARN(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	}
+	else if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) || arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT))
+	{
+		MIRU_WARN(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+	}
+
+	return VK_FALSE;
 }
 
 void Context::AddExtensions()

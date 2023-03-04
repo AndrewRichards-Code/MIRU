@@ -74,6 +74,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_RI.activeExtensions = ExtensionsBit::DYNAMIC_RENDERING;
 	if (m_Features.d3d12Options5.RaytracingTier > D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
 		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
+	if (m_Features.d3d12Options12.EnhancedBarriersSupported)
+		m_RI.activeExtensions |= ExtensionsBit::SYNCHRONISATION_2;
 	if (m_Features.d3d12Options7.MeshShaderTier > D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
 		m_RI.activeExtensions |= ExtensionsBit::MESH_SHADER;
 	if (m_Features.d3d12Options3.ViewInstancingTier > D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED)
@@ -211,7 +213,30 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 	errorMessage << "D3D12 " << severity << ": " << description << " [ " << severity << " " << category << " #" << uint32_t(ID) << ": " << id << " ]";
 	std::string errorMessageStr = errorMessage.str();
 
-	MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
+	switch (Severity)
+	{
+		case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+		{
+			MIRU_FATAL(uint32_t(ID), errorMessageStr.c_str());
+			break;
+		}
+		case D3D12_MESSAGE_SEVERITY_ERROR:
+		{
+			MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
+			break;
+		}
+		case D3D12_MESSAGE_SEVERITY_WARNING:
+		{
+			MIRU_WARN(uint32_t(ID), errorMessageStr.c_str());
+			break;
+		}
+		case D3D12_MESSAGE_SEVERITY_INFO:
+		case D3D12_MESSAGE_SEVERITY_MESSAGE:
+		{
+			MIRU_INFO(uint32_t(ID), errorMessageStr.c_str());
+			break;
+		}
+	}
 }
 
 Context::Features::Features(ID3D12Device* device)
