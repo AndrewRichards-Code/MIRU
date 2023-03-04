@@ -86,17 +86,15 @@
 
 namespace miru
 {
-	inline auto shrink_uint32_t_to_uint8_t = [](uint32_t a) -> uint8_t
+	inline uint8_t ShrinkUint32ToUint8(uint32_t value)
 	{
-		uint8_t b = 0;
-		for (int i = 0; i < 8; i++)
-			b += ((0x0F & (a >> i * 4)) / 0xF) << i;
-		return b;
+		double result = (static_cast<double>(value) / static_cast<double>(UINT32_MAX)) * static_cast<double>(UINT8_MAX);
+		return static_cast<uint8_t>(result);
 	};
 
-	inline auto alignedSize = [](uint32_t value, uint32_t alignment) -> size_t
+	inline uint32_t Align(uint32_t value, uint32_t alignment)
 	{
-		return static_cast<size_t>((value + alignment - 1) & ~(alignment - 1));
+		return (value + (alignment - 1)) & ~(alignment - 1);
 	};
 }
 

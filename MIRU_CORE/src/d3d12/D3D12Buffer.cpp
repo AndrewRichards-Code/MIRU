@@ -20,11 +20,11 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	if (arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_BIT) || arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_TEXEL_BIT))
 	{
-		m_Allocation.width = (m_CI.size + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+		m_Allocation.width = Align(m_CI.size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 	}
 	else if (m_CI.imageDimension.width % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
 	{
-		m_Allocation.rowPitch = ((m_CI.imageDimension.width * m_CI.imageDimension.pixelSize) + (D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1)) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
+		m_Allocation.rowPitch = Align((m_CI.imageDimension.width * m_CI.imageDimension.pixelSize), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 		m_Allocation.rowPadding = m_Allocation.rowPitch - (m_CI.imageDimension.width * m_CI.imageDimension.pixelSize);
 		m_Allocation.width = m_Allocation.rowPitch * m_CI.imageDimension.height;
 		m_Allocation.height = m_CI.imageDimension.height;
@@ -149,8 +149,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::UNIFORM:
 		{
 			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
-			m_CBVDesc.SizeInBytes = (static_cast<UINT>(m_CI.size) + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
-			break;
+			m_CBVDesc.SizeInBytes = Align(static_cast<UINT>(m_CI.size), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 		}
 		case Type::STORAGE_TEXEL:
 		case Type::STORAGE:

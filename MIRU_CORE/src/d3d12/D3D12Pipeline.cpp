@@ -129,8 +129,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPSD.DepthStencilState.DepthWriteMask = static_cast<D3D12_DEPTH_WRITE_MASK>(m_CI.depthStencilState.depthWriteEnable);
 		m_GPSD.DepthStencilState.DepthFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.depthCompareOp) + 1);
 		m_GPSD.DepthStencilState.StencilEnable = m_CI.depthStencilState.stencilTestEnable;
-		m_GPSD.DepthStencilState.StencilReadMask = shrink_uint32_t_to_uint8_t(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.compareMask : m_CI.depthStencilState.front.compareMask);
-		m_GPSD.DepthStencilState.StencilWriteMask = shrink_uint32_t_to_uint8_t(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.writeMask : m_CI.depthStencilState.front.writeMask);
+		m_GPSD.DepthStencilState.StencilReadMask = ShrinkUint32ToUint8(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.compareMask : m_CI.depthStencilState.front.compareMask);
+		m_GPSD.DepthStencilState.StencilWriteMask = ShrinkUint32ToUint8(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.writeMask : m_CI.depthStencilState.front.writeMask);
 		m_GPSD.DepthStencilState.FrontFace.StencilFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.failOp) + 1);
 		m_GPSD.DepthStencilState.FrontFace.StencilDepthFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.depthFailOp) + 1);
 		m_GPSD.DepthStencilState.FrontFace.StencilPassOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.passOp) + 1);
@@ -436,7 +436,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		//ShaderHandleSize
 		const size_t& handleSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-		const size_t& handleSizeAligned = alignedSize(D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+		const size_t& handleSizeAligned = Align(D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 
 		//Allocate new memory for the handles to be copied into.
 		m_ShaderGroupHandles.reserve(shaderIdentifiers.size());
