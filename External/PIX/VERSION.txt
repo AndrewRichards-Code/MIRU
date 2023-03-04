@@ -1,2 +1,2 @@
-WinPixEventRuntime 1.0.220810001 2022/11/29
+WinPixEventRuntime 1.0.230302001 2023/03/04
 Redistribution - No Modifications.
