@@ -154,6 +154,11 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 
 						if (arg.find("-Fd") != std::string::npos)
 						{
+							if (spv)
+							{
+								c_arguments.pop_back();
+								continue;
+							}
 							std::string absoluteDstPDBDir = absoluteDstDir.replace(absoluteDstDir.find_last_of('.'), 4, ".pdb");
 							c_arguments.push_back(currentWorkingDir + absoluteDstPDBDir);
 						}
