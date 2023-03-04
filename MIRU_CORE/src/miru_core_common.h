@@ -92,7 +92,8 @@ namespace miru
 		return static_cast<uint8_t>(result);
 	};
 
-	inline uint32_t Align(uint32_t value, uint32_t alignment)
+	template<typename T>
+	inline T Align(T value, T alignment)
 	{
 		return (value + (alignment - 1)) & ~(alignment - 1);
 	};
