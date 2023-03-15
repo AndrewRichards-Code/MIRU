@@ -312,24 +312,27 @@ VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT
 		return msg_flags;
 	};
 
+	std::string messageIdName = (pCallbackData->pMessageIdName) ? pCallbackData->pMessageIdName : "";
 	std::string messageSeverityStr = GetMessageSeverityString(messageSeverity);
 	std::string messageTypeStr = GetMessageTypeString(VkDebugUtilsMessageTypeFlagBitsEXT(messageType));
+	int32_t messageIdNumber = pCallbackData->messageIdNumber;
+	std::string message = (pCallbackData->pMessage) ? pCallbackData->pMessage : "";
 
 	std::stringstream errorMessage;
-	errorMessage << pCallbackData->pMessageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessage;
+	errorMessage << messageIdName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << messageIdNumber << " - " << message;
 	std::string errorMessageStr = errorMessage.str();
 
 	if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
 	{
-		MIRU_ERROR(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+		MIRU_ERROR(messageIdNumber, errorMessageStr.c_str());
 	}
 	else if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
 	{
-		MIRU_WARN(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+		MIRU_WARN(messageIdNumber, errorMessageStr.c_str());
 	}
 	else if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) || arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT))
 	{
-		MIRU_WARN(pCallbackData->messageIdNumber, errorMessageStr.c_str());
+		MIRU_INFO(messageIdNumber, errorMessageStr.c_str());
 	}
 
 	return VK_FALSE;
