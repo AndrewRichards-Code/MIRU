@@ -9,7 +9,11 @@ struct VS_OUT
 {
 	MIRU_LOCATION(0, float4, position, SV_POSITION);
 	MIRU_LOCATION(1, float3, texCoords, TEXCOORD1);
+	#if MIRU_D3D12
+	MIRU_LOCATION(2, uint, rtIdx, SV_RenderTargetArrayIndex);
+	#else
 	MIRU_LOCATION(2, uint, rtIdx, TEXCOORD2);
+	#endif
 };
 typedef VS_OUT PS_IN;
 
