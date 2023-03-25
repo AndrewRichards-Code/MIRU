@@ -185,7 +185,7 @@ namespace base
 
 		struct DynamicRendering
 		{
-			uint32_t					viewMask;
+			uint32_t					viewMask = 0;
 			std::vector<Image::Format>	colourAttachmentFormats;
 			Image::Format				depthAttachmentFormat;
 			Image::Format				stencilAttachmentFormat;

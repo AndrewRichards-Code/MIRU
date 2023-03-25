@@ -85,7 +85,7 @@ void Shader::VulkanShaderReflection(
 	for (auto& stageAndEntryPoint : stageAndEntryPoints)
 		stageBit |= stageAndEntryPoint.first;
 
-	auto spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType =
+	auto spirv_cross_SPIRType_BaseType_to_miru_base_VertexType =
 		[](spirv_cross::SPIRType::BaseType type, uint32_t vector_count) -> base::VertexType
 	{
 		switch (type)
@@ -142,11 +142,11 @@ void Shader::VulkanShaderReflection(
 			break;
 		}
 
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::crossplatform::VertexType.");
+		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::base::VertexType.");
 		return static_cast<base::VertexType>(0);
 	};
 
-	auto sizeof_miru_crossplatform_VertexType =
+	auto sizeof_miru_base_VertexType =
 		[](base::VertexType type) -> uint32_t
 	{
 		switch (type)
@@ -192,8 +192,8 @@ void Shader::VulkanShaderReflection(
 			Shader::VertexShaderInputAttributeDescription vsiad;
 			vsiad.location = compiled_bin.get_decoration(res.id, spv::DecorationLocation);
 			vsiad.binding = 0;
-			vsiad.vertexType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
-			vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(VSIADs.back().vertexType);
+			vsiad.vertexType = spirv_cross_SPIRType_BaseType_to_miru_base_VertexType(type.basetype, type.vecsize);
+			vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_base_VertexType(VSIADs.back().vertexType);
 			vsiad.semanticName = res.name;
 			VSIADs.push_back(vsiad);
 		}
@@ -212,7 +212,7 @@ void Shader::VulkanShaderReflection(
 
 			Shader::FragmentShaderOutputAttributeDescription fsoad;
 			fsoad.location = location;
-			fsoad.outputType = spirv_cross_SPIRType_BaseType_to_miru_crossplatform_VertexType(type.basetype, type.vecsize);
+			fsoad.outputType = spirv_cross_SPIRType_BaseType_to_miru_base_VertexType(type.basetype, type.vecsize);
 			fsoad.semanticName = res.name;
 			PSOADs.push_back(fsoad);
 		}

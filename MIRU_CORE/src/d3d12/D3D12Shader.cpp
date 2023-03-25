@@ -92,7 +92,7 @@ void Shader::D3D12ShaderReflection(
 					if (partIndex != 0) //No reflection available for non-DXIL shaders.
 					{
 						//General parsing functions:
-						auto D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType = [](D3D_SHADER_INPUT_TYPE type, D3D_SRV_DIMENSION dimension) -> base::DescriptorType
+						auto D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType = [](D3D_SHADER_INPUT_TYPE type, D3D_SRV_DIMENSION dimension) -> base::DescriptorType
 						{
 							switch (type)
 							{
@@ -120,7 +120,7 @@ void Shader::D3D12ShaderReflection(
 								break;
 							}
 
-							MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::crossplatform::DescriptorType.");
+							MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::base::DescriptorType.");
 							return static_cast<base::DescriptorType>(0);
 						};
 						auto get_shader_stage = [](D3D12_SHADER_VERSION_TYPE type) -> Shader::StageBit
@@ -139,20 +139,25 @@ void Shader::D3D12ShaderReflection(
 								return Shader::StageBit::DOMAIN_BIT;
 							case D3D12_SHVER_COMPUTE_SHADER:
 								return Shader::StageBit::COMPUTE_BIT;
-							case D3D12_SHVER_RESERVED0:
+							case D3D12_SHVER_LIBRARY:
 								return Shader::StageBit(0);
-							case 7:
+							case D3D12_SHVER_RAY_GENERATION_SHADER:
 								return Shader::StageBit::RAYGEN_BIT;
-							case 8:
+							case D3D12_SHVER_INTERSECTION_SHADER:
 								return Shader::StageBit::INTERSECTION_BIT;
-							case 9:
+							case D3D12_SHVER_ANY_HIT_SHADER:
 								return Shader::StageBit::ANY_HIT_BIT;
-							case 10:
+							case D3D12_SHVER_CLOSEST_HIT_SHADER:
 								return Shader::StageBit::CLOSEST_HIT_BIT;
-							case 11:
+							case D3D12_SHVER_MISS_SHADER:
 								return Shader::StageBit::MISS_BIT;
-							case 12:
+							case D3D12_SHVER_CALLABLE_SHADER:
 								return Shader::StageBit::CALLABLE_BIT;
+							case D3D12_SHVER_MESH_SHADER:
+								return Shader::StageBit::MESH_BIT_EXT;
+							case D3D12_SHVER_AMPLIFICATION_SHADER:
+								return Shader::StageBit::AMPLIFICATION_BIT_EXT;
+							case D3D12_SHVER_RESERVED0:
 							default:
 								return Shader::StageBit(0);
 							}
@@ -177,7 +182,7 @@ void Shader::D3D12ShaderReflection(
 									D3D_FEATURE_LEVEL featureLevel;
 									shader_reflection->GetMinFeatureLevel(&featureLevel);
 
-									auto D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> base::VertexType
+									auto D3D_REGISTER_COMPONENT_TYPE_to_miru_base_VertexType = [](D3D_REGISTER_COMPONENT_TYPE type, uint32_t vector_count) -> base::VertexType
 									{
 										switch (type)
 										{
@@ -195,13 +200,13 @@ void Shader::D3D12ShaderReflection(
 										default:
 											break;
 										}
-										MIRU_WARN(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::crossplatform::VertexType.");
+										MIRU_WARN(true, "ERROR: D3D12: Unsupported D3D_REGISTER_COMPONENT_TYPE. Cannot convert to miru::base::VertexType.");
 										return static_cast<base::VertexType>(0);
 									};
 
 									if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
 									{
-										auto sizeof_miru_crossplatform_VertexType = [](base::VertexType type) -> uint32_t
+										auto sizeof_miru_base_VertexType = [](base::VertexType type) -> uint32_t
 										{
 											switch (type)
 											{
@@ -245,8 +250,8 @@ void Shader::D3D12ShaderReflection(
 												Shader::VertexShaderInputAttributeDescription vsiad;
 												vsiad.location = input_parameter.SemanticIndex;
 												vsiad.binding = 0;
-												vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
-												vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_crossplatform_VertexType(VSIADs.back().vertexType);
+												vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_base_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
+												vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_base_VertexType(VSIADs.back().vertexType);
 												vsiad.semanticName = input_parameter.SemanticName;
 												VSIADs.push_back(vsiad);
 											}
@@ -265,7 +270,7 @@ void Shader::D3D12ShaderReflection(
 											{
 												Shader::PixelShaderOutputAttributeDescription psoad;
 												psoad.location = out_parameter.SemanticIndex;
-												psoad.outputType = D3D_REGISTER_COMPONENT_TYPE_to_miru_crossplatform_VertexType(out_parameter.ComponentType, (uint32_t)log2((double)(out_parameter.Mask + 1)));
+												psoad.outputType = D3D_REGISTER_COMPONENT_TYPE_to_miru_base_VertexType(out_parameter.ComponentType, (uint32_t)log2((double)(out_parameter.Mask + 1)));
 												psoad.semanticName = out_parameter.SemanticName;
 												PSOADs.push_back(psoad);
 											}
@@ -298,7 +303,7 @@ void Shader::D3D12ShaderReflection(
 										{
 											size_t structSize = 0;
 
-											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
 											if (descType == base::DescriptorType::UNIFORM_BUFFER)
 											{
 												ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.
@@ -393,7 +398,7 @@ void Shader::D3D12ShaderReflection(
 													{
 														size_t structSize = 0;
 
-														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_crossplatform_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
 														if (descType == base::DescriptorType::UNIFORM_BUFFER)
 														{
 															ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = function_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.

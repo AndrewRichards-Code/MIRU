@@ -50,7 +50,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				m_GPSD.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			case Shader::StageBit::GEOMETRY_BIT:
 				m_GPSD.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
-			case Shader::StageBit::TASK_BIT_EXT:
+			case Shader::StageBit::AMPLIFICATION_BIT_EXT:
 				AS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			case Shader::StageBit::MESH_BIT_EXT:
 				MS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
@@ -225,11 +225,16 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		//Pipeline Extensions
 		CD3DX12_PIPELINE_STATE_STREAM2 gpss2(m_GPSD);
 
-		//ViewInstancing TODO: DynamicRendering
+		//ViewInstancing
+		uint32_t viewMask = 0;
 		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
+			viewMask = m_CI.renderPass->GetCreateInfo().multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)];
+		else
+			viewMask = m_CI.dynamicRendering.viewMask;
+		
+		if (viewMask > 0)
 		{
-			const RenderPass::Multiview& multiview = m_CI.renderPass->GetCreateInfo().multiview;
-			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)]);
+			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(viewMask);
 			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
 			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
 			{
@@ -237,7 +242,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
 			}
 			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
-			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
+			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_NONE;
 
 			gpss2.ViewInstancingDesc = CD3DX12_VIEW_INSTANCING_DESC(m_ViewInstancingDesc);
 		}

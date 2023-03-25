@@ -9,11 +9,6 @@ struct VS_OUT
 {
 	MIRU_LOCATION(0, float4, position, SV_POSITION);
 	MIRU_LOCATION(1, float3, texCoords, TEXCOORD1);
-	#if MIRU_D3D12
-	MIRU_LOCATION(2, uint, rtIdx, SV_RenderTargetArrayIndex);
-	#else
-	MIRU_LOCATION(2, uint, rtIdx, TEXCOORD2);
-	#endif
 };
 typedef VS_OUT PS_IN;
 
@@ -43,17 +38,16 @@ VS_OUT vs_main(VS_IN IN, uint ViewID : SV_ViewID)
 	VS_OUT OUT;
 	float4x4 modl = ViewID == 0 ? model.modl0 : model.modl1;
 	
-	OUT.position = mul(IN.position, mul(model.modl0, mul(camera.view, camera.proj)));
+	OUT.position = mul(IN.position, mul(modl, mul(camera.view, camera.proj)));
 	OUT.texCoords = IN.position.xyz;
-	OUT.rtIdx = ViewID;
 	return OUT;
 }
 
-PS_OUT ps_main(PS_IN IN)
+PS_OUT ps_main(PS_IN IN, uint ViewID : SV_ViewID)
 {
 	PS_OUT OUT;
 	//OUT.colour = colour_ImageCIS.Sample(colour_SamplerCIS, IN.texCoords) + (float4(IN.texCoords, 1.0) + float4(0.5, 0.5, 0.5, 0.0));
-	float4 c = IN.rtIdx == 0 ? float4(1, 0, 0, 1) : float4(0, 1, 0, 1);
+	float4 c = ViewID == 0 ? float4(1, 0, 0, 1) : float4(0, 1, 0, 1);
 	OUT.colour = colour_ImageCIS.Sample(colour_SamplerCIS, IN.texCoords) + c;
 	return OUT;
 }

@@ -35,6 +35,8 @@ namespace base
 			PIXEL_BIT = FRAGMENT_BIT,
 			HULL_BIT = TESSELLATION_CONTROL_BIT,
 			DOMAIN_BIT = TESSELLATION_EVALUATION_BIT,
+
+			AMPLIFICATION_BIT_EXT = TASK_BIT_EXT,
 		};
 
 		struct VertexShaderInputAttributeDescription
