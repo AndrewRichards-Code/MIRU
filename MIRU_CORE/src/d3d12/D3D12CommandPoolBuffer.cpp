@@ -939,10 +939,10 @@ void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeli
 		if (!arc::FindInVector(pipeline->GetCreateInfo().dynamicStates.dynamicStates, base::DynamicState::SCISSOR))
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(ref_cast<Pipeline>(pipeline)->m_Scissors.size()), ref_cast<Pipeline>(pipeline)->m_Scissors.data());
 		
-		//if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
-		//	reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_RenderingResources[index].SubpassIndex]);
-		//else if (m_RenderingResources[index].RenderingInfo.viewMask > 0)
-		//	reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingResources[index].RenderingInfo.viewMask);
+		if (pipeline->GetCreateInfo().renderPass && !pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks.empty())
+			reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->SetViewInstanceMask(pipeline->GetCreateInfo().renderPass->GetCreateInfo().multiview.viewMasks[m_RenderingResources[index].SubpassIndex]);
+		else if (m_RenderingResources[index].RenderingInfo.viewMask > 0)
+			reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->SetViewInstanceMask(m_RenderingResources[index].RenderingInfo.viewMask);
 	}
 	else if (pipeline->GetCreateInfo().type == base::PipelineType::COMPUTE)
 	{

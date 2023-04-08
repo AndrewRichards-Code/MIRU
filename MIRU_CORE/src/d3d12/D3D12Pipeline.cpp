@@ -242,7 +242,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
 			}
 			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
-			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_NONE;
+			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
 
 			gpss2.ViewInstancingDesc = CD3DX12_VIEW_INSTANCING_DESC(m_ViewInstancingDesc);
 		}
