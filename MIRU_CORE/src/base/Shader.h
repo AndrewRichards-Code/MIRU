@@ -61,7 +61,14 @@ namespace base
 			uint32_t			descriptorCount; //Number of descriptor in a single binding, accessed as an array.
 			Shader::StageBit	stage;
 			std::string			name;
+
 			size_t				structSize;
+
+			uint32_t			dimension;
+			bool				cubemap;
+			bool				array_;
+			bool				multisample;
+			bool				readwrite;
 		};
 
 		//See MSCDocumentation.h for correct usage.

@@ -246,6 +246,32 @@ void Shader::VulkanShaderReflection(
 				structSize = compiled_bin.get_declared_struct_size(type);
 			}
 
+			uint32_t dimension = 0;
+			bool cubemap = false;
+			bool array_ = false;
+			bool multisample = false;
+			bool readwrite = false;
+			if (descType == base::DescriptorType::COMBINED_IMAGE_SAMPLER || descType == base::DescriptorType::SAMPLED_IMAGE || descType == base::DescriptorType::STORAGE_IMAGE)
+			{
+				const spirv_cross::SPIRType::ImageType& image = type.image;
+				switch (image.dim)
+				{
+				case spv::Dim::Dim1D:
+					dimension = 1; break;
+				case spv::Dim::Dim2D:
+					dimension = 2; break;
+				case spv::Dim::Dim3D:
+					dimension = 3; break;
+				case spv::Dim::DimCube:
+					dimension = 2; cubemap = true; break;
+				default:
+					break;
+				}
+				array_ = image.arrayed;
+				multisample = image.ms;
+				readwrite = descType == base::DescriptorType::STORAGE_IMAGE ? true : false;
+			}
+
 			uint32_t set = compiled_bin.get_decoration(res.id, spv::DecorationDescriptorSet);
 			uint32_t binding = compiled_bin.get_decoration(res.id, spv::DecorationBinding);
 			uint32_t descCount = !type.array.empty() ? type.array[0] : 1;
@@ -261,23 +287,27 @@ void Shader::VulkanShaderReflection(
 						break;
 					}
 				}
+
 				if (found)
-				{
 					continue;
-				}
 				else
 					cis_list.push_back(res.name.substr(0, res.name.find_last_of('_')));
+
 				descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 			}
 
-			Shader::ResourceBindingDescription rbd;
+			Shader::ResourceBindingDescription& rbd = RBDs[set][binding];
 			rbd.binding = binding;
 			rbd.type = descType;
 			rbd.descriptorCount = descCount;
 			rbd.stage = stageBit;
 			rbd.name = name;
 			rbd.structSize = structSize;
-			RBDs[set][binding] = rbd;
+			rbd.dimension = dimension;
+			rbd.cubemap = cubemap;
+			rbd.array_ = array_;
+			rbd.multisample = multisample;
+			rbd.readwrite = readwrite;
 		}
 	};
 

@@ -301,9 +301,9 @@ void Shader::D3D12ShaderReflection(
 										MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetResourceBindingDesc failed.");
 										if (res == S_OK)
 										{
-											size_t structSize = 0;
-
 											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+
+											size_t structSize = 0;
 											if (descType == base::DescriptorType::UNIFORM_BUFFER)
 											{
 												ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = shader_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.
@@ -321,6 +321,39 @@ void Shader::D3D12ShaderReflection(
 												}
 											}
 
+											uint32_t dimension = 0;
+											bool cubemap = false;
+											bool array_ = false;
+											bool multisample = false;
+											bool readwrite = false;
+											if (descType == base::DescriptorType::COMBINED_IMAGE_SAMPLER || descType == base::DescriptorType::SAMPLED_IMAGE || descType == base::DescriptorType::STORAGE_IMAGE)
+											{
+												switch (bindingDesc.Dimension)
+												{
+												case D3D_SRV_DIMENSION_TEXTURE1D:
+													dimension = 1; break;
+												case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+													dimension = 1; array_ = true; break;
+												case D3D_SRV_DIMENSION_TEXTURE2D:
+													dimension = 2; break;
+												case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+													dimension = 2; array_ = true; break;
+												case D3D_SRV_DIMENSION_TEXTURE2DMS:
+													dimension = 2; multisample = true; break;
+												case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+													dimension = 2; array_ = true; multisample = true; break;
+												case D3D_SRV_DIMENSION_TEXTURE3D:
+													dimension = 3; break;
+												case D3D_SRV_DIMENSION_TEXTURECUBE:
+													dimension = 2; cubemap = true; break;
+												case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+													dimension = 2; cubemap = true; array_ = true; break;
+												default:
+													break;
+												}
+												readwrite = descType == base::DescriptorType::STORAGE_IMAGE ? true : false;
+											}
+
 											std::string name = bindingDesc.Name;
 											if (name.find("CIS") != std::string::npos)
 											{
@@ -333,23 +366,27 @@ void Shader::D3D12ShaderReflection(
 														break;
 													}
 												}
+
 												if (found)
-												{
 													continue;
-												}
 												else
 													cis_list.push_back(name.substr(0, name.find_last_of('_')));
+
 												descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 											}
 
-											Shader::ResourceBindingDescription rbd;
+											Shader::ResourceBindingDescription& rbd = RBDs[bindingDesc.Space][bindingDesc.BindPoint];
 											rbd.binding = bindingDesc.BindPoint;
 											rbd.type = descType;
 											rbd.descriptorCount = bindingDesc.BindCount;
 											rbd.stage = get_shader_stage(stage);
 											rbd.name = name;
 											rbd.structSize = structSize;
-											RBDs[bindingDesc.Space][bindingDesc.BindPoint] = rbd;
+											rbd.dimension = dimension;
+											rbd.cubemap = cubemap;
+											rbd.array_ = array_;
+											rbd.multisample = multisample;
+											rbd.readwrite = readwrite;
 										}
 									}
 								}
@@ -396,9 +433,9 @@ void Shader::D3D12ShaderReflection(
 													MIRU_WARN(res, "WARN: D3D12: ID3D12FunctionReflection::GetResourceBindingDesc failed.");
 													if (res == S_OK)
 													{
-														size_t structSize = 0;
-
 														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+
+														size_t structSize = 0;
 														if (descType == base::DescriptorType::UNIFORM_BUFFER)
 														{
 															ID3D12ShaderReflectionConstantBuffer* shader_reflection_constant_buffer = function_reflection->GetConstantBufferByName(bindingDesc.Name); //No need to release.
@@ -416,6 +453,39 @@ void Shader::D3D12ShaderReflection(
 															}
 														}
 
+														uint32_t dimension = 0;
+														bool cubemap = false;
+														bool array_ = false;
+														bool multisample = false;
+														bool readwrite = false;
+														if (descType == base::DescriptorType::COMBINED_IMAGE_SAMPLER || descType == base::DescriptorType::SAMPLED_IMAGE || descType == base::DescriptorType::STORAGE_IMAGE)
+														{
+															switch (bindingDesc.Dimension)
+															{
+															case D3D_SRV_DIMENSION_TEXTURE1D:
+																dimension = 1; break;
+															case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+																dimension = 1; array_ = true; break;
+															case D3D_SRV_DIMENSION_TEXTURE2D:
+																dimension = 2; break;
+															case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+																dimension = 2; array_ = true; break;
+															case D3D_SRV_DIMENSION_TEXTURE2DMS:
+																dimension = 2; multisample = true; break;
+															case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+																dimension = 2; array_ = true; multisample = true; break;
+															case D3D_SRV_DIMENSION_TEXTURE3D:
+																dimension = 3; break;
+															case D3D_SRV_DIMENSION_TEXTURECUBE:
+																dimension = 2; cubemap = true; break;
+															case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+																dimension = 2; cubemap = true; array_ = true; break;
+															default:
+																break;
+															}
+															readwrite = descType == base::DescriptorType::STORAGE_IMAGE ? true : false;
+														}
+
 														std::string name = bindingDesc.Name;
 														if (name.find("CIS") != std::string::npos)
 														{
@@ -428,12 +498,12 @@ void Shader::D3D12ShaderReflection(
 																	break;
 																}
 															}
+
 															if (found)
-															{
 																continue;
-															}
 															else
 																cis_list.push_back(name.substr(0, name.find_last_of('_')));
+
 															descType = base::DescriptorType::COMBINED_IMAGE_SAMPLER;
 														}
 
@@ -444,6 +514,11 @@ void Shader::D3D12ShaderReflection(
 														rbd.stage |= get_shader_stage(stage);
 														rbd.name = name;
 														rbd.structSize = structSize;
+														rbd.dimension = dimension;
+														rbd.cubemap = cubemap;
+														rbd.array_ = array_;
+														rbd.multisample = multisample;
+														rbd.readwrite = readwrite;
 													}
 												}
 											}
