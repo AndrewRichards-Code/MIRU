@@ -77,7 +77,7 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Windows SDK: 10.0.22621.0
 - ISO C++ 20
 - Vulkan SDK 1.3
-- Microsoft.Direct3D.D3D12.1.608.3 NuGet package
+- Microsoft.Direct3D.D3D12.1.610.3 NuGet package
 - Microsoft.Windows.CppWinRT.2.0.201217.4 NuGet package (For MIRU_TEST_UWP only)
 
 ### Linux x64:
