@@ -69,8 +69,18 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			il.Format = ToDXGI_FORMAT(attrib.vertexType);
 			il.InputSlot = attrib.binding;
 			il.AlignedByteOffset = attrib.offset;
-			il.InputSlotClass = static_cast<D3D12_INPUT_CLASSIFICATION>(m_CI.vertexInputState.vertexInputBindingDescriptions[attrib.binding].inputRate);
-			il.InstanceDataStepRate = static_cast<UINT>(m_CI.vertexInputState.vertexInputBindingDescriptions[attrib.binding].inputRate);
+
+			base::VertexInputRate inputRate;
+			for (auto& bindingDesc : m_CI.vertexInputState.vertexInputBindingDescriptions)
+			{
+				if (bindingDesc.binding == attrib.binding)
+				{
+					inputRate = bindingDesc.inputRate;
+					break;
+				}
+			}
+			il.InputSlotClass = static_cast<D3D12_INPUT_CLASSIFICATION>(inputRate);
+			il.InstanceDataStepRate = static_cast<UINT>(inputRate);
 			inputLayout.push_back(il);
 		}
 		m_GPSD.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };

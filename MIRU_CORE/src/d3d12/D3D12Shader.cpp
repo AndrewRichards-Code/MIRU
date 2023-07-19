@@ -249,7 +249,6 @@ void Shader::D3D12ShaderReflection(
 											{
 												Shader::VertexShaderInputAttributeDescription vsiad;
 												vsiad.location = input_parameter.SemanticIndex;
-												vsiad.binding = 0;
 												vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_base_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
 												vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_base_VertexType(VSIADs.back().vertexType);
 												vsiad.semanticName = input_parameter.SemanticName;

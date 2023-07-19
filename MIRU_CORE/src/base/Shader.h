@@ -42,7 +42,6 @@ namespace base
 		struct VertexShaderInputAttributeDescription
 		{
 			uint32_t	location;
-			uint32_t	binding;
 			VertexType	vertexType;
 			uint32_t	offset;
 			std::string semanticName;

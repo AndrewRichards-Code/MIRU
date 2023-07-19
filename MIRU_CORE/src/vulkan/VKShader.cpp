@@ -191,7 +191,6 @@ void Shader::VulkanShaderReflection(
 
 			Shader::VertexShaderInputAttributeDescription vsiad;
 			vsiad.location = compiled_bin.get_decoration(res.id, spv::DecorationLocation);
-			vsiad.binding = 0;
 			vsiad.vertexType = spirv_cross_SPIRType_BaseType_to_miru_base_VertexType(type.basetype, type.vecsize);
 			vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_base_VertexType(VSIADs.back().vertexType);
 			vsiad.semanticName = res.name;
