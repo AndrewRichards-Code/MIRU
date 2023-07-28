@@ -599,10 +599,10 @@ void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<base::Bu
 	CHECK_VALID_INDEX_RETURN(index);
 	std::vector<VkBuffer> vkBuffers;
 	std::vector<VkDeviceSize> offsets;
-	for (auto& vetexBufferView : vertexBufferViews)
+	for (auto& vertexBufferView : vertexBufferViews)
 	{
-		vkBuffers.push_back(ref_cast<Buffer>(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().buffer)->m_Buffer);
-		offsets.push_back(ref_cast<BufferView>(vetexBufferView)->GetCreateInfo().offset);
+		vkBuffers.push_back(ref_cast<Buffer>(ref_cast<BufferView>(vertexBufferView)->GetCreateInfo().buffer)->m_Buffer);
+		offsets.push_back(ref_cast<BufferView>(vertexBufferView)->GetCreateInfo().offset);
 	}
 
 	vkCmdBindVertexBuffers(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkBuffers.size()), vkBuffers.data(), offsets.data());
