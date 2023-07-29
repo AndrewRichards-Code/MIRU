@@ -143,7 +143,6 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
-      <AdditionalOptions>/constexpr:steps2097152 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -314,7 +313,6 @@
     <ClInclude Include="src\d3d12\D3D12Sync.h" />
     <ClInclude Include="src\d3d12\D3D12_Include.h" />
     <ClInclude Include="src\d3d12\D3D12_SetName.h" />
-    <ClInclude Include="src\d3d12\d3dx12.h" />
     <ClInclude Include="src\vulkan\VKAccelerationStructure.h" />
     <ClInclude Include="src\vulkan\VKAllocator.h" />
     <ClInclude Include="src\vulkan\VKBuffer.h" />

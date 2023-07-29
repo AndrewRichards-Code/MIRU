@@ -1,6 +1,6 @@
 #pragma once
+#define MIRU_CORE_COMMON_MINDEF
 #include "miru_core_common.h"
-
 #include "Pipeline.h"
 #include "Buffer.h"
 #include "AccelerationStructure.h"

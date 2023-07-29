@@ -129,7 +129,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -146,7 +146,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -165,7 +165,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_SHADER_CORE\src;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -186,7 +186,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -206,7 +206,7 @@
       <AdditionalDependencies>$(SolutionDir)bin\$(Platform)\$(Configuration)\libMIRU_CORE.so;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include;$(VS_NdkRoot)sources\android\native_app_glue</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External;$(VS_NdkRoot)sources\android\native_app_glue</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>;_DEBUG</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -217,7 +217,7 @@
       <AdditionalDependencies>$(SolutionDir)bin\$(Platform)\$(Configuration)\libMIRU_CORE.so;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\External;$(ProjectDir)..\MIRU_CORE\src;$(VULKAN_SDK)\Include;$(VS_NdkRoot)sources\android\native_app_glue</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MIRU_CORE\src;$(ProjectDir)..\External;$(VS_NdkRoot)sources\android\native_app_glue</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -341,3 +341,6 @@ ASALocalRun/
 healthchecksdb
 *.json
 /D3D12_RT_Error.txt
+/compileData.scor
+/compileData.scor.incl
+/compileData.scor.t0000
