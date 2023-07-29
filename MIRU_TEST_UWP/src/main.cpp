@@ -154,7 +154,8 @@ public:
 				cmdBuffer->DrawIndexed(frameIndex, 36);
 				cmdBuffer->EndRenderPass(frameIndex);
 				cmdBuffer->End(frameIndex);
-				cmdBuffer->Submit({ frameIndex }, { acquire }, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, draws[frameIndex]);
+				CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+				cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
 				swapchain->Present(cmdPool, submit, frameIndex);
 
@@ -385,7 +386,8 @@ public:
 
 			cmdCopyBuffer->End(0);
 		}
-		cmdCopyBuffer->Submit({ 0 }, {}, {}, { transfer }, nullptr);
+		CommandBuffer::SubmitInfo copySI = { { 0 }, {}, {}, {}, { transfer }, {} };
+		cmdCopyBuffer->Submit({ copySI }, nullptr);
 		{
 			cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 
@@ -404,7 +406,8 @@ public:
 
 			cmdBuffer->End(2);
 		}
-		cmdBuffer->Submit({ 2 }, { transfer }, { PipelineStageBit::TRANSFER_BIT }, {}, nullptr);
+		CommandBuffer::SubmitInfo copy2SI = { { 2 }, { transfer }, {}, { PipelineStageBit::TRANSFER_BIT }, {}, {} };
+		cmdBuffer->Submit({ copy2SI }, nullptr);
 
 		BufferView::CreateInfo vbViewCI;
 		vbViewCI.debugName = "VerticesBufferView";
@@ -665,7 +668,7 @@ public:
 		framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 	}
 
-	protected:
+protected:
 	// Event handlers
 	/*void OnActivated(CoreApplicationView const& applicationView, IActivatedEventArgs const& args)
 	{
