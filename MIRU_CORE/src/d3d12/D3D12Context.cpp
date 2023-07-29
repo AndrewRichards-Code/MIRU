@@ -203,14 +203,14 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 {
 	std::string category = std::string(magic_enum::enum_name<D3D12_MESSAGE_CATEGORY>(Category));
 	std::string severity = std::string(magic_enum::enum_name<D3D12_MESSAGE_SEVERITY>(Severity));
-	std::string id = std::string(magic_enum::enum_name<D3D12_MESSAGE_ID>(ID));
+	//std::string id = std::string(magic_enum::enum_name<D3D12_MESSAGE_ID>(ID));
 	std::string description = pDescription;
 
 	category = category.substr(category.find_last_of('_') + 1);
 	severity = severity.substr(severity.find_last_of('_') + 1);
 
 	std::stringstream errorMessage;
-	errorMessage << "D3D12 " << severity << ": " << description << " [ " << severity << " " << category << " #" << uint32_t(ID) << ": " << id << " ]";
+	errorMessage << "D3D12 " << severity << ": " << description << " [ " << severity << " " << category << " #" << uint32_t(ID) << ": " /*<< id*/ << " ]";
 	std::string errorMessageStr = errorMessage.str();
 
 	switch (Severity)
