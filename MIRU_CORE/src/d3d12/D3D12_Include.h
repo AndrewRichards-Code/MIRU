@@ -1,5 +1,7 @@
 #pragma once
 #if defined(MIRU_D3D12)
+#define NOMINMAX
+
 //D3D12 Header
 #include "../packages/Microsoft.Direct3D.D3D12.1.610.3/build/native/include/d3d12.h"
 #include <dxgi1_6.h>
