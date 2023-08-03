@@ -431,6 +431,15 @@ void Context::AddExtensions()
 		{
 			m_DeviceExtensions.push_back(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME);
 		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES))
+		{
+			m_DeviceExtensions.push_back(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME);
+			//Required by VK_KHR_shader_float16_int8.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
+			m_DeviceExtensions.push_back(VK_KHR_16BIT_STORAGE_EXTENSION_NAME);
+			//Required by VK_KHR_16bit_storage.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
+		}
 	}
 
 	if (m_AI.apiVersion >= VK_API_VERSION_1_1)
@@ -489,6 +498,11 @@ void Context::SetResultInfo()
 	//VK_EXT_shader_viewport_index_layer
 	if (IsActive(m_ActiveDeviceExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
+
+	//VK_KHR_shader_float16_int8, VK_KHR_16bit_storage
+	if (IsActive(m_ActiveDeviceExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME)
+		&& IsActive(m_ActiveDeviceExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
+		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
 	
 	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
@@ -625,6 +639,18 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				pdi.m_MultivewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
 				*nextPropsAddr = &pdi.m_MultivewFeatures;
 				nextPropsAddr = &pdi.m_MultivewFeatures.pNext;
+			}
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			{
+				pdi.m_ShaderFloat16Int8Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_ShaderFloat16Int8Features;
+				nextPropsAddr = &pdi.m_ShaderFloat16Int8Features.pNext;
+			}
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			{
+				pdi.m_16BitStorageFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_16BitStorageFeatures;
+				nextPropsAddr = &pdi.m_16BitStorageFeatures.pNext;
 			}
 			pdi.m_Features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 			vkGetPhysicalDeviceFeatures2(pdi.m_PhysicalDevice, &pdi.m_Features2);

@@ -14,7 +14,7 @@ void Sync2();
 #define MIRU_TEST_DYNAMIC_RENDERING 0
 #define MIRU_TEST_MULTIVIEW 0
 #define MIRU_TEST_MESH_SHADER 0
-#define MIRU_TEST_SYNC2 1
+#define MIRU_TEST_SYNC2 0
 
 int main()
 {

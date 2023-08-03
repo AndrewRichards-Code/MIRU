@@ -68,7 +68,12 @@ namespace base
 			//D3D12: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics
 			//Vulkan: VK_EXT_shader_viewport_index_layer : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/vkspec.html#VK_EXT_shader_viewport_index_layer
 			SHADER_VIEWPORT_INDEX_LAYER = 0x00000400,
-			
+
+			//STATUS: O		Allows the use of int16, uint16 and float16 in shaders
+			//D3D12: https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/d3d12/ns-d3d12-d3d12_feature_data_d3d12_options4.md, https://github.com/microsoft/DirectXShaderCompiler/wiki/16-Bit-Scalar-Types
+			//Vulkan: VK_KHR_shader_float16_int8, VK_KHR_16bit_storage : https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_shader_float16_int8.html, https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_16bit_storage.html
+			SHADER_NATIVE_16_BIT_TYPES	 = 0x00000800,
+
 			//STATUS: X 
 			//D3D12: https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-overview
 			//Vulkan: VK_KHR_video_queue, VK_KHR_video_encode_queue, VK_KHR_video_encode_h264/_h265 : https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap52.html#provisional-extension-appendices-list

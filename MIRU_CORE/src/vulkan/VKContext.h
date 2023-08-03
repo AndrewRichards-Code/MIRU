@@ -51,6 +51,12 @@ namespace vulkan
 				//VK_KHR_multiview
 				VkPhysicalDeviceMultiviewFeatures m_MultivewFeatures;
 				VkPhysicalDeviceMultiviewProperties m_MultivewProperties;
+
+				//VK_KHR_shader_float16_int8
+				VkPhysicalDeviceShaderFloat16Int8FeaturesKHR m_ShaderFloat16Int8Features;
+
+				//VK_KHR_16bit_storage
+				VkPhysicalDevice16BitStorageFeaturesKHR m_16BitStorageFeatures;
 				
 			};
 			std::vector<PhysicalDeviceInfo> m_PDIs;
