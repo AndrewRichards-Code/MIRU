@@ -220,6 +220,7 @@ public:
 		#endif
 		contextCI.extensions = Context::ExtensionsBit::NONE;
 		contextCI.deviceDebugName = "GPU Device";
+		contextCI.pNext = nullptr;
 		context = Context::Create(&contextCI);
 
 		swapchainCI.debugName = "Swapchain";
@@ -353,6 +354,7 @@ public:
 		imageCI.size = img_width * img_height * 4;
 		imageCI.data = nullptr;
 		imageCI.allocator = gpu_alloc_0;
+		imageCI.externalImage = nullptr;
 		image = Image::Create(&imageCI);
 
 		Semaphore::CreateInfo transSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
@@ -516,6 +518,7 @@ public:
 		colourCI.size = 0;
 		colourCI.data = nullptr;
 		colourCI.allocator = gpu_alloc_0;
+		colourCI.externalImage = nullptr;
 		colourImage = Image::Create(&colourCI);
 
 		ImageView::CreateInfo colourImageViewCI;
@@ -542,6 +545,7 @@ public:
 		depthCI.size = 0;
 		depthCI.data = nullptr;
 		depthCI.allocator = gpu_alloc_0;
+		depthCI.externalImage = nullptr;
 		depthImage = Image::Create(&depthCI);
 
 		ImageView::CreateInfo depthImageViewCI;

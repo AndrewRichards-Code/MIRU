@@ -262,6 +262,7 @@ namespace base
 			ClearColourValue		colour;
 			ClearDepthStencilValue	depthStencil;
 		};
+		typedef void* ExternalImageHandle;
 
 		struct CreateInfo
 		{
@@ -280,6 +281,7 @@ namespace base
 			size_t				size;
 			void*				data;
 			AllocatorRef		allocator;
+			ExternalImageHandle externalImage;
 		};
 
 		//Methods

@@ -10,7 +10,6 @@ namespace vulkan
 	{
 		//Methods
 	public:
-		Image() {};
 		Image(Image::CreateInfo* pCreateInfo);
 		~Image();
 

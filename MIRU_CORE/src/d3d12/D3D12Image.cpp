@@ -45,6 +45,13 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 		clear.DepthStencil = { 0.0f, 0 };
 	}
 
+	if (m_CI.externalImage)
+	{
+		m_InitialResourceState = D3D12_RESOURCE_STATE_COMMON;
+		m_Image = reinterpret_cast<ID3D12Resource*>(m_CI.externalImage);
+		return;
+	}
+
 	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.allocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 		m_InitialResourceState = ToD3D12ImageLayout(m_CI.layout);
@@ -339,6 +346,8 @@ DXGI_FORMAT Image::ToD3D12ImageFormat(Image::Format format)
 		return DXGI_FORMAT_UNKNOWN;
 	}
 }
+
+
 
 D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 {

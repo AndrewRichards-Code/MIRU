@@ -522,37 +522,37 @@ VkFormat Pipeline::ToVkFormat(base::VertexType type)
 
 	switch (type)
 	{
-	case miru::base::VertexType::FLOAT:
+	case base::VertexType::FLOAT:
 		return VK_FORMAT_R32_SFLOAT;
-	case miru::base::VertexType::VEC2:
+	case base::VertexType::VEC2:
 		return VK_FORMAT_R32G32_SFLOAT;
-	case miru::base::VertexType::VEC3:
+	case base::VertexType::VEC3:
 		return VK_FORMAT_R32G32B32_SFLOAT;
-	case miru::base::VertexType::VEC4:
+	case base::VertexType::VEC4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
-	case miru::base::VertexType::INT:
+	case base::VertexType::INT:
 		return VK_FORMAT_R32_SINT;
-	case miru::base::VertexType::IVEC2:
+	case base::VertexType::IVEC2:
 		return VK_FORMAT_R32G32_SINT;
-	case miru::base::VertexType::IVEC3:
+	case base::VertexType::IVEC3:
 		return VK_FORMAT_R32G32B32_SINT;
-	case miru::base::VertexType::IVEC4:
+	case base::VertexType::IVEC4:
 		return VK_FORMAT_R32G32B32A32_SINT;
-	case miru::base::VertexType::UINT:
+	case base::VertexType::UINT:
 		return VK_FORMAT_R32_UINT;
-	case miru::base::VertexType::UVEC2:
+	case base::VertexType::UVEC2:
 		return VK_FORMAT_R32G32_UINT;
-	case miru::base::VertexType::UVEC3:
+	case base::VertexType::UVEC3:
 		return VK_FORMAT_R32G32B32_UINT;
-	case miru::base::VertexType::UVEC4:
+	case base::VertexType::UVEC4:
 		return VK_FORMAT_R32G32B32A32_UINT;
-	case miru::base::VertexType::DOUBLE:
+	case base::VertexType::DOUBLE:
 		return VK_FORMAT_R64_SFLOAT;
-	case miru::base::VertexType::DVEC2:
+	case base::VertexType::DVEC2:
 		return VK_FORMAT_R64G64_SFLOAT;
-	case miru::base::VertexType::DVEC3:
+	case base::VertexType::DVEC3:
 		return VK_FORMAT_R64G64B64_SFLOAT;
-	case miru::base::VertexType::DVEC4:
+	case base::VertexType::DVEC4:
 		return VK_FORMAT_R64G64B64A64_SFLOAT;
 	default:
 		return VK_FORMAT_UNDEFINED;

@@ -28,6 +28,12 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_ImageCI.pQueueFamilyIndices = nullptr;
 	m_ImageCI.initialLayout = static_cast<VkImageLayout>(m_CI.layout);
 
+	if (m_CI.externalImage)
+	{
+		m_Image = reinterpret_cast<VkImage>(m_CI.externalImage);
+		return;
+	}
+
 	m_VmaACI.flags = 0;
 	m_VmaACI.usage = VMA_MEMORY_USAGE_UNKNOWN;
 	m_VmaACI.requiredFlags = static_cast<VkMemoryPropertyFlags>(m_CI.allocator->GetCreateInfo().properties);

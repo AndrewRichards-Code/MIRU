@@ -68,6 +68,22 @@ namespace vulkan
 			void FillOutFeaturesAndProperties(Context* pContext);
 		};
 
+		struct OpenXRVulkanData
+		{
+			typedef VkPhysicalDevice(*PFN_GetPhysicalDeviceVulkan)(VkInstance vkInstance, Ref<void> miruXrInstance, Ref<void> miruXrSystem);
+			CreateInfoExtensionStructureTypes	type;
+			void*								pNext;
+			uint16_t							minApiVersionMajorSupported;
+			uint16_t							minApiVersionMinorSupported;
+			uint16_t							maxApiVersionMajorSupported;
+			uint16_t							maxApiVersionMinorSupported;
+			std::vector<std::string>			instanceExtensions;
+			std::vector<std::string>			deviceExtensions;
+			PFN_GetPhysicalDeviceVulkan			getPhysicalDeviceVulkan;
+			Ref<void>							miruXrInstance;
+			Ref<void>							miruXrSystem;
+		};
+
 		//Methods
 	public:
 		Context(Context::CreateInfo* pCreateInfo);
@@ -109,6 +125,7 @@ namespace vulkan
 		std::vector<const char*> m_ActiveDeviceLayers;
 		std::vector<const char*> m_ActiveDeviceExtensions;
 		PhysicalDevices m_PhysicalDevices;
+		size_t m_PhysicalDeviceIndex;
 
 		//Queues
 		std::vector<std::vector<VkQueue>> m_Queues;

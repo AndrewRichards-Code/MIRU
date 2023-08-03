@@ -143,6 +143,7 @@ void Basic()
 	contextCI.extensions = Context::ExtensionsBit::NONE;
 	contextCI.debugValidationLayers = true;
 	contextCI.deviceDebugName = "GPU Device";
+	contextCI.pNext = nullptr;
 	ContextRef context = Context::Create(&contextCI);
 
 	Swapchain::CreateInfo swapchainCI;
@@ -306,6 +307,7 @@ void Basic()
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
 	imageCI.allocator = gpu_alloc_0;
+	imageCI.externalImage = nullptr;
 	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -475,6 +477,7 @@ void Basic()
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.allocator = gpu_alloc_0;
+	colourCI.externalImage = nullptr;
 	ImageRef colourImage = Image::Create(&colourCI);
 
 	ImageView::CreateInfo colourImageViewCI;
@@ -502,6 +505,7 @@ void Basic()
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.allocator = gpu_alloc_0;
+	depthCI.externalImage = nullptr;
 	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
@@ -529,6 +533,7 @@ void Basic()
 	resolveAndInputImageCI.size = 0;
 	resolveAndInputImageCI.data = nullptr;
 	resolveAndInputImageCI.allocator = gpu_alloc_0;
+	resolveAndInputImageCI.externalImage = nullptr;
 	ImageRef resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
 
 	ImageView::CreateInfo resolveAndInputImageViewCI;

@@ -64,7 +64,7 @@ void Sync2()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	//GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -73,6 +73,7 @@ void Sync2()
 	contextCI.extensions = Context::ExtensionsBit::SYNCHRONISATION_2;
 	contextCI.debugValidationLayers = true;
 	contextCI.deviceDebugName = "GPU Device";
+	contextCI.pNext = nullptr;
 	ContextRef context = Context::Create(&contextCI);
 
 	//Creates the windows
@@ -146,7 +147,7 @@ void Sync2()
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
-	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
+	cmdPoolCI.queueType = CommandPool::QueueType::TRANSFER;
 	CommandPoolRef cmdCopyPool = CommandPool::Create(&cmdPoolCI);
 
 	CommandBuffer::CreateInfo cmdBufferCI, cmdCopyBufferCI;
@@ -247,6 +248,7 @@ void Sync2()
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
 	imageCI.allocator = gpu_alloc_0;
+	imageCI.externalImage = nullptr;
 	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -318,7 +320,7 @@ void Sync2()
 		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
 		Barrier2Ref b = Barrier2::Create(&bCI);
 		CommandBuffer::DependencyInfo dependencyInfo = { DependencyBit::NONE_BIT, { b } };
-		cmdCopyBuffer->PipelineBarrier2(0, dependencyInfo);
+		//cmdCopyBuffer->PipelineBarrier2(0, dependencyInfo);
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -423,6 +425,7 @@ void Sync2()
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.allocator = gpu_alloc_0;
+	colourCI.externalImage = nullptr;
 	ImageRef colourImage = Image::Create(&colourCI);
 
 	ImageView::CreateInfo colourImageViewCI;
@@ -450,6 +453,7 @@ void Sync2()
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.allocator = gpu_alloc_0;
+	depthCI.externalImage = nullptr;
 	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
@@ -477,6 +481,7 @@ void Sync2()
 	resolveAndInputImageCI.size = 0;
 	resolveAndInputImageCI.data = nullptr;
 	resolveAndInputImageCI.allocator = gpu_alloc_0;
+	resolveAndInputImageCI.externalImage = nullptr;
 	ImageRef resolveAndInputImage = Image::Create(&resolveAndInputImageCI);
 
 	ImageView::CreateInfo resolveAndInputImageViewCI;
@@ -708,7 +713,7 @@ void Sync2()
 				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 				Barrier2Ref b = Barrier2::Create(&bCI);
 				CommandBuffer::DependencyInfo dependencyInfo = { DependencyBit::NONE_BIT, { b } };
-				cmdBuffer->PipelineBarrier2(2, dependencyInfo);
+				//cmdBuffer->PipelineBarrier2(2, dependencyInfo);
 
 				cmdBuffer->End(2);
 			}

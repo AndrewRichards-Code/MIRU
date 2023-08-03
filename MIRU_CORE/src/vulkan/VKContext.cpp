@@ -11,11 +11,37 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
+	//OpenXR Data
+	OpenXRVulkanData* openXRVulkanData = reinterpret_cast<OpenXRVulkanData*>(m_CI.pNext);
+	if (!(openXRVulkanData && openXRVulkanData->type == CreateInfoExtensionStructureTypes::OPENXR_VULKAN_DATA))
+		openXRVulkanData = nullptr;
+
 	//Instance
 	uint32_t apiVersion = VK_API_VERSION_1_0;
 	PFN_vkEnumerateInstanceVersion _vkEnumerateInstanceVersion = (PFN_vkEnumerateInstanceVersion)vkGetInstanceProcAddr(VK_NULL_HANDLE, "vkEnumerateInstanceVersion");
 	if (_vkEnumerateInstanceVersion != nullptr)
 		_vkEnumerateInstanceVersion(&apiVersion);
+
+	if (openXRVulkanData)
+	{
+		uint16_t apiVersionMajor = VK_API_VERSION_MAJOR(apiVersion);
+		uint16_t apiVersionMinor = VK_API_VERSION_MINOR(apiVersion);
+
+		bool underMin = apiVersionMajor < openXRVulkanData->minApiVersionMajorSupported
+			|| apiVersionMinor < openXRVulkanData->minApiVersionMinorSupported;
+		bool overMax = apiVersionMajor > openXRVulkanData->maxApiVersionMajorSupported
+			|| apiVersionMinor > openXRVulkanData->maxApiVersionMinorSupported;
+
+		if (underMin)
+		{
+			MIRU_ASSERT(true, "ERROR: VULKAN: Selected API Version is less than the minimum for OpenXR.");
+		}
+		if (overMax)
+		{
+			MIRU_WARN(true, "WARN: VULKAN: Selected API Version is greater than the maximum for OpenXR.");
+			apiVersion = VK_MAKE_API_VERSION(0, openXRVulkanData->maxApiVersionMajorSupported, openXRVulkanData->maxApiVersionMinorSupported, 0);
+		}
+	}
 	
 	#if defined(VK_USE_PLATFORM_WIN32_KHR)
 	const char* engineName = "MIRU - x64";
@@ -54,6 +80,16 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 		//Extensions
 		AddExtensions();
+
+		//OpenXR Extension
+		if (openXRVulkanData)
+		{
+			for (const auto& instanceExtension : openXRVulkanData->instanceExtensions)
+				m_InstanceExtensions.push_back(instanceExtension);
+
+			for (const auto& deviceExtension : openXRVulkanData->deviceExtensions)
+				m_DeviceExtensions.push_back(deviceExtension);
+		}
 	}
 
 	uint32_t instanceLayerCount = 0;
@@ -117,7 +153,21 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//PhysicalDevice
 	m_PhysicalDevices = PhysicalDevices(m_Instance);
-	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice; //We only use the first PhysicalDevice
+	m_PhysicalDeviceIndex = 0;
+	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_PhysicalDevice; //We only use the first PhysicalDevice
+	if (openXRVulkanData)
+	{
+		physicalDevice = openXRVulkanData->getPhysicalDeviceVulkan(m_Instance,openXRVulkanData->miruXrInstance, openXRVulkanData->miruXrSystem);
+
+		for (size_t i = 0; i < m_PhysicalDevices.m_PDIs.size(); i++)
+		{
+			if (m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_PhysicalDevice == physicalDevice)
+			{
+				m_PhysicalDeviceIndex = i;
+				break;
+			}
+		}
+	}
 
 	//Device
 	uint32_t queueFamilyPropertiesCount = 0;
@@ -172,11 +222,11 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//PhysicalDevice Features
 	m_PhysicalDevices.FillOutFeaturesAndProperties(this);
-	VkPhysicalDeviceFeatures* physicalDeviceFeatures = &m_PhysicalDevices.m_PDIs[0].m_Features;
+	VkPhysicalDeviceFeatures* physicalDeviceFeatures = &m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Features;
 	void* deviceCI_pNext = nullptr;
 #if !defined(VK_USE_PLATFORM_ANDROID_KHR)
 	if (IsActive(m_ActiveInstanceExtensions, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME) || m_AI.apiVersion >= VK_API_VERSION_1_1)
-		deviceCI_pNext = &m_PhysicalDevices.m_PDIs[0].m_Features2;
+		deviceCI_pNext = &m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Features2;
 #endif
 
 	m_DeviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -199,7 +249,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Set Names
 	//VKSetName<VkInstance>(m_Device, m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
-	VKSetName<VkPhysicalDevice>(m_Device, m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[0].m_Properties.deviceName));
+	VKSetName<VkPhysicalDevice>(m_Device, physicalDevice, "PhysicalDevice: " + std::string(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Properties.deviceName));
 	VKSetName<VkDevice>(m_Device, m_Device, m_CI.deviceDebugName);
 	
 	//Device Queues

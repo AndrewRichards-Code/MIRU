@@ -110,7 +110,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		MIRU_ASSERT(true, "ERROR: VULKAN: Swapchain minimum image count is not greater than 0.");
 	}
 
-	if (!(m_SurfaceCapability.minImageCount < m_CI.swapchainCount) && !(m_CI.swapchainCount < m_SurfaceCapability.maxImageCount))
+	if (!(m_SurfaceCapability.minImageCount < m_CI.swapchainCount) || !(m_CI.swapchainCount < m_SurfaceCapability.maxImageCount))
 		m_CI.swapchainCount = m_SurfaceCapability.minImageCount;
 
 	m_Extent = m_SurfaceCapability.currentExtent;

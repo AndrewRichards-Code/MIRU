@@ -72,6 +72,7 @@ void Raytracing()
 	contextCI.extensions = Context::ExtensionsBit::RAY_TRACING;
 	contextCI.debugValidationLayers = true;
 	contextCI.deviceDebugName = "GPU Device";
+	contextCI.pNext = nullptr;
 	ContextRef context = Context::Create(&contextCI);
 
 	//Creates the windows
@@ -280,6 +281,7 @@ void Raytracing()
 	RT_RWImageCI.size = width * height * 4;
 	RT_RWImageCI.data = nullptr;
 	RT_RWImageCI.allocator = gpu_alloc_0;
+	RT_RWImageCI.externalImage = nullptr;
 	ImageRef RT_RWImage = Image::Create(&RT_RWImageCI);
 
 	ImageView::CreateInfo RT_RWImageViewCI;

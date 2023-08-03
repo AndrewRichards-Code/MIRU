@@ -17,6 +17,11 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 
+	//OpenXR Data
+	OpenXRD3D12Data* openXRD3D12Data = reinterpret_cast<OpenXRD3D12Data*>(m_CI.pNext);
+	if (!(openXRD3D12Data && openXRD3D12Data->type == CreateInfoExtensionStructureTypes::OPENXR_D3D12_DATA))
+		openXRD3D12Data = nullptr;
+
 	//Setup Debug
 	if (m_CI.debugValidationLayers)
 	{
@@ -35,6 +40,21 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
+	
+	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[0].m_Adapter;
+	if (openXRD3D12Data)
+	{
+		for (const auto& physicalDeviceInfo : m_PhysicalDevices.m_PDIs)
+		{
+			const LUID& openXRAdapterLuid = openXRD3D12Data->adapterLuid;
+			const LUID& adapterLuid = physicalDeviceInfo.m_AdapterDesc.AdapterLuid;
+			if (memcmp(&openXRAdapterLuid, &adapterLuid, sizeof(LUID)) == 0)
+			{
+				adapter = physicalDeviceInfo.m_Adapter;
+				break;
+			}
+		}
+	}
 
 	//Load dxil.dll
 	if (!s_HModeuleDXIL)
@@ -54,18 +74,23 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	for (size_t i = 0; i < _countof(m_Features.featureLevelsList); i++)
 	{
 		featureLevel = m_Features.featureLevelsList[i];
-		HRESULT res = D3D12CreateDevice(m_PhysicalDevices.m_PDIs[0].m_Adapter, featureLevel, __uuidof(ID3D12Device), nullptr);
+		HRESULT res = D3D12CreateDevice(adapter, featureLevel, __uuidof(ID3D12Device), nullptr);
 		if (res == S_FALSE)
 			break;
 		else
 			continue;
 	}
+	if (openXRD3D12Data && featureLevel < openXRD3D12Data->minFeatureLevel)
+	{
+		MIRU_ASSERT(true, "ERROR: D3D12: Selected D3D_FEATURE_LEVEL is less than the minimum for OpenXR.");
+	}
+
 	m_RI.apiVersionMajor = (((uint32_t)(featureLevel) >> 12) & 0xFU);
 	m_RI.apiVersionMinor = (((uint32_t)(featureLevel) >> 8) & 0xFU);
 	m_RI.apiVersionPatch = 0;
 	
 	//Create Device
-	MIRU_ASSERT(D3D12CreateDevice(m_PhysicalDevices.m_PDIs[0].m_Adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device."); //We only use the first PhysicalDevice
+	MIRU_ASSERT(D3D12CreateDevice(adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device."); 
 	D3D12SetName(m_Device, m_CI.deviceDebugName);
 
 	//Enumerate D3D12 Device Features

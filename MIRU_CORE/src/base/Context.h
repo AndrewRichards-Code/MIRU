@@ -85,6 +85,7 @@ namespace base
 			bool			debugValidationLayers;
 			ExtensionsBit	extensions;
 			std::string		deviceDebugName;
+			void*			pNext;
 		};
 		struct ResultInfo
 		{
@@ -92,6 +93,12 @@ namespace base
 			uint32_t		apiVersionMinor;
 			uint32_t		apiVersionPatch;
 			ExtensionsBit	activeExtensions;
+		};
+		enum class CreateInfoExtensionStructureTypes : uint32_t
+		{
+			UNKNOWN,
+			OPENXR_D3D12_DATA,
+			OPENXR_VULKAN_DATA,
 		};
 
 		//Methods

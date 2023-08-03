@@ -74,6 +74,14 @@ namespace d3d12
 			Features(ID3D12Device* device);
 		};
 
+		struct OpenXRD3D12Data
+		{
+			CreateInfoExtensionStructureTypes	type;
+			void*								pNext;
+			LUID								adapterLuid;
+			D3D_FEATURE_LEVEL					minFeatureLevel;
+		};
+
 		//Methods
 	public:
 		Context(Context::CreateInfo* pCreateInfo);

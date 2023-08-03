@@ -71,6 +71,7 @@ void Multiview()
 	contextCI.extensions = Context::ExtensionsBit::MULTIVIEW;
 	contextCI.debugValidationLayers = false;
 	contextCI.deviceDebugName = "GPU Device";
+	contextCI.pNext = nullptr;
 	ContextRef context = Context::Create(&contextCI);
 	
 	//Creates the windows
@@ -243,6 +244,7 @@ void Multiview()
 	imageCI.size = img_width * img_height * 4;
 	imageCI.data = nullptr;
 	imageCI.allocator = gpu_alloc_0;
+	imageCI.externalImage = nullptr;
 	ImageRef image = Image::Create(&imageCI);
 
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -417,6 +419,7 @@ void Multiview()
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.allocator = gpu_alloc_0;
+	colourCI.externalImage = nullptr;
 	ImageRef colourImage = Image::Create(&colourCI);
 
 	ImageView::CreateInfo colourImageViewCI;
@@ -444,6 +447,7 @@ void Multiview()
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.allocator = gpu_alloc_0;
+	depthCI.externalImage = nullptr;
 	ImageRef depthImage = Image::Create(&depthCI);
 
 	ImageView::CreateInfo depthImageViewCI;
