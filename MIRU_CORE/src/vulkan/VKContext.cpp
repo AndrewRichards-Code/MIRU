@@ -157,7 +157,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_PhysicalDevice; //We only use the first PhysicalDevice
 	if (openXRVulkanData)
 	{
-		physicalDevice = openXRVulkanData->getPhysicalDeviceVulkan(m_Instance,openXRVulkanData->miruXrInstance, openXRVulkanData->miruXrSystem);
+		physicalDevice = openXRVulkanData->getPhysicalDeviceVulkan(m_Instance);
 
 		for (size_t i = 0; i < m_PhysicalDevices.m_PDIs.size(); i++)
 		{

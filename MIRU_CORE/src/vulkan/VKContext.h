@@ -76,18 +76,15 @@ namespace vulkan
 
 		struct OpenXRVulkanData
 		{
-			typedef VkPhysicalDevice(*PFN_GetPhysicalDeviceVulkan)(VkInstance vkInstance, Ref<void> miruXrInstance, Ref<void> miruXrSystem);
-			CreateInfoExtensionStructureTypes	type;
-			void*								pNext;
-			uint16_t							minApiVersionMajorSupported;
-			uint16_t							minApiVersionMinorSupported;
-			uint16_t							maxApiVersionMajorSupported;
-			uint16_t							maxApiVersionMinorSupported;
-			std::vector<std::string>			instanceExtensions;
-			std::vector<std::string>			deviceExtensions;
-			PFN_GetPhysicalDeviceVulkan			getPhysicalDeviceVulkan;
-			Ref<void>							miruXrInstance;
-			Ref<void>							miruXrSystem;
+			CreateInfoExtensionStructureTypes			type;
+			void*										pNext;
+			uint16_t									minApiVersionMajorSupported;
+			uint16_t									minApiVersionMinorSupported;
+			uint16_t									maxApiVersionMajorSupported;
+			uint16_t									maxApiVersionMinorSupported;
+			std::vector<std::string>					instanceExtensions;
+			std::vector<std::string>					deviceExtensions;
+			std::function<VkPhysicalDevice(VkInstance)>	getPhysicalDeviceVulkan;
 		};
 
 		//Methods
