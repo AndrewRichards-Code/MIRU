@@ -46,7 +46,7 @@ This repository is under active development and is not currently intended for co
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2303.02, RenderDoc v1.25
+- Graphics Debuggers: Pix 2303.02, RenderDoc v1.28
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
@@ -56,19 +56,18 @@ This repository is under active development and is not currently intended for co
 
 ## Projects:
 ### MIRU_CORE: 
-Contains the core functionality of the Low level Graphics API wrapper. Provide path to VulkanSDK; Build as dynamic library; Dynamic Runtime Linking (MD).
+Contains the core functionality of the Low level Graphics API wrapper. Provide path to the Vulkan SDK; Build as dynamic library; Dynamic Runtime Linking (MD).
 
 ### MIRU_SHADER_COMPILER: 
 A 'compiler' that uses HLSL files to produce SPIR-V and CSO binaries using dxcompiler. Build as executable; Dynamic Runtime Linking (MD).
 
 ### MIRU_TEST: 
-Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD).
+Simple test application for development, test and demostration. Build as executable; Dynamic Runtime Linking (MD). This project also compiles for Android with Android Game Developer Extension.
 
 ### MIRU_TEST_UWP:
 A UWP version of the MIRU_TEST project. MIRU_CORE should be built with the define MIRU_WIN64_UWP. Build as executable; Dynamic Runtime Linking (MD). - WIP
 
 ### MIRU_ANDRIOD/MIRU_TEST:
-An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded as native activity, and libMIRU_CORE.a;
 
 ## Build Tools with Visual Studio:
 ### Windows x64:
@@ -76,21 +75,9 @@ An Android version of the MIRU_TEST project. Build both libMIRU_TEST.so, loaded 
 - Toolset: v143 
 - Windows SDK: 10.0.22621.0
 - ISO C++ 20
-- Vulkan SDK 1.3
+- Vulkan SDK 1.3 with Shader Toolchain Debug Symbols - 64-bit
 - Microsoft.Direct3D.D3D12.1.610.3 NuGet package
 - Microsoft.Windows.CppWinRT.2.0.201217.4 NuGet package (For MIRU_TEST_UWP only)
 
 ### Linux x64:
 - No project available to build.
-
-### Android ARM64:
-- Android Studio 4.0.1
-- Android SDK Build-Tools: 30.0.2
-- Android SDK Platform-Tools: 30.0.1
-- Android NDK: 22 Beta / 21.3.6528147
-- Android Gradle Plugin Version: 4.0.1
-- Gradle Version: 6.1.1
-- Android CMake: 3.10.2.4988404
-- Android API: Minimum 24 - Target 28
-- ISO C++ 17 (-std=c++1z)
-

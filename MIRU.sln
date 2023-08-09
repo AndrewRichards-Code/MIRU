@@ -9,23 +9,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIRU_TEST", "MIRU_TEST\MIRU
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIRU_CORE", "MIRU_CORE\MIRU_CORE.vcxproj", "{A85CAE6B-D45E-46B3-9FAF-CC609220443E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{3B139016-30E1-4F38-891E-194E65E24DA9} = {3B139016-30E1-4F38-891E-194E65E24DA9}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIRU_TEST_UWP", "MIRU_TEST_UWP\MIRU_TEST_UWP.vcxproj", "{878190F7-A818-4445-A84C-21C3E1A5C0FA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A85CAE6B-D45E-46B3-9FAF-CC609220443E} = {A85CAE6B-D45E-46B3-9FAF-CC609220443E}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{258EA3CB-EDFD-46B3-9338-991336D49D98}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIRU_SHADER_COMPILER", "MIRU_SHADER_COMPILER\MIRU_SHADER_COMPILER.vcxproj", "{1DDDBE24-1051-4D10-AC4A-4BA23B633F27}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A85CAE6B-D45E-46B3-9FAF-CC609220443E} = {A85CAE6B-D45E-46B3-9FAF-CC609220443E}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spirv-cross-core", "External\SPIRV-Cross\spirv-cross-core\spirv-cross-core.vcxproj", "{3B139016-30E1-4F38-891E-194E65E24DA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,24 +84,9 @@ Global
 		{1DDDBE24-1051-4D10-AC4A-4BA23B633F27}.Release|Gaming.Desktop.x64.Build.0 = Release|x64
 		{1DDDBE24-1051-4D10-AC4A-4BA23B633F27}.Release|x64.ActiveCfg = Release|x64
 		{1DDDBE24-1051-4D10-AC4A-4BA23B633F27}.Release|x64.Build.0 = Release|x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|Android-arm64-v8a.ActiveCfg = Debug|Android-arm64-v8a
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|Android-arm64-v8a.Build.0 = Debug|Android-arm64-v8a
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|Gaming.Desktop.x64.ActiveCfg = Debug|Gaming.Desktop.x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|Gaming.Desktop.x64.Build.0 = Debug|Gaming.Desktop.x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|x64.ActiveCfg = Debug|x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Debug|x64.Build.0 = Debug|x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|Android-arm64-v8a.ActiveCfg = Release|Android-arm64-v8a
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|Android-arm64-v8a.Build.0 = Release|Android-arm64-v8a
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|Gaming.Desktop.x64.ActiveCfg = Release|Gaming.Desktop.x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|Gaming.Desktop.x64.Build.0 = Release|Gaming.Desktop.x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|x64.ActiveCfg = Release|x64
-		{3B139016-30E1-4F38-891E-194E65E24DA9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{3B139016-30E1-4F38-891E-194E65E24DA9} = {258EA3CB-EDFD-46B3-9338-991336D49D98}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {33F0DCA6-E97A-4E65-BB90-E55C25EBDCCC}
