@@ -421,99 +421,28 @@ void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image
 	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for RenderTargetViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
 	UINT RTV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
 		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 		{
-			D3D12_RENDER_TARGET_VIEW_DESC m_RTVDesc = {};
-			m_RTVDesc.Format = resourceDesc.Format;
-			switch (resourceDesc.Dimension)
-			{
-			case D3D12_RESOURCE_DIMENSION_UNKNOWN:
-			{
-				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_UNKNOWN;
-				break;
-			}
-			case D3D12_RESOURCE_DIMENSION_BUFFER:
-			{
-				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
-				m_RTVDesc.Buffer.FirstElement = 0;
-				m_RTVDesc.Buffer.NumElements = static_cast<UINT>(resourceDesc.Width);
-				break;
-			}
-			case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-			{
-				if (resourceDesc.DepthOrArraySize > 1)
-				{
-					m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
-					m_RTVDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-					m_RTVDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-					m_RTVDesc.Texture1DArray.MipSlice = i;
-					break;
-				}
-				else
-				{
-					m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-					m_RTVDesc.Texture1D.MipSlice = i;
-					break;
-				}
-			}
-			case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
-			{
-				if (resourceDesc.DepthOrArraySize > 1)
-				{
-					if (resourceDesc.SampleDesc.Count > 1)
-					{
-						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
-						m_RTVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						m_RTVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						break;
-					}
-					else
-					{
-						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-						m_RTVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						m_RTVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						m_RTVDesc.Texture2D.MipSlice = i;
-						m_RTVDesc.Texture2D.PlaneSlice = 0;
-						break;
-					}
-				}
-				else
-				{
-					if (resourceDesc.SampleDesc.Count > 1)
-					{
-						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
-						break;
-					}
-					else
-					{
-						m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-						m_RTVDesc.Texture2D.MipSlice = i;
-						m_RTVDesc.Texture2D.PlaneSlice = 0;
-						break;
-					}
-				}
-			}
-			case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
-			{
-				m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-				m_RTVDesc.Texture3D.FirstWSlice = subresourceRanges[h].baseArrayLayer;
-				m_RTVDesc.Texture3D.WSize = subresourceRanges[h].arrayLayerCount;
-				m_RTVDesc.Texture3D.MipSlice = i;
-				break;
-			}
-			}
-			m_Device->CreateRenderTargetView(ref_cast<Image>(image)->m_Image, 0/*&m_RTVDesc*/, handle);
+			ImageView::CreateInfo imageViewCI;
+			imageViewCI.debugName = "CommandBuffer::ClearColourImage RTV: " + std::to_string(h) + " MIP: " + std::to_string(i);
+			imageViewCI.device = m_Device;
+			imageViewCI.image = image;
+			imageViewCI.viewType = image->GetCreateInfo().type;
+			imageViewCI.subresourceRange = subresourceRanges[h];
+			imageViewCI.subresourceRange.baseMipLevel = i;
+			imageViewCI.subresourceRange.mipLevelCount = 1;
+			d3d12::ImageViewRef rtv = ref_cast<d3d12::ImageView>(ImageView::Create(&imageViewCI));
+
+			m_Device->CreateRenderTargetView(ref_cast<Image>(image)->m_Image, &(rtv->m_RTVDesc), handle);
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(handle, clear.float32, 0, nullptr);
 			handle.ptr += RTV_DescriptorSize;
 		}
 	}
 
-	handle = heap->GetCPUDescriptorHandleForHeapStart();
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
@@ -527,7 +456,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 			descriptorCount++;
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = descriptorCount;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -535,85 +464,28 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for DepthStencilViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
-	D3D12_RESOURCE_DESC resourceDesc = ref_cast<Image>(image)->m_ResourceDesc;
 	UINT DSV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	for (size_t h = 0; h < subresourceRanges.size(); h++)
 	{
 		for (uint32_t i = subresourceRanges[h].baseMipLevel; i < subresourceRanges[h].baseMipLevel + subresourceRanges[h].mipLevelCount; i++)
 		{
-			D3D12_DEPTH_STENCIL_VIEW_DESC m_DSVDesc;
-			m_DSVDesc.Format = resourceDesc.Format;
-			switch (resourceDesc.Dimension)
-			{
-			case D3D12_RESOURCE_DIMENSION_BUFFER:
-			case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
-			case D3D12_RESOURCE_DIMENSION_UNKNOWN:
-			{
-				m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_UNKNOWN;
-				break;
-			}
-			case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-			{
-				if (resourceDesc.DepthOrArraySize > 1)
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
-					m_DSVDesc.Texture1DArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-					m_DSVDesc.Texture1DArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-					m_DSVDesc.Texture1DArray.MipSlice = i;
-					break;
-				}
-				else
-				{
-					m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
-					m_DSVDesc.Texture1D.MipSlice = i;
-					break;
-				}
-			}
-			case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
-			{
-				if (resourceDesc.DepthOrArraySize > 1)
-				{
-					if (resourceDesc.SampleDesc.Count > 1)
-					{
-						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
-						m_DSVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						m_DSVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						break;
-					}
-					else
-					{
-						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-						m_DSVDesc.Texture2DMSArray.FirstArraySlice = subresourceRanges[h].baseArrayLayer;
-						m_DSVDesc.Texture2DMSArray.ArraySize = subresourceRanges[h].arrayLayerCount;
-						m_DSVDesc.Texture2D.MipSlice = i;
-						break;
-					}
-				}
-				else
-				{
-					if (resourceDesc.SampleDesc.Count > 1)
-					{
-						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
-						break;
-					}
-					else
-					{
-						m_DSVDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-						m_DSVDesc.Texture2D.MipSlice = i;
-						break;
-					}
-				}
-			}
-			}
-			m_Device->CreateDepthStencilView(ref_cast<Image>(image)->m_Image, 0/*&m_DSVDesc*/, handle);
+			ImageView::CreateInfo imageViewCI;
+			imageViewCI.debugName = "CommandBuffer::ClearColourImage DSV: " + std::to_string(h) + " MIP: " + std::to_string(i);
+			imageViewCI.device = m_Device;
+			imageViewCI.image = image;
+			imageViewCI.viewType = image->GetCreateInfo().type;
+			imageViewCI.subresourceRange = subresourceRanges[h];
+			imageViewCI.subresourceRange.baseMipLevel = i;
+			imageViewCI.subresourceRange.mipLevelCount = 1;
+			d3d12::ImageViewRef dsv = ref_cast<d3d12::ImageView>(ImageView::Create(&imageViewCI));
+
+			m_Device->CreateDepthStencilView(ref_cast<Image>(image)->m_Image, &(dsv->m_DSVDesc), handle);
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, static_cast<UINT8>(clear.stencil), 0, nullptr);
 			handle.ptr += DSV_DescriptorSize;
-			descriptorCount++;
 		}
 	}
 
-	handle = heap->GetCPUDescriptorHandleForHeapStart();
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clear.depth, static_cast<UINT8>(clear.stencil), 0, nullptr);
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
