@@ -61,7 +61,7 @@ Image::~Image()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (!m_SwapchainImage)
+	if (!m_SwapchainImage && !m_CI.externalImage)
 	{
 		vmaDestroyImage(m_CI.allocator->GetVmaAllocator(), m_Image, m_VmaAllocation);
 	}

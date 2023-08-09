@@ -82,7 +82,7 @@ Image::~Image()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (!m_SwapchainImage)
+	if (!m_SwapchainImage && !m_CI.externalImage)
 	{
 		MIRU_D3D12_SAFE_RELEASE(m_D3D12MAllocation);
 		MIRU_D3D12_SAFE_RELEASE(m_Image);
