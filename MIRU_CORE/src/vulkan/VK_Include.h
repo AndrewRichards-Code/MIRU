@@ -20,7 +20,7 @@
 #include "VulkanMemoryAllocator/include/vk_mem_alloc.h"
 
 //SPIR-V Cross Core
-#include "SPIRV-Cross/spirv_cross.hpp"
+#include "spirv_cross/spirv_cross.hpp"
 
 //Internal Version
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
