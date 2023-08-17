@@ -60,8 +60,8 @@ static void WindowUpdate()
 
 void DynamicRendering()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
@@ -215,6 +215,7 @@ void DynamicRendering()
 	imageBufferCI.data = imageData;
 	imageBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
+	stbi_image_free(imageData);
 
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "MIRU logo Image";

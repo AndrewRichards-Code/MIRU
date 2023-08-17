@@ -39,7 +39,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		if (overMax)
 		{
 			MIRU_WARN(true, "WARN: VULKAN: Selected API Version is greater than the maximum for OpenXR.");
-			apiVersion = VK_MAKE_API_VERSION(0, openXRVulkanData->maxApiVersionMajorSupported, openXRVulkanData->maxApiVersionMinorSupported, 0);
 		}
 	}
 	

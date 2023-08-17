@@ -84,7 +84,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	m_SemaphoreTypeCI.initialValue = 0;
 
 	m_SemaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	m_SemaphoreCI.pNext = &m_SemaphoreTypeCI;
+	m_SemaphoreCI.pNext = m_CI.type == Type::TIMELINE ? &m_SemaphoreTypeCI : nullptr;
 	m_SemaphoreCI.flags = 0;
 
 	MIRU_ASSERT(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create Semaphore.");

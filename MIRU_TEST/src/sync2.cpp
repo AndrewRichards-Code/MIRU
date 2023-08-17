@@ -231,6 +231,7 @@ void Sync2()
 	imageBufferCI.data = imageData;
 	imageBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
+	stbi_image_free(imageData);
 
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "MIRU logo Image";
