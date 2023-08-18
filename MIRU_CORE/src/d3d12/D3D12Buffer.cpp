@@ -150,6 +150,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		{
 			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress() + m_CI.offset;
 			m_CBVDesc.SizeInBytes = arc::Align<UINT>(static_cast<UINT>(m_CI.size), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+			break;
 		}
 		case Type::STORAGE_TEXEL:
 		case Type::STORAGE:
