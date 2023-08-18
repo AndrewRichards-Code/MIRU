@@ -173,8 +173,8 @@ public:
 				memcpy(ubData + 0 * 16, &proj[0][0], sizeof(mat4));
 				memcpy(ubData + 1 * 16, &view[0][0], sizeof(mat4));
 
-				cpu_alloc_0->SubmitData(ub1->GetAllocation(), 2 * sizeof(mat4), ubData);
-				cpu_alloc_0->SubmitData(ub2->GetAllocation(), sizeof(mat4), (void*)&modl[0][0]);
+				cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(mat4), ubData);
+				cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(mat4), (void*)&modl[0][0]);
 
 				var_x++;
 				var_y = 20;

@@ -631,8 +631,8 @@ void DynamicRendering()
 			memcpy(ubData + 0 * 16, &proj.a, sizeof(Mat4));
 			memcpy(ubData + 1 * 16, &view.a, sizeof(Mat4));
 
-			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 2 * sizeof(Mat4), ubData);
-			cpu_alloc_0->SubmitData(ub2->GetAllocation(), sizeof(Mat4), (void*)&modl.a);
+			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
+			cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
 
 			frameCount++;
 		}

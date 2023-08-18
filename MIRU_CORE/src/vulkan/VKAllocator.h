@@ -16,8 +16,8 @@ namespace vulkan
 
 		void* GetNativeAllocator() override;
 
-		void SubmitData(const base::Allocation& allocation, size_t size, void* data) override;
-		void AccessData(const base::Allocation& allocation, size_t size, void* data) override;
+		void SubmitData(const base::Allocation& allocation, size_t offset, size_t size, void* data) override;
+		void AccessData(const base::Allocation& allocation, size_t offset, size_t size, void* data) override;
 
 	private:
 		/*VkMemoryPropertyFlags GetMemoryPropertyFlag(base::Resource::Type type, uint32_t usage);

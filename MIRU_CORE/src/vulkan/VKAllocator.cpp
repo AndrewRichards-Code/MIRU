@@ -47,7 +47,7 @@ void* Allocator::GetNativeAllocator()
 	return reinterpret_cast<void*>(&m_Allocator);
 }
 
-void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void* data)
+void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -61,16 +61,16 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void
 		{
 			void* mappedData;
 			MIRU_ASSERT(vmaMapMemory(m_Allocator, vmaAllocation, &mappedData), "ERROR: VULKAN: Can not map resource.");
-			memcpy(mappedData, data, size);
+			memcpy(reinterpret_cast<char*>(mappedData) + offset, data, size);
 			if (!hostCoherent)
-				vmaFlushAllocation(m_Allocator, vmaAllocation, 0, VK_WHOLE_SIZE);
+				vmaFlushAllocation(m_Allocator, vmaAllocation, offset, size);
 
 			vmaUnmapMemory(m_Allocator, vmaAllocation);
 		}
 	}
 }
 
-void Allocator::AccessData(const base::Allocation& allocation, size_t size, void* data)
+void Allocator::AccessData(const base::Allocation& allocation, size_t offset, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -85,9 +85,9 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t size, void
 			void* mappedData;
 			MIRU_ASSERT(vmaMapMemory(m_Allocator, vmaAllocation, &mappedData), "ERROR: VULKAN: Can not map resource.");
 			if (!hostCoherent)
-				vmaInvalidateAllocation(m_Allocator, vmaAllocation, 0, VK_WHOLE_SIZE);
+				vmaInvalidateAllocation(m_Allocator, vmaAllocation, offset, size);
 			
-			memcpy(data, mappedData, size);
+			memcpy(data, reinterpret_cast<char*>(mappedData) + offset, size);
 			vmaUnmapMemory(m_Allocator, vmaAllocation);
 		}
 	}

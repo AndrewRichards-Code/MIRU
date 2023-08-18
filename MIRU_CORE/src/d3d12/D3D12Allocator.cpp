@@ -36,7 +36,7 @@ void* Allocator::GetNativeAllocator()
 	return reinterpret_cast<void*>(m_Allocator);
 }
 
-void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void* data)
+void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -49,7 +49,7 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void
 		if (uploadHeap)
 		{
 			void* mappedData;
-			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
+			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource
 			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
 			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
@@ -57,8 +57,8 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void
 			{
 				size_t rowWidth = allocation.rowPitch - allocation.rowPadding;
 				std::vector<char> paddingData(allocation.rowPadding, 0);
-				char* _mappedData = (char*)mappedData;
-				char* _data = (char*)data;
+				char* _mappedData = reinterpret_cast<char*>(mappedData) + offset;
+				char* _data = reinterpret_cast<char*>(data);
 
 				for (size_t i = 0; i < allocation.height; i++)
 				{
@@ -71,15 +71,16 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t size, void
 			}
 			else
 			{
-				memcpy(mappedData, data, size);
+				memcpy(reinterpret_cast<char*>(mappedData) + offset, data, size);
 			}
 
-			d3d12Resource->Unmap(0, nullptr);
+			D3D12_RANGE writtenRange = { offset, offset + size };
+			d3d12Resource->Unmap(0, &writtenRange);
 		}
 	}
 }
 
-void Allocator::AccessData(const base::Allocation& allocation, size_t size, void* data)
+void Allocator::AccessData(const base::Allocation& allocation, size_t offset, size_t size, void* data)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -91,10 +92,33 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t size, void
 		if (uploadHeap)
 		{
 			void* mappedData;
-			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource;
+			D3D12_RANGE readRange = { offset, offset + size };
 			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
-			memcpy(data, mappedData, size);
-			d3d12Resource->Unmap(0, nullptr);
+
+			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
+			if (copyByRow)
+			{
+				size_t rowWidth = allocation.rowPitch - allocation.rowPadding;
+				std::vector<char> paddingData(allocation.rowPadding, 0);
+				char* _mappedData = reinterpret_cast<char*>(mappedData) + offset;
+				char* _data = reinterpret_cast<char*>(data);
+
+				for (size_t i = 0; i < allocation.height; i++)
+				{
+					memcpy(_data, _mappedData, rowWidth);
+					_data += rowWidth;
+					_mappedData += rowWidth;
+					memcpy(paddingData.data(), _mappedData, allocation.rowPadding);
+					_mappedData += allocation.rowPadding;
+				}
+			}
+			else
+			{
+				memcpy(data, reinterpret_cast<char*>(mappedData) + offset, size);
+			}
+
+			D3D12_RANGE writtenRange = { 0, 0 };
+			d3d12Resource->Unmap(0, &writtenRange);
 		}
 	}
 }

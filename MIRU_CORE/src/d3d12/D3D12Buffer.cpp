@@ -63,7 +63,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	if (m_CI.data)
 	{
-		m_CI.allocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
+		m_CI.allocator->SubmitData(m_Allocation, 0, m_CI.size, m_CI.data);
 	}
 }
 
@@ -148,7 +148,7 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::UNIFORM_TEXEL:
 		case Type::UNIFORM:
 		{
-			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_CBVDesc.BufferLocation = buffer->GetGPUVirtualAddress() + m_CI.offset;
 			m_CBVDesc.SizeInBytes = arc::Align<UINT>(static_cast<UINT>(m_CI.size), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 		}
 		case Type::STORAGE_TEXEL:
@@ -156,8 +156,8 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		{
 			m_UAVDesc.Format = resourceDesc.Format;
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-			m_UAVDesc.Buffer.FirstElement = m_CI.offset;
-			m_UAVDesc.Buffer.NumElements = static_cast<UINT>(m_CI.size);
+			m_UAVDesc.Buffer.FirstElement = m_CI.offset / m_CI.stride;
+			m_UAVDesc.Buffer.NumElements = static_cast<UINT>(m_CI.size / m_CI.stride);
 			m_UAVDesc.Buffer.StructureByteStride = static_cast<UINT>(m_CI.stride);
 			m_UAVDesc.Buffer.CounterOffsetInBytes = 0;
 			m_UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
@@ -166,14 +166,14 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::INDEX:
 		{
 			
-			m_IBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_IBVDesc.BufferLocation = buffer->GetGPUVirtualAddress() + m_CI.offset;
 			m_IBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 			m_IBVDesc.Format = m_CI.stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 			break;
 		}
 		case Type::VERTEX:
 		{
-			m_VBVDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+			m_VBVDesc.BufferLocation = buffer->GetGPUVirtualAddress() + m_CI.offset;
 			m_VBVDesc.SizeInBytes = static_cast<UINT>(m_CI.size);
 			m_VBVDesc.StrideInBytes = static_cast<UINT>(m_CI.stride);
 			break;

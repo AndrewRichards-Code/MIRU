@@ -66,8 +66,8 @@ namespace base
 
 		virtual NativeAllocator GetNativeAllocator() = 0;
 
-		virtual void SubmitData(const Allocation& allocation, size_t size, void* data) = 0;
-		virtual void AccessData(const Allocation& allocation, size_t size, void* data) = 0;
+		virtual void SubmitData(const Allocation& allocation, size_t offset, size_t size, void* data) = 0;
+		virtual void AccessData(const Allocation& allocation, size_t offset, size_t size, void* data) = 0;
 
 		#if defined(MIRU_D3D12)
 		inline D3D12MA::Allocator* GetD3D12MAAllocator() { return reinterpret_cast<D3D12MA::Allocator*>(GetNativeAllocator()); }

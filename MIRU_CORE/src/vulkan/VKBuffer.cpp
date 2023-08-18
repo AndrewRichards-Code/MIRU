@@ -41,7 +41,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	if (m_CI.data)
 	{
-		m_CI.allocator->SubmitData(m_Allocation, m_CI.size, m_CI.data);
+		m_CI.allocator->SubmitData(m_Allocation, 0, m_CI.size, m_CI.data);
 	}
 }
 

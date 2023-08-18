@@ -16,8 +16,8 @@ namespace d3d12
 
 		void* GetNativeAllocator() override;
 
-		void SubmitData(const base::Allocation& allocation, size_t size, void* data) override;
-		void AccessData(const base::Allocation& allocation, size_t size, void* data) override;
+		void SubmitData(const base::Allocation& allocation, size_t offset, size_t size, void* data) override;
+		void AccessData(const base::Allocation& allocation, size_t offset, size_t size, void* data) override;
 
 		D3D12_HEAP_PROPERTIES GetHeapProperties();
 
