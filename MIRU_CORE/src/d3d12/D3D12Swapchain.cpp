@@ -55,7 +55,9 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	IDXGIOutput6* output;
 	MIRU_ASSERT(m_Swapchain->GetContainingOutput(reinterpret_cast<IDXGIOutput**>(&output)), "ERROR: D3D12: Failed to get containing Output.");
 	DXGI_OUTPUT_DESC1 outputDesc;
-	output->GetDesc1(&outputDesc);
+	MIRU_ASSERT(output->GetDesc1(&outputDesc), "ERROR: D3D12: Failed to get Output Description.");
+	MIRU_D3D12_SAFE_RELEASE(output);
+
 	if (outputDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) //HDR
 	{
 		if (surfaceFormat.second == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
