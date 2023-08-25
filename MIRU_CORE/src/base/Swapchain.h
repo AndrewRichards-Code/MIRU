@@ -40,7 +40,7 @@ namespace base
 		virtual void Present(const CommandPoolRef& cmdPool, const SemaphoreRef& submit, uint32_t& imageIndex) = 0;
 
 	protected:
-		void FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);
+		void FillSwapchainImageAndViews(void** ppImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);
 		
 		//Members
 	public:

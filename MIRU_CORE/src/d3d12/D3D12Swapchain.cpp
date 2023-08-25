@@ -168,7 +168,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		swapchainRTV_CPUDescHandle.ptr += rtvDescriptorSize;
 	}
 
-	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void**)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height, static_cast<uint32_t>(m_Format));
+	FillSwapchainImageAndViews((void**)m_SwapchainRTVs.data(), (void*)m_SwapchainRTV_CPU_Desc_Handles.data(), m_Width, m_Height, static_cast<uint32_t>(m_Format));
 	m_Resized = true;
 }
 

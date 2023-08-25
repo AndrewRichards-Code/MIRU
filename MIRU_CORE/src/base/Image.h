@@ -262,7 +262,7 @@ namespace base
 			ClearColourValue		colour;
 			ClearDepthStencilValue	depthStencil;
 		};
-		typedef void* ExternalImageHandle;
+		typedef void* ExternalImageHandle; //Either ID3D12Resource* or VkImage.
 
 		struct CreateInfo
 		{

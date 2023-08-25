@@ -35,7 +35,7 @@ SwapchainRef Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 }
 
 
-void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format)
+void Swapchain::FillSwapchainImageAndViews(void** ppImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -84,7 +84,7 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 			swapchainImageCI.format = static_cast<Image::Format>(format);
 		#endif		
 		}
-		swapchainImageCI.externalImage = reinterpret_cast<Image::ExternalImageHandle>(pImages[i]);
+		swapchainImageCI.externalImage = reinterpret_cast<Image::ExternalImageHandle>(ppImages[i]);
 		swapchainImage = Image::Create(&swapchainImageCI);
 		swapchainImage->m_SwapchainImage = true;
 		i++;
