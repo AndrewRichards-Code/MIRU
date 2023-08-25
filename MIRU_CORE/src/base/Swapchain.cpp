@@ -39,6 +39,9 @@ void Swapchain::FillSwapchainImageAndViews(void** pImages, void* pImageViews, ui
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
+	m_SwapchainImages.clear();
+	m_SwapchainImageViews.clear();
+
 	m_SwapchainImages.resize(m_CI.swapchainCount);
 	m_SwapchainImageViews.resize(m_CI.swapchainCount);
 

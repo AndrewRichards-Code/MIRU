@@ -194,10 +194,10 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
-		vkDestroyImageView(m_Device, imageView, 0);
+		vkDestroyImageView(m_Device, imageView, nullptr);
 	m_SwapchainImageViews.clear();
 
-	vkDestroySwapchainKHR(m_Device, m_Swapchain, 0);
+	vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
 
 	//Create new swapchain
 	m_SwapchainCI.imageExtent = { width, height };
@@ -233,13 +233,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		m_SwapchainImageViews.push_back(imageView);
 	}
 
-	std::vector<VkImage*> images;
-	for (auto& swapchainImage : m_SwapchainImages)
-	{
-		images.push_back(&swapchainImage);
-	}
-
-	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
+	FillSwapchainImageAndViews((void**)m_SwapchainImages.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 	m_Resized = true;
 }
 
