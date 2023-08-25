@@ -20,4 +20,17 @@ extern "C"\
 
 #define MIRU_D3D12_SAFE_RELEASE(x) if((x)) { (x)->Release(); (x) = nullptr; }
 
+//Vulkan HRESULT to string
+#include "ARC/src/WindowsErrorHandling.h"
+namespace miru
+{
+	namespace d3d12
+	{
+		static std::string HRESULTToString(int64_t code)
+		{
+			return arc::GetLastErrorToString(static_cast<DWORD>(code));
+		}
+	}
+}
+
 #endif

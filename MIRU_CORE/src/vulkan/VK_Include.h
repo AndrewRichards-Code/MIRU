@@ -35,6 +35,19 @@
 #define MIRU_VK_API_VERSION_1_0	1
 #endif
 
+//Vulkan VkResult to string
+#include "ARC/External/magic_enum/include/magic_enum.hpp"
+namespace miru
+{
+	namespace vulkan
+	{
+		static std::string VkResultToString(int64_t code)
+		{
+			return std::string(magic_enum::enum_name(static_cast<VkResult>(code)));
+		}
+	}
+}
+
 //Vulkan Extension
 #define MIRU_PFN_DEFINITION_LOAD(fn) inline PFN_##fn fn = ::fn
 #define MIRU_PFN_DEFINITION_NULL(fn) inline PFN_##fn fn = nullptr

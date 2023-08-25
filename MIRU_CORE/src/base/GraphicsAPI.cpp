@@ -19,6 +19,11 @@ void GraphicsAPI::SetAPI(GraphicsAPI::API api, bool forceOverride)
 		s_API = api;
 		s_ApiInitialised = true;
 	}
+
+	if (GraphicsAPI::IsD3D12())
+		MiruCoreLog.SetErrorCodeToStringFunction(d3d12::HRESULTToString);
+	else
+		MiruCoreLog.SetErrorCodeToStringFunction(vulkan::VkResultToString);
 }
 
 void GraphicsAPI::AllowSetName(bool allowSetName)
