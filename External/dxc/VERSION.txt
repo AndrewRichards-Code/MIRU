@@ -1,2 +1,0 @@
-DirectXShaderCompiler - 1.7.2212 - Release 2022/12/16
-Redistribution - No Modifications.
