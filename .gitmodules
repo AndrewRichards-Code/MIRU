@@ -1,13 +1,3 @@
 [submodule "External/ARC"]
 	path = External/ARC
 	url = git@github.com:AndrewRichards-Code/ARC.git
-[submodule "External/VulkanMemoryAllocator"]
-	path = External/VulkanMemoryAllocator
-	url = git@github.com:AndrewRichards-Code/VulkanMemoryAllocator.git
-[submodule "External/D3D12MemoryAllocator"]
-	path = External/D3D12MemoryAllocator
-	url = git@github.com:AndrewRichards-Code/D3D12MemoryAllocator.git
-[submodule "External/SPIRV-Cross"]
-	path = External/SPIRV-Cross
-	url = git@github.com:AndrewRichards-Code/SPIRV-Cross.git
-	branch = master
