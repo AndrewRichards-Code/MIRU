@@ -41,7 +41,7 @@
 #endif
 
 //Vulkan VkResult to string
-#include "ARC/External/magic_enum/include/magic_enum.hpp"
+#include "ARC/External/magic_enum/magic_enum.hpp"
 namespace miru
 {
 	namespace vulkan

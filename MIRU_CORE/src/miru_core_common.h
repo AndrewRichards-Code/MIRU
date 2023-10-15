@@ -65,7 +65,7 @@
 #include "ARC/src/ScopeAndRef.h"
 #include "ARC/src/Helpers.h"
 
-#include "ARC/External/magic_enum/include/magic_enum.hpp"
+#include "ARC/External/magic_enum/magic_enum.hpp"
 
 //MIRU Class Forward Decalaration and Ref types
 #define MIRU_FORWARD_DECLARE_CLASS_AND_REF(_class) class _class; typedef Ref<_class> _class##Ref

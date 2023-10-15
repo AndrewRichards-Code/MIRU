@@ -6,11 +6,11 @@ include("External/ARC/src/CMakeFunctions.cmake")
 
 #External Downloads
 file(DOWNLOAD 
-https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator/blob/master/include/D3D12MemAlloc.h
+	https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator/master/include/D3D12MemAlloc.h
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/D3D12MemoryAllocator/include/D3D12MemAlloc.h"
 )
 file(DOWNLOAD 
-https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator/blob/master/src/D3D12MemAlloc.cpp
+	https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator/master/src/D3D12MemAlloc.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"
 )
 file(DOWNLOAD 
@@ -18,15 +18,15 @@ file(DOWNLOAD
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/nuget/nuget.exe"
 )
 file(DOWNLOAD 
-	https://github.com/baldurk/renderdoc/blob/v1.x/renderdoc/api/app/renderdoc_app.h
+	https://raw.githubusercontent.com/baldurk/renderdoc/v1.x/renderdoc/api/app/renderdoc_app.h
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/renderdoc/api/app/renderdoc_app.h"
 )
 file(DOWNLOAD 
-	https://github.com/nothings/stb/blob/master/stb_image.h
+	https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/stb/stb_image.h"
 )
 file(DOWNLOAD 
-	https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/include/vk_mem_alloc.h
+	https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/master/include/vk_mem_alloc.h
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/VulkanMemoryAllocator/include/vk_mem_alloc.h"
 )
 

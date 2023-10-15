@@ -2,7 +2,7 @@
 #include "common.h"
 #include "maths.h"
 
-#include "STBI/stb_image.h"
+#include "stb/stb_image.h"
 
 extern "C"
 {

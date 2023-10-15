@@ -1,7 +1,7 @@
 #pragma once
 #include "GraphicsDebugger.h"
 #include "ARC/src/DynamicLibrary.h"
-#include "renderdoc/Include/renderdoc_app.h"
+#include "renderdoc/api/app/renderdoc_app.h"
 #include <filesystem>
 
 namespace miru

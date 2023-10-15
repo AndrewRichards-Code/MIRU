@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "STBI/stb_image.h"
+#include "stb/stb_image.h"
 
 #if defined(_WIN64)
 //Forward Declaration from other cpp files.

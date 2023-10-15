@@ -2,7 +2,7 @@
 #include "miru_core.h"
 #include "maths.h"
 
-#include "STBI/stb_image.h"
+#include "stb/stb_image.h"
 #include "Windows.h"
 
 using namespace miru;
