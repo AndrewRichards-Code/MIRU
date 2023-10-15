@@ -27,7 +27,7 @@ FenceRef Fence::Create(Fence::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -49,7 +49,7 @@ SemaphoreRef Semaphore::Create(Semaphore::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -71,7 +71,7 @@ EventRef Event::Create(Event::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -92,7 +92,7 @@ BarrierRef Barrier::Create(Barrier::CreateInfo* pCreateInfo)
 		return nullptr;
 		#endif
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -113,6 +113,6 @@ Barrier2Ref Barrier2::Create(Barrier2::CreateInfo* pCreateInfo)
 		return nullptr;
 		#endif
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

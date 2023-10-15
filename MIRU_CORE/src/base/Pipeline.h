@@ -1,5 +1,5 @@
 #pragma once
-#define MIRU_CORE_COMMON_MINDEF
+
 #include "miru_core_common.h"
 #include "PipelineHelper.h"
 #include "Shader.h"

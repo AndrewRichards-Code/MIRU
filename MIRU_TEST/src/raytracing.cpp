@@ -1,5 +1,5 @@
-#if defined(_WIN64)
 #include "miru_core.h"
+#include "common.h"
 #include "maths.h"
 
 #include "STBI/stb_image.h"
@@ -110,18 +110,7 @@ void Raytracing()
 	};
 	shaderCI.binaryFilepath = "res/bin/raytracing_lib_6_3.spv";
 	shaderCI.binaryCode = {};
-	shaderCI.recompileArguments = {
-		"res/shaders/raytracing.hlsl",
-		"res/bin",
-		{"../MIRU_SHADER_COMPILER/shaders/includes"},
-		"",
-		"lib_6_3",
-		{},
-		true,
-		true,
-		{"-Zi", "-Od", "-Fd"},
-		""
-	};
+	shaderCI.recompileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/raytracing_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } })[0];
 	ShaderRef raytracingShader = Shader::Create(&shaderCI);
 
 	//CmdPool and CmdBuffer
@@ -719,4 +708,3 @@ void Raytracing()
 	}
 	context->DeviceWaitIdle();
 }
-#endif

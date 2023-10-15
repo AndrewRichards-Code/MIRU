@@ -1,6 +1,12 @@
 #include "miru_core_common.h"
 #include "Pix.h"
 
+#if defined(MIRU_D3D12)
+#include "d3d12/D3D12_Include.h"
+#define USE_PIX
+#include "Include/WinPixEventRuntime/pix3.h"
+#endif
+
 #if defined(_WIN64)
 #include <ShlObj.h>
 #endif
@@ -36,9 +42,9 @@ void Pix::LoadWinPixEventRuntime()
 	if (!s_WinPixEventRuntimeHandle)
 	{
 	#if defined (MIRU_WIN64_UWP)
-		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "../External/pix/lib/x64/WinPixEventRuntime_UAP.dll";
+		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "/../External/pix/lib/x64/WinPixEventRuntime_UAP.dll";
 	#else
-		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "../External/pix/lib/x64/WinPixEventRuntime.dll";
+		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "/../External/pix/lib/x64/WinPixEventRuntime.dll";
 	#endif
 		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath.generic_string());
 		if (!s_WinPixEventRuntimeHandle)

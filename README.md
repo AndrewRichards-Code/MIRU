@@ -46,7 +46,7 @@ This repository is under active development and is not currently intended for co
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2303.02, RenderDoc v1.28
+- Graphics Debuggers: Pix 2303.02, RenderDoc v1.29
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
@@ -67,17 +67,13 @@ Simple test application for development, test and demostration. Build as executa
 ### MIRU_TEST_UWP:
 A UWP version of the MIRU_TEST project. MIRU_CORE should be built with the define MIRU_WIN64_UWP. Build as executable; Dynamic Runtime Linking (MD). - WIP
 
-### MIRU_ANDRIOD/MIRU_TEST:
-
-## Build Tools with Visual Studio:
+## CMake and Visual Studio:
 ### Windows x64:
 - Microsoft Visual Studio 2022
 - Toolset: v143 
 - Windows SDK: 10.0.22621.0
 - ISO C++ 20
 - Vulkan SDK 1.3 with Shader Toolchain Debug Symbols - 64-bit
-- Microsoft.Direct3D.D3D12.1.610.3 NuGet package
-- Microsoft.Windows.CppWinRT.2.0.201217.4 NuGet package (For MIRU_TEST_UWP only)
-
-### Linux x64:
-- No project available to build.
+- NuGet Package: Microsoft.Direct3D.D3D12 1.610.5
+- NuGet Package: Microsoft.Direct3D.DXC 1.7.2212.23
+- NuGet Package: WinPixEventRuntime 1.0.230302001

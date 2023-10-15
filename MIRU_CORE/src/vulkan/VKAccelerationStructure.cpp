@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKAccelerationStructure.h"
 #include "VKBuffer.h"
 #include "VKPipeline.h"
@@ -63,7 +61,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 		}
 		default:
 		{
-			MIRU_ASSERT(true, "ERROR: VULKAN: Unknown BuildGeometryInfo::Geometry::Type.");
+			MIRU_FATAL(true, "ERROR: VULKAN: Unknown BuildGeometryInfo::Geometry::Type.");
 			break;
 		}
 		}
@@ -116,7 +114,7 @@ AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* 
 	m_ASCI.type = static_cast<VkAccelerationStructureTypeKHR>(m_CI.type);
 	m_ASCI.deviceAddress = m_CI.deviceAddress;
 
-	MIRU_ASSERT(vkCreateAccelerationStructureKHR(m_Device, &m_ASCI, nullptr, &m_AS), "ERROR: VULKAN: Failed to create AccelerationStructure.");
+	MIRU_FATAL(vkCreateAccelerationStructureKHR(m_Device, &m_ASCI, nullptr, &m_AS), "ERROR: VULKAN: Failed to create AccelerationStructure.");
 	VKSetName<VkAccelerationStructureKHR>(m_Device, m_AS, m_CI.debugName);
 }
 
@@ -126,5 +124,3 @@ AccelerationStructure::~AccelerationStructure()
 
 	vkDestroyAccelerationStructureKHR(m_Device, m_AS, nullptr);
 }
-
-#endif

@@ -1,6 +1,6 @@
 #pragma once
-#if defined(MIRU_VULKAN)
 #include "base/AccelerationStructure.h"
+#include "vulkan/VK_Include.h"
 
 namespace miru
 {
@@ -38,4 +38,3 @@ namespace vulkan
 	};
 }
 }
-#endif

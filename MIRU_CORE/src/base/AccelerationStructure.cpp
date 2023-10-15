@@ -29,7 +29,7 @@ AccelerationStructureBuildInfoRef AccelerationStructureBuildInfo::Create(Acceler
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -51,7 +51,7 @@ AccelerationStructureRef AccelerationStructure::Create(AccelerationStructure::Cr
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -77,7 +77,7 @@ DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, co
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
 	}
 }
 
@@ -103,6 +103,6 @@ DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const BufferRef& 
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return 0;
 	}
 }

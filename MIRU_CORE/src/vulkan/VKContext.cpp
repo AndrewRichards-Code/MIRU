@@ -1,6 +1,5 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKContext.h"
+#include <sstream>
 
 using namespace miru;
 using namespace vulkan;
@@ -34,7 +33,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 		if (underMin)
 		{
-			MIRU_ASSERT(true, "ERROR: VULKAN: Selected API Version is less than the minimum for OpenXR.");
+			MIRU_FATAL(true, "ERROR: VULKAN: Selected API Version is less than the minimum for OpenXR.");
 		}
 		if (overMax)
 		{
@@ -92,10 +91,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	}
 
 	uint32_t instanceLayerCount = 0;
-	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
+	MIRU_FATAL(vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
 	std::vector<VkLayerProperties> instanceLayerProperties;
 	instanceLayerProperties.resize(instanceLayerCount);
-	MIRU_ASSERT(vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
+	MIRU_FATAL(vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceLayerProperties.");
 	for (auto& requestLayer : m_InstanceLayers)
 	{
 		for (auto& layerProperty : instanceLayerProperties)
@@ -107,10 +106,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 	uint32_t instanceExtensionCount = 0;
-	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
+	MIRU_FATAL(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
 	std::vector<VkExtensionProperties> instanceExtensionProperties;
 	instanceExtensionProperties.resize(instanceExtensionCount);
-	MIRU_ASSERT(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
+	MIRU_FATAL(vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate InstanceExtensionProperties.");
 	for (auto& requestExtension : m_InstanceExtensions)
 	{
 		for (auto& extensionProperty : instanceExtensionProperties)
@@ -131,7 +130,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_InstanceCI.enabledExtensionCount = static_cast<uint32_t>(m_ActiveInstanceExtensions.size());
 	m_InstanceCI.ppEnabledExtensionNames = m_ActiveInstanceExtensions.data();
 
-	MIRU_ASSERT(vkCreateInstance(&m_InstanceCI, nullptr, &m_Instance), "ERROR: VULKAN: Failed to create Instance.");
+	MIRU_FATAL(vkCreateInstance(&m_InstanceCI, nullptr, &m_Instance), "ERROR: VULKAN: Failed to create Instance.");
 
 	//Load Instance Extension PFN
 	LoadInstanceExtensionPFNs();
@@ -189,10 +188,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_DeviceQueueCIs[i].pQueuePriorities = m_QueuePriorities[i].data();
 	}
 	uint32_t deviceLayerCount = 0;
-	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
+	MIRU_FATAL(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, nullptr), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
 	std::vector<VkLayerProperties> deviceLayerProperties;
 	deviceLayerProperties.resize(deviceLayerCount);
-	MIRU_ASSERT(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, deviceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
+	MIRU_FATAL(vkEnumerateDeviceLayerProperties(physicalDevice, &deviceLayerCount, deviceLayerProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceLayerProperties.");
 	for (auto& requestLayer : m_DeviceLayers)
 	{
 		for (auto& layerProperty : deviceLayerProperties)
@@ -204,10 +203,10 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 	uint32_t deviceExtensionCount = 0;
-	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, 0), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
+	MIRU_FATAL(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, 0), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
 	std::vector<VkExtensionProperties> deviceExtensionProperties;
 	deviceExtensionProperties.resize(deviceExtensionCount);
-	MIRU_ASSERT(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, deviceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
+	MIRU_FATAL(vkEnumerateDeviceExtensionProperties(physicalDevice, 0, &deviceExtensionCount, deviceExtensionProperties.data()), "ERROR: VULKAN: Failed to enumerate DeviceExtensionProperties.");
 	for (auto& requestExtension : m_DeviceExtensions)
 	{
 		for (auto& extensionProperty : deviceExtensionProperties)
@@ -239,7 +238,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_DeviceCI.ppEnabledExtensionNames = m_ActiveDeviceExtensions.data();
 	m_DeviceCI.pEnabledFeatures = deviceCI_pNext ? nullptr : physicalDeviceFeatures;
 
-	MIRU_ASSERT(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
+	MIRU_FATAL(vkCreateDevice(physicalDevice, &m_DeviceCI, nullptr, &m_Device), "ERROR: VULKAN: Failed to create Device");
 
 	//Load Device Extension PFN
 	LoadDeviceExtensionPFNs();
@@ -552,10 +551,10 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	uint32_t physicalDeviceCount = 0;
-	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
+	MIRU_FATAL(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
 	m_PDIs.resize(physicalDeviceCount);
 	std::vector<VkPhysicalDevice> vkPhysicalDevices(physicalDeviceCount);
-	MIRU_ASSERT(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices.data()), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
+	MIRU_FATAL(vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices.data()), "ERROR: VULKAN: Failed to enumerate PhysicalDevices.");
 	for (size_t i = 0; i < vkPhysicalDevices.size(); i++)
 	{
 		if (vkPhysicalDevices[i] == VK_NULL_HANDLE)
@@ -566,7 +565,7 @@ Context::PhysicalDevices::PhysicalDevices(const VkInstance& instance)
 	}
 	if (vkPhysicalDevices.empty())
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: No valid Vulkan devices are available.");
+		MIRU_FATAL(true, "ERROR: VULKAN: No valid Vulkan devices are available.");
 	}
 	for (size_t i = 0; i < m_PDIs.size(); i++) 
 		m_PDIs[i].m_PhysicalDevice = vkPhysicalDevices[i]; 
@@ -694,4 +693,3 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 #endif
 	}
 }
-#endif

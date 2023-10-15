@@ -1,7 +1,4 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKSync.h"
-
 #include "VKBuffer.h"
 #include "VKImage.h"
 
@@ -20,7 +17,7 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 	m_FenceCI.pNext = nullptr;
 	m_FenceCI.flags = m_CI.signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
-	MIRU_ASSERT(vkCreateFence(m_Device, &m_FenceCI, nullptr, &m_Fence), "ERROR: VULKAN: Failed to a create Fence.");
+	MIRU_FATAL(vkCreateFence(m_Device, &m_FenceCI, nullptr, &m_Fence), "ERROR: VULKAN: Failed to a create Fence.");
 	VKSetName<VkFence>(m_Device, m_Fence, m_CI.debugName);
 }
 
@@ -35,7 +32,7 @@ void Fence::Reset()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(vkResetFences(m_Device, 1, &m_Fence), "ERROR: VULKAN: Failed to reset Fence.");
+	MIRU_FATAL(vkResetFences(m_Device, 1, &m_Fence), "ERROR: VULKAN: Failed to reset Fence.");
 }
 
 bool Fence::GetStatus()
@@ -49,7 +46,7 @@ bool Fence::GetStatus()
 		return false;
 	else
 	{
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to get status of Fence.");
+		MIRU_FATAL(result, "ERROR: VULKAN: Failed to get status of Fence.");
 		return false;
 	}
 }
@@ -65,7 +62,7 @@ bool Fence::Wait()
 		return false;
 	else
 	{
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to wait for Fence.");
+		MIRU_FATAL(result, "ERROR: VULKAN: Failed to wait for Fence.");
 		return false;
 	}
 }
@@ -87,7 +84,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 	m_SemaphoreCI.pNext = m_CI.type == Type::TIMELINE ? &m_SemaphoreTypeCI : nullptr;
 	m_SemaphoreCI.flags = 0;
 
-	MIRU_ASSERT(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create Semaphore.");
+	MIRU_FATAL(vkCreateSemaphore(m_Device, &m_SemaphoreCI, nullptr, &m_Semaphore), "ERROR: VULKAN: Failed to a create Semaphore.");
 	VKSetName<VkSemaphore>(m_Device, m_Semaphore, m_CI.debugName);
 }
 
@@ -110,11 +107,11 @@ void Semaphore::Signal(uint64_t value)
 		signalInfo.semaphore = m_Semaphore;
 		signalInfo.value = value;
 
-		MIRU_ASSERT(vkSignalSemaphore(m_Device, &signalInfo), "ERROR: VULKAN: Failed to a signal Semaphore.");
+		MIRU_FATAL(vkSignalSemaphore(m_Device, &signalInfo), "ERROR: VULKAN: Failed to a signal Semaphore.");
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Failed to a signal Semaphore, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: VULKAN: Failed to a signal Semaphore, because it's not Type::TIMELINE.")
 	}
 }
 
@@ -139,13 +136,13 @@ bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 			return false;
 		else
 		{
-			MIRU_ASSERT(result, "ERROR: VULKAN: Failed to wait for Semaphore.");
+			MIRU_FATAL(result, "ERROR: VULKAN: Failed to wait for Semaphore.");
 			return false;
 		}
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Failed to wait for Semaphore, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: VULKAN: Failed to wait for Semaphore, because it's not Type::TIMELINE.")
 		return false;
 	}
 }
@@ -157,12 +154,12 @@ uint64_t Semaphore::GetCurrentValue()
 	if (m_CI.type == Type::TIMELINE)
 	{
 		uint64_t value;
-		MIRU_ASSERT(vkGetSemaphoreCounterValue(m_Device, m_Semaphore, &value), "ERROR: VULKAN: Failed to a get Semaphore's counter value.");
+		MIRU_FATAL(vkGetSemaphoreCounterValue(m_Device, m_Semaphore, &value), "ERROR: VULKAN: Failed to a get Semaphore's counter value.");
 		return value;
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Failed to a get Semaphore's counter value, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: VULKAN: Failed to a get Semaphore's counter value, because it's not Type::TIMELINE.")
 		return 0;
 	}
 }
@@ -179,7 +176,7 @@ Event::Event(Event::CreateInfo* pCreateInfo)
 	m_EventCI.pNext = nullptr;
 	m_EventCI.flags = 0;
 
-	MIRU_ASSERT(vkCreateEvent(m_Device, &m_EventCI, nullptr, &m_Event), "ERROR: VULKAN: Failed to a create Event.");
+	MIRU_FATAL(vkCreateEvent(m_Device, &m_EventCI, nullptr, &m_Event), "ERROR: VULKAN: Failed to a create Event.");
 	VKSetName<VkEvent>(m_Device, m_Event, m_CI.debugName);
 }
 
@@ -194,14 +191,14 @@ void Event::Set()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(vkSetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to set Event.");
+	MIRU_FATAL(vkSetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to set Event.");
 }
 
 void Event::Reset()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(vkResetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to reset Event.");
+	MIRU_FATAL(vkResetEvent(m_Device, m_Event), "ERROR: VULKAN: Failed to reset Event.");
 }
 
 bool Event::GetStatus()
@@ -215,7 +212,7 @@ bool Event::GetStatus()
 		return true;
 	else if (result)
 	{
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to get status of Event.");
+		MIRU_FATAL(result, "ERROR: VULKAN: Failed to get status of Event.");
 		return true;
 	}
 	else
@@ -333,4 +330,3 @@ Barrier2::~Barrier2()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 }
-#endif

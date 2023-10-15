@@ -1,7 +1,4 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKCommandPoolBuffer.h"
-
 #include "VKContext.h"
 #include "VKSwapchain.h"
 #include "VKSync.h"
@@ -28,7 +25,7 @@ CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
 	m_CmdPoolCI.flags = static_cast<VkCommandPoolCreateFlags>(m_CI.flags);
 	m_CmdPoolCI.queueFamilyIndex = GetQueueFamilyIndex(m_CI.queueType);
 
-	MIRU_ASSERT(vkCreateCommandPool(m_Device, &m_CmdPoolCI, nullptr, &m_CmdPool), "ERROR: VULKAN: Failed to create CommandPool.");
+	MIRU_FATAL(vkCreateCommandPool(m_Device, &m_CmdPoolCI, nullptr, &m_CmdPool), "ERROR: VULKAN: Failed to create CommandPool.");
 	VKSetName<VkCommandPool>(m_Device, m_CmdPool, m_CI.debugName);
 }
 
@@ -50,7 +47,7 @@ void CommandPool::Reset(bool releaseResources)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(vkResetCommandPool(m_Device, m_CmdPool, releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandPool.");
+	MIRU_FATAL(vkResetCommandPool(m_Device, m_CmdPool, releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandPool.");
 }
 
 uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
@@ -98,7 +95,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	m_CmdBufferAI.commandBufferCount = m_CI.commandBufferCount;
 
 	m_CmdBuffers.resize(m_CI.commandBufferCount);
-	MIRU_ASSERT(vkAllocateCommandBuffers(m_Device, &m_CmdBufferAI, m_CmdBuffers.data()), "ERROR: VULKAN: Failed to allocate CommandBuffers.");
+	MIRU_FATAL(vkAllocateCommandBuffers(m_Device, &m_CmdBufferAI, m_CmdBuffers.data()), "ERROR: VULKAN: Failed to allocate CommandBuffers.");
 
 	size_t i = 0;
 	for (auto& cmdBuffer : m_CmdBuffers)
@@ -128,7 +125,7 @@ void CommandBuffer::Begin(uint32_t index, UsageBit usage)
 	m_CmdBufferBIs[index].flags = static_cast<VkCommandBufferUsageFlags>(usage);
 	m_CmdBufferBIs[index].pInheritanceInfo = nullptr;
 
-	MIRU_ASSERT(vkBeginCommandBuffer(m_CmdBuffers[index], &m_CmdBufferBIs[index]), "ERROR: VULKAN: Failed to begin CommandBuffer.");
+	MIRU_FATAL(vkBeginCommandBuffer(m_CmdBuffers[index], &m_CmdBufferBIs[index]), "ERROR: VULKAN: Failed to begin CommandBuffer.");
 }
 
 void CommandBuffer::End(uint32_t index)
@@ -136,7 +133,7 @@ void CommandBuffer::End(uint32_t index)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	MIRU_ASSERT(vkEndCommandBuffer(m_CmdBuffers[index]), "ERROR: VULKAN: Failed to end CommandBuffer.");
+	MIRU_FATAL(vkEndCommandBuffer(m_CmdBuffers[index]), "ERROR: VULKAN: Failed to end CommandBuffer.");
 }
 
 void CommandBuffer::Reset(uint32_t index, bool releaseResources)
@@ -144,7 +141,7 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	MIRU_ASSERT(vkResetCommandBuffer(m_CmdBuffers[index], releaseResources ? VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandBuffer.");
+	MIRU_FATAL(vkResetCommandBuffer(m_CmdBuffers[index], releaseResources ? VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT : 0), "ERROR: VULKAN: Failed to reset CommandBuffer.");
 }
 
 void CommandBuffer::ExecuteSecondaryCommandBuffers(uint32_t index, const base::CommandBufferRef& commandBuffer, const std::vector<uint32_t>& secondaryCommandBufferIndices)
@@ -186,7 +183,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 	{
 		if (submitInfo.waits.size() != submitInfo.waitDstPipelineStages.size())
 		{
-			MIRU_ASSERT(true, "ERROR: VULKAN: The count of Wait Semaphores and Wait Destination PipelineStages does not match.");
+			MIRU_FATAL(true, "ERROR: VULKAN: The count of Wait Semaphores and Wait Destination PipelineStages does not match.");
 		}
 
 		vkWaits.push_back({});
@@ -237,7 +234,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
 	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
-	MIRU_ASSERT(vkQueueSubmit(queue, static_cast<uint32_t>(vkSubmitInfos.size()), vkSubmitInfos.data(), vkFence), "ERROR: VULKAN: Failed to submit Queue.");
+	MIRU_FATAL(vkQueueSubmit(queue, static_cast<uint32_t>(vkSubmitInfos.size()), vkSubmitInfos.data(), vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
 
 void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>& submitInfo2s, const base::FenceRef& fence)
@@ -623,7 +620,7 @@ void CommandBuffer::BindIndexBuffer(uint32_t index, const base::BufferViewRef& i
 	else if (ci.stride == 4)
 		type = VK_INDEX_TYPE_UINT32;
 	else
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown index type.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Unknown index type.");
 
 	vkCmdBindIndexBuffer(m_CmdBuffers[index], buffer, static_cast<VkDeviceSize>(ci.offset), type);
 }
@@ -696,7 +693,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		VkAccelerationStructureBuildGeometryInfoKHR asbgi = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfos[i])->m_ASBGI;
 		if (asbgi.geometryCount != buildRangeInfos[i].size())
 		{
-			MIRU_ASSERT(true, "ERROR: VULKAN: Size mismatch between VkAccelerationStructureBuildGeometryInfoKHR::geometryCount and buildRangeInfos[i].size().");
+			MIRU_FATAL(true, "ERROR: VULKAN: Size mismatch between VkAccelerationStructureBuildGeometryInfoKHR::geometryCount and buildRangeInfos[i].size().");
 		}
 		
 		if (asbgi.type == VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR)
@@ -716,7 +713,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		}
 		else
 		{
-			MIRU_ASSERT(true, "ERROR: VULKAN: VkAccelerationStructureTypeKHR is not VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR or VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR.");
+			MIRU_FATAL(true, "ERROR: VULKAN: VkAccelerationStructureTypeKHR is not VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR or VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR.");
 		}
 	}
 
@@ -910,4 +907,3 @@ void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& 
 
 	vkCmdSetScissor(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkRect2D.size()), vkRect2D.data());
 }
-#endif

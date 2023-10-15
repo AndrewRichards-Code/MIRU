@@ -1,5 +1,5 @@
 #pragma once
-#define MIRU_CORE_COMMON_MINDEF
+
 #include "miru_core_common.h"
 
 namespace miru
@@ -16,13 +16,6 @@ namespace base
 		size_t				height;
 		size_t				rowPitch;
 		size_t				rowPadding;
-
-		#if defined(MIRU_D3D12)
-		inline const D3D12MA::Allocation* GetD3D12MAAllocaton() const  { return reinterpret_cast<D3D12MA::Allocation*>(nativeAllocation); }
-		#endif
-		#if defined(MIRU_VULKAN)
-		inline const VmaAllocation& GetVmaAllocation() const { return *reinterpret_cast<VmaAllocation*>(nativeAllocation); }
-		#endif
 	};
 
 	class MIRU_API Allocator
@@ -68,13 +61,6 @@ namespace base
 
 		virtual void SubmitData(const Allocation& allocation, size_t offset, size_t size, void* data) = 0;
 		virtual void AccessData(const Allocation& allocation, size_t offset, size_t size, void* data) = 0;
-
-		#if defined(MIRU_D3D12)
-		inline D3D12MA::Allocator* GetD3D12MAAllocator() { return reinterpret_cast<D3D12MA::Allocator*>(GetNativeAllocator()); }
-		#endif
-		#if defined(MIRU_VULKAN)
-		inline VmaAllocator GetVmaAllocator() { return *reinterpret_cast<VmaAllocator*>(GetNativeAllocator()); };
-		#endif
 
 		//Members
 	protected:

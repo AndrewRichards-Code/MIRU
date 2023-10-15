@@ -27,7 +27,7 @@ DescriptorPoolRef DescriptorPool::Create(DescriptorPool::CreateInfo* pCreateInfo
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -49,7 +49,7 @@ DescriptorSetLayoutRef DescriptorSetLayout::Create(DescriptorSetLayout::CreateIn
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -71,6 +71,6 @@ DescriptorSetRef DescriptorSet::Create(DescriptorSet::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }

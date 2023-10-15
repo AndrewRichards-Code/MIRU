@@ -30,7 +30,7 @@ SwapchainRef Swapchain::Create(Swapchain::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 

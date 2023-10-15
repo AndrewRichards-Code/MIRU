@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKSwapchain.h"
 #include "VKContext.h"
 #include "VKSync.h"
@@ -27,7 +25,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SurfaceCI.hwnd = static_cast<HWND>(m_CI.pWindow);
 	m_SurfaceCI.hinstance = GetModuleHandle(nullptr);
 
-	MIRU_ASSERT(vkCreateWin32SurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create Win32Surface.");
+	MIRU_FATAL(vkCreateWin32SurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create Win32Surface.");
 	VKSetName<VkSurfaceKHR>(m_Device, m_Surface, m_CI.debugName + ": Surface");
 
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
@@ -37,35 +35,35 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SurfaceCI.flags = 0;
 	m_SurfaceCI.window = reinterpret_cast<ANativeWindow*>(m_CI.pWindow);
 
-	MIRU_ASSERT(vkCreateAndroidSurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create AndroidSurface.");
+	MIRU_FATAL(vkCreateAndroidSurfaceKHR(m_Instance, &m_SurfaceCI, nullptr, &m_Surface), "ERROR: VULKAN: Failed to create AndroidSurface.");
 	VKSetName<VkSurfaceKHR>(m_Device, m_Surface, m_CI.debugName + ": Surface");
 
 #else
-	MIRU_ASSERT(true, "ERROR: VULKAN: Unknown Platform.");
+	MIRU_FATAL(true, "ERROR: VULKAN: Unknown Platform.");
 #endif
 
 	VkBool32 surfaceSupport;
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, m_Surface, &surfaceSupport), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceSupport.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, m_Surface, &surfaceSupport), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceSupport.");
 	if (!surfaceSupport)
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Can not use the created surface.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Can not use the created surface.");
 	}
 
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_SurfaceCapability), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceCapabilities.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_SurfaceCapability), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceCapabilities.");
 
 	uint32_t surfaceFormatsCount = 0;
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
 	m_SurfaceFormats.resize(surfaceFormatsCount);
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, m_SurfaceFormats.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatsCount, m_SurfaceFormats.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceFormats.");
 
 	uint32_t presentModesCount = 0;
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, nullptr), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
 	m_PresentModes.resize(presentModesCount);
-	MIRU_ASSERT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, m_PresentModes.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
+	MIRU_FATAL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModesCount, m_PresentModes.data()), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfacePresentModes.");
 
 	if (m_SurfaceFormats.empty() || m_PresentModes.empty())
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Could not find suitable surface formats and/or present modes for the created surface");
+		MIRU_FATAL(true, "ERROR: VULKAN: Could not find suitable surface formats and/or present modes for the created surface");
 	}
 
 	VkSurfaceFormatKHR surfaceFormat;
@@ -107,7 +105,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	//Swapchain
 	if (!(m_SurfaceCapability.minImageCount > 0))
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Swapchain minimum image count is not greater than 0.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Swapchain minimum image count is not greater than 0.");
 	}
 
 	if (!(m_SurfaceCapability.minImageCount < m_CI.swapchainCount) || !(m_CI.swapchainCount < m_SurfaceCapability.maxImageCount))
@@ -135,13 +133,13 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	m_SwapchainCI.clipped = VK_TRUE;
 	m_SwapchainCI.oldSwapchain = VK_NULL_HANDLE;
 
-	MIRU_ASSERT(vkCreateSwapchainKHR(m_Device, &m_SwapchainCI, nullptr, &m_Swapchain), "ERROR: VULKAN: Failed to create Swapchain");
+	MIRU_FATAL(vkCreateSwapchainKHR(m_Device, &m_SwapchainCI, nullptr, &m_Swapchain), "ERROR: VULKAN: Failed to create Swapchain");
 	VKSetName<VkSwapchainKHR>(m_Device, m_Swapchain, m_CI.debugName);
 
 	uint32_t swapchainImagesCount = 0;
-	MIRU_ASSERT(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, 0), "ERROR: VULKAN: Failed to get Swapchain Images");
+	MIRU_FATAL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, 0), "ERROR: VULKAN: Failed to get Swapchain Images");
 	m_SwapchainImages.resize(swapchainImagesCount);
-	MIRU_ASSERT(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, m_SwapchainImages.data()), "ERROR: VULKAN: Failed to get Swapchain Images");
+	MIRU_FATAL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, m_SwapchainImages.data()), "ERROR: VULKAN: Failed to get Swapchain Images");
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
@@ -158,7 +156,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		ci.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
 		VkImageView imageView;
-		MIRU_ASSERT(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
+		MIRU_FATAL(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
 		VKSetName<VkImageView>(m_Device, imageView, m_CI.debugName + ": ImageView " + std::to_string(i));
 
 		m_SwapchainImageViews.push_back(imageView);
@@ -203,14 +201,14 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_SwapchainCI.imageExtent = { width, height };
 	m_Extent = m_SwapchainCI.imageExtent;
 
-	MIRU_ASSERT(vkCreateSwapchainKHR(m_Device, &m_SwapchainCI, nullptr, &m_Swapchain), "ERROR: VULKAN: Failed to create Swapchain");
+	MIRU_FATAL(vkCreateSwapchainKHR(m_Device, &m_SwapchainCI, nullptr, &m_Swapchain), "ERROR: VULKAN: Failed to create Swapchain");
 	VKSetName<VkSurfaceKHR>(m_Device, m_Surface, m_CI.debugName);
 
 	uint32_t swapchainImagesCount = 0;
-	MIRU_ASSERT(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, 0), "ERROR: VULKAN: Failed to Swapchain Images");
+	MIRU_FATAL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, 0), "ERROR: VULKAN: Failed to Swapchain Images");
 	m_SwapchainImages.clear();
 	m_SwapchainImages.resize(swapchainImagesCount);
-	MIRU_ASSERT(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, m_SwapchainImages.data()), "ERROR: VULKAN: Failed to Swapchain Images");
+	MIRU_FATAL(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &swapchainImagesCount, m_SwapchainImages.data()), "ERROR: VULKAN: Failed to Swapchain Images");
 
 	for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 	{
@@ -227,7 +225,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 		ci.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
 		VkImageView imageView;
-		MIRU_ASSERT(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
+		MIRU_FATAL(vkCreateImageView(m_Device, &ci, 0, &imageView), "ERROR: VULKAN: Failed to create Swapchain ImageViews");
 		VKSetName<VkImageView>(m_Device, imageView, m_CI.debugName + ": ImageView " + std::to_string(i));
 
 		m_SwapchainImageViews.push_back(imageView);
@@ -248,7 +246,7 @@ void Swapchain::AcquireNextImage(const base::SemaphoreRef& acquire, uint32_t& im
 	}
 	else
 	{
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
+		MIRU_FATAL(result, "ERROR: VULKAN: Failed to acquire next Image from Swapchain.");
 	}
 }
 
@@ -278,7 +276,6 @@ void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::Semapho
 	}
 	else
 	{
-		MIRU_ASSERT(result, "ERROR: VULKAN: Failed to present the Image from Swapchain.");
+		MIRU_FATAL(result, "ERROR: VULKAN: Failed to present the Image from Swapchain.");
 	}
 }
-#endif

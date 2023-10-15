@@ -1,11 +1,9 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Shader.h"
 
 #include "base/DescriptorPoolSet.h"
 
-#include "dxc/inc/d3d12shader.h"
-#include "dxc/inc/dxcapi.h"
+#include "build/native/include/d3d12shader.h"
+#include "build/native/include/dxcapi.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -56,20 +54,6 @@ void Shader::D3D12ShaderReflection(
 	std::array<uint32_t, 3>& GroupCountXYZ,
 	std::map<uint32_t, std::map<uint32_t, Shader::ResourceBindingDescription>>& RBDs)
 {
-	if (!s_HModeuleDxcompiler)
-	{
-		s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
-		if (!s_HModeuleDxcompiler)
-		{
-			std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
-			std::string error_str = "WARN: D3D12: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
-			MIRU_WARN(GetLastError(), error_str.c_str());
-		}
-	}
-	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)arc::DynamicLibrary::LoadFunction(s_HModeuleDxcompiler, "DxcCreateInstance");
-	if (!DxcCreateInstance)
-		return;
-
 	IDxcLibrary* dxc_library = nullptr;
 	MIRU_WARN(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxc_library)), "WARN: D3D12: DxcCreateInstance failed to create IDxcLibrary.");
 	if (dxc_library)
@@ -120,7 +104,7 @@ void Shader::D3D12ShaderReflection(
 								break;
 							}
 
-							MIRU_ASSERT(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::base::DescriptorType.");
+							MIRU_FATAL(true, "ERROR: D3D12: Unsupported D3D_SHADER_INPUT_TYPE and/or D3D_SRV_DIMENSION. Cannot convert to miru::base::DescriptorType.");
 							return static_cast<base::DescriptorType>(0);
 						};
 						auto get_shader_stage = [](D3D12_SHADER_VERSION_TYPE type) -> Shader::StageBit
@@ -540,4 +524,3 @@ void Shader::D3D12ShaderReflection(
 	}
 	MIRU_D3D12_SAFE_RELEASE(dxc_library);
 }
-#endif

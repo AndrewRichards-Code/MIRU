@@ -1,15 +1,10 @@
 The licence declaration in LICENCE.txt does not cover the redistributed works in this repository. They contain their own licensing, and all redistributors of this repository are solely responsible to follow any and all redistribution requirements of the following works.
 
-Dependencies:
-GLM
-STB Image
-
 Redistributions:
 D3D12MemoryAllocator
-DirectXShaderCompiler
-Pix
+Nuget
 RenderDoc
-Spirv-Cross
+STB Image
 VulkanMemoryAllocator
 
 Licence details for dependencies and redistributions of any headers, sources and binaries are located alongside those files or in relevant directory.

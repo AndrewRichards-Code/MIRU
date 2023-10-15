@@ -8,34 +8,24 @@
 
 #include "ARC/src/FileSaver.h"
 #include "ARC/src/FileLoader.h"
+#include "ARC/External/JSON/json.hpp"
 
 #if defined(_WIN64)
-#include "dxc/inc/dxcapi.h"
+#include "build/native/include/dxcapi.h"
 #endif
+
+#include <fstream>
+#include <regex>
 
 using namespace miru;
 using namespace base;
 
-arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDxil;
-arc::DynamicLibrary::LibraryHandle Shader::s_HModeuleDxcompiler;
-uint32_t Shader::s_RefCount = 0;
-
 Shader::~Shader()
 {
-	s_RefCount--;
-	if (s_RefCount == 0)
-	{
-		if (s_HModeuleDxcompiler)
-			arc::DynamicLibrary::Unload(s_HModeuleDxcompiler);
-		if (s_HModeuleDxil)
-			arc::DynamicLibrary::Unload(s_HModeuleDxil);
-	}
 }
 
 ShaderRef Shader::Create(Shader::CreateInfo* pCreateInfo)
 {
-	s_RefCount++;
-
 	switch (GraphicsAPI::GetAPI())
 	{
 	case GraphicsAPI::API::D3D12:
@@ -52,7 +42,7 @@ ShaderRef Shader::Create(Shader::CreateInfo* pCreateInfo)
 		#endif
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
 
@@ -66,36 +56,70 @@ void Shader::Recompile()
 	#endif
 }
 
+std::vector<Shader::CompileArguments> Shader::LoadCompileArgumentsFromFile(std::filesystem::path filepath, const std::unordered_map<std::string, std::string>& environmentVariables)
+{
+	std::vector<Shader::CompileArguments> compileArguments = {};
+
+	std::filesystem::path currentWorkingDir = std::filesystem::current_path();
+	if (filepath.is_relative())
+		filepath = currentWorkingDir / filepath.relative_path();
+
+	using namespace nlohmann;
+	json jsonData = {};
+	std::ifstream file(filepath, std::ios::binary);
+	if (file.is_open())
+	{
+		file >> jsonData;
+	}
+	else
+	{
+		MIRU_WARN(true, "WARN: BASE: The Recompile Arguments File could not by opened.");
+		return compileArguments;
+	}
+	file.close();
+
+	if (jsonData["fileType"] != "MSC_RAF")
+	{
+		MIRU_WARN(true, "WARN: BASE: The Recompile Arguments File is not valid.");
+		return compileArguments;
+	}
+
+	const json& recompileArguments = jsonData["recompileArguments"];
+	for (const json& recompileArgument : recompileArguments)
+	{
+		CompileArguments compileArgument;
+		compileArgument.hlslFilepath = recompileArgument["hlslFilepath"];
+		compileArgument.outputDirectory = recompileArgument["outputDirectory"];
+		compileArgument.includeDirectories = { recompileArgument["includeDirectories"].begin(), recompileArgument["includeDirectories"].end() };
+		compileArgument.entryPoint = recompileArgument["entryPoint"];
+		compileArgument.shaderModel = recompileArgument["shaderModel"];
+		compileArgument.macros = { recompileArgument["macros"].begin(), recompileArgument["macros"].end() };
+		compileArgument.cso = recompileArgument["cso"];
+		compileArgument.spv = recompileArgument["spv"];
+		compileArgument.dxcArguments = { recompileArgument["dxcArguments"].begin(), recompileArgument["dxcArguments"].end() };
+
+		for (const auto& environmentVariable : environmentVariables)
+		{
+			const std::string& regexVariable = "\\" + environmentVariable.first;
+			const std::string& value = "\\" + environmentVariable.second;
+
+			compileArgument.hlslFilepath = std::regex_replace(compileArgument.hlslFilepath, std::regex(regexVariable), value);
+			compileArgument.outputDirectory = std::regex_replace(compileArgument.outputDirectory, std::regex(regexVariable), value);
+			for (auto& includeDirectory : compileArgument.includeDirectories)
+				includeDirectory = std::regex_replace(includeDirectory, std::regex(regexVariable), value);
+		}
+
+		compileArguments.push_back(compileArgument);
+	}
+
+	return compileArguments;
+}
+
 void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	#if defined(_WIN64)
-	if (!s_HModeuleDxil)
-	{
-		s_HModeuleDxil = LoadLibrary_dxil();
-		if (!s_HModeuleDxil)
-		{
-			std::filesystem::path s_DxilFullpath = GetLibraryFullpath_dxil();
-			std::string error_str = "WARN: BASE: Unable to load '" + s_DxilFullpath.generic_string() + "'.";
-			MIRU_WARN(GetLastError(), error_str.c_str());
-
-		}
-	}
-	if (!s_HModeuleDxcompiler)
-	{
-		s_HModeuleDxcompiler = LoadLibrary_dxcompiler();
-		if (!s_HModeuleDxcompiler)
-		{
-			std::filesystem::path s_DxcompilerFullpath = GetLibraryFullpath_dxcompiler();
-			std::string error_str = "WARN: BASE: Unable to load '" + s_DxcompilerFullpath.generic_string() + "'.";
-			MIRU_WARN(GetLastError(), error_str.c_str());
-		}
-	}
-	DxcCreateInstanceProc DxcCreateInstance = (DxcCreateInstanceProc)arc::DynamicLibrary::LoadFunction(s_HModeuleDxcompiler, "DxcCreateInstance");
-	if (!DxcCreateInstance)
-		return;
-
 	IDxcCompiler3* compiler = nullptr;
 	MIRU_WARN(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)), "WARN: BASE: DxcCreateInstance failed to create IDxcCompiler3.");
 
@@ -107,9 +131,14 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 		IDxcIncludeHandler* includeHandler = nullptr;
 		MIRU_WARN(utils->CreateDefaultIncludeHandler(&includeHandler), "WARN: BASE: IDxcUtils::CreateDefaultIncludeHandler failed to create IDxcIncludeHandler.");
 
-		std::string currentWorkingDir = std::filesystem::current_path().string() + "\\";
+		std::filesystem::path currentWorkingDir = std::filesystem::current_path();
+
+		std::filesystem::path absoluteHlslFilepath = std::filesystem::path(arguments.hlslFilepath);
+		if (absoluteHlslFilepath.is_relative())
+			absoluteHlslFilepath = currentWorkingDir / absoluteHlslFilepath.relative_path();
+
 		IDxcBlobEncoding* sourceBlob = nullptr;
-		MIRU_WARN(utils->LoadFile(arc::ToWString(currentWorkingDir + arguments.hlslFilepath).c_str(), nullptr, &sourceBlob), "WARN: BASE: IDxcUtils::LoadFile failed to create IDxcBlobEncoding.");
+		MIRU_WARN(utils->LoadFile(arc::ToWString(absoluteHlslFilepath.string()).c_str(), nullptr, &sourceBlob), "WARN: BASE: IDxcUtils::LoadFile failed to create IDxcBlobEncoding.");
 
 		if (includeHandler && sourceBlob)
 		{
@@ -136,20 +165,22 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 
 				std::vector<std::string> c_arguments;
 				{
-					c_arguments.push_back(currentWorkingDir + arguments.hlslFilepath);
+					c_arguments.push_back(absoluteHlslFilepath.string());
 
-					size_t fileNamePos = arguments.hlslFilepath.find_last_of('/');
-					size_t hlslExtPos = arguments.hlslFilepath.find(".hlsl");
-					std::string filename = arguments.hlslFilepath.substr(fileNamePos, hlslExtPos - fileNamePos);
-					std::string absoluteDstDir = arguments.outputDirectory + filename + "_" + arguments.shaderModel;
+					std::string filename = absoluteHlslFilepath.stem().string();
+					std::string dstFilename = filename + "_" + arguments.shaderModel;
 					if (!arguments.entryPoint.empty())
-						absoluteDstDir += "_" + arguments.entryPoint;
+						dstFilename += "_" + arguments.entryPoint;
 					if (cso)
-						absoluteDstDir += ".cso";
+						dstFilename += ".cso";
 					if (spv)
-						absoluteDstDir += ".spv";
+						dstFilename += ".spv";
+
+					std::filesystem::path absoluteDstDir = arguments.outputDirectory / std::filesystem::path(dstFilename);
+					if (absoluteDstDir.is_relative())
+						absoluteDstDir = currentWorkingDir / absoluteDstDir.relative_path();
 					c_arguments.push_back("-Fo");
-					c_arguments.push_back(currentWorkingDir + absoluteDstDir);
+					c_arguments.push_back(absoluteDstDir.string());
 
 					if (!arguments.entryPoint.empty())
 					{
@@ -163,8 +194,12 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					}
 					for (auto& includeDir : arguments.includeDirectories)
 					{
+						std::filesystem::path absoluteIncludeDir = includeDir;
+						if (absoluteIncludeDir.is_relative())
+							absoluteIncludeDir = currentWorkingDir / absoluteIncludeDir.relative_path();
+
 						c_arguments.push_back("-I");
-						c_arguments.push_back(currentWorkingDir + includeDir);
+						c_arguments.push_back(absoluteIncludeDir.string());
 					}
 					for (auto& macro : arguments.macros)
 					{
@@ -182,8 +217,8 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 								c_arguments.pop_back();
 								continue;
 							}
-							std::string absoluteDstPDBDir = absoluteDstDir.replace(absoluteDstDir.find_last_of('.'), 4, ".pdb");
-							c_arguments.push_back(currentWorkingDir + absoluteDstPDBDir);
+							std::filesystem::path absoluteDstPDBDir = absoluteDstDir.replace_extension(std::filesystem::path(".pdb"));
+							c_arguments.push_back(absoluteDstPDBDir.string());
 						}
 						if (arg.find("-Zi") != std::string::npos && spv)
 						{
@@ -205,7 +240,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 							c_arguments.push_back("MIRU_FRAGMENT_SHADER");
 						}
 						c_arguments.push_back("-spirv");
-						c_arguments.push_back("-fspv-target-env=vulkan1.2");
+						c_arguments.push_back("-fspv-target-env=vulkan1.3");
 					}
 				}
 				std::vector<std::wstring> w_arguments;
@@ -221,13 +256,23 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				IDxcResult* results = nullptr;
 				MIRU_WARN(compiler->Compile(&source, wchar_arguments.data(), static_cast<UINT32>(wchar_arguments.size()), includeHandler, IID_PPV_ARGS(&results)), "WARN: BASE: IDxcCompiler3::Compile failed.");
 
+				auto LogDXCCommandLineArgs = [&]()
+					{
+						std::stringstream ss;
+						for (const auto& arg : c_arguments)
+						{
+							ss << arg << " ";
+						}
+						MIRU_WARN(true, ss.str().c_str());
+					};
+
 				IDxcBlobUtf8* errors = nullptr;
 				IDxcBlobUtf16* errorsName = nullptr;
 				results->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), &errorsName);
 				if (errors != nullptr && errors->GetStringLength() != 0)
 				{
-					char* s = (char*)errors->GetStringPointer();
-					MIRU_WARN(true, s);
+					LogDXCCommandLineArgs();
+					MIRU_WARN(true, (char*)errors->GetStringPointer());
 				}
 				MIRU_D3D12_SAFE_RELEASE(errorsName);
 				MIRU_D3D12_SAFE_RELEASE(errors);
@@ -236,6 +281,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				results->GetStatus(&complicationResults);
 				if (complicationResults != S_OK)
 				{
+					LogDXCCommandLineArgs();
 					MIRU_WARN(true, "WARN: BASE: Failed to Compile shader.");
 				}
 
@@ -246,10 +292,13 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				{
 					char* shaderBinaryPtr = (char*)shaderBinary->GetBufferPointer();
 					std::vector<char> contents(shaderBinaryPtr, shaderBinaryPtr + shaderBinary->GetBufferSize());
-					arc::SaveBinaryFile(arc::ToString(shaderName->GetStringPointer()), contents);
+					std::filesystem::path shaderBinaryPath = arc::ToString(shaderName->GetStringPointer());
+					std::filesystem::create_directory(shaderBinaryPath.parent_path());
+					arc::SaveBinaryFile(shaderBinaryPath.string(), contents);
 				}
 				else
 				{
+					LogDXCCommandLineArgs();
 					MIRU_WARN(true, "WARN: BASE: Failed to GetOutput for shader binary and/or shader name.");
 				}
 				MIRU_D3D12_SAFE_RELEASE(shaderName);
@@ -264,10 +313,13 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					{
 						char* pdbBinaryPtr = (char*)pdbBinary->GetBufferPointer();
 						std::vector<char> contents(pdbBinaryPtr, pdbBinaryPtr + pdbBinary->GetBufferSize());
-						arc::SaveBinaryFile(arc::ToString(pdbName->GetStringPointer()), contents);
+						std::filesystem::path pdbBinaryPath = arc::ToString(pdbName->GetStringPointer());
+						std::filesystem::create_directory(pdbBinaryPath.parent_path());
+						arc::SaveBinaryFile(pdbBinaryPath.string(), contents);
 					}
 					else
 					{
+						LogDXCCommandLineArgs();
 						MIRU_WARN(true, "WARN: BASE: Failed to GetOutput for shader PDB binary and/or shader PDB name.");
 					}
 					MIRU_D3D12_SAFE_RELEASE(pdbName);
@@ -287,26 +339,6 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 	return;
 }
 
-std::filesystem::path Shader::GetLibraryFullpath_dxil()
-{
-	return std::string(PROJECT_DIR) + "../External/dxc/bin/x64/dxil.dll";
-}
-
-arc::DynamicLibrary::LibraryHandle Shader::LoadLibrary_dxil()
-{
-	return arc::DynamicLibrary::Load(GetLibraryFullpath_dxil().generic_string());
-}
-
-std::filesystem::path Shader::GetLibraryFullpath_dxcompiler()
-{
-	return std::string(PROJECT_DIR) + "../External/dxc/bin/x64/dxcompiler.dll";
-}
-
-arc::DynamicLibrary::LibraryHandle Shader::LoadLibrary_dxcompiler()
-{
-	return arc::DynamicLibrary::Load(GetLibraryFullpath_dxcompiler().generic_string());
-}
-
 void Shader::GetShaderByteCode()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -317,7 +349,7 @@ void Shader::GetShaderByteCode()
 		binFilepath = std::string(m_CI.binaryFilepath);
 
 	if (binFilepath.empty() && m_CI.binaryCode.empty())
-		MIRU_ASSERT(true, "ERROR: BASE: No file path or binary code provided.");
+		MIRU_FATAL(true, "ERROR: BASE: No file path or binary code provided.");
 
 	//Load from binary code if no binary filapath is provided
 	if (binFilepath.empty() && !m_CI.binaryCode.empty())
@@ -336,7 +368,7 @@ void Shader::GetShaderByteCode()
 		shaderBinaryFileExtension = ".spv"; break;
 	case GraphicsAPI::API::UNKNOWN:
 	default:
-		MIRU_ASSERT(true, "ERROR: BASE: Unknown GraphicsAPI."); return;
+		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return;
 	}
 	
 	binFilepath = binFilepath.replace(binFilepath.find_last_of('.'), 4, shaderBinaryFileExtension);
@@ -356,5 +388,5 @@ void Shader::GetShaderByteCode()
 	#endif
 
 	m_ShaderBinary = arc::ReadBinaryFile(binFilepath);
-	MIRU_ASSERT(m_ShaderBinary.empty(), "ERROR: BASE: Unable to read shader binary file.");
+	MIRU_FATAL(m_ShaderBinary.empty(), "ERROR: BASE: Unable to read shader binary file.");
 }

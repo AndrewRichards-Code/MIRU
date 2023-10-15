@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKPipeline.h"
 #include "VKDescriptorPoolSet.h"
 #include "VKShader.h"
@@ -104,7 +102,7 @@ RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
 		m_RenderPassCI.pNext = &m_MultiviewCreateInfo;
 	}
 
-	MIRU_ASSERT(vkCreateRenderPass(m_Device, &m_RenderPassCI, nullptr, &m_RenderPass), "ERROR: VULKAN: Failed to create RenderPass.");
+	MIRU_FATAL(vkCreateRenderPass(m_Device, &m_RenderPassCI, nullptr, &m_RenderPass), "ERROR: VULKAN: Failed to create RenderPass.");
 	VKSetName<VkRenderPass>(m_Device, m_RenderPass, m_CI.debugName);
 }
 
@@ -141,7 +139,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	m_PLCI.pushConstantRangeCount = static_cast<uint32_t>(vkPushConstantRanges.size());
 	m_PLCI.pPushConstantRanges = vkPushConstantRanges.data();
 	
-	MIRU_ASSERT(vkCreatePipelineLayout(m_Device, &m_PLCI, nullptr, &m_PipelineLayout), "ERROR: VULKAN: Failed to create PipelineLayout.");
+	MIRU_FATAL(vkCreatePipelineLayout(m_Device, &m_PLCI, nullptr, &m_PipelineLayout), "ERROR: VULKAN: Failed to create PipelineLayout.");
 	VKSetName<VkPipelineLayout>(m_Device, m_PipelineLayout, m_CI.debugName + " : PipelineLayout");
 
 	if (m_CI.type == base::PipelineType::GRAPHICS)
@@ -341,7 +339,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_GPCI.basePipelineIndex = -1;
 
-		MIRU_ASSERT(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &m_GPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Graphics Pipeline.");
+		MIRU_FATAL(vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &m_GPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Graphics Pipeline.");
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::COMPUTE)
@@ -354,7 +352,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_CPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_CPCI.basePipelineIndex = -1;
 		
-		MIRU_ASSERT(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
+		MIRU_FATAL(vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &m_CPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Compute Pipeline.");
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::RAY_TRACING)
@@ -421,7 +419,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_RTPCI.layout = m_PipelineLayout;
 		m_RTPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_RTPCI.basePipelineIndex = -1;
-		MIRU_ASSERT(vkCreateRayTracingPipelinesKHR(m_Device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &m_RTPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Ray Tracing Pipeline.");
+		MIRU_FATAL(vkCreateRayTracingPipelinesKHR(m_Device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &m_RTPCI, nullptr, &m_Pipeline), "ERROR: VULKAN: Failed to create Ray Tracing Pipeline.");
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
 		//Get ShaderHandles
@@ -435,7 +433,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		//Get ShaderGroupHandle - Handles should return in the order specific in VkRayTracingPipelineCreateInfoKHR::pStages.
 		std::vector<uint8_t> shaderGroupHandles(shaderGroupHandleDataSize);
-		MIRU_ASSERT(vkGetRayTracingShaderGroupHandlesKHR(m_Device, m_Pipeline, 0, m_RTPCI.groupCount, shaderGroupHandleDataSize, shaderGroupHandles.data()), "ERROR: VULKAN: Failed to get Ray Tracing Pipeline Shader Group Handles.");
+		MIRU_FATAL(vkGetRayTracingShaderGroupHandlesKHR(m_Device, m_Pipeline, 0, m_RTPCI.groupCount, shaderGroupHandleDataSize, shaderGroupHandles.data()), "ERROR: VULKAN: Failed to get Ray Tracing Pipeline Shader Group Handles.");
 
 		//We need to bundles the handles together by type.
 		//Get the indices per type.
@@ -490,7 +488,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		}
 	}	
 	else
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unknown pipeline type.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Unknown pipeline type.");
 }
 
 std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
@@ -503,7 +501,7 @@ std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeli
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: VULKAN: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
 	}
 	return std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>>();
 }
@@ -558,4 +556,3 @@ VkFormat Pipeline::ToVkFormat(base::VertexType type)
 		return VK_FORMAT_UNDEFINED;
 	}
 }
-#endif

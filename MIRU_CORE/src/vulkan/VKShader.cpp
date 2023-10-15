@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKShader.h"
 
 #include "base/DescriptorPoolSet.h"
@@ -40,7 +38,7 @@ void Shader::Reconstruct()
 	m_ShaderModuleCI.codeSize = static_cast<uint32_t>(m_ShaderBinary.size());
 	m_ShaderModuleCI.pCode = reinterpret_cast<const uint32_t*>(m_ShaderBinary.data());
 
-	MIRU_ASSERT(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
+	MIRU_FATAL(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
 	VKSetName<VkShaderModule>(m_Device, m_ShaderModule, m_CI.debugName);
 
 	for (const auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
@@ -142,7 +140,7 @@ void Shader::VulkanShaderReflection(
 			break;
 		}
 
-		MIRU_ASSERT(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::base::VertexType.");
+		MIRU_FATAL(true, "ERROR: VULKAN: Unsupported SPIRType::BaseType. Cannot convert to miru::base::VertexType.");
 		return static_cast<base::VertexType>(0);
 	};
 
@@ -321,4 +319,3 @@ void Shader::VulkanShaderReflection(
 	push_back_ResourceBindingDescription(resources.separate_images, base::DescriptorType::SAMPLED_IMAGE);
 	push_back_ResourceBindingDescription(resources.separate_samplers, base::DescriptorType::SAMPLER);
 }
-#endif

@@ -1,8 +1,13 @@
 #pragma once
-#if defined(MIRU_VULKAN)
 //Platform usage
 #if defined(_WIN64)
 #define VK_USE_PLATFORM_WIN32_KHR
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #endif
 
 #if defined(__ANDROID__)
@@ -314,4 +319,6 @@ namespace miru
 		}
 	}
 }
-#endif
+
+//MIRU SetName
+#include "vulkan/VK_SetName.h"

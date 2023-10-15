@@ -1,15 +1,10 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Context.h"
 #include "D3D12Sync.h"
 #include "D3D12Shader.h"
+#include <sstream>
 
 using namespace miru;
 using namespace d3d12;
-
-HMODULE Context::s_HModeuleDXIL;
-std::filesystem::path Context::s_DXILFullpath;
-uint32_t Context::s_RefCount = 0;
 
 Context::Context(Context::CreateInfo* pCreateInfo)
 {
@@ -25,7 +20,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//Setup Debug
 	if (m_CI.debugValidationLayers)
 	{
-		MIRU_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
+		MIRU_FATAL(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
 		m_Debug->EnableDebugLayer();
 		#if !defined(MIRU_WIN64_UWP)
 		reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
@@ -36,7 +31,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	UINT createFactoryFlags = 0;
 	if (m_CI.debugValidationLayers)
 		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-	MIRU_ASSERT(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
+	MIRU_FATAL(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
 
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
@@ -56,19 +51,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		}
 	}
 
-	//Load dxil.dll
-	if (!s_HModeuleDXIL)
-	{
-		s_DXILFullpath = base::Shader::GetLibraryFullpath_dxil();
-		s_HModeuleDXIL = base::Shader::LoadLibrary_dxil();
-		if (!s_HModeuleDXIL)
-		{
-			std::string error_str = "WARN: D3D12: Unable to load '" + s_DXILFullpath.generic_string() + "'.";
-			MIRU_WARN(GetLastError(), error_str.c_str());
-		}
-	}
-	s_RefCount++;
-
 	//Check provide feature level
 	D3D_FEATURE_LEVEL featureLevel;
 	for (size_t i = 0; i < _countof(m_Features.featureLevelsList); i++)
@@ -82,7 +64,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	}
 	if (openXRD3D12Data && featureLevel < openXRD3D12Data->minFeatureLevel)
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Selected D3D_FEATURE_LEVEL is less than the minimum for OpenXR.");
+		MIRU_FATAL(true, "ERROR: D3D12: Selected D3D_FEATURE_LEVEL is less than the minimum for OpenXR.");
 	}
 
 	m_RI.apiVersionMajor = (((uint32_t)(featureLevel) >> 12) & 0xFU);
@@ -90,7 +72,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_RI.apiVersionPatch = 0;
 	
 	//Create Device
-	MIRU_ASSERT(D3D12CreateDevice(adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device."); 
+	MIRU_FATAL(D3D12CreateDevice(adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device.");
 	D3D12SetName(m_Device, m_CI.deviceDebugName);
 
 	//Enumerate D3D12 Device Features
@@ -137,7 +119,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_QueueDescs[i].Priority = 0;
 		m_QueueDescs[i].Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		m_QueueDescs[i].NodeMask = 0;
-		MIRU_ASSERT(m_Device->CreateCommandQueue(&m_QueueDescs[i], IID_PPV_ARGS(&m_Queues[i])), "ERROR: D3D12: Failed to create CommandQueue.");
+		MIRU_FATAL(m_Device->CreateCommandQueue(&m_QueueDescs[i], IID_PPV_ARGS(&m_Queues[i])), "ERROR: D3D12: Failed to create CommandQueue.");
 
 		std::string typeStr = i == 0 ? "Direct" : i == 1 ? "Compute" : i == 2 ? "Copy" : "";
 		D3D12SetName(m_Queues[i], m_CI.deviceDebugName + ": Queue - " + typeStr);
@@ -147,16 +129,6 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 Context::~Context()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
-
-	s_RefCount--;
-	if (!s_RefCount)
-	{
-		if (!FreeLibrary(s_HModeuleDXIL))
-		{
-			std::string error_str = "WARN: D3D12: Unable to free'" + s_DXILFullpath.generic_string() + "'.";
-			MIRU_WARN(GetLastError(), error_str.c_str());
-		}
-	}
 
 	if (m_InfoQueue)
 		reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->UnregisterMessageCallback(m_CallbackCookie);
@@ -386,4 +358,3 @@ Context::Features::Features(ID3D12Device* device)
 	
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &d3d12Options16, sizeof(d3d12Options16)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS16.");
 }
-#endif

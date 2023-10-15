@@ -1,4 +1,5 @@
 #include "miru_core.h"
+#include "common.h"
 #include "maths.h"
 
 #include "STBI/stb_image.h"
@@ -97,44 +98,30 @@ void Multiview()
 	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().width;
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
-	//Basic shader
+	//Multiview shader
+	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/multiview_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Multiview: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
-	shaderCI.binaryFilepath = "res/bin/multiview_vs_6_1_vs_main.spv";
+	shaderCI.binaryFilepath = "../shaderbin/multiview_vs_6_1_vs_main.spv";
 	shaderCI.binaryCode = {};
-	shaderCI.recompileArguments = {
-		"res/shaders/multiview.hlsl",
-		"res/bin",
-		{"../MIRU_SHADER_COMPILER/shaders/includes"},
-		"vs_main",
-		"vs_6_1",
-		{},
-		true,
-		true,
-		{"-Zi", "-Od", "-Fd"},
-		""
-	};
+	shaderCI.recompileArguments = compileArguments[0];
 	ShaderRef vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Multiview: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "res/bin/multiview_ps_6_1_ps_main.spv";
-	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderModel = "ps_6_1";
+	shaderCI.binaryFilepath = "../shaderbin/multiview_ps_6_1_ps_main.spv";
+	shaderCI.recompileArguments = compileArguments[1];
 	ShaderRef fragmentShader = Shader::Create(&shaderCI);
-
 	shaderCI.debugName = "Multiview Show: Vertex Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::VERTEX_BIT, "vs_show"} };
-	shaderCI.binaryFilepath = "res/bin/multiview_vs_6_1_vs_show.spv";
-	shaderCI.recompileArguments.entryPoint = "vs_show";
-	shaderCI.recompileArguments.shaderModel = "vs_6_1";
+	shaderCI.binaryFilepath = "../shaderbin/multiview_vs_6_1_vs_show.spv";
+	shaderCI.recompileArguments = compileArguments[2];
 	ShaderRef showVertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Multiview Show: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_show"} };
-	shaderCI.binaryFilepath = "res/bin/multiview_ps_6_1_ps_show.spv";
-	shaderCI.recompileArguments.entryPoint = "ps_show";
-	shaderCI.recompileArguments.shaderModel = "ps_6_1";
+	shaderCI.binaryFilepath = "../shaderbin/multiview_ps_6_1_ps_show.spv";
+	shaderCI.recompileArguments = compileArguments[3];
 	ShaderRef showFragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
@@ -191,7 +178,8 @@ void Multiview()
 	int img_width;
 	int img_height;
 	int bpp;
-	uint8_t* imageData = stbi_load("../Branding/logo.png", &img_width, &img_height, &bpp, 4);
+	std::string logoFilepath = std::string(SOLUTION_DIR) + std::string("/Branding/logo.png");
+	uint8_t* imageData = stbi_load(logoFilepath.c_str(), &img_width, &img_height, &bpp, 4);
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Framebuffer.h"
 #include "D3D12Image.h"
 #include "D3D12DescriptorPoolSet.h"
@@ -159,4 +157,3 @@ Framebuffer::~Framebuffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
-#endif

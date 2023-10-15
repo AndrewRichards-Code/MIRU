@@ -1,0 +1,9 @@
+{
+  "hlsl.preprocessorDefinitions": 
+  {
+  },
+  "hlsl.additionalIncludeDirectories": 
+  [
+    "../../../MIRU_SHADER_COMPILER/shaders/includes/"
+  ]
+}

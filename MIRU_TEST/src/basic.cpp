@@ -1,7 +1,14 @@
 #include "miru_core.h"
+#include "common.h"
 #include "maths.h"
 
 #include "STBI/stb_image.h"
+
+extern "C"
+{
+	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 610;
+	__declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";
+}
 
 using namespace miru;
 using namespace base;
@@ -159,45 +166,33 @@ void Basic()
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Basic shader
+	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/basic_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
-	shaderCI.binaryFilepath = "res/bin/basic_vs_6_0_vs_main.spv";
+	shaderCI.binaryFilepath = "../shaderbin/basic_vs_6_0_vs_main.spv";
 	shaderCI.binaryCode = {};
-	shaderCI.recompileArguments = {
-		"res/shaders/basic.hlsl",
-		"res/bin",
-		{"../MIRU_SHADER_COMPILER/shaders/includes"},
-		"vs_main",
-		"vs_6_0",
-		{},
-		true,
-		true,
-		{"-Zi", "-Od", "-Fd"},
-		""
-	};
+	shaderCI.recompileArguments = compileArguments[0];
 	ShaderRef vertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "Basic: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "res/bin/basic_ps_6_0_ps_main.spv";
-	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderModel = "ps_6_0";
+	shaderCI.binaryFilepath = "../shaderbin/basic_ps_6_0_ps_main.spv";
+	shaderCI.recompileArguments = compileArguments[1];
 	ShaderRef fragmentShader = Shader::Create(&shaderCI);
 
 	//PostProcessing
+	compileArguments.clear();
+	compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/postprocess_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
 	shaderCI.debugName = "PostProcess: Vertex Shader Module";
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
-	shaderCI.binaryFilepath = "res/bin/postprocess_vs_6_0_vs_main.spv";
-	shaderCI.recompileArguments.hlslFilepath = "res/shaders/postprocess.hlsl";
-	shaderCI.recompileArguments.entryPoint = "vs_main";
-	shaderCI.recompileArguments.shaderModel = "vs_6_0";
+	shaderCI.binaryFilepath = "../shaderbin/postprocess_vs_6_0_vs_main.spv";
+	shaderCI.recompileArguments = compileArguments[0];
 	ShaderRef postProcessVertexShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "PostProcess: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "res/bin/postprocess_ps_6_0_ps_main.spv";
-	shaderCI.recompileArguments.entryPoint = "ps_main";
-	shaderCI.recompileArguments.shaderModel = "ps_6_0";
+	shaderCI.binaryFilepath = "../shaderbin/postprocess_ps_6_0_ps_main.spv";
+	shaderCI.recompileArguments = compileArguments[1];
 	ShaderRef postProcessFragmentShader = Shader::Create(&shaderCI);
 
 	CommandPool::CreateInfo cmdPoolCI;
@@ -254,7 +249,8 @@ void Basic()
 	int img_width;
 	int img_height;
 	int bpp;
-	uint8_t* imageData = stbi_load("../Branding/logo.png", &img_width, &img_height, &bpp, 4);
+	std::string logoFilepath = std::string(SOLUTION_DIR) + std::string("/Branding/logo.png");
+	uint8_t* imageData = stbi_load(logoFilepath.c_str(), &img_width, &img_height, &bpp, 4);
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";

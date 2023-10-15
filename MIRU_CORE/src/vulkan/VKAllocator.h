@@ -1,7 +1,6 @@
 #pragma once
-#if defined(MIRU_VULKAN)
-#include "miru_core_common.h"
 #include "base/Allocator.h"
+#include "vulkan/VK_Include.h"
 
 namespace miru
 {
@@ -33,4 +32,3 @@ namespace vulkan
 	};
 }
 }
-#endif

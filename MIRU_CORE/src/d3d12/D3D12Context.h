@@ -1,6 +1,7 @@
 #pragma once
-#if defined(MIRU_D3D12)
 #include "base/Context.h"
+#include "d3d12/D3D12_Include.h"
+#include <filesystem>
 
 namespace miru
 {
@@ -116,13 +117,6 @@ namespace d3d12
 
 		//Features
 		Features m_Features;
-
-	private:
-		//DXIL Library
-		static HMODULE s_HModeuleDXIL;
-		static std::filesystem::path s_DXILFullpath;
-		static uint32_t s_RefCount;
 	};
 }
 }
-#endif

@@ -339,8 +339,12 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-*.json
-/D3D12_RT_Error.txt
+
 /compileData.scor
 /compileData.scor.incl
 /compileData.scor.t0000
+
+build/
+/External/nuget/nuget.exe
+/External/renderdoc/api/app/renderdoc_app.h
+/External/stb/stb_image.h

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKFramebuffer.h"
 #include "VKPipeline.h"
 #include "VKImage.h"
@@ -29,7 +27,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	m_FramebufferCI.height = m_CI.height;
 	m_FramebufferCI.layers = m_CI.layers;
 
-	MIRU_ASSERT(vkCreateFramebuffer(m_Device, &m_FramebufferCI, nullptr, &m_Framebuffer), "ERROR: VULKAN: Failed to create Framebuffer.");
+	MIRU_FATAL(vkCreateFramebuffer(m_Device, &m_FramebufferCI, nullptr, &m_Framebuffer), "ERROR: VULKAN: Failed to create Framebuffer.");
 	VKSetName<VkFramebuffer>(m_Device, m_Framebuffer, m_CI.debugName);
 }
 
@@ -39,4 +37,3 @@ Framebuffer::~Framebuffer()
 
 	vkDestroyFramebuffer(m_Device, m_Framebuffer, nullptr);
 }
-#endif

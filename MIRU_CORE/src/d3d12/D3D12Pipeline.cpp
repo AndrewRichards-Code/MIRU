@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Shader.h"
@@ -269,7 +267,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		gpssd.SizeInBytes = sizeof(gpss2);
 		gpssd.pPipelineStateSubobjectStream = &gpss2;
 
-		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&gpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
+		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&gpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::COMPUTE)
@@ -286,7 +284,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		cpssd.SizeInBytes = sizeof(cpss2);
 		cpssd.pPipelineStateSubobjectStream = &cpss2;
 
-		MIRU_ASSERT(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&cpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
+		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&cpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::RAY_TRACING)
@@ -424,12 +422,12 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_RayTracingPipelineDesc.NumSubobjects = static_cast<UINT>(m_RayTracingPipelineSubDesc.size());
 		m_RayTracingPipelineDesc.pSubobjects = m_RayTracingPipelineSubDesc.data();
 
-		MIRU_ASSERT(reinterpret_cast<ID3D12Device5*>(m_Device)->CreateStateObject(&m_RayTracingPipelineDesc, IID_PPV_ARGS(&m_RayTracingPipeline)), "ERROR: D3D12: Failed to create Ray Tracing Pipeline.");
+		MIRU_FATAL(reinterpret_cast<ID3D12Device5*>(m_Device)->CreateStateObject(&m_RayTracingPipelineDesc, IID_PPV_ARGS(&m_RayTracingPipeline)), "ERROR: D3D12: Failed to create Ray Tracing Pipeline.");
 		D3D12SetName(m_RayTracingPipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
 		// Get ShaderGroupIdentifiers
 		ID3D12StateObjectProperties * rayTracingPipelineProperties = nullptr;
-		MIRU_ASSERT(m_RayTracingPipeline->QueryInterface(IID_PPV_ARGS(&rayTracingPipelineProperties)), "ERROR: D3D12: Failed to get Ray Tracing Pipeline Properties.");
+		MIRU_FATAL(m_RayTracingPipeline->QueryInterface(IID_PPV_ARGS(&rayTracingPipelineProperties)), "ERROR: D3D12: Failed to get Ray Tracing Pipeline Properties.");
 
 		std::map<base::ShaderGroupHandleType, std::vector<void*>>shaderIdentifiers;
 		for (auto& exportStageAndName : exportStagesAndNames)
@@ -470,7 +468,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		}
 	}
 	else
-		MIRU_ASSERT(true, "ERROR: D3D12: Unknown pipeline type.");
+		MIRU_FATAL(true, "ERROR: D3D12: Unknown pipeline type.");
 }
 
 std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeline::GetShaderGroupHandles()
@@ -483,7 +481,7 @@ std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>> Pipeli
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
+		MIRU_FATAL(true, "ERROR: D3D12: Pipeline type is not RAY_TRACING. Unable to get ShaderGroupHandles.");
 	}
 	return std::vector<std::pair<base::ShaderGroupHandleType, std::vector<uint8_t>>>();
 }
@@ -752,7 +750,7 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const base::Pipeline::Pipe
 
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSignatureData;
 	rootSignatureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-	MIRU_ASSERT(m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(rootSignatureData)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
+	MIRU_FATAL(m_Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignatureData, sizeof(rootSignatureData)), "ERROR: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
 
 	HRESULT res = D3D12SerializeRootSignature(&result.rootSignatureDesc, rootSignatureData.HighestVersion, &result.serializedRootSignature, &result.serializedRootSignatureError);
 	if (result.serializedRootSignatureError)
@@ -760,9 +758,8 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const base::Pipeline::Pipe
 		std::string errorStr = std::string((char*)result.serializedRootSignatureError->GetBufferPointer());
 		MIRU_ERROR(true, "ERROR: D3D12: Error in serialising RootSignature: " + errorStr);
 	}
-	MIRU_ASSERT(res, "ERROR: D3D12: Failed to serialise RootSignature.");
-	MIRU_ASSERT(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
+	MIRU_FATAL(res, "ERROR: D3D12: Failed to serialise RootSignature.");
+	MIRU_FATAL(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 
 	return result;
 }
-#endif

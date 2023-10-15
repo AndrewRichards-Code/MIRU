@@ -1,27 +1,8 @@
-//MIRU_PRE_COMPILED HEADER
 #include "miru_core_common.h"
+#include <fstream>
+#include <chrono>
 
 using namespace miru;
-
-//MIRU CPU Heap Allocation tracker
-#if defined(MIRU_CPU_HEAP_ALLOCATION_TRACKER)
-size_t CPU_HEAP_ALLOC_TRACKER::current_allocated_bytes = 0;
-//std::map<void*, size_t> CPU_HEAP_ALLOC_TRACKER::current_allocation_map = {};
-
-void* operator new(size_t size)
-{
-	void* ptr = (void*)malloc(size);
-	CPU_HEAP_ALLOC_TRACKER::current_allocated_bytes += size;
-	//CPU_HEAP_ALLOC_TRACKER::current_allocation_map[ptr] = size;
-	return ptr;
-}
-void operator delete(void* ptr, size_t size)
-{
-	CPU_HEAP_ALLOC_TRACKER::current_allocated_bytes -= size;
-	//CPU_HEAP_ALLOC_TRACKER::current_allocation_map.erase(ptr);
-	free(ptr);
-}
-#endif
 
 //MIRU CPU Profiler
 #if defined(MIRU_CPU_PROFILER)

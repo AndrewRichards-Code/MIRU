@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKDescriptorPoolSet.h"
 #include "VKBuffer.h"
 #include "VKImage.h"
@@ -26,7 +24,7 @@ DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
 	m_DescriptorPoolCI.poolSizeCount = static_cast<uint32_t>(m_PoolSizes.size());
 	m_DescriptorPoolCI.pPoolSizes = m_PoolSizes.data();
 
-	MIRU_ASSERT(vkCreateDescriptorPool(m_Device, &m_DescriptorPoolCI, nullptr, &m_DescriptorPool), "ERROR: VULKAN: Failed to create DescriptorPool.");
+	MIRU_FATAL(vkCreateDescriptorPool(m_Device, &m_DescriptorPoolCI, nullptr, &m_DescriptorPool), "ERROR: VULKAN: Failed to create DescriptorPool.");
 	VKSetName<VkDescriptorPool>(m_Device, m_DescriptorPool, m_CI.debugName);
 }
 
@@ -59,7 +57,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 	m_DescriptorSetLayoutCI.bindingCount = static_cast<uint32_t>(m_DescriptorSetLayoutBindings.size());
 	m_DescriptorSetLayoutCI.pBindings = m_DescriptorSetLayoutBindings.data();
 
-	MIRU_ASSERT(vkCreateDescriptorSetLayout(m_Device, &m_DescriptorSetLayoutCI, nullptr, &m_DescriptorSetLayout), "ERROR: VULKAN: Failed to create DescriptorSetLayout.");
+	MIRU_FATAL(vkCreateDescriptorSetLayout(m_Device, &m_DescriptorSetLayoutCI, nullptr, &m_DescriptorSetLayout), "ERROR: VULKAN: Failed to create DescriptorSetLayout.");
 	VKSetName<VkDescriptorSetLayout>(m_Device, m_DescriptorSetLayout, m_CI.debugName);
 }
 
@@ -89,7 +87,7 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 
 	m_DescriptorSets.resize(m_DescriptorSetLayouts.size());
 
-	MIRU_ASSERT(vkAllocateDescriptorSets(m_Device, &m_DescriptorSetAI, m_DescriptorSets.data()), "ERROR: VULKAN: Failed to create DescriptorSet.");
+	MIRU_FATAL(vkAllocateDescriptorSets(m_Device, &m_DescriptorSetAI, m_DescriptorSets.data()), "ERROR: VULKAN: Failed to create DescriptorSet.");
 	
 	uint32_t i = 0;
 	for (auto& descriptorSet : m_DescriptorSets)
@@ -224,4 +222,3 @@ void DescriptorSet::Update()
 
 	vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(m_WriteDescriptorSets.size()), m_WriteDescriptorSets.data(), 0, nullptr);
 }
-#endif

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKBuffer.h"
 #include "base/Allocator.h"
 
@@ -30,7 +28,8 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_VmaACI.pool = VK_NULL_HANDLE;
 	m_VmaACI.pUserData = nullptr;
 
-	MIRU_ASSERT(vmaCreateBuffer(m_CI.allocator->GetVmaAllocator(), &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
+	VmaAllocator& allocator = *reinterpret_cast<VmaAllocator*>(m_CI.allocator->GetNativeAllocator());
+	MIRU_FATAL(vmaCreateBuffer(allocator, &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
 	VKSetName<VkBuffer>(m_Device, m_Buffer, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
@@ -49,7 +48,8 @@ Buffer::~Buffer()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	vmaDestroyBuffer(m_CI.allocator->GetVmaAllocator(), m_Buffer, m_VmaAllocation);
+	VmaAllocator& allocator = *reinterpret_cast<VmaAllocator*>(m_CI.allocator->GetNativeAllocator());
+	vmaDestroyBuffer(allocator, m_Buffer, m_VmaAllocation);
 }
 
 BufferView::BufferView(CreateInfo* pCreateInfo)
@@ -70,7 +70,7 @@ BufferView::BufferView(CreateInfo* pCreateInfo)
 	if (m_CI.buffer->GetCreateInfo().usage == Buffer::UsageBit::UNIFORM_TEXEL_BIT
 		|| m_CI.buffer->GetCreateInfo().usage == Buffer::UsageBit::STORAGE_TEXEL_BIT) // These are the only valid usage to create a VkBufferView proper.
 	{
-		MIRU_ASSERT(vkCreateBufferView(m_Device, &m_BufferViewCI, nullptr, &m_BufferView), "ERROR: VULKAN: Failed to create BufferView.");
+		MIRU_FATAL(vkCreateBufferView(m_Device, &m_BufferViewCI, nullptr, &m_BufferView), "ERROR: VULKAN: Failed to create BufferView.");
 	}
 }
 
@@ -84,4 +84,3 @@ BufferView::~BufferView()
 		vkDestroyBufferView(m_Device, m_BufferView, nullptr);
 	}
 }
-#endif

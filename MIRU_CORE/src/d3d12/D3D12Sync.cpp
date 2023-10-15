@@ -1,7 +1,4 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Sync.h"
-
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
 
@@ -16,7 +13,7 @@ Fence::Fence(Fence::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	m_Value = 0;
-	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence)), "ERROR: D3D12: Failed to a create Fence.");
+	MIRU_FATAL(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence)), "ERROR: D3D12: Failed to a create Fence.");
 	D3D12SetName(m_Fence, m_CI.debugName + " : Fence");
 	m_Event = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
@@ -51,7 +48,7 @@ bool Fence::Wait()
 	UINT64 currentValue = m_Fence->GetCompletedValue();
 	if (currentValue < m_Value)
 	{
-		MIRU_ASSERT(m_Fence->SetEventOnCompletion(m_Value, m_Event), "ERROR: D3D12: Failed to wait for Fence.");
+		MIRU_FATAL(m_Fence->SetEventOnCompletion(m_Value, m_Event), "ERROR: D3D12: Failed to wait for Fence.");
 		DWORD result = WaitForSingleObject(m_Event, static_cast<DWORD>(m_CI.timeout/1000));
 		if (result == WAIT_OBJECT_0)
 			return true;
@@ -59,7 +56,7 @@ bool Fence::Wait()
 			return false;
 		else
 		{
-			MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait for Fence.");
+			MIRU_FATAL(result, "ERROR: D3D12: Failed to wait for Fence.");
 			return false;
 		}
 	}
@@ -71,7 +68,7 @@ void Fence::Signal()
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_Value++;
-	MIRU_ASSERT(m_Fence->Signal(m_Value), "ERROR: D3D12: Failed to a signal Fence.");
+	MIRU_FATAL(m_Fence->Signal(m_Value), "ERROR: D3D12: Failed to a signal Fence.");
 }
 
 //Semaphore
@@ -82,7 +79,7 @@ Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	m_Value = 0;
-	MIRU_ASSERT(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create Semaphore.");
+	MIRU_FATAL(m_Device->CreateFence(m_Value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Semaphore)), "ERROR: D3D12 Failed to create Semaphore.");
 	D3D12SetName(m_Semaphore, m_CI.debugName + " : Semaphore");
 }
 
@@ -99,11 +96,11 @@ void Semaphore::Signal(uint64_t value)
 	
 	if (m_CI.type == Type::TIMELINE)
 	{
-		MIRU_ASSERT(m_Semaphore->Signal(value), "ERROR: D3D12: Failed to a signal Semaphore.");
+		MIRU_FATAL(m_Semaphore->Signal(value), "ERROR: D3D12: Failed to a signal Semaphore.");
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Failed to a signal Semaphore, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: D3D12: Failed to a signal Semaphore, because it's not Type::TIMELINE.")
 	}
 }
 
@@ -117,7 +114,7 @@ bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 		if (currentValue < value)
 		{
 			HANDLE _event = CreateEvent(NULL, FALSE, FALSE, NULL);
-			MIRU_ASSERT(m_Semaphore->SetEventOnCompletion(value, _event), "ERROR: D3D12: Failed to wait for Semaphore.");
+			MIRU_FATAL(m_Semaphore->SetEventOnCompletion(value, _event), "ERROR: D3D12: Failed to wait for Semaphore.");
 			DWORD result = WaitForSingleObject(_event, static_cast<DWORD>(timeout / 1000));
 			if (result == WAIT_OBJECT_0)
 				return true;
@@ -125,7 +122,7 @@ bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 				return false;
 			else
 			{
-				MIRU_ASSERT(result, "ERROR: D3D12: Failed to wait for Semaphore.");
+				MIRU_FATAL(result, "ERROR: D3D12: Failed to wait for Semaphore.");
 				return false;
 			}
 		}
@@ -133,7 +130,7 @@ bool Semaphore::Wait(uint64_t value, uint64_t timeout)
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Failed to wait for Semaphore, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: D3D12: Failed to wait for Semaphore, because it's not Type::TIMELINE.")
 		return false;
 	}
 }
@@ -148,7 +145,7 @@ uint64_t Semaphore::GetCurrentValue()
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Failed to a get Semaphore's counter value, because it's not Type::TIMELINE.")
+		MIRU_FATAL(true, "ERROR: D3D12: Failed to a get Semaphore's counter value, because it's not Type::TIMELINE.")
 		return 0;
 	}
 }
@@ -622,5 +619,3 @@ D3D12_BARRIER_LAYOUT Barrier2::ToD3D12BarrierLayout(Image::Layout layout)
 		return D3D12_BARRIER_LAYOUT_COMMON;
 	}
 }
-
-#endif

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12AccelerationStructure.h"
 #include "D3D12Buffer.h"
 #include "D3D12Pipeline.h"
@@ -58,7 +56,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 		}
 		default:
 		{
-			MIRU_ASSERT(true, "ERROR: D3D12: Unknown BuildGeometryInfo::Geometry::Type.");
+			MIRU_FATAL(true, "ERROR: D3D12: Unknown BuildGeometryInfo::Geometry::Type.");
 			break;
 		}
 		}
@@ -120,5 +118,3 @@ AccelerationStructure::~AccelerationStructure()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
-
-#endif

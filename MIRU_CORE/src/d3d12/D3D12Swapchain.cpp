@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Swapchain.h"
 #include "D3D12Context.h"
 
@@ -45,17 +43,17 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 	IDXGISwapChain1* swapchain;
 	#if defined(MIRU_WIN64_UWP)
-	MIRU_ASSERT(m_Factory->CreateSwapChainForCoreWindow(cmdQueue, reinterpret_cast<IUnknown*>(m_CI.pWindow), &m_SwapchainDesc, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
+	MIRU_FATAL(m_Factory->CreateSwapChainForCoreWindow(cmdQueue, reinterpret_cast<IUnknown*>(m_CI.pWindow), &m_SwapchainDesc, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	#else
-	MIRU_ASSERT(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
+	MIRU_FATAL(m_Factory->CreateSwapChainForHwnd(cmdQueue, static_cast<HWND>(m_CI.pWindow), &m_SwapchainDesc, nullptr, nullptr, &swapchain), "ERROR: D3D12: Failed to create Swapchain.");
 	#endif
 	m_Swapchain = reinterpret_cast<IDXGISwapChain4*>(swapchain);
 
 	//Set Colour space
 	IDXGIOutput6* output;
-	MIRU_ASSERT(m_Swapchain->GetContainingOutput(reinterpret_cast<IDXGIOutput**>(&output)), "ERROR: D3D12: Failed to get containing Output.");
+	MIRU_FATAL(m_Swapchain->GetContainingOutput(reinterpret_cast<IDXGIOutput**>(&output)), "ERROR: D3D12: Failed to get containing Output.");
 	DXGI_OUTPUT_DESC1 outputDesc;
-	MIRU_ASSERT(output->GetDesc1(&outputDesc), "ERROR: D3D12: Failed to get Output Description.");
+	MIRU_FATAL(output->GetDesc1(&outputDesc), "ERROR: D3D12: Failed to get Output Description.");
 	MIRU_D3D12_SAFE_RELEASE(output);
 
 	if (outputDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) //HDR
@@ -63,10 +61,10 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		if (surfaceFormat.second == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
 		{
 			UINT colourSpaceSupport;
-			MIRU_ASSERT(m_Swapchain->CheckColorSpaceSupport(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, &colourSpaceSupport), "ERROR: D3D12: Failed to check ColourSpace support.");
+			MIRU_FATAL(m_Swapchain->CheckColorSpaceSupport(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, &colourSpaceSupport), "ERROR: D3D12: Failed to check ColourSpace support.");
 			if (arc::BitwiseCheck(static_cast<DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG>(colourSpaceSupport), DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT))
 			{
-				MIRU_ASSERT(m_Swapchain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020), "ERROR: D3D12: Failed to set ColourSpace.");
+				MIRU_FATAL(m_Swapchain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020), "ERROR: D3D12: Failed to set ColourSpace.");
 				surfaceFormat.second = DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
 			}
 		}
@@ -77,20 +75,20 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Unknown colour space.")
+		MIRU_FATAL(true, "ERROR: D3D12: Unknown colour space.")
 	}
 	m_Format = surfaceFormat.first;
 	m_ColorSpace = surfaceFormat.second;
 
 	//D3D12SetName(m_Swapchain, m_CI.debugName);
-	MIRU_ASSERT(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
+	MIRU_FATAL(m_Swapchain->GetSourceSize(&m_Width, &m_Height), "ERROR: D3D12: Failed to get size of the Swapchain.");
 
 	//Create Swapchian RTV
 	m_SwapchainRTVDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	m_SwapchainRTVDescHeapDesc.NumDescriptors = m_SwapchainDesc.BufferCount;
 	m_SwapchainRTVDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_SwapchainRTVDescHeapDesc.NodeMask = 0;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
+	MIRU_FATAL(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
 	D3D12SetName(m_SwapchainRTVDescHeap, m_CI.debugName + ": RTV Descriptor Heap");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE swapchainRTV_CPUDescHandle = m_SwapchainRTVDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -101,7 +99,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 	for(UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
-		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
+		MIRU_FATAL(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
 		m_Device->CreateRenderTargetView(swapchainRTV, nullptr, swapchainRTV_CPUDescHandle);
 		D3D12SetName(swapchainRTV, m_CI.debugName + ": RTV " + std::to_string(i));
 
@@ -141,14 +139,14 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	m_SwapchainRTVs.clear();
 	m_SwapchainRTV_CPU_Desc_Handles.clear();
 
-	MIRU_ASSERT(m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags), "ERROR: D3D12: Failed to Resize Swapchain Images");
+	MIRU_FATAL(m_Swapchain->ResizeBuffers(m_CI.swapchainCount, width, height, m_SwapchainDesc.Format, m_SwapchainDesc.Flags), "ERROR: D3D12: Failed to Resize Swapchain Images");
 
 	//Create Swapchian RTV
 	m_SwapchainRTVDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	m_SwapchainRTVDescHeapDesc.NumDescriptors = m_SwapchainDesc.BufferCount;
 	m_SwapchainRTVDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	m_SwapchainRTVDescHeapDesc.NodeMask = 0;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
+	MIRU_FATAL(m_Device->CreateDescriptorHeap(&m_SwapchainRTVDescHeapDesc, IID_PPV_ARGS(&m_SwapchainRTVDescHeap)), "ERROR: D3D12: Failed to Create Swapchain Image Descriptor Heap.");
 	D3D12SetName(m_SwapchainRTVDescHeap, m_CI.debugName + ": RTV Descriptor Heap");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE swapchainRTV_CPUDescHandle = m_SwapchainRTVDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -159,7 +157,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	for (UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
-		MIRU_ASSERT(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
+		MIRU_FATAL(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
 		m_Device->CreateRenderTargetView(swapchainRTV, nullptr, swapchainRTV_CPUDescHandle);
 		D3D12SetName(swapchainRTV, m_CI.debugName + ": RTV " + std::to_string(i));
 
@@ -185,11 +183,10 @@ void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::Semapho
 
 	if (m_CI.vSync)
 	{
-		MIRU_ASSERT(m_Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+		MIRU_FATAL(m_Swapchain->Present(1, 0), "ERROR: D3D12: Failed to present the Image from Swapchain.");
 	}
 	else
 	{
-		MIRU_ASSERT(m_Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
+		MIRU_FATAL(m_Swapchain->Present(0, DXGI_PRESENT_ALLOW_TEARING), "ERROR: D3D12: Failed to present the Image from Swapchain.");
 	}
 }
-#endif

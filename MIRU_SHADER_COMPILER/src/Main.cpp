@@ -1,12 +1,19 @@
-#include <iostream>
-#include <vector>
-
 #include "ErrorCodes.h"
 #include "MSCDocumentation.h"
 #include "miru_core.h"
 
 using namespace miru;
 using namespace shader_compiler;
+
+bool FoundArg(const std::string& arg, const std::string& value)
+{
+	return (arg.find(value) != std::string::npos);
+}
+
+void BuildBinary(base::Shader::CompileArguments compileArgs)
+{
+	base::Shader::CompileShaderFromSource(compileArgs);
+}
 
 int main(int argc, const char** argv)
 {
@@ -15,7 +22,7 @@ int main(int argc, const char** argv)
 	ErrorCode error = ErrorCode::MIRU_SHADER_COMPILER_OK;
 
 	//Null arguments
-	if (!argc)
+	if (argc == 1)
 	{
 		error = ErrorCode::MIRU_SHADER_COMPILER_NO_ARGS;
 		MIRU_SHADER_COMPILER_RETURN(error, "No arguments passed to MIRU_SHADER_COMPILER.");
@@ -27,21 +34,78 @@ int main(int argc, const char** argv)
 	bool help = false;
 	for (int i = 0; i < argc; i++)
 	{
-		if (!_stricmp(argv[i], "-h") || !_stricmp(argv[i], "-help"))
+		if (FoundArg(argv[i], "-h") || FoundArg(argv[i], "-H") || FoundArg(argv[i], "-help") || FoundArg(argv[i], "-HELP"))
 			help = true;
-		if (!_stricmp(argv[i], "-pause"))
+		if (FoundArg(argv[i], "-pause") || FoundArg(argv[i], "-PAUSE"))
 			{ pause = true; help = true; }
-		if (!_stricmp(argv[i], "-nologo"))
+		if (FoundArg(argv[i], "-nologo") || FoundArg(argv[i], "-NOLOGO"))
 			logo = false;
-		if (!_stricmp(argv[i], "-nooutput"))
+		if (FoundArg(argv[i], "-nooutput") || FoundArg(argv[i], "-NOOUTPUT"))
 			output = false;
 	}
 	if (logo)
-		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2022 Andrew Richards.\n\n");
+		MIRU_SHADER_COMPILER_PRINTF("MIRU_SHADER_COMPILER: Copyright © 2019-2023 Andrew Richards.\n\n");
 	if (help)
 	{
 		MIRU_SHADER_COMPILER_PRINTF(help_doucumentation);
 		MIRU_SHADER_COMPILER_PRINTF("\n");
+	}
+
+	//Check for Recompile Argument Files
+	std::unordered_map<std::string, std::string> rafEnvironmentVariables;
+	for (int i = 0; i < argc; i++)
+	{
+		const size_t tagSize = std::string("-RAFD:").size();
+		std::string arg = argv[i];
+		if (FoundArg(arg, "-rafd:") || FoundArg(arg, "-RAFD:"))
+		{
+			arg.erase(0, tagSize);
+			if (FoundArg(arg, "="))
+			{
+				std::stringstream ss = std::stringstream(arg);
+				std::string regexVariable;
+				std::string value;
+				std::getline(ss, regexVariable, '=');
+				std::getline(ss, value, '=');
+				rafEnvironmentVariables.insert({ regexVariable, value });
+			}
+		}
+	}
+
+	bool raf = false;
+	for (int i = 0; i < argc; i++)
+	{
+		const size_t tagSize = std::string("-RAF:").size();
+		std::string arg = argv[i];
+
+		if (FoundArg(arg, "-raf:") || FoundArg(arg, "-RAF:") || raf)
+		{
+			raf = true;
+			if (FoundArg(arg, "-raf:") || FoundArg(arg, "-RAF:"))
+				arg.erase(0, tagSize);
+
+			if (FoundArg(arg, ".json"))
+			{
+				std::filesystem::path filepath = arg;
+				const std::vector<base::Shader::CompileArguments> compileArguments 
+					= base::Shader::LoadCompileArgumentsFromFile(
+					filepath, rafEnvironmentVariables);
+
+				for (const auto& compileArgument : compileArguments)
+				{
+					BuildBinary(compileArgument);
+				}
+			}
+		}
+		else 
+		{
+			continue;
+		}
+
+	}
+	if (raf)
+	{
+		return 0;
 	}
 
 	//Parse compile flags
@@ -49,12 +113,12 @@ int main(int argc, const char** argv)
 	bool spv = false;
 	for(int i = 0; i < argc; i++)
 	{
-		if (!_stricmp(argv[i], "-cso"))
+		if (FoundArg(argv[i], "-cso") || FoundArg(argv[i], "-CSO"))
 		{
 			cso = true;
 			continue;
 		}
-		if (!_stricmp(argv[i], "-spv"))
+		if (FoundArg(argv[i], "-spv") || FoundArg(argv[i], "-SPV"))
 		{
 			spv = true;
 			continue;
@@ -67,54 +131,49 @@ int main(int argc, const char** argv)
 	}
 
 	//Get Filepath, Directories and others
-	std::string filepath, outputDir, entryPoint, shaderModel, dxc_path;
+	std::string filepath, outputDir, entryPoint, shaderModel;
 	std::vector<std::string> includeDirs, macros, dxc_args;
 	const size_t tagSize = std::string("-X:").size();
 	for (int i = 0; i < argc; i++)
 	{
-		std::string tempFilepath = argv[i];
-		if (tempFilepath.find(".hlsl") != std::string::npos && (tempFilepath.find("-f:") != std::string::npos || tempFilepath.find("-F:") != std::string::npos))
+		std::string arg = argv[i];
+		if (FoundArg(arg, ".hlsl") && (FoundArg(arg, "-f:") || FoundArg(arg, "-F:")))
 		{
-			tempFilepath.erase(0, tagSize);
-			filepath = tempFilepath;
+			arg.erase(0, tagSize);
+			filepath = arg;
 		}
-		else if (tempFilepath.find("-o:") != std::string::npos || tempFilepath.find("-O:") != std::string::npos)
+		else if (FoundArg(arg, "-o:") || FoundArg(arg, "-O:"))
 		{
-			tempFilepath.erase(0, tagSize);
-			outputDir = tempFilepath;
+			arg.erase(0, tagSize);
+			outputDir = arg;
 		}
-		else if (tempFilepath.find("-i:") != std::string::npos || tempFilepath.find("-I:") != std::string::npos)
+		else if (FoundArg(arg, "-i:") || FoundArg(arg, "-I:"))
 		{
-			tempFilepath.erase(0, tagSize);
-			includeDirs.push_back(tempFilepath);
+			arg.erase(0, tagSize);
+			includeDirs.push_back(arg);
 		}
-		else if (tempFilepath.find("-e:") != std::string::npos || tempFilepath.find("-E:") != std::string::npos)
+		else if (FoundArg(arg, "-e:") || FoundArg(arg, "-E:"))
 		{
-			tempFilepath.erase(0, tagSize);
-			entryPoint = tempFilepath;
+			arg.erase(0, tagSize);
+			entryPoint = arg;
 		}
-		else if (tempFilepath.find("-t:") != std::string::npos || tempFilepath.find("-T:") != std::string::npos)
+		else if (FoundArg(arg, "-t:") || FoundArg(arg, "-T:"))
 		{
-			tempFilepath.erase(0, tagSize);
-			shaderModel = tempFilepath;
+			arg.erase(0, tagSize);
+			shaderModel = arg;
 		}
-		else if (tempFilepath.find("-dxc:") != std::string::npos || tempFilepath.find("-DXC:") != std::string::npos)
+		else if (FoundArg(arg, "-dxc_args:") || FoundArg(arg, "-DXC_ARGS:"))
 		{
-			tempFilepath.erase(0, std::string("-DXC:").size());
-			dxc_path = tempFilepath;
-		}
-		else if (tempFilepath.find("-dxc_args:") != std::string::npos || tempFilepath.find("-DXC_ARGS:") != std::string::npos)
-		{
-			tempFilepath.erase(0, std::string("-DXC_ARGS:").size());
+			arg.erase(0, std::string("-DXC_ARGS:").size());
 			std::string string;
-			std::stringstream stream(tempFilepath);
+			std::stringstream stream(arg);
 			while (stream >> string)
 				dxc_args.push_back(string);
 		}
-		else if (tempFilepath.find("-d") != std::string::npos || tempFilepath.find("-D") != std::string::npos)
+		else if (FoundArg(arg, "-d:") || FoundArg(arg, "-D:"))
 		{
-			tempFilepath.erase(0, tagSize - size_t(1));
-			macros.push_back(tempFilepath);
+			arg.erase(0, tagSize);
+			macros.push_back(arg);
 		}
 		else
 		{
@@ -156,8 +215,7 @@ int main(int argc, const char** argv)
 	compileArgs.cso = cso;
 	compileArgs.spv = spv;
 	compileArgs.dxcArguments = dxc_args;
-	compileArgs.dxcLocation = dxc_path;
-	base::Shader::CompileShaderFromSource(compileArgs);
+	BuildBinary(compileArgs);
 
 	if (pause)
 	{

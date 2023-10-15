@@ -1,0 +1,16 @@
+{
+  "fileType": "MSC_RAF",
+  "recompileArguments": [
+    {
+      "hlslFilepath": "$SOLUTION_DIR/MIRU_TEST/res/shaders/raytracing.hlsl",
+      "outputDirectory": "$BUILD_DIR/shaderbin",
+      "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
+      "entryPoint": "",
+      "shaderModel": "lib_6_3",
+      "macros": [],
+      "cso": true,
+      "spv": true,
+      "dxcArguments": [ "-Zi", "-Od", "-Fd" ]
+    }
+  ]
+}

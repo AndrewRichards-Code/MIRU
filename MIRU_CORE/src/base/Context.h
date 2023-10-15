@@ -1,5 +1,4 @@
 #pragma once
-#define MIRU_CORE_COMMON_MINDEF
 #include "miru_core_common.h"
 
 namespace miru

@@ -1,6 +1,6 @@
 #pragma once
-#define MIRU_CORE_COMMON_MINDEF
 #include "miru_core_common.h"
+#include <filesystem>
 
 namespace miru
 {
@@ -72,8 +72,6 @@ namespace base
 		};
 
 		//See MSCDocumentation.h for correct usage.
-		//All filepaths and directories must be relative to the current working directory.
-		//All locations must be full paths i.e. dxc.
 		struct CompileArguments
 		{
 			std::string					hlslFilepath;
@@ -85,7 +83,6 @@ namespace base
 			bool						cso;				//Either cso or spv must be true
 			bool						spv;				//Either cso or spv must be true
 			std::vector<std::string>	dxcArguments;		//Optional
-			std::string					dxcLocation;		//Optional
 		};
 
 		struct CreateInfo
@@ -113,17 +110,12 @@ namespace base
 		const std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>>& GetRBDs() const { return m_RBDs; };
 
 	public:
+		static std::vector<CompileArguments> LoadCompileArgumentsFromFile(std::filesystem::path filepath, const std::unordered_map<std::string, std::string>& environmentVariables = {});
 		static void CompileShaderFromSource(const CompileArguments& arguments);
-		static std::filesystem::path GetLibraryFullpath_dxil();
-		static arc::DynamicLibrary::LibraryHandle LoadLibrary_dxil();
-		static std::filesystem::path GetLibraryFullpath_dxcompiler();
-		static arc::DynamicLibrary::LibraryHandle LoadLibrary_dxcompiler();
 
 	protected:
 		void GetShaderByteCode();
 		virtual void Reconstruct() = 0;
-
-		static const arc::DynamicLibrary::LibraryHandle GetHModeuleDxcompiler() { return s_HModeuleDxcompiler; };
 
 		//Members
 	protected:
@@ -136,10 +128,6 @@ namespace base
 
 		//Key is the set number
 		std::map<uint32_t, std::map<uint32_t, ResourceBindingDescription>> m_RBDs;
-
-		static arc::DynamicLibrary::LibraryHandle s_HModeuleDxil;
-		static arc::DynamicLibrary::LibraryHandle s_HModeuleDxcompiler;
-		static uint32_t s_RefCount;
 	};
 }
 }

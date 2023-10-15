@@ -1,6 +1,6 @@
 #pragma once
-#if defined(MIRU_D3D12)
 #include "base/Image.h"
+#include "d3d12/D3D12_Include.h"
 
 namespace miru
 {
@@ -79,4 +79,3 @@ namespace d3d12
 	};
 }
 }
-#endif

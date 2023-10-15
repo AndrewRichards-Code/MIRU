@@ -1,11 +1,11 @@
 #pragma once
-#if defined(MIRU_VULKAN)
+#include "base/GraphicsAPI.h"
 
 namespace miru
 {
 namespace vulkan
 {
-#if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
+#if defined(_DEBUG)
 	template<class T>
 	static inline void VKSetName(VkDevice& device, const T& objectHandle, const std::string& name)
 	{
@@ -87,4 +87,3 @@ namespace vulkan
 #endif
 }
 }
-#endif

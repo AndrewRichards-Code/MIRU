@@ -1,186 +1,5 @@
 #pragma once
 
-#if defined(MIRU_CORE_COMMON_MINDEF)
-
-#if defined(_MSC_VER)
-#pragma warning(disable : 4251)  //Disables 'Needs  dll-interface' warning C4251
-#endif
-
-//CSTDLIB
-#include <array>
-#include <map>
-#include <filesystem>
-
-//D3D12
-#define MIRU_D3D12_AGILITY_SDK_SET_VERSION_AND_PATH \
-extern "C"\
-{\
-	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 610;\
-	__declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";\
-}
-
-//MIRU API
-#include "ARC/src/ExportAttributes.h"
-#ifdef MIRU_BUILD_DLL
-#define MIRU_API ARC_EXPORT
-#else
-#define MIRU_API ARC_IMPORT
-#endif
-
-//MIRU GraphicsAPI
-#include "base/GraphicsAPI.h"
-
-//MIRU Helpers
-#include "ARC/src/ScopeAndRef.h"
-
-//MIRU Class Forward Decalaration and Ref types
-#define MIRU_FORWARD_DECLARE_CLASS_AND_REF(_class) class _class; typedef Ref<_class> _class##Ref
-
-namespace miru::base
-{
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructureBuildInfo);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructure);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Allocator);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Buffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(BufferView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandBuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Context);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSetLayout);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSet);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Framebuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Image);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ImageView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Sampler);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(RenderPass);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Pipeline);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Shader);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ShaderBindingTable);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Swapchain);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Fence);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Semaphore);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Event);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier2);
-}
-namespace miru::d3d12
-{
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructureBuildInfo);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructure);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Allocator);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Buffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(BufferView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandBuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Context);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSetLayout);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSet);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Framebuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Image);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ImageView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Sampler);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(RenderPass);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Pipeline);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Shader);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ShaderBindingTable);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Swapchain);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Fence);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Semaphore);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Event);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier2);
-}
-namespace miru::vulkan
-{
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructureBuildInfo);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(AccelerationStructure);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Allocator);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Buffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(BufferView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(CommandBuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Context);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorPool);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSetLayout);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(DescriptorSet);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Framebuffer);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Image);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ImageView);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Sampler);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(RenderPass);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Pipeline);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Shader);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(ShaderBindingTable);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Swapchain);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Fence);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Semaphore);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Event);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier);
-	MIRU_FORWARD_DECLARE_CLASS_AND_REF(Barrier2);
-}
-
-//MIRU CPU Profiler
-#define MIRU_CPU_PROFILER
-#if defined(MIRU_CPU_PROFILER)
-#include "ARC/src/DebugMacros.h"
-namespace miru
-{
-	class MIRU_API Timer
-	{
-		//enum/struct
-		struct ProfileDatum
-		{
-			uint64_t scopeNumber;
-			std::string name;
-			double duration;
-		};
-
-		//Methods
-	public:
-		Timer(const std::string& name);
-		~Timer();
-
-		void Stop();
-
-		static void BeginSession(const std::string& filepath);
-		static void EndSession();
-
-		//Members
-	private:
-		std::string m_Name;
-		bool m_Stopped = false;
-		std::chrono::time_point<std::chrono::steady_clock> m_StartTP, m_EndTP;
-
-		static uint64_t m_ScopeCount;
-		static std::vector<ProfileDatum> m_ProfileData;
-		static std::fstream m_File;
-	};
-}
-#if defined(_DEBUG)
-#define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath) miru::Timer::BeginSession(filepath);
-#define MIRU_CPU_PROFILE_END_SESSION() miru::Timer::EndSession();
-#define MIRU_CPU_PROFILE_SCOPE_LINE2(name, line) miru::Timer timer##line(name)
-#define MIRU_CPU_PROFILE_SCOPE_LINE(name, line) MIRU_CPU_PROFILE_SCOPE_LINE2(name, line)
-#define MIRU_CPU_PROFILE_SCOPE(name) MIRU_CPU_PROFILE_SCOPE_LINE(name, __LINE__)
-#define MIRU_CPU_PROFILE_FUNCTION() MIRU_CPU_PROFILE_SCOPE(ARC_FUNCSIG)
-#else
-#define MIRU_CPU_PROFILE_BEGIN_SESSION(filepath);
-#define MIRU_CPU_PROFILE_END_SESSION();
-#define MIRU_CPU_PROFILE_SCOPE(name)
-#define MIRU_CPU_PROFILE_FUNCTION()
-#endif
-#endif
-
-//MIRU Enum Class Bitwise Operators Templates
-#define MIRU_ENUM_CLASS_BITWISE_OPERATORS
-#if defined(MIRU_ENUM_CLASS_BITWISE_OPERATORS)
-#include "ARC/src/EnumClassBitwiseOperators.h"
-#endif
-
-#else
-
 #if defined(_MSC_VER)
 #pragma warning(disable : 26812) //Disables 'Prefered scoped enum' warning C26812
 #pragma warning(disable : 26495) //Disables 'Unitialised variable' warning C26495
@@ -189,34 +8,22 @@ namespace miru
 #endif
 
 //CSTDLIB
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <sstream>
 #include <vector>
 #include <array>
-#include <deque>
 #include <map>
-#include <memory>
-#include <thread>
-#include <mutex>
-#include <chrono>
-#include <assert.h>
-#include <cmath>
-#include <filesystem>
+#include <unordered_map>
 
-//PLATORM SYSTEM
+//PLATORM SYSTEM HELPERS
 #if defined(_WIN64)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#ifndef NOMINMAX
 #define NOMINMAX
-#include <Windows.h>
-
+#endif
 #elif defined (__ANDROID__) && (__ANDROID_API__ >= 24)
-#include <android/window.h>
 #define memcpy_s(dst, dstSize, src, srcSize) memcpy(dst, src, srcSize)
-
 #endif
 
 //GRAPHICS API
@@ -240,12 +47,6 @@ namespace miru
 #endif
 
 #endif
-
-//D3D12
-#include "d3d12/D3D12_Include.h"
-
-//Vulkan
-#include "vulkan/VK_Include.h"
 
 //MIRU API
 #include "ARC/src/ExportAttributes.h"
@@ -355,31 +156,11 @@ namespace miru::vulkan
 }
 
 //MIRU Enum Class Bitwise Operators Templates
-#define MIRU_ENUM_CLASS_BITWISE_OPERATORS
-#if defined(MIRU_ENUM_CLASS_BITWISE_OPERATORS)
 #include "ARC/src/EnumClassBitwiseOperators.h"
-#endif
-
-//MIRU CPU Heap Allocation tracker
-//#define MIRU_CPU_HEAP_ALLOCATION_TRACKER
-#if defined(MIRU_CPU_HEAP_ALLOCATION_TRACKER)
-void* operator new(size_t size);
-void operator delete(void* ptr);
-namespace miru
-{
-	class CPU_HEAP_ALLOC_TRACKER
-	{
-	public:
-		static size_t current_allocated_bytes;
-		//static std::map<void*, size_t> current_allocation_map;
-	};
-}
-#endif
 
 //MIRU CPU Profiler
 #define MIRU_CPU_PROFILER
 #if defined(MIRU_CPU_PROFILER)
-#include "ARC/src/DebugMacros.h"
 namespace miru
 {
 	class MIRU_API Timer
@@ -428,11 +209,6 @@ namespace miru
 #endif
 #endif
 
-//MIRU SetName
-#define MIRU_ALLOW_API_SETNAME_FN_COMPILE
-#include "d3d12/D3D12_SetName.h"
-#include "vulkan/VK_SetName.h"
-
 //MIRU Debugbreak, Assert and Warn
 #include "ARC/src/DebugMacros.h"
 
@@ -444,12 +220,9 @@ inline arc::Log MiruCoreLog("MIRU_CORE");
 #define ARC_LOG_INSTANCE MiruCoreLog
 #endif
 
-//Triggered if x != 0
-#define MIRU_ASSERT(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); }
+#define MIRU_ASSERT(x) ARC_ASSERT((x));
 
-#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); }
+#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); }
 #define MIRU_ERROR(x, y) if((x) != 0) { ARC_ERROR(static_cast<int64_t>(x), "%s", y); }
 #define MIRU_WARN(x, y) if((x) != 0) { ARC_WARN(static_cast<int64_t>(x), "%s", y); }
 #define MIRU_INFO(x, y) if((x) != 0) { ARC_INFO(static_cast<int64_t>(x), "%s", y); }
-
-#endif

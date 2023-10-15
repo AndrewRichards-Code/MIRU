@@ -1,11 +1,15 @@
 #pragma once
-#if defined(MIRU_D3D12)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
 //D3D12 Header
-#include "../packages/Microsoft.Direct3D.D3D12.1.610.3/build/native/include/d3d12.h"
+#include "build/native/include/d3d12.h"
 #include <dxgi1_6.h>
-#include "../packages/Microsoft.Direct3D.D3D12.1.610.3/build/native/include/d3dx12/d3dx12.h"
+#include "build/native/include/d3dx12/d3dx12.h"
 
 #define MIRU_D3D12_AGILITY_SDK_SET_VERSION_AND_PATH \
 extern "C"\
@@ -33,4 +37,5 @@ namespace miru
 	}
 }
 
-#endif
+//MIRU SetName
+#include "d3d12/D3D12_SetName.h"

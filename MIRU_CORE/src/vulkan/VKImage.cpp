@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_VULKAN)
 #include "VKImage.h"
 
 using namespace miru;
@@ -42,7 +40,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_VmaACI.pool = VK_NULL_HANDLE;
 	m_VmaACI.pUserData = nullptr;
 
-	MIRU_ASSERT(vmaCreateImage(m_CI.allocator->GetVmaAllocator(), &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
+	VmaAllocator& allocator = *reinterpret_cast<VmaAllocator*>(m_CI.allocator->GetNativeAllocator());
+	MIRU_FATAL(vmaCreateImage(allocator, &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
 	VKSetName<VkImage>(m_Device, m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
@@ -63,7 +62,8 @@ Image::~Image()
 
 	if (!m_SwapchainImage && !m_CI.externalImage)
 	{
-		vmaDestroyImage(m_CI.allocator->GetVmaAllocator(), m_Image, m_VmaAllocation);
+		VmaAllocator& allocator = *reinterpret_cast<VmaAllocator*>(m_CI.allocator->GetNativeAllocator());
+		vmaDestroyImage(allocator, m_Image, m_VmaAllocation);
 	}
 }
 
@@ -75,7 +75,7 @@ void Image::GenerateMipmaps()
 	cmdBI.pNext = nullptr;
 	cmdBI.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	cmdBI.pInheritanceInfo = nullptr;
-	MIRU_ASSERT(vkBeginCommandBuffer(cmdBuffer, &cmdBI), "ERROR: VULKAN: Failed to begin CommandBuffer.");
+	MIRU_FATAL(vkBeginCommandBuffer(cmdBuffer, &cmdBI), "ERROR: VULKAN: Failed to begin CommandBuffer.");
 
 	VkImageMemoryBarrier imb;
 	imb.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -314,7 +314,7 @@ ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
 		m_CI.subresourceRange.arrayLayerCount,
 	};
 
-	MIRU_ASSERT(vkCreateImageView(m_Device, &m_ImageViewCI, nullptr, &m_ImageView), "ERROR: VULKAN: Failed to create ImageView.");
+	MIRU_FATAL(vkCreateImageView(m_Device, &m_ImageViewCI, nullptr, &m_ImageView), "ERROR: VULKAN: Failed to create ImageView.");
 	VKSetName<VkImageView>(m_Device, m_ImageView, m_CI.debugName);
 }
 
@@ -352,7 +352,7 @@ Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
 	m_SamplerCI.borderColor = static_cast<VkBorderColor>(m_CI.borderColour);
 	m_SamplerCI.unnormalizedCoordinates = m_CI.unnormalisedCoordinates;
 
-	MIRU_ASSERT(vkCreateSampler(m_Device, &m_SamplerCI, nullptr, &m_Sampler), "ERROR: VULKAN: Failed to create Sampler.");
+	MIRU_FATAL(vkCreateSampler(m_Device, &m_SamplerCI, nullptr, &m_Sampler), "ERROR: VULKAN: Failed to create Sampler.");
 	VKSetName<VkSampler>(m_Device, m_Sampler, m_CI.debugName);
 }
 
@@ -362,4 +362,3 @@ Sampler::~Sampler()
 
 	vkDestroySampler(m_Device, m_Sampler, nullptr);
 }
-#endif

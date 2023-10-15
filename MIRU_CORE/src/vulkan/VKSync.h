@@ -1,6 +1,6 @@
 #pragma once
-#if defined(MIRU_VULKAN)
 #include "base/Sync.h"
+#include "vulkan/VK_Include.h"
 
 namespace miru
 {
@@ -93,4 +93,3 @@ namespace vulkan
 	};
 }
 }
-#endif

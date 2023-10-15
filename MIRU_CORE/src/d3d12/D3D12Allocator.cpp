@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Allocator.h"
 #include "D3D12Context.h"
 
@@ -20,7 +18,7 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	m_AllocatorDesc.pAllocationCallbacks = nullptr;
 	m_AllocatorDesc.pAdapter = dynamic_cast<IDXGIAdapter*>(ref_cast<Context>(m_CI.context)->m_PhysicalDevices.m_PDIs[0].m_Adapter);
 
-	MIRU_ASSERT(D3D12MA::CreateAllocator(&m_AllocatorDesc, &m_Allocator), "ERROR: D3D12: Failed to create Allocator.");
+	MIRU_FATAL(D3D12MA::CreateAllocator(&m_AllocatorDesc, &m_Allocator), "ERROR: D3D12: Failed to create Allocator.");
 	//D3D12SetName(m_MemoryHeap, m_CI.debugName);
 }
 
@@ -43,14 +41,14 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, si
 
 	if (allocation.nativeAllocation && size > 0  && data)
 	{
-		ID3D12Resource* d3d12Resource = allocation.GetD3D12MAAllocaton()->GetResource();
+		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocation)->GetResource();
 
 		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
 		if (uploadHeap)
 		{
 			void* mappedData;
 			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource
-			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
+			MIRU_FATAL(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
 			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
 			if (copyByRow)
@@ -86,14 +84,14 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t offset, si
 
 	if (allocation.nativeAllocation && size > 0 && data)
 	{
-		ID3D12Resource* d3d12Resource = allocation.GetD3D12MAAllocaton()->GetResource();
+		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocation)->GetResource();
 
 		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
 		if (uploadHeap)
 		{
 			void* mappedData;
 			D3D12_RANGE readRange = { offset, offset + size };
-			MIRU_ASSERT(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
+			MIRU_FATAL(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
 			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
 			if (copyByRow)
@@ -140,4 +138,3 @@ D3D12_HEAP_PROPERTIES Allocator::GetHeapProperties()
 
 	return result;
 }
-#endif

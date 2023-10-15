@@ -1,0 +1,27 @@
+{
+  "fileType": "MSC_RAF",
+  "recompileArguments": [
+    {
+      "hlslFilepath": "$SOLUTION_DIR/MIRU_TEST/res/shaders/meshshader.hlsl",
+      "outputDirectory": "$BUILD_DIR/shaderbin",
+      "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
+      "entryPoint": "ms_main",
+      "shaderModel": "ms_6_5",
+      "macros": [],
+      "cso": true,
+      "spv": true,
+      "dxcArguments": [ "-Zi", "-Od", "-Fd" ]
+    },
+    {
+      "hlslFilepath": "$SOLUTION_DIR/MIRU_TEST/res/shaders/meshshader.hlsl",
+      "outputDirectory": "$BUILD_DIR/shaderbin",
+      "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
+      "entryPoint": "ps_main",
+      "shaderModel": "ps_6_0",
+      "macros": [],
+      "cso": true,
+      "spv": true,
+      "dxcArguments": [ "-Zi", "-Od", "-Fd" ]
+    }
+  ]
+}

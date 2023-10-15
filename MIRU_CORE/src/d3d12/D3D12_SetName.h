@@ -1,6 +1,5 @@
 #pragma once
-#if defined(MIRU_D3D12)
-
+#include "base/GraphicsAPI.h"
 #include "ARC/src/StringConversion.h"
 
 namespace miru
@@ -12,7 +11,7 @@ namespace d3d12
 	inline PFN_PIXBeginEventOnCommandList PIXBeginEventOnCommandList;
 	inline PFN_PIXEndEventOnCommandList PIXEndEventOnCommandList;
 
-#if defined(MIRU_ALLOW_API_SETNAME_FN_COMPILE) && defined(_DEBUG)
+#if defined(_DEBUG)
 	static inline void D3D12SetName(void* object, const std::string& name)
 	{
 		if (!base::GraphicsAPI::IsSetNameAllowed())
@@ -27,4 +26,3 @@ namespace d3d12
 #endif
 }
 }
-#endif

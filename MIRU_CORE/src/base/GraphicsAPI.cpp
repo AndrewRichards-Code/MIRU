@@ -1,6 +1,13 @@
 #include "miru_core_common.h"
 #include "GraphicsAPI.h"
 
+#if defined(MIRU_D3D12)
+#include "d3d12/D3D12_Include.h"
+#endif
+#if defined(MIRU_VULKAN)
+#include "vulkan/VK_Include.h"
+#endif
+
 using namespace miru;
 using namespace base;
 
@@ -21,9 +28,17 @@ void GraphicsAPI::SetAPI(GraphicsAPI::API api, bool forceOverride)
 	}
 
 	if (GraphicsAPI::IsD3D12())
+	{
+	#if defined(MIRU_D3D12)
 		MiruCoreLog.SetErrorCodeToStringFunction(d3d12::HRESULTToString);
+	#endif
+	}
 	else
+	{
+	#if defined(MIRU_VULKAN)
 		MiruCoreLog.SetErrorCodeToStringFunction(vulkan::VkResultToString);
+	#endif
+	}
 }
 
 void GraphicsAPI::AllowSetName(bool allowSetName)

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12CommandPoolBuffer.h"
 #include "D3D12Context.h"
 #include "D3D12Swapchain.h"
@@ -10,6 +8,8 @@
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Framebuffer.h"
 #include "D3D12AccelerationStructure.h"
+
+#include "Include/WinPixEventRuntime/pix3.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -47,7 +47,7 @@ void CommandPool::Reset(bool releaseResources)
 	{
 		for (auto& cmdPool : m_CmdPools)
 		{
-			MIRU_ASSERT(cmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+			MIRU_FATAL(cmdPool->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
 		}
 	}
 }
@@ -87,10 +87,10 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	m_RenderingResources.resize(m_CI.commandBufferCount);
 	for (size_t i = 0; i < m_CmdBuffers.size(); i++)
 	{
-		MIRU_ASSERT(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&d3d12CmdAllocators[i])), "ERROR: D3D12: Failed to create CommandPool.");
+		MIRU_FATAL(m_Device->CreateCommandAllocator(queueDesc.Type, IID_PPV_ARGS(&d3d12CmdAllocators[i])), "ERROR: D3D12: Failed to create CommandPool.");
 		D3D12SetName(d3d12CmdAllocators[i], cmdPool->GetCreateInfo().debugName + ": " + std::to_string(i));
 	
-		MIRU_ASSERT(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, d3d12CmdAllocators[i], nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
+		MIRU_FATAL(m_Device->CreateCommandList(0, m_CI.level == Level::SECONDARY ? D3D12_COMMAND_LIST_TYPE_BUNDLE : queueDesc.Type, d3d12CmdAllocators[i], nullptr, IID_PPV_ARGS(&m_CmdBuffers[i])), "ERROR: D3D12: Failed to create CommandBuffer.");
 		D3D12SetName(m_CmdBuffers[i], m_CI.debugName + ": " + std::to_string(i));
 		End(static_cast<uint32_t>(i));
 	}
@@ -181,7 +181,7 @@ void CommandBuffer::End(uint32_t index)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Close(), "ERROR: D3D12: Failed to end CommandBuffer.");
+	MIRU_FATAL(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Close(), "ERROR: D3D12: Failed to end CommandBuffer.");
 	m_RenderingResources[index].Resettable = true;
 }
 
@@ -194,8 +194,8 @@ void CommandBuffer::Reset(uint32_t index, bool releaseResources)
 	{
 		std::vector<ID3D12CommandAllocator*>& d3d12CmdAllocators = ref_cast<CommandPool>(m_CI.commandPool)->m_CmdPools;
 
-		MIRU_ASSERT(d3d12CmdAllocators[index]->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
-		MIRU_ASSERT(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(d3d12CmdAllocators[index], nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
+		MIRU_FATAL(d3d12CmdAllocators[index]->Reset(), "ERROR: D3D12: Failed to reset CommandPool.");
+		MIRU_FATAL(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->Reset(d3d12CmdAllocators[index], nullptr), "ERROR: D3D12: Failed to reset CommandBuffer.");
 		m_RenderingResources[index].Resettable = false;
 	}
 }
@@ -239,7 +239,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 			{
 				value = ref_cast<Semaphore>(wait)->GetValue();
 			}
-			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+			MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
 			waitIndex++;
 		}
 
@@ -263,7 +263,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 				ref_cast<Semaphore>(signal)->GetValue()++;
 				value = ref_cast<Semaphore>(signal)->GetValue();
 			}
-			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
+			MIRU_FATAL(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 			signalIndex++;
 		}
 	}
@@ -271,7 +271,7 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 	if (fence)
 	{
 		ref_cast<Fence>(fence)->GetValue()++;
-		MIRU_ASSERT(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
+		MIRU_FATAL(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
 	}
 }
 
@@ -296,7 +296,7 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 			{
 				value = ref_cast<Semaphore>(wait)->GetValue();
 			}
-			MIRU_ASSERT(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+			MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
 		}
 
 		for (auto& commandBufferInfo : submitInfo.commandBufferInfos)
@@ -319,14 +319,14 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 				ref_cast<Semaphore>(signal)->GetValue()++;
 				value = ref_cast<Semaphore>(signal)->GetValue();
 			}
-			MIRU_ASSERT(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
+			MIRU_FATAL(queue->Signal(ref_cast<Semaphore>(signal)->m_Semaphore, value), "ERROR: D3D12: Failed to Signal the signal Semaphore.");
 		}
 	}
 
 	if (fence)
 	{
 		ref_cast<Fence>(fence)->GetValue()++;
-		MIRU_ASSERT(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
+		MIRU_FATAL(queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue()), "ERROR: D3D12: Failed to Signal the draw Fence.");
 	}
 }
 
@@ -418,7 +418,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image
 	heapDesc.NumDescriptors = descriptorCount;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ID3D12DescriptorHeap* heap;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for RenderTargetViews.");
+	MIRU_FATAL(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for RenderTargetViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
 	UINT RTV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -461,7 +461,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 	heapDesc.NumDescriptors = descriptorCount;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ID3D12DescriptorHeap* heap;
-	MIRU_ASSERT(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for DepthStencilViews.");
+	MIRU_FATAL(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)), "ERROR: D3D12: Failed to create temporary DescriptorHeap for DepthStencilViews.");
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
 
 	UINT DSV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -828,7 +828,7 @@ void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeli
 	}
 	else
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
+		MIRU_FATAL(true, "ERROR: D3D12: Unknown PipelineType.")
 	}
 
 };
@@ -872,8 +872,8 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::D
 	UINT CBV_SRV_UAV_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	UINT SAMPLER_DescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 	
-	MIRU_ASSERT(!(renderingResource.CBV_SRV_UAV_DescriptorOffset < m_ResourceBindingCapabilities.maxDescriptorCount * CBV_SRV_UAV_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
-	MIRU_ASSERT(!(renderingResource.SAMPLER_DescriptorOffset < m_ResourceBindingCapabilities.maxSamplerCount * SAMPLER_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
+	MIRU_FATAL(!(renderingResource.CBV_SRV_UAV_DescriptorOffset < m_ResourceBindingCapabilities.maxDescriptorCount * CBV_SRV_UAV_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type CBV_SRV_UAV.");
+	MIRU_FATAL(!(renderingResource.SAMPLER_DescriptorOffset < m_ResourceBindingCapabilities.maxSamplerCount * SAMPLER_DescriptorSize), "ERROR: D3D12: Exceeded maximum Descriptor count for type SAMPLER.");
 
 	UINT Current_CBV_SRV_UAV_DescriptorOffset = 0;
 	UINT Current_SAMPLER_DescriptorOffset = 0;
@@ -934,13 +934,13 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::D
 	
 		if (descriptorTable.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
 		{
-			MIRU_ASSERT(!(SAMPLER_GPUDescriptorHandleIndex < SAMPLER_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			MIRU_FATAL(!(SAMPLER_GPUDescriptorHandleIndex < SAMPLER_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
 			GPUDescriptorHandle = SAMPLER_GPUDescriptorHandles[SAMPLER_GPUDescriptorHandleIndex];
 			SAMPLER_GPUDescriptorHandleIndex++;
 		}
 		else
 		{
-			MIRU_ASSERT(!(CBV_SRV_UAV_GPUDescriptorHandleIndex < CBV_SRV_UAV_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
+			MIRU_FATAL(!(CBV_SRV_UAV_GPUDescriptorHandleIndex < CBV_SRV_UAV_GPUDescriptorHandles.size()), "ERROR: D3D12: No D3D12_GPU_DESCRIPTOR_HANDLE is available.");
 			GPUDescriptorHandle = CBV_SRV_UAV_GPUDescriptorHandles[CBV_SRV_UAV_GPUDescriptorHandleIndex];
 			CBV_SRV_UAV_GPUDescriptorHandleIndex++;
 		}
@@ -959,7 +959,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::D
 		}
 		else
 		{
-			MIRU_ASSERT(true, "ERROR: D3D12: Unknown PipelineType.")
+			MIRU_FATAL(true, "ERROR: D3D12: Unknown PipelineType.")
 		}
 
 		rootParameterIndex++;
@@ -1203,7 +1203,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 		}
 		else
 		{
-			MIRU_ASSERT(true, "ERROR: D3D12: Source and Destination formats for resolve images must match.");
+			MIRU_FATAL(true, "ERROR: D3D12: Source and Destination formats for resolve images must match.");
 		}
 
 		bool arrayCheck = resolveRegion.srcSubresource.arrayLayerCount == resolveRegion.dstSubresource.arrayLayerCount;
@@ -1221,7 +1221,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 		}
 		else
 		{
-			MIRU_ASSERT(true, "ERROR: D3D12: Source and Destination arrayLayerCount for resolve image subresources must match.");
+			MIRU_FATAL(true, "ERROR: D3D12: Source and Destination arrayLayerCount for resolve image subresources must match.");
 		}
 
 		bCI.image = srcImage;
@@ -1284,7 +1284,7 @@ void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
 
 	if (subpassDesc.colourAttachments.size() < subpassDesc.resolveAttachments.size())
 	{
-		MIRU_ASSERT(true, "ERROR: D3D12: More resolve attachment provide than colour attachements.");
+		MIRU_FATAL(true, "ERROR: D3D12: More resolve attachment provide than colour attachements.");
 	}
 
 	for (size_t i = 0; i < subpassDesc.resolveAttachments.size(); i++)
@@ -1328,4 +1328,3 @@ void CommandBuffer::EndDebugLabel(uint32_t index)
 	if (PIXEndEventOnCommandList)
 		PIXEndEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]));
 }
-#endif

@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Buffer.h"
 #include "D3D12Allocator.h"
 
@@ -56,7 +54,8 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
 	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	MIRU_ASSERT(m_CI.allocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
+	D3D12MA::Allocator* allocator = reinterpret_cast<D3D12MA::Allocator*>(m_CI.allocator->GetNativeAllocator());
+	MIRU_FATAL(allocator->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
 	D3D12SetName(m_Buffer, m_CI.debugName);
 	
 	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
@@ -192,4 +191,3 @@ BufferView::~BufferView()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 }
-#endif

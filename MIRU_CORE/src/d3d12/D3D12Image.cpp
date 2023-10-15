@@ -1,5 +1,3 @@
-#include "miru_core_common.h"
-#if defined(MIRU_D3D12)
 #include "D3D12Image.h"
 #include "D3D12Allocator.h"
 
@@ -63,7 +61,8 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	m_D3D12MAllocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE;
 	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
-	MIRU_ASSERT(m_CI.allocator->GetD3D12MAAllocator()->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
+	D3D12MA::Allocator* allocator = reinterpret_cast<D3D12MA::Allocator*>(m_CI.allocator->GetNativeAllocator());
+	MIRU_FATAL(allocator->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 	D3D12SetName(m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
@@ -941,4 +940,3 @@ D3D12_FILTER Sampler::ToD3D12Filter(Filter magFilter, Filter minFilter, MipmapMo
 
 	return static_cast<D3D12_FILTER>(res);
 }
-#endif
