@@ -26,13 +26,18 @@ file(DOWNLOAD
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/stb/stb_image.h"
 )
 file(DOWNLOAD 
+	https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+	"${CMAKE_CURRENT_SOURCE_DIR}/External/stb/stb_image_write.h"
+)
+file(DOWNLOAD 
 	https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/master/include/vk_mem_alloc.h
 	"${CMAKE_CURRENT_SOURCE_DIR}/External/VulkanMemoryAllocator/include/vk_mem_alloc.h"
 )
 
 #MIRU Functions
 function(RestoreNuGutPackages)
-	find_program(NUGET nuget PATHS "${CMAKE_SOURCE_DIR}/External/nuget/")
+	message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}/../External/nuget/")
+	find_program(NUGET nuget PATHS "${CMAKE_CURRENT_SOURCE_DIR}/../External/nuget/")
 	if(NUGET)
 		# Copy packages.config file from source to build directory.
 		execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/packages.config" "${CMAKE_CURRENT_BINARY_DIR}/packages.config")
@@ -41,11 +46,16 @@ function(RestoreNuGutPackages)
 	endif()
 endfunction()
 
+option(MIRU_BUILD_MIRU_TEST "Build MIRU_TEST" ON)
+
 #Project Folders
 add_subdirectory(External/ARC)
 add_subdirectory(MIRU_CORE)
 add_subdirectory(MIRU_SHADER_COMPILER)
-add_subdirectory(MIRU_TEST)
-#add_subdirectory(MIRU_TEST_UWP)
 
-set_property(DIRECTORY "${CMAKE_SOURCE_DIR}/MIRU_TEST" PROPERTY VS_STARTUP_PROJECT MIRU_TEST)
+if (MIRU_BUILD_MIRU_TEST)
+	add_subdirectory(MIRU_TEST)
+	set_property(DIRECTORY "${CMAKE_SOURCE_DIR}/MIRU_TEST" PROPERTY VS_STARTUP_PROJECT MIRU_TEST)
+endif()
+
+#add_subdirectory(MIRU_TEST_UWP)
