@@ -36,7 +36,6 @@ file(DOWNLOAD
 
 #MIRU Functions
 function(RestoreNuGutPackages)
-	message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}/../External/nuget/")
 	find_program(NUGET nuget PATHS "${CMAKE_CURRENT_SOURCE_DIR}/../External/nuget/")
 	if(NUGET)
 		# Copy packages.config file from source to build directory.

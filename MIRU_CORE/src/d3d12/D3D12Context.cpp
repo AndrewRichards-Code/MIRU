@@ -35,8 +35,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
+	m_PhysicalDeviceIndex = 0;
 	
-	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[0].m_Adapter;
+	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Adapter;
 	if (openXRD3D12Data)
 	{
 		for (const auto& physicalDeviceInfo : m_PhysicalDevices.m_PDIs)
@@ -48,6 +49,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				adapter = physicalDeviceInfo.m_Adapter;
 				break;
 			}
+			m_PhysicalDeviceIndex++;
 		}
 	}
 
@@ -91,6 +93,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
 	if (m_Features.d3d12Options4.Native16BitShaderOpsSupported)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
+
+	m_RI.deviceName = arc::ToString(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_AdapterDesc.Description);
 	
 
 	//Create Info Queue
@@ -281,7 +285,7 @@ Context::Features::Features(ID3D12Device* device)
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &gpuVirtualAddressSupport, sizeof(gpuVirtualAddressSupport)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT.");
 
-	shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_7;
+	shaderModel.HighestShaderModel = D3D_HIGHEST_SHADER_MODEL;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_SHADER_MODEL.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &d3d12Options1, sizeof(d3d12Options1)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS1.");

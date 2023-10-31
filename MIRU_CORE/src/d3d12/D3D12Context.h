@@ -110,6 +110,7 @@ namespace d3d12
 		//Device
 		ID3D12Device* m_Device;
 		PhysicalDevices m_PhysicalDevices;
+		size_t m_PhysicalDeviceIndex;
 
 		//Queue
 		std::vector<ID3D12CommandQueue*> m_Queues;

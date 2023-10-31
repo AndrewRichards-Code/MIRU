@@ -154,7 +154,7 @@ if (WIN32)
 	target_include_directories(MIRU_CORE PRIVATE 
 		"${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/"
 		"${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/"
-		"${CMAKE_BINARY_DIR}/packages/WinPixEventRuntime.1.0.230302001/")
+		"${CMAKE_BINARY_DIR}/packages/WinPixEventRuntime.1.0.231030001/")
 
 	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/D3D12Core.dll" "D3D12/")
 	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/D3D12Core.pdb" "D3D12/")
@@ -172,7 +172,6 @@ if (WIN32)
 	endif()
 	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/build/native/bin/x64/dxil.dll" "")
 endif()
-
 
 find_package(Vulkan)
 if (Vulkan_FOUND)

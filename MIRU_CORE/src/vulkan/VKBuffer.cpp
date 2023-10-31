@@ -33,10 +33,10 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	VKSetName<VkBuffer>(m_Device, m_Buffer, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
-	m_Allocation.width = 0;
-	m_Allocation.height = 0;
-	m_Allocation.rowPitch = 0;
+	m_Allocation.rowPitch = m_CI.imageDimension.width * m_CI.imageDimension.pixelSize;
 	m_Allocation.rowPadding = 0;
+	m_Allocation.width = m_Allocation.rowPitch * m_CI.imageDimension.height;
+	m_Allocation.height = m_CI.imageDimension.height;
 
 	if (m_CI.data)
 	{

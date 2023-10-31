@@ -103,6 +103,7 @@ namespace d3d12
 			uint32_t maxSamplerCount = 2048;
 		} m_ResourceBindingCapabilities;
 
+	public:
 		struct RenderingResource
 		{
 			//End, Reset control
@@ -130,6 +131,7 @@ namespace d3d12
 		typedef std::vector<RenderingResource> RenderingResources;
 		RenderingResources m_RenderingResources;
 
+	private:
 		std::map<base::ImageRef, base::Image::Layout> m_RenderPassAttachementImageLayouts;
 	};
 }
