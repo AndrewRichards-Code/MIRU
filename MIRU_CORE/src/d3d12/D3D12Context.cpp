@@ -293,7 +293,7 @@ Context::Features::Features(ID3D12Device* device)
 	protectedResourceSessionSupport.NodeIndex = 0;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_SUPPORT, &protectedResourceSessionSupport, sizeof(protectedResourceSessionSupport)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_SUPPORT.");
 
-	rootSignature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	rootSignature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_2;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignature, sizeof(rootSignature)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
 
 	architecture1.NodeIndex = 0;
@@ -361,4 +361,10 @@ Context::Features::Features(ID3D12Device* device)
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &d3d12Options15, sizeof(d3d12Options15)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS15.");
 	
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &d3d12Options16, sizeof(d3d12Options16)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS16.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &d3d12Options17, sizeof(d3d12Options17)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS17.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &d3d12Options18, sizeof(d3d12Options18)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS18.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &d3d12Options19, sizeof(d3d12Options19)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS19.");
 }
