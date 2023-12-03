@@ -162,13 +162,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 		m_SwapchainImageViews.push_back(imageView);
 	}
 
-	std::vector<VkImage*> images;
-	for (auto& swapchainImage : m_SwapchainImages)
-	{
-		images.push_back(&swapchainImage);
-	}
-
-	FillSwapchainImageAndViews((void**)images.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
+	FillSwapchainImageAndViews((void**)m_SwapchainImages.data(), (void*)m_SwapchainImageViews.data(), m_Extent.width, m_Extent.height, m_Format);
 }
 
 Swapchain::~Swapchain()
@@ -198,6 +192,9 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
 
 	//Create new swapchain
+	VkPhysicalDevice physicalDevice = ref_cast<Context>(m_CI.context)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
+	MIRU_FATAL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_SurfaceCapability), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceCapabilities.");
+
 	m_SwapchainCI.imageExtent = { width, height };
 	m_Extent = m_SwapchainCI.imageExtent;
 
