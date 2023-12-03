@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 
+message(STATUS "MIRU_CORE")
+
 # Files
 set(BASE_HEADERS 
 	"src/base/AccelerationStructure.h"

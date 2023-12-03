@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 
+message(STATUS "MIRU_SHADER_COMPILER")
+
 #Files
 set(SRC_HEADERS
 	"src/ErrorCodes.h"
