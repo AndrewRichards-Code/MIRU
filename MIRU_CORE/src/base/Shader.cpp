@@ -101,7 +101,7 @@ std::vector<Shader::CompileArguments> Shader::LoadCompileArgumentsFromFile(std::
 		for (const auto& environmentVariable : environmentVariables)
 		{
 			const std::string& regexVariable = "\\" + environmentVariable.first;
-			const std::string& value = "\\" + environmentVariable.second;
+			const std::string& value = environmentVariable.second;
 
 			compileArgument.hlslFilepath = std::regex_replace(compileArgument.hlslFilepath, std::regex(regexVariable), value);
 			compileArgument.outputDirectory = std::regex_replace(compileArgument.outputDirectory, std::regex(regexVariable), value);
