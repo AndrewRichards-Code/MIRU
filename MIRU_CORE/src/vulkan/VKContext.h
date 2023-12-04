@@ -57,6 +57,15 @@ namespace vulkan
 
 				//VK_KHR_16bit_storage
 				VkPhysicalDevice16BitStorageFeaturesKHR m_16BitStorageFeatures;
+
+				VkPhysicalDeviceVulkan11Features m_Vulkan11Features;
+				VkPhysicalDeviceVulkan11Properties m_Vulkan11Properties;
+
+				VkPhysicalDeviceVulkan12Features m_Vulkan12Features;
+				VkPhysicalDeviceVulkan12Properties m_Vulkan12Properties;
+
+				VkPhysicalDeviceVulkan13Features m_Vulkan13Features;
+				VkPhysicalDeviceVulkan13Properties m_Vulkan13Properties;
 				
 			};
 			std::vector<PhysicalDeviceInfo> m_PDIs;

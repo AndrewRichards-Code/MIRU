@@ -63,6 +63,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
 			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
+			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
 		}
 		if (base::GraphicsAPI::IsSetNameAllowed())
 			m_InstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -605,19 +606,19 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_AccelerationStructureFeatures;
 				nextPropsAddr = &pdi.m_AccelerationStructureFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_BufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
 				*nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures;
 				nextPropsAddr = &pdi.m_BufferDeviceAddressFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_TimelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
 				*nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures;
 				nextPropsAddr = &pdi.m_TimelineSemaphoreFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_Synchronization2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
 				*nextPropsAddr = &pdi.m_Synchronization2Features;
@@ -629,29 +630,47 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_DeviceMeshShaderFeatures;
 				nextPropsAddr = &pdi.m_DeviceMeshShaderFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_3) //Promoted to Vulkan 1.3
 			{
 				pdi.m_DynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
 				*nextPropsAddr = &pdi.m_DynamicRenderingFeatures;
 				nextPropsAddr = &pdi.m_DynamicRenderingFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 			{
 				pdi.m_MultivewFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
 				*nextPropsAddr = &pdi.m_MultivewFeatures;
 				nextPropsAddr = &pdi.m_MultivewFeatures.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 			{
 				pdi.m_ShaderFloat16Int8Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
 				*nextPropsAddr = &pdi.m_ShaderFloat16Int8Features;
 				nextPropsAddr = &pdi.m_ShaderFloat16Int8Features.pNext;
 			}
-			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME) || deviceApiVersion >= VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_1) //Promoted to Vulkan 1.1
 			{
 				pdi.m_16BitStorageFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES_KHR;
 				*nextPropsAddr = &pdi.m_16BitStorageFeatures;
 				nextPropsAddr = &pdi.m_16BitStorageFeatures.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_1)
+			{
+				pdi.m_Vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+				*nextPropsAddr = &pdi.m_Vulkan11Features;
+				nextPropsAddr = &pdi.m_Vulkan11Features.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_2)
+			{
+				pdi.m_Vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+				*nextPropsAddr = &pdi.m_Vulkan12Features;
+				nextPropsAddr = &pdi.m_Vulkan12Features.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_3)
+			{
+				pdi.m_Vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+				*nextPropsAddr = &pdi.m_Vulkan13Features;
+				nextPropsAddr = &pdi.m_Vulkan13Features.pNext;
 			}
 			pdi.m_Features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 			vkGetPhysicalDeviceFeatures2(pdi.m_PhysicalDevice, &pdi.m_Features2);
@@ -689,6 +708,24 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				pdi.m_MultivewProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES;
 				*nextPropsAddr = &pdi.m_MultivewProperties;
 				nextPropsAddr = &pdi.m_MultivewProperties.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_1)
+			{
+				pdi.m_Vulkan11Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+				*nextPropsAddr = &pdi.m_Vulkan11Properties;
+				nextPropsAddr = &pdi.m_Vulkan11Properties.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_2)
+			{
+				pdi.m_Vulkan12Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+				*nextPropsAddr = &pdi.m_Vulkan12Properties;
+				nextPropsAddr = &pdi.m_Vulkan12Properties.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_3)
+			{
+				pdi.m_Vulkan13Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+				*nextPropsAddr = &pdi.m_Vulkan13Properties;
+				nextPropsAddr = &pdi.m_Vulkan13Properties.pNext;
 			}
 			pdi.m_Properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 			vkGetPhysicalDeviceProperties2(pdi.m_PhysicalDevice, &pdi.m_Properties2);
