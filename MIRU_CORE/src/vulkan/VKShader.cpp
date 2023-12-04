@@ -41,6 +41,7 @@ void Shader::Reconstruct()
 	MIRU_FATAL(vkCreateShaderModule(m_Device, &m_ShaderModuleCI, nullptr, &m_ShaderModule), "ERROR: VULKAN: Failed to create ShaderModule.");
 	VKSetName<VkShaderModule>(m_Device, m_ShaderModule, m_CI.debugName);
 
+	m_ShaderStageCIs.clear();
 	for (const auto& stageAndEntryPoint : m_CI.stageAndEntryPoints)
 	{
 		const StageBit& stage = stageAndEntryPoint.first;
