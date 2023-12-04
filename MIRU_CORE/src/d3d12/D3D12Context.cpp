@@ -35,8 +35,9 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 
 	//Create PhysicalDevices
 	m_PhysicalDevices = PhysicalDevices(m_Factory);
+	m_PhysicalDeviceIndex = 0;
 	
-	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[0].m_Adapter;
+	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Adapter;
 	if (openXRD3D12Data)
 	{
 		for (const auto& physicalDeviceInfo : m_PhysicalDevices.m_PDIs)
@@ -48,6 +49,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 				adapter = physicalDeviceInfo.m_Adapter;
 				break;
 			}
+			m_PhysicalDeviceIndex++;
 		}
 	}
 
@@ -91,6 +93,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
 	if (m_Features.d3d12Options4.Native16BitShaderOpsSupported)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
+
+	m_RI.deviceName = arc::ToString(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_AdapterDesc.Description);
 	
 
 	//Create Info Queue
@@ -281,7 +285,7 @@ Context::Features::Features(ID3D12Device* device)
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT, &gpuVirtualAddressSupport, sizeof(gpuVirtualAddressSupport)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT.");
 
-	shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_7;
+	shaderModel.HighestShaderModel = D3D_HIGHEST_SHADER_MODEL;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_SHADER_MODEL.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &d3d12Options1, sizeof(d3d12Options1)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS1.");
@@ -289,7 +293,7 @@ Context::Features::Features(ID3D12Device* device)
 	protectedResourceSessionSupport.NodeIndex = 0;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_SUPPORT, &protectedResourceSessionSupport, sizeof(protectedResourceSessionSupport)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_PROTECTED_RESOURCE_SESSION_SUPPORT.");
 
-	rootSignature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	rootSignature.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_2;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &rootSignature, sizeof(rootSignature)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_ROOT_SIGNATURE.");
 
 	architecture1.NodeIndex = 0;
@@ -357,4 +361,10 @@ Context::Features::Features(ID3D12Device* device)
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &d3d12Options15, sizeof(d3d12Options15)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS15.");
 	
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &d3d12Options16, sizeof(d3d12Options16)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS16.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &d3d12Options17, sizeof(d3d12Options17)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS17.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &d3d12Options18, sizeof(d3d12Options18)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS18.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &d3d12Options19, sizeof(d3d12Options19)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS19.");
 }

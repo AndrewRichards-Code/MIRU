@@ -348,6 +348,7 @@ build/
 /External/nuget/nuget.exe
 /External/renderdoc/api/app/renderdoc_app.h
 /External/stb/stb_image.h
+/External/stb/stb_image_write.h
 /External/D3D12MemoryAllocator/include/D3D12MemAlloc.h
 /External/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
 /External/VulkanMemoryAllocator/include/vk_mem_alloc.h

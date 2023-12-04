@@ -152,6 +152,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	//PhysicalDevice
 	m_PhysicalDevices = PhysicalDevices(m_Instance);
 	m_PhysicalDeviceIndex = 0;
+
 	VkPhysicalDevice physicalDevice = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_PhysicalDevice; //We only use the first PhysicalDevice
 	if (openXRVulkanData)
 	{
@@ -505,6 +506,8 @@ void Context::SetResultInfo()
 	m_RI.apiVersionMajor = VK_API_VERSION_MAJOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 	m_RI.apiVersionMinor = VK_API_VERSION_MINOR(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
 	m_RI.apiVersionPatch = VK_API_VERSION_PATCH(m_PhysicalDevices.m_PDIs[0].m_Properties.apiVersion);
+
+	m_RI.deviceName = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Properties.deviceName;
 }
 
 #define _STR(str) #str

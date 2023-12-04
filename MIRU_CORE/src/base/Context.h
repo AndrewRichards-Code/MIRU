@@ -97,6 +97,7 @@ namespace base
 			uint32_t		apiVersionMinor;
 			uint32_t		apiVersionPatch;
 			ExtensionsBit	activeExtensions;
+			std::string		deviceName;
 		};
 		enum class CreateInfoExtensionStructureTypes : uint32_t
 		{

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 
+message(STATUS "MIRU_TEST")
+
 #Files
 set(SRC_HEADERS
 	"src/common.h"
