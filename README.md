@@ -46,7 +46,7 @@ This repository is under active development and is not currently intended for co
 - API: D3D12 and Vulkan
 - Platform: x64 and ARM64
 - OS: Windows, Linux and Android
-- Graphics Debuggers: Pix 2303.02, RenderDoc v1.29
+- Graphics Debuggers: Pix 2303.02, RenderDoc v1.30
 
 | OS      | Platform | D3D12            | Vulkan           | Pix for D3D12    | RenderDoc for D3D12 | RenderDoc for Vulkan |
 | ------- | -------- | ---------------- | ---------------- | ---------------- | ------------------- | -------------------- |
