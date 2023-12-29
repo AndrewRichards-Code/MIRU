@@ -1175,25 +1175,60 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 
 	CHECK_VALID_INDEX_RETURN(index);
 
+	const bool& useBarrier2 = arc::BitwiseCheck(m_CI.commandPool->GetCreateInfo().context->GetResultInfo().activeExtensions, base::Context::ExtensionsBit::SYNCHRONISATION_2);
+
 	Barrier::CreateInfo bCI;
+	Barrier2::CreateInfo b2CI;
 	for (auto& resolveRegion : resolveRegions)
 	{
-		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.image = srcImage;
-		bCI.oldLayout = srcImageLayout;
-		bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
-		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		base::BarrierRef preResolveBarrierSrc = Barrier::Create(&bCI);
-		bCI.image = dstImage;
-		bCI.oldLayout = dstImageLayout;
-		bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
-		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		base::BarrierRef preResolveBarrierDst = Barrier::Create(&bCI);
-		PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
+		if (useBarrier2)
+		{
+			b2CI.type = Barrier::Type::IMAGE;
+			b2CI.srcStageMask = base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT;
+			b2CI.srcAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			b2CI.dstStageMask = base::PipelineStageBit::RESOLVE_BIT;
+			b2CI.dstAccess = Barrier::AccessBit::D3D12_RESOLVE_SOURCE;
+			b2CI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			b2CI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			b2CI.image = srcImage;
+			b2CI.oldLayout = srcImageLayout;
+			b2CI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+			b2CI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+			base::Barrier2Ref preResolveBarrierSrc = Barrier2::Create(&b2CI);
+
+			b2CI.srcStageMask = base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT;
+			b2CI.srcAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			b2CI.dstStageMask = base::PipelineStageBit::RESOLVE_BIT;
+			b2CI.dstAccess = Barrier::AccessBit::D3D12_RESOLVE_DEST;
+			b2CI.image = dstImage;
+			b2CI.oldLayout = dstImageLayout;
+			b2CI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
+			b2CI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+			base::Barrier2Ref preResolveBarrierDst = Barrier2::Create(&b2CI);
+
+			PipelineBarrier2(index, { base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst } });
+		}
+		else
+		{
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = srcImage;
+			bCI.oldLayout = srcImageLayout;
+			bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+			bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+			base::BarrierRef preResolveBarrierSrc = Barrier::Create(&bCI);
+			
+			bCI.image = dstImage;
+			bCI.oldLayout = dstImageLayout;
+			bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
+			bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+			base::BarrierRef preResolveBarrierDst = Barrier::Create(&bCI);
+			
+			PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
+		}
 
 		D3D12_RECT srcRect = {};
 		srcRect.left = static_cast<UINT>(resolveRegion.srcOffset.x);
@@ -1230,17 +1265,46 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			MIRU_FATAL(true, "ERROR: D3D12: Source and Destination arrayLayerCount for resolve image subresources must match.");
 		}
 
-		bCI.image = srcImage;
-		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
-		bCI.newLayout = srcImageLayout;
-		bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
-		base::BarrierRef postResolveBarrierSrc = Barrier::Create(&bCI);
-		bCI.image = dstImage;
-		bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
-		bCI.newLayout = dstImageLayout;
-		bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
-		base::BarrierRef postResolveBarrierDst = Barrier::Create(&bCI);
-		PipelineBarrier(index, base::PipelineStageBit::TRANSFER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
+		if (useBarrier2)
+		{
+			b2CI.srcStageMask = base::PipelineStageBit::RESOLVE_BIT;
+			b2CI.srcAccess = Barrier::AccessBit::D3D12_RESOLVE_SOURCE;
+			b2CI.dstStageMask = base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT;
+			b2CI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			b2CI.image = srcImage;
+			b2CI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+			b2CI.newLayout = srcImageLayout;
+			b2CI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+			base::Barrier2Ref postResolveBarrierSrc = Barrier2::Create(&b2CI);
+			
+			b2CI.srcStageMask = base::PipelineStageBit::RESOLVE_BIT;
+			b2CI.srcAccess = Barrier::AccessBit::D3D12_RESOLVE_DEST;
+			b2CI.dstStageMask = base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT;
+			b2CI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			b2CI.image = dstImage;
+			b2CI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
+			b2CI.newLayout = dstImageLayout;
+			b2CI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+			base::Barrier2Ref postResolveBarrierDst = Barrier2::Create(&b2CI);
+			
+			PipelineBarrier2(index, { base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst } });
+		}
+		else
+		{
+			bCI.image = srcImage;
+			bCI.oldLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
+			bCI.newLayout = srcImageLayout;
+			bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
+			base::BarrierRef postResolveBarrierSrc = Barrier::Create(&bCI);
+			
+			bCI.image = dstImage;
+			bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
+			bCI.newLayout = dstImageLayout;
+			bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
+			base::BarrierRef postResolveBarrierDst = Barrier::Create(&bCI);
+			
+			PipelineBarrier(index, base::PipelineStageBit::TRANSFER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
+		}
 	}
 }
 

@@ -28,8 +28,8 @@ namespace base
 			//Vulkan: VK_KHR_timeline_semaphore: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap52.html#VK_KHR_timeline_semaphore
 			TIMELINE_SEMAPHORE			= 0x00000004,
 			
-			//STATUS: O - Excluding D3D12 Enhanced Barriers and Events2.
-			//D3D12: Enhanced Barriers?
+			//STATUS: O - Excluding Vulkan Events2.
+			//D3D12: Enhanced Barriers
 			//Vulkan: VK_KHR_synchronization2: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap52.html#VK_KHR_synchronization2
 			SYNCHRONISATION_2			= 0x00000008,
 

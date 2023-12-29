@@ -410,7 +410,7 @@ D3D12_BARRIER_SYNC Barrier2::ToD3D12BarrierSync(base::PipelineStageBit pipelineS
 			case base::PipelineStageBit::DRAW_INDIRECT_BIT:
 				return D3D12_BARRIER_SYNC_EXECUTE_INDIRECT;
 			case base::PipelineStageBit::VERTEX_INPUT_BIT:
-				return D3D12_BARRIER_SYNC_VERTEX_SHADING;
+				return D3D12_BARRIER_SYNC_INDEX_INPUT;
 			case base::PipelineStageBit::VERTEX_SHADER_BIT:
 				return D3D12_BARRIER_SYNC_VERTEX_SHADING;
 			case base::PipelineStageBit::TESSELLATION_CONTROL_SHADER_BIT:
@@ -522,11 +522,11 @@ D3D12_BARRIER_ACCESS Barrier2::ToD3D12BarrierAccess(Barrier::AccessBit access)
 			case Barrier::AccessBit::TRANSFER_READ_BIT:
 			case Barrier::AccessBit::HOST_READ_BIT:
 			case Barrier::AccessBit::MEMORY_READ_BIT:
-				return D3D12_BARRIER_ACCESS_COPY_SOURCE;
+				return D3D12_BARRIER_ACCESS_COPY_DEST;
 			case Barrier::AccessBit::TRANSFER_WRITE_BIT:
 			case Barrier::AccessBit::HOST_WRITE_BIT:
 			case Barrier::AccessBit::MEMORY_WRITE_BIT:
-				return D3D12_BARRIER_ACCESS_COPY_DEST;
+				return D3D12_BARRIER_ACCESS_COPY_SOURCE;
 			case Barrier::AccessBit::TRANSFORM_FEEDBACK_WRITE_BIT:
 			case Barrier::AccessBit::TRANSFORM_FEEDBACK_COUNTER_READ_BIT:
 			case Barrier::AccessBit::TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT:
@@ -557,6 +557,10 @@ D3D12_BARRIER_ACCESS Barrier2::ToD3D12BarrierAccess(Barrier::AccessBit access)
 				return D3D12_BARRIER_ACCESS_SHADER_RESOURCE;
 			case Barrier::AccessBit::SHADER_STORAGE_WRITE_BIT:
 				return D3D12_BARRIER_ACCESS_UNORDERED_ACCESS;
+			case Barrier::AccessBit::D3D12_RESOLVE_SOURCE:
+				return D3D12_BARRIER_ACCESS_RESOLVE_SOURCE;
+			case Barrier::AccessBit::D3D12_RESOLVE_DEST:
+				return D3D12_BARRIER_ACCESS_RESOLVE_DEST;
 			default:
 				return D3D12_BARRIER_ACCESS_COMMON;
 			}
