@@ -15,6 +15,7 @@ namespace base
 		{
 			uint32_t width;
 			uint32_t height;
+			uint32_t depthOrArraySize;
 			uint32_t pixelSize;
 		};
 		struct Copy
@@ -47,7 +48,7 @@ namespace base
 			std::string		debugName;
 			void*			device;
 			UsageBit		usage;
-			ImageDimension	imageDimension = { 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for an image.
+			ImageDimension	imageDimension = { 0, 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for an image.
 			size_t			size;
 			void*			data;
 			AllocatorRef	allocator;

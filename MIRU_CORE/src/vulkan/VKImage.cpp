@@ -45,10 +45,11 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	VKSetName<VkImage>(m_Device, m_Image, m_CI.debugName);
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
-	m_Allocation.width = 0;
-	m_Allocation.height = 0;
 	m_Allocation.rowPitch = 0;
+	m_Allocation.rowCount = 0;
 	m_Allocation.rowPadding = 0;
+	m_Allocation.slicePitch = 0;
+	m_Allocation.sliceCount = 0;
 
 	if (m_CI.data)
 	{

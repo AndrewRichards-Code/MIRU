@@ -34,9 +34,10 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.rowPitch = m_CI.imageDimension.width * m_CI.imageDimension.pixelSize;
+	m_Allocation.rowCount = m_CI.imageDimension.height;
 	m_Allocation.rowPadding = 0;
-	m_Allocation.width = m_Allocation.rowPitch * m_CI.imageDimension.height;
-	m_Allocation.height = m_CI.imageDimension.height;
+	m_Allocation.slicePitch = m_Allocation.rowPitch * m_CI.imageDimension.height;
+	m_Allocation.sliceCount = m_CI.imageDimension.depthOrArraySize;
 
 	if (m_CI.data)
 	{

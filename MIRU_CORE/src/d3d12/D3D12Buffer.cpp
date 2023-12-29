@@ -11,26 +11,34 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 
 	m_CI = *pCreateInfo;
 	
-	m_Allocation.width = m_CI.size;
-	m_Allocation.height = 0;
-	m_Allocation.rowPitch = 0;
-	m_Allocation.rowPadding = 0;
-
 	if (arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_BIT) || arc::BitwiseCheck(m_CI.usage, Buffer::UsageBit::UNIFORM_TEXEL_BIT))
 	{
-		m_Allocation.width = arc::Align<size_t>(m_CI.size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+		m_CI.size = arc::Align<size_t>(m_CI.size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 	}
-	else if (m_CI.imageDimension.width % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
+
+	if ((m_CI.imageDimension.width * m_CI.imageDimension.pixelSize) % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
 	{
+		//https://github.com/microsoft/DirectXTex/blob/3bf25e04b40a5b77ca0c13c7cffaf79cef551393/DirectXTex/DirectXTexUtil.cpp#L1115-L1117
 		m_Allocation.rowPitch = arc::Align<size_t>((m_CI.imageDimension.width * m_CI.imageDimension.pixelSize), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		m_Allocation.rowCount = m_CI.imageDimension.height;
 		m_Allocation.rowPadding = m_Allocation.rowPitch - (m_CI.imageDimension.width * m_CI.imageDimension.pixelSize);
-		m_Allocation.width = m_Allocation.rowPitch * m_CI.imageDimension.height;
-		m_Allocation.height = m_CI.imageDimension.height;
+		m_Allocation.slicePitch = m_Allocation.rowPitch * m_CI.imageDimension.height;
+		m_Allocation.sliceCount = m_CI.imageDimension.depthOrArraySize;
+
+		m_CI.size = m_Allocation.rowPitch * m_CI.imageDimension.height * m_CI.imageDimension.depthOrArraySize;
+	}
+	else
+	{
+		m_Allocation.rowPitch = m_CI.imageDimension.width * m_CI.imageDimension.pixelSize;
+		m_Allocation.rowCount = m_CI.imageDimension.height;
+		m_Allocation.rowPadding = 0;
+		m_Allocation.slicePitch = m_Allocation.rowPitch * m_CI.imageDimension.height;
+		m_Allocation.sliceCount = m_CI.imageDimension.depthOrArraySize;
 	}
 
 	m_ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;		//General Type of Resource
 	m_ResourceDesc.Alignment = 0;
-	m_ResourceDesc.Width = m_Allocation.width;						//Alias for bufferSize
+	m_ResourceDesc.Width = m_CI.size;								//Alias for bufferSize
 	m_ResourceDesc.Height = 1;
 	m_ResourceDesc.DepthOrArraySize = 1;
 	m_ResourceDesc.MipLevels = 1;

@@ -12,10 +12,11 @@ namespace base
 	struct MIRU_API Allocation
 	{
 		NativeAllocation	nativeAllocation;
-		size_t				width;
-		size_t				height;
 		size_t				rowPitch;
+		size_t				rowCount;
 		size_t				rowPadding;
+		size_t				slicePitch;
+		size_t				sliceCount;
 	};
 
 	class MIRU_API Allocator
