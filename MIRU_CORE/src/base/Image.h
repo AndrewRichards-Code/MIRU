@@ -264,6 +264,16 @@ namespace base
 		};
 		typedef void* ExternalImageHandle; //Either ID3D12Resource* or VkImage.
 
+		struct FormatData
+		{
+			uint8_t R; //Size of the Red Component.
+			uint8_t G; //Size of the Green Component.
+			uint8_t B; //Size of the Blue Component.
+			uint8_t A; //Size of the Alpha Component.
+			uint8_t D; //Size of the Depth Component.
+			uint8_t S; //Size of the Stencil Component.
+		};
+
 		struct CreateInfo
 		{
 			std::string			debugName;
@@ -292,6 +302,12 @@ namespace base
 		const Allocation& GetAllocation() { return m_Allocation; }
 		const bool& IsSwapchainImage() { return m_SwapchainImage; }
 		friend Swapchain;
+
+		static FormatData GetFormatData(miru::base::Image::Format format);
+		static uint32_t GetFormatSize(FormatData formatData);
+		static uint32_t GetFormatSize(miru::base::Image::Format format);
+		static uint32_t GetFormatComponents(FormatData formatData);
+		static uint32_t GetFormatComponents(miru::base::Image::Format format);
 
 		//Members
 	protected:
