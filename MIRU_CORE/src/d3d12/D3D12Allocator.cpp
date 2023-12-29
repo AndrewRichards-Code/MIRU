@@ -50,7 +50,7 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, si
 			D3D12_RANGE readRange = { 0, 0 }; //We never intend to read from the resource
 			MIRU_FATAL(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
-			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
+			bool copyByRow = allocation.rowPadding > 0;
 			if (copyByRow)
 			{
 				size_t rowWidth = allocation.rowPitch - allocation.rowPadding;
@@ -58,13 +58,17 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, si
 				char* _mappedData = reinterpret_cast<char*>(mappedData) + offset;
 				char* _data = reinterpret_cast<char*>(data);
 
-				for (size_t i = 0; i < allocation.height; i++)
+				for (size_t z = 0; z < allocation.sliceCount; z++)
 				{
-					memcpy(_mappedData, _data, rowWidth);
-					_mappedData += rowWidth;
-					_data += rowWidth;
-					memcpy(_mappedData, paddingData.data(), allocation.rowPadding);
-					_mappedData += allocation.rowPadding;
+					for (size_t y = 0; y < allocation.rowCount; y++)
+					{
+						memcpy(_mappedData, _data, rowWidth);
+						_mappedData += rowWidth;
+						_data += rowWidth;
+
+						memcpy(_mappedData, paddingData.data(), allocation.rowPadding);
+						_mappedData += allocation.rowPadding;
+					}
 				}
 			}
 			else
@@ -93,7 +97,7 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t offset, si
 			D3D12_RANGE readRange = { offset, offset + size };
 			MIRU_FATAL(d3d12Resource->Map(0, &readRange, &mappedData), "ERROR: D3D12: Can not map resource.");
 
-			bool copyByRow = allocation.rowPitch && allocation.rowPadding && allocation.height;
+			bool copyByRow = allocation.rowPadding > 0;
 			if (copyByRow)
 			{
 				size_t rowWidth = allocation.rowPitch - allocation.rowPadding;
@@ -101,13 +105,17 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t offset, si
 				char* _mappedData = reinterpret_cast<char*>(mappedData) + offset;
 				char* _data = reinterpret_cast<char*>(data);
 
-				for (size_t i = 0; i < allocation.height; i++)
+				for (size_t z = 0; z < allocation.sliceCount; z++)
 				{
-					memcpy(_data, _mappedData, rowWidth);
-					_data += rowWidth;
-					_mappedData += rowWidth;
-					memcpy(paddingData.data(), _mappedData, allocation.rowPadding);
-					_mappedData += allocation.rowPadding;
+					for (size_t y = 0; y < allocation.rowCount; y++)
+					{
+						memcpy(_data, _mappedData, rowWidth);
+						_data += rowWidth;
+						_mappedData += rowWidth;
+
+						memcpy(paddingData.data(), _mappedData, allocation.rowPadding);
+						_mappedData += allocation.rowPadding;
+					}
 				}
 			}
 			else
