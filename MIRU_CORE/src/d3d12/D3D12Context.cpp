@@ -101,8 +101,11 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	m_Device->QueryInterface(IID_PPV_ARGS(&m_InfoQueue));
 	if (m_InfoQueue)
 	{
+		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, false);
+		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_MESSAGE, false);
 
 		D3D12_MESSAGE_ID filteredMessageIDs[2] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE };
 		D3D12_INFO_QUEUE_FILTER filter = {};
@@ -196,12 +199,6 @@ void Context::DeviceWaitIdle()
 	}
 }
 
-template <>
-struct magic_enum::customize::enum_range<D3D12_MESSAGE_ID> {
-	static constexpr int min = static_cast<int>(D3D12_MESSAGE_ID::D3D12_MESSAGE_ID_UNKNOWN);
-	static constexpr int max = static_cast<int>(D3D12_MESSAGE_ID::D3D12_MESSAGE_ID_D3D12_MESSAGES_END);
-};
-
 void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
 {
 	std::string category = std::string(magic_enum::enum_name<D3D12_MESSAGE_CATEGORY>(Category));
@@ -209,11 +206,11 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 	//std::string id = std::string(magic_enum::enum_name<D3D12_MESSAGE_ID>(ID));
 	std::string description = pDescription;
 
-	category = category.substr(category.find_last_of('_') + 1);
-	severity = severity.substr(severity.find_last_of('_') + 1);
+	category = category.substr(std::string("D3D12_MESSAGE_CATEGORY_").size());
+	severity = severity.substr(std::string("D3D12_MESSAGE_SEVERITY_").size());
 
 	std::stringstream errorMessage;
-	errorMessage << "D3D12 " << severity << ": " << description << " [ " << severity << " " << category << " #" << uint32_t(ID) << ": " /*<< id*/ << " ]";
+	errorMessage << "D3D12 " << severity << ": " << description << " [ " << category << " " << severity << " #" << uint32_t(ID) << ": " /*<< id*/ << " ]";
 	std::string errorMessageStr = errorMessage.str();
 
 	switch (Severity)
@@ -221,11 +218,13 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 		case D3D12_MESSAGE_SEVERITY_CORRUPTION:
 		{
 			MIRU_FATAL(uint32_t(ID), errorMessageStr.c_str());
+			ARC_DEBUG_BREAK;
 			break;
 		}
 		case D3D12_MESSAGE_SEVERITY_ERROR:
 		{
 			MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
+			ARC_DEBUG_BREAK;
 			break;
 		}
 		case D3D12_MESSAGE_SEVERITY_WARNING:

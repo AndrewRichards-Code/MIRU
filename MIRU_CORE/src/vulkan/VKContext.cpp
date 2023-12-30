@@ -375,6 +375,7 @@ VkBool32 Context::MessageCallbackFunction(VkDebugUtilsMessageSeverityFlagBitsEXT
 	if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT))
 	{
 		MIRU_ERROR(messageIdNumber, errorMessageStr.c_str());
+		ARC_DEBUG_BREAK;
 	}
 	else if (arc::BitwiseCheck(messageSeverity, VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
 	{
