@@ -132,10 +132,10 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.SAMPLER_DescriptorHeap));
 		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		DescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		DescriptorHeapDesc.NumDescriptors = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
+		DescriptorHeapDesc.NumDescriptors = m_ResourceBindingCapabilities.maxDescriptorCount * D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
 		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.RTV_DescriptorHeap));
 		DescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		DescriptorHeapDesc.NumDescriptors = 1;
+		DescriptorHeapDesc.NumDescriptors = m_ResourceBindingCapabilities.maxDescriptorCount * 1;
 		m_Device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&renderingResource.DSV_DescriptorHeap));
 
 		renderingResource.CBV_SRV_UAV_DescriptorOffset = 0;
