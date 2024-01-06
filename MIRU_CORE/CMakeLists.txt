@@ -132,7 +132,7 @@ target_include_directories(MIRU_CORE PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/../External"
 )
 target_compile_definitions(MIRU_CORE PRIVATE MIRU_BUILD_DLL)
-target_compile_definitions(MIRU_CORE PRIVATE "PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+target_compile_definitions(MIRU_CORE PRIVATE "BUILD_DIR=\"${CMAKE_BINARY_DIR}\"")
 
 set(DXCOMPILER_FOUND FALSE)
 

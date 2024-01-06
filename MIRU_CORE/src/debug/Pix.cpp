@@ -42,9 +42,9 @@ void Pix::LoadWinPixEventRuntime()
 	if (!s_WinPixEventRuntimeHandle)
 	{
 	#if defined (MIRU_WIN64_UWP)
-		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "/../External/pix/lib/x64/WinPixEventRuntime_UAP.dll";
+		s_WinPixEventRuntimeFullpath = std::string(BUILD_DIR) + "/packages/WinPixEventRuntime.1.0.231030001/bin/x64/WinPixEventRuntime_UAP.dll";
 	#else
-		s_WinPixEventRuntimeFullpath = std::string(PROJECT_DIR) + "/../External/pix/lib/x64/WinPixEventRuntime.dll";
+		s_WinPixEventRuntimeFullpath = std::string(BUILD_DIR) + "/packages/WinPixEventRuntime.1.0.231030001/bin/x64/WinPixEventRuntime.dll";
 	#endif
 		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath.generic_string());
 		if (!s_WinPixEventRuntimeHandle)

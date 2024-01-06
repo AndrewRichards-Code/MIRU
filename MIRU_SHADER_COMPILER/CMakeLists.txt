@@ -27,5 +27,3 @@ target_include_directories(MIRU_SHADER_COMPILER PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/../MIRU_CORE/src"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../External"
 )
-
-#target_compile_definitions(MIRU_SHADER_COMPILER PRIVATE "PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
