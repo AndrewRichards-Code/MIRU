@@ -105,6 +105,13 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
 			continue;
 		}
+		case base::DescriptorType::D3D12_STRUCTURED_BUFFER:
+		{
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
+			if (baseBindingSRV == ~0U)
+				baseBindingSRV = descriptorSetLayoutBinding.binding;
+			continue;
+		}
 		default:
 		{
 			countSRV += descriptorSetLayoutBinding.descriptorCount;
@@ -302,22 +309,39 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 
 	for (auto& descriptorBufferInfo : descriptorBufferInfos)
 	{
-		auto& type = ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().type;
+		base::DescriptorType descriptorType = base::DescriptorType(0);
+		for (auto& descriptorSetLayoutBinding : m_CI.descriptorSetLayouts[index]->GetCreateInfo().descriptorSetLayoutBinding)
+		{
+			if (descriptorSetLayoutBinding.binding == bindingIndex)
+			{
+				descriptorType = descriptorSetLayoutBinding.type;
+				break;
+			}
+		}
 
 		//CBV
-		if (type == BufferView::Type::UNIFORM || type == BufferView::Type::UNIFORM_TEXEL)
+		if (descriptorType == base::DescriptorType::UNIFORM_BUFFER || descriptorType == base::DescriptorType::UNIFORM_TEXEL_BUFFER || descriptorType == base::DescriptorType::UNIFORM_BUFFER_DYNAMIC)
 		{
 			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 
 			m_Device->CreateConstantBufferView(&ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_CBVDesc, descriptorWriteLocation);
 			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_CBVDescHandle = descriptorWriteLocation;
 		}
+		//SRV
+		if (descriptorType == base::DescriptorType::D3D12_STRUCTURED_BUFFER)
+		{
+			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
+			
+			m_Device->CreateShaderResourceView(ref_cast<Buffer>(ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().buffer)->m_Buffer,
+				&ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_SRVDesc, descriptorWriteLocation);
+			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_SRVDescHandle = descriptorWriteLocation;
+		}
 		//UAV
-		if (type == BufferView::Type::STORAGE || type == BufferView::Type::STORAGE_TEXEL)
+		if (descriptorType == base::DescriptorType::STORAGE_BUFFER || descriptorType == base::DescriptorType::STORAGE_TEXEL_BUFFER || descriptorType == base::DescriptorType::STORAGE_BUFFER_DYNAMIC)
 		{
 			descriptorWriteLocation = m_DescCPUHandles[index][bindingIndex][D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
 
-			m_Device->CreateUnorderedAccessView(ref_cast<Buffer>(descriptorBufferInfo.bufferView)->m_Buffer, nullptr,
+			m_Device->CreateUnorderedAccessView(ref_cast<Buffer>(ref_cast<BufferView>(descriptorBufferInfo.bufferView)->GetCreateInfo().buffer)->m_Buffer, nullptr,
 				&ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_UAVDesc, descriptorWriteLocation);
 			ref_cast<BufferView>(descriptorBufferInfo.bufferView)->m_UAVDescHandle = descriptorWriteLocation;
 		}

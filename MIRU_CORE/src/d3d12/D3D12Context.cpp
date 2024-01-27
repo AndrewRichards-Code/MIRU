@@ -140,6 +140,8 @@ Context::~Context()
 	if (m_InfoQueue)
 		reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->UnregisterMessageCallback(m_CallbackCookie);
 
+	MIRU_D3D12_SAFE_RELEASE(m_InfoQueue);
+
 	ID3D12DebugDevice* debugDevice = nullptr;
 	m_Device->QueryInterface(&debugDevice);
 

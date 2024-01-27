@@ -162,13 +162,22 @@ BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
 		case Type::STORAGE_TEXEL:
 		case Type::STORAGE:
 		{
-			m_UAVDesc.Format = resourceDesc.Format;
+			m_UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
 			m_UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			m_UAVDesc.Buffer.FirstElement = m_CI.offset / m_CI.stride;
 			m_UAVDesc.Buffer.NumElements = static_cast<UINT>(m_CI.size / m_CI.stride);
 			m_UAVDesc.Buffer.StructureByteStride = static_cast<UINT>(m_CI.stride);
 			m_UAVDesc.Buffer.CounterOffsetInBytes = 0;
 			m_UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+			m_SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+			m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+			m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			m_SRVDesc.Buffer.FirstElement = m_CI.offset / m_CI.stride;
+			m_SRVDesc.Buffer.NumElements = static_cast<UINT>(m_CI.size / m_CI.stride);
+			m_SRVDesc.Buffer.StructureByteStride = static_cast<UINT>(m_CI.stride);
+			m_SRVDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
 			break;
 		}
 		case Type::INDEX:

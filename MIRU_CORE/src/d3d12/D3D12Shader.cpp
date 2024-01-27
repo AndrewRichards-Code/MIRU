@@ -76,8 +76,9 @@ void Shader::D3D12ShaderReflection(
 					if (partIndex != 0) //No reflection available for non-DXIL shaders.
 					{
 						//General parsing functions:
-						auto D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType = [](D3D_SHADER_INPUT_TYPE type, D3D_SRV_DIMENSION dimension) -> base::DescriptorType
+						auto D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType = [](D3D_SHADER_INPUT_TYPE type) -> base::DescriptorType
 						{
+							//https://github.com/microsoft/DirectXShaderCompiler/blob/main/lib/HLSL/DxilContainerReflection.cpp
 							switch (type)
 							{
 							case D3D_SIT_CBUFFER:
@@ -89,15 +90,19 @@ void Shader::D3D12ShaderReflection(
 							case D3D_SIT_SAMPLER:
 								return base::DescriptorType::SAMPLER;
 							case D3D_SIT_UAV_RWTYPED:
+								return base::DescriptorType::STORAGE_IMAGE;
 							case D3D_SIT_STRUCTURED:
+								return base::DescriptorType::D3D12_STRUCTURED_BUFFER;
 							case D3D_SIT_UAV_RWSTRUCTURED:
+								return base::DescriptorType::STORAGE_BUFFER;
 							case D3D_SIT_BYTEADDRESS:
+								return base::DescriptorType::D3D12_STRUCTURED_BUFFER;
 							case D3D_SIT_UAV_RWBYTEADDRESS:
 							case D3D_SIT_UAV_APPEND_STRUCTURED:
 							case D3D_SIT_UAV_CONSUME_STRUCTURED:
 							case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 							case D3D_SIT_UAV_FEEDBACKTEXTURE:
-								return dimension > D3D_SRV_DIMENSION_BUFFER ? base::DescriptorType::STORAGE_IMAGE : base::DescriptorType::STORAGE_BUFFER;
+								return base::DescriptorType::STORAGE_BUFFER;
 							case D3D_SIT_RTACCELERATIONSTRUCTURE:
 								return base::DescriptorType::ACCELERATION_STRUCTURE;
 							default:
@@ -284,7 +289,7 @@ void Shader::D3D12ShaderReflection(
 										MIRU_WARN(res, "WARN: D3D12: ID3D12ShaderReflection::GetResourceBindingDesc failed.");
 										if (res == S_OK)
 										{
-											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+											base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type);
 
 											size_t structSize = 0;
 											if (descType == base::DescriptorType::UNIFORM_BUFFER)
@@ -416,7 +421,7 @@ void Shader::D3D12ShaderReflection(
 													MIRU_WARN(res, "WARN: D3D12: ID3D12FunctionReflection::GetResourceBindingDesc failed.");
 													if (res == S_OK)
 													{
-														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type, bindingDesc.Dimension);
+														base::DescriptorType descType = D3D_SHADER_INPUT_TYPE_to_miru_base_DescriptorType(bindingDesc.Type);
 
 														size_t structSize = 0;
 														if (descType == base::DescriptorType::UNIFORM_BUFFER)
