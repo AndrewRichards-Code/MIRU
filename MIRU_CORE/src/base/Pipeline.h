@@ -161,8 +161,8 @@ namespace base
 		};
 		struct PipelineLayout
 		{
-			std::vector<DescriptorSetLayoutRef> descriptorSetLayouts;
-			std::vector<PushConstantRange>		  pushConstantRanges;
+			std::vector<DescriptorSetLayoutRef>	descriptorSetLayouts;
+			std::vector<PushConstantRange>		pushConstantRanges;
 		};
 
 		static constexpr uint32_t ShaderUnused = ~0;
