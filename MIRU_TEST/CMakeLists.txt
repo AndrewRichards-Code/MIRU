@@ -30,14 +30,18 @@ set(HLSL_JSON_FILES
 	"res/shaders/postprocess_hlsl.json"
 	"res/shaders/raytracing_hlsl.json"
 )
+set(JSON_FILES
+	"res/shadertoolsconfig.json"
+)
 
 add_executable(MIRU_TEST)
-target_sources(MIRU_TEST PRIVATE ${SRC_CPP_FILES} ${SRC_HEADERS} ${HLSL_FILES} ${HLSL_JSON_FILES})
+target_sources(MIRU_TEST PRIVATE ${SRC_CPP_FILES} ${SRC_HEADERS} ${HLSL_FILES} ${HLSL_JSON_FILES} ${JSON_FILES})
 
 target_link_libraries(MIRU_TEST PRIVATE MIRU_CORE ARC)
 
 source_group("src" FILES ${SRC_CPP_FILES} ${SRC_HEADERS})
 source_group("res\\shaders" FILES ${HLSL_FILES} ${HLSL_JSON_FILES})
+source_group("res" FILES ${JSON_FILES})
 
 set_property(SOURCE ${HLSL_FILES} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
 
