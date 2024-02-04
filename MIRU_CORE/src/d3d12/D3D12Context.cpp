@@ -94,6 +94,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 	if (m_Features.d3d12Options4.Native16BitShaderOpsSupported)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
 
+	m_RI.activeExtensions &= m_CI.extensions;
+
 	m_RI.deviceName = arc::ToString(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_AdapterDesc.Description);
 	
 
