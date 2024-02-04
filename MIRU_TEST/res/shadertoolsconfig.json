@@ -2,8 +2,7 @@
   "hlsl.preprocessorDefinitions": 
   {
   },
-  "hlsl.additionalIncludeDirectories": 
-  [
-    "../../../MIRU_SHADER_COMPILER/shaders/includes/"
+  "hlsl.additionalIncludeDirectories": [
+    "C:/Users/Andrew/source/repos/MIRU/MIRU_SHADER_COMPILER/shaders/includes/"
   ]
 }
