@@ -20,7 +20,7 @@ target_sources(MIRU_SHADER_COMPILER PRIVATE ${SRC_CPP_FILES} ${SRC_HEADERS} ${SH
 target_link_libraries(MIRU_SHADER_COMPILER PRIVATE MIRU_CORE ARC)
 
 source_group("src" FILES ${SRC_CPP_FILES} ${SRC_HEADERS})
-source_group("shaders\\include" FILES ${SHADER_INCLUDE_HEADERS})
+source_group("shaders\\includes" FILES ${SHADER_INCLUDE_HEADERS})
 
 target_include_directories(MIRU_SHADER_COMPILER PRIVATE 
 	"${CMAKE_CURRENT_SOURCE_DIR}/src"
