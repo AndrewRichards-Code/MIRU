@@ -1,29 +1,11 @@
 #include "msc_common.h"
 
-struct Vertex
+struct VertexOut
 {
 	float4 position : SV_POSITION;
 	float3 texCoords : TEXCOORD1;
 };
-typedef Vertex PS_IN;
-
-struct Meshlet
-{
-	uint VertexCount;
-	uint VertexOffset;
-	uint PrimitiveCount;
-	uint PrimitiveOffset;
-};
-
-struct Primitive
-{
-	bool cull : SV_CullPrimitive;
-};
-
-MIRU_STRUCTURED_BUFFER(2, 0, Meshlet, meshlets);
-MIRU_STRUCTURED_BUFFER(2, 1, Vertex, inVertices);
-MIRU_STRUCTURED_BUFFER(2, 2, uint, inVertexIdxs);
-MIRU_STRUCTURED_BUFFER(2, 3, uint3, inPrimitveIdxs);
+typedef VertexOut PS_IN;
 
 struct PS_OUT
 {
@@ -45,55 +27,52 @@ MIRU_UNIFORM_BUFFER(1, 0, Model, model);
 
 MIRU_COMBINED_IMAGE_SAMPLER(MIRU_IMAGE_CUBE, 1, 1, float4, colour);
 
-void as_main()
+struct Vertex
 {
-}
+	float4 position;
+};
+MIRU_STRUCTURED_BUFFER(1, 2, Vertex, _vertices);
+
+struct Meshlet
+{
+	uint vertices[64];
+	uint indices[126]; // up to 126 triangles
+	uint indexCount;
+	uint vertexCount;
+};
+MIRU_STRUCTURED_BUFFER(1, 3, Meshlet, meshlets);
 
 [outputtopology("triangle")]
-[numthreads(128, 1, 1)]
+[numthreads(1, 1, 1)]
 void ms_main(
 	in uint g : SV_GroupID, //Which meshlet?
-	in uint gt : SV_GroupThreadID, //Which vertex/primitive within the meshlet?
-	out vertices Vertex outVerts[128],
-	out indices uint3 outIndices[128]/*, 
-	out primitives Primitive outPrims[128]*/
+	out vertices VertexOut outVerts[64],
+	out indices uint3 outIndices[42]
 )
 {
 	Meshlet meshlet = meshlets[g];
-	SetMeshOutputCounts(meshlet.VertexCount, meshlet.PrimitiveCount);
+	uint primitiveCount = meshlet.indexCount / 3;
+
+	SetMeshOutputCounts(meshlet.vertexCount, primitiveCount);
 	
 	//Write the vertices
-	if (gt < meshlet.VertexCount)
+	for (uint i = 0; i < meshlet.vertexCount; i++)
 	{
-		uint finalVertID = inVertexIdxs[gt + meshlet.VertexOffset];
-		Vertex vertex = inVertices[finalVertID];
+		Vertex vertex = _vertices[meshlet.vertices[i]];
 		
-		outVerts[gt].position = mul(vertex.position, mul(model.modl, mul(camera.view, camera.proj)));
-		outVerts[gt].texCoords = vertex.position.xyz;
+		outVerts[i].position = mul(vertex.position, mul(model.modl, mul(camera.view, camera.proj)));
+		outVerts[i].texCoords = vertex.position.xyz;
 	}
 
 	//Write the indices
-	if (gt < meshlet.PrimitiveCount)
+	for (uint j = 0; j < primitiveCount; j++)
 	{
-		uint3 _indices = inPrimitveIdxs[gt + meshlet.PrimitiveOffset];
-		outIndices[gt] = _indices;
+		uint a = meshlet.indices[j * 3 + 0];
+		uint b = meshlet.indices[j * 3 + 1];
+		uint c = meshlet.indices[j * 3 + 2];
+
+		outIndices[j] = uint3(a, b, c);
 	}
-	
-	/*
-	//Sync all thread for primitive culling
-	GroupMemoryBarrierWithGroupSync();
-	
-	//Write primitive attributes.
-	if (gt < meshlet.PrimitiveCount && gt%3 == 0)
-	{
-		uint3 _indices = outIndices[gt];
-		float4 vertex0 = outVerts[_indices.x].position;
-		float4 vertex1 = outVerts[_indices.y].position;
-		float4 vertex2 = outVerts[_indices.z].position;
-		float3 normal = normalize(cross(vertex1.xyz - vertex0.xyz, vertex2.xyz - vertex0.xyz));
-		bool cull = dot(normal, float3(0.0, 0.0, 1.0)) > 0.0;
-		outPrims[gt].cull = cull;
-	}*/
 }
 
 PS_OUT ps_main(PS_IN IN)

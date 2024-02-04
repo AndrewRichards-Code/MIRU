@@ -63,7 +63,7 @@ void MeshShader()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -110,7 +110,7 @@ void MeshShader()
 	ShaderRef meshShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "MeshShader: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
-	shaderCI.binaryFilepath = "../shaderbin/meshshader_ps_6_0_ps_main.spv";
+	shaderCI.binaryFilepath = "../shaderbin/meshshader_ps_6_2_ps_main.spv";
 	shaderCI.recompileArguments = compileArguments[1];
 	ShaderRef fragmentShader = Shader::Create(&shaderCI);
 
@@ -159,16 +159,16 @@ void MeshShader()
 	allocCI.properties = Allocator::PropertiesBit::DEVICE_LOCAL_BIT;
 	AllocatorRef gpu_alloc_0 = Allocator::Create(&allocCI);
 
-	float vertices[32] =
+	Vec4 vertices[8] =
 	{
-		-0.5f, -0.5f, -0.5f, 1.0f,
-		+0.5f, -0.5f, -0.5f, 1.0f,
-		+0.5f, +0.5f, -0.5f, 1.0f,
-		-0.5f, +0.5f, -0.5f, 1.0f,
-		-0.5f, -0.5f, +0.5f, 1.0f,
-		+0.5f, -0.5f, +0.5f, 1.0f,
-		+0.5f, +0.5f, +0.5f, 1.0f,
-		-0.5f, +0.5f, +0.5f, 1.0f,
+		{ -0.5f, -0.5f, -0.5f, 1.0f },
+		{ +0.5f, -0.5f, -0.5f, 1.0f },
+		{ +0.5f, +0.5f, -0.5f, 1.0f },
+		{ -0.5f, +0.5f, -0.5f, 1.0f },
+		{ -0.5f, -0.5f, +0.5f, 1.0f },
+		{ +0.5f, -0.5f, +0.5f, 1.0f },
+		{ +0.5f, +0.5f, +0.5f, 1.0f },
+		{ -0.5f, +0.5f, +0.5f, 1.0f }
 	};
 	uint32_t indices[36] = {
 		0, 1, 2, 2, 3, 0,
@@ -178,6 +178,69 @@ void MeshShader()
 		3, 2, 6, 6, 7, 3,
 		4, 5, 1, 1, 0, 4
 	};
+	struct Meshlet
+	{
+		uint32_t vertices[64]; //Index into the vertex buffer.
+		uint32_t indices[126]; //Up to 42 triangles.
+		uint32_t indexCount;
+		uint32_t vertexCount;
+	};
+	std::vector<Meshlet> meshlets;
+
+	//https://github.com/zeux/niagara/commit/7ad941833f5bd23f19ea667a3b2cc3911520d20b
+	{
+		Meshlet meshlet = {};
+		std::vector<uint16_t> meshletVertices(_countof(vertices), 0xFF);
+
+		for (size_t i = 0; i < _countof(indices); i += 3)
+		{
+			//Get triangle indices
+			uint32_t index_a = indices[i + 0];
+			uint32_t index_b = indices[i + 1];
+			uint32_t index_c = indices[i + 2];
+
+			//Get triangle vertices
+			uint16_t& vertex_a = meshletVertices[index_a];
+			uint16_t& vertex_b = meshletVertices[index_b];
+			uint16_t& vertex_c = meshletVertices[index_c];
+
+			//Check if we can fit this triangle into the current mesh, if not get a new meshlet
+			bool outOfVertices = (meshlet.vertexCount + uint32_t(vertex_a == 0xFF) + uint32_t(vertex_b == 0xFF) + uint32_t(vertex_c == 0xFF)) > _countof(Meshlet::vertices);
+			bool outOfIndices = (meshlet.indexCount + 3) > _countof(Meshlet::indices);
+			if (outOfVertices || outOfIndices)
+			{
+				meshlets.push_back(meshlet);
+				meshletVertices.assign(meshletVertices.size(), 0xFF);
+				meshlet = {};
+			}
+
+			//Add vertices to the meshlet
+			if (vertex_a == 0xFF)
+			{
+				vertex_a = meshlet.vertexCount;
+				meshlet.vertices[meshlet.vertexCount++] = index_a;
+			}
+			if (vertex_b == 0xFF)
+			{
+				vertex_b = meshlet.vertexCount;
+				meshlet.vertices[meshlet.vertexCount++] = index_b;
+			}
+			if (vertex_c == 0xFF)
+			{
+				vertex_c = meshlet.vertexCount;
+				meshlet.vertices[meshlet.vertexCount++] = index_c;
+			}
+
+			//Add indices to meshlet
+			meshlet.indices[meshlet.indexCount++] = vertex_a;
+			meshlet.indices[meshlet.indexCount++] = vertex_b;
+			meshlet.indices[meshlet.indexCount++] = vertex_c;
+		}
+
+		//Push final meshlet
+		if (meshlet.indexCount)
+			meshlets.push_back(meshlet);
+	}
 
 	int img_width;
 	int img_height;
@@ -193,23 +256,23 @@ void MeshShader()
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
-	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
+	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::STORAGE_BIT;
 	verticesBufferCI.data = nullptr;
 	verticesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
 
-	Buffer::CreateInfo indicesBufferCI;
-	indicesBufferCI.debugName = "Indices Buffer";
-	indicesBufferCI.device = context->GetDevice();
-	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
-	indicesBufferCI.size = sizeof(indices);
-	indicesBufferCI.data = indices;
-	indicesBufferCI.allocator = cpu_alloc_0;
-	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
-	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
-	indicesBufferCI.data = nullptr;
-	indicesBufferCI.allocator = gpu_alloc_0;
-	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
+	Buffer::CreateInfo meshletsBufferCI;
+	meshletsBufferCI.debugName = "Meshlets Buffer";
+	meshletsBufferCI.device = context->GetDevice();
+	meshletsBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
+	meshletsBufferCI.size = sizeof(Meshlet) * meshlets.size();
+	meshletsBufferCI.data = meshlets.data();
+	meshletsBufferCI.allocator = cpu_alloc_0;
+	BufferRef c_mb = Buffer::Create(&meshletsBufferCI);
+	meshletsBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::STORAGE_BIT;
+	meshletsBufferCI.data = nullptr;
+	meshletsBufferCI.allocator = gpu_alloc_0;
+	BufferRef g_mb = Buffer::Create(&meshletsBufferCI);
 
 	Buffer::CreateInfo imageBufferCI;
 	imageBufferCI.debugName = "MIRU logo upload buffer";
@@ -293,7 +356,7 @@ void MeshShader()
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
 
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
-		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
+		cmdCopyBuffer->CopyBuffer(0, c_mb, g_mb, { { 0, 0, sizeof(Meshlet) * meshlets.size() } });
 
 		Barrier::CreateInfo bCI;
 		bCI.type = Barrier::Type::IMAGE;
@@ -345,22 +408,22 @@ void MeshShader()
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";
 	vbViewCI.device = context->GetDevice();
-	vbViewCI.type = BufferView::Type::VERTEX;
+	vbViewCI.type = BufferView::Type::STORAGE;
 	vbViewCI.buffer = g_vb;
 	vbViewCI.offset = 0;
 	vbViewCI.size = sizeof(vertices);
-	vbViewCI.stride = 4 * sizeof(float);
+	vbViewCI.stride = sizeof(Vec4);
 	BufferViewRef vbv = BufferView::Create(&vbViewCI);
 
-	BufferView::CreateInfo ibViewCI;
-	ibViewCI.debugName = "IndicesBufferView";
-	ibViewCI.device = context->GetDevice();
-	ibViewCI.type = BufferView::Type::INDEX;
-	ibViewCI.buffer = g_ib;
-	ibViewCI.offset = 0;
-	ibViewCI.size = sizeof(indices);
-	ibViewCI.stride = sizeof(uint32_t);
-	BufferViewRef ibv = BufferView::Create(&ibViewCI);
+	BufferView::CreateInfo mbViewCI;
+	mbViewCI.debugName = "MeshletsBufferView";
+	mbViewCI.device = context->GetDevice();
+	mbViewCI.type = BufferView::Type::STORAGE;
+	mbViewCI.buffer = g_mb;
+	mbViewCI.offset = 0;
+	mbViewCI.size = sizeof(Meshlet) * meshlets.size();
+	mbViewCI.stride = sizeof(Meshlet);
+	BufferViewRef mbv = BufferView::Create(&mbViewCI);
 
 	ImageView::CreateInfo imageViewCI;
 	imageViewCI.debugName = "MIRU logo ImageView";
@@ -478,18 +541,20 @@ void MeshShader()
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "Basic: Descriptor Pool";
 	descriptorPoolCI.device = context->GetDevice();
-	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2}, {DescriptorType::INPUT_ATTACHMENT, 1} };
+	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1}, {DescriptorType::UNIFORM_BUFFER, 2}, {DescriptorType::STORAGE_BUFFER, 2}, {DescriptorType::INPUT_ATTACHMENT, 1} };
 	descriptorPoolCI.maxSets = 3;
 	DescriptorPoolRef descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic: DescSetLayout1";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
+	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT } };
 	DescriptorSetLayoutRef setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "Basic: DescSetLayout2";
 	setLayoutCI.descriptorSetLayoutBinding = {
-		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT },
-		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT }
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT },
+		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT },
+		{2, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT }, //D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
+		{3, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT }	//D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
 	};
 	DescriptorSetLayoutRef setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "PostProcess: DescSetLayout3";
@@ -508,6 +573,8 @@ void MeshShader()
 	descriptorSet_p0->AddBuffer(0, 0, { { ubViewCam } });
 	descriptorSet_p1->AddBuffer(0, 0, { { ubViewMdl } });
 	descriptorSet_p1->AddImage(0, 1, { { sampler, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
+	descriptorSet_p1->AddBuffer(0, 2, { { vbv } });
+	descriptorSet_p1->AddBuffer(0, 3, { { mbv } });
 	descriptorSet_p0->Update();
 	descriptorSet_p1->Update();
 	descriptorSetCI.debugName = "PostProcess: Descriptor Set";
@@ -579,9 +646,9 @@ void MeshShader()
 	pCI.device = context->GetDevice();
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { meshShader, fragmentShader };
-	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices) / 8, VertexInputRate::VERTEX} };
-	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
-	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
+	pCI.vertexInputState.vertexInputBindingDescriptions = {}; //No Vertex Input State for Mesh shaders.
+	pCI.vertexInputState.vertexInputAttributeDescriptions = {}; //No Vertex Input State for Mesh shaders.
+	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false }; //Input Topology should match mesh shader.
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
@@ -783,9 +850,8 @@ void MeshShader()
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p0 }, 0, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p1 }, 1, pipeline);
-			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
-			cmdBuffer->BindIndexBuffer(frameIndex, ibv);
-			cmdBuffer->DrawIndexed(frameIndex, 36);
+			cmdBuffer->DrawMeshTasks(frameIndex, meshlets.size(), 1, 1);
+
 			cmdBuffer->NextSubpass(frameIndex);
 			cmdBuffer->BindPipeline(frameIndex, postProcessPipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet1 }, 0, postProcessPipeline);

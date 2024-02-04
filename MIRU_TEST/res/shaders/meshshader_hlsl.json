@@ -17,7 +17,7 @@
       "outputDirectory": "$BUILD_DIR/shaderbin",
       "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
       "entryPoint": "ps_main",
-      "shaderModel": "ps_6_0",
+      "shaderModel": "ps_6_2",
       "macros": [],
       "cso": true,
       "spv": true,
