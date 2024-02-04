@@ -100,7 +100,7 @@ void DynamicRendering()
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Basic shader
-	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/basic_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
+	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/basic_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();

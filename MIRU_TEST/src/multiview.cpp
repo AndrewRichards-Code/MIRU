@@ -99,7 +99,7 @@ void Multiview()
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Multiview shader
-	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/multiview_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
+	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/multiview_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Multiview: Vertex Shader Module";
 	shaderCI.device = context->GetDevice();

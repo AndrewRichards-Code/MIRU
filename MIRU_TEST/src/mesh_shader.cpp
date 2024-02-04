@@ -99,7 +99,7 @@ void MeshShader()
 	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
 
 	//Basic shader
-	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/meshshader_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
+	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/meshshader_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "MeshShader: Mesh Shader Module";
 	shaderCI.device = context->GetDevice();
@@ -116,7 +116,7 @@ void MeshShader()
 
 	//PostProcessing
 	compileArguments.clear();
-	compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/postprocess_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } });
+	compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/postprocess_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } });
 	shaderCI.debugName = "PostProcess: Vertex Shader Module";
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
 	shaderCI.binaryFilepath = "../shaderbin/postprocess_vs_6_0_vs_main.spv";

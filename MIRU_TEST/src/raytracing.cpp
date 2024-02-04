@@ -110,7 +110,7 @@ void Raytracing()
 	};
 	shaderCI.binaryFilepath = "res/bin/raytracing_lib_6_3.spv";
 	shaderCI.binaryCode = {};
-	shaderCI.recompileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/raytracing_hlsl.json", { { "\\$SOLUTION_DIR", SOLUTION_DIR }, { "\\$BUILD_DIR", BUILD_DIR } })[0];
+	shaderCI.recompileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/raytracing_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } })[0];
 	ShaderRef raytracingShader = Shader::Create(&shaderCI);
 
 	//CmdPool and CmdBuffer
