@@ -36,18 +36,19 @@ MIRU_STRUCTURED_BUFFER(1, 2, Vertex, _vertices);
 struct Meshlet
 {
 	uint vertices[64];
-	uint indices[126]; // up to 126 triangles
+	uint indices[126 * 3]; //Up to 126 triangles.
 	uint indexCount;
 	uint vertexCount;
 };
 MIRU_STRUCTURED_BUFFER(1, 3, Meshlet, meshlets);
 
 [outputtopology("triangle")]
-[numthreads(1, 1, 1)]
+[numthreads(32, 1, 1)]
 void ms_main(
 	in uint g : SV_GroupID, //Which meshlet?
+	in uint gt : SV_GroupThreadID, //Which vertex?
 	out vertices VertexOut outVerts[64],
-	out indices uint3 outIndices[42]
+	out indices uint3 outIndices[126]
 )
 {
 	Meshlet meshlet = meshlets[g];
@@ -56,7 +57,7 @@ void ms_main(
 	SetMeshOutputCounts(meshlet.vertexCount, primitiveCount);
 	
 	//Write the vertices
-	for (uint i = 0; i < meshlet.vertexCount; i++)
+	for (uint i = gt; i < meshlet.vertexCount; i += 32)
 	{
 		Vertex vertex = _vertices[meshlet.vertices[i]];
 		
@@ -65,7 +66,7 @@ void ms_main(
 	}
 
 	//Write the indices
-	for (uint j = 0; j < primitiveCount; j++)
+	for (uint j = gt; j < primitiveCount; j += 32)
 	{
 		uint a = meshlet.indices[j * 3 + 0];
 		uint b = meshlet.indices[j * 3 + 1];

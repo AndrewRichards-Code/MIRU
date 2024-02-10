@@ -181,7 +181,7 @@ void MeshShader()
 	struct Meshlet
 	{
 		uint32_t vertices[64]; //Index into the vertex buffer.
-		uint32_t indices[126]; //Up to 42 triangles.
+		uint32_t indices[126 * 3]; //Up to 126 triangles.
 		uint32_t indexCount;
 		uint32_t vertexCount;
 	};
