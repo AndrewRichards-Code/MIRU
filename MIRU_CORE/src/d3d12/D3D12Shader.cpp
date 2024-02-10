@@ -143,9 +143,9 @@ void Shader::D3D12ShaderReflection(
 							case D3D12_SHVER_CALLABLE_SHADER:
 								return Shader::StageBit::CALLABLE_BIT;
 							case D3D12_SHVER_MESH_SHADER:
-								return Shader::StageBit::MESH_BIT_EXT;
+								return Shader::StageBit::MESH_BIT;
 							case D3D12_SHVER_AMPLIFICATION_SHADER:
-								return Shader::StageBit::AMPLIFICATION_BIT_EXT;
+								return Shader::StageBit::AMPLIFICATION_BIT;
 							case D3D12_SHVER_RESERVED0:
 							default:
 								return Shader::StageBit(0);

@@ -448,8 +448,8 @@ D3D12_BARRIER_SYNC Barrier2::ToD3D12BarrierSync(base::PipelineStageBit pipelineS
 				return D3D12_BARRIER_SYNC_RAYTRACING;
 			case base::PipelineStageBit::FRAGMENT_DENSITY_PROCESS_BIT:
 				return D3D12_BARRIER_SYNC_PIXEL_SHADING;
-			case base::PipelineStageBit::TASK_SHADER_BIT_EXT:
-			case base::PipelineStageBit::MESH_SHADER_BIT_EXT:
+			case base::PipelineStageBit::TASK_SHADER_BIT:
+			case base::PipelineStageBit::MESH_SHADER_BIT:
 				return D3D12_BARRIER_SYNC_VERTEX_SHADING;
 			case base::PipelineStageBit::VIDEO_DECODE_BIT:
 				return D3D12_BARRIER_SYNC_VIDEO_DECODE;

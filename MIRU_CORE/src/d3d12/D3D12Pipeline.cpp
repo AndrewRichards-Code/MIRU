@@ -48,9 +48,9 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 				m_GPSD.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			case Shader::StageBit::GEOMETRY_BIT:
 				m_GPSD.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
-			case Shader::StageBit::AMPLIFICATION_BIT_EXT:
+			case Shader::StageBit::AMPLIFICATION_BIT:
 				AS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
-			case Shader::StageBit::MESH_BIT_EXT:
+			case Shader::StageBit::MESH_BIT:
 				MS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
 			default:
 				continue;
