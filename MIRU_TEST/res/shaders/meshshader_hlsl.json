@@ -16,6 +16,17 @@
       "hlslFilepath": "$SOLUTION_DIR/MIRU_TEST/res/shaders/meshshader.hlsl",
       "outputDirectory": "$BUILD_DIR/shaderbin",
       "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
+      "entryPoint": "as_main",
+      "shaderModel": "as_6_5",
+      "macros": [],
+      "cso": true,
+      "spv": true,
+      "dxcArguments": [ "-Zi", "-Od", "-Fd" ]
+    },
+    {
+      "hlslFilepath": "$SOLUTION_DIR/MIRU_TEST/res/shaders/meshshader.hlsl",
+      "outputDirectory": "$BUILD_DIR/shaderbin",
+      "includeDirectories": [ "$SOLUTION_DIR/MIRU_SHADER_COMPILER/shaders/includes" ],
       "entryPoint": "ps_main",
       "shaderModel": "ps_6_2",
       "macros": [],

@@ -42,22 +42,37 @@ struct Meshlet
 };
 MIRU_STRUCTURED_BUFFER(1, 3, Meshlet, meshlets);
 
+groupshared struct Payload
+{
+	uint data[32];
+} p;
+
+[numthreads(32, 1, 1)]
+void as_main(
+	in uint3 g : SV_GroupID
+)
+{
+	p.data[g.x] = g.x;
+	DispatchMesh(1, 1, 1, p);
+}
+
 [outputtopology("triangle")]
 [numthreads(32, 1, 1)]
 void ms_main(
-	in uint g : SV_GroupID, //Which meshlet?
-	in uint gt : SV_GroupThreadID, //Which vertex?
+	in uint3 g : SV_GroupID, //Which meshlet?
+	in uint3 gt : SV_GroupThreadID, //Which vertex?
+	in payload Payload p,
 	out vertices VertexOut outVerts[64],
 	out indices uint3 outIndices[126]
 )
 {
-	Meshlet meshlet = meshlets[g];
+	Meshlet meshlet = meshlets[g.x];
 	uint primitiveCount = meshlet.indexCount / 3;
 
 	SetMeshOutputCounts(meshlet.vertexCount, primitiveCount);
 	
 	//Write the vertices
-	for (uint i = gt; i < meshlet.vertexCount; i += 32)
+	for (uint i = gt.x; i < meshlet.vertexCount; i += 32)
 	{
 		Vertex vertex = _vertices[meshlet.vertices[i]];
 		
@@ -66,7 +81,7 @@ void ms_main(
 	}
 
 	//Write the indices
-	for (uint j = gt; j < primitiveCount; j += 32)
+	for (uint j = gt.x; j < primitiveCount; j += 32)
 	{
 		uint a = meshlet.indices[j * 3 + 0];
 		uint b = meshlet.indices[j * 3 + 1];
@@ -81,5 +96,4 @@ PS_OUT ps_main(PS_IN IN)
 	PS_OUT OUT;
 	OUT.colour = colour_ImageCIS.Sample(colour_SamplerCIS, IN.texCoords) + (float4(IN.texCoords, 1.0) + float4(0.5, 0.5, 0.5, 0.0));
 	return OUT;
-	
 }

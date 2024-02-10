@@ -108,10 +108,15 @@ void MeshShader()
 	shaderCI.binaryCode = {};
 	shaderCI.recompileArguments = compileArguments[0];
 	ShaderRef meshShader = Shader::Create(&shaderCI);
+	shaderCI.debugName = "MeshShader: Task Shader Module";
+	shaderCI.stageAndEntryPoints = { {Shader::StageBit::TASK_BIT, "as_main"} };
+	shaderCI.binaryFilepath = "../shaderbin/meshshader_as_6_5_as_main.spv";
+	shaderCI.recompileArguments = compileArguments[1];
+	ShaderRef taskShader = Shader::Create(&shaderCI);
 	shaderCI.debugName = "MeshShader: Fragment Shader Module";
 	shaderCI.stageAndEntryPoints = { { Shader::StageBit::PIXEL_BIT, "ps_main"} };
 	shaderCI.binaryFilepath = "../shaderbin/meshshader_ps_6_2_ps_main.spv";
-	shaderCI.recompileArguments = compileArguments[1];
+	shaderCI.recompileArguments = compileArguments[2];
 	ShaderRef fragmentShader = Shader::Create(&shaderCI);
 
 	//PostProcessing
@@ -645,10 +650,10 @@ void MeshShader()
 	pCI.debugName = "Basic";
 	pCI.device = context->GetDevice();
 	pCI.type = PipelineType::GRAPHICS;
-	pCI.shaders = { meshShader, fragmentShader };
+	pCI.shaders = { taskShader, meshShader, fragmentShader };
 	pCI.vertexInputState.vertexInputBindingDescriptions = {}; //No Vertex Input State for Mesh shaders.
 	pCI.vertexInputState.vertexInputAttributeDescriptions = {}; //No Vertex Input State for Mesh shaders.
-	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false }; //Input Topology should match mesh shader.
+	pCI.inputAssemblyState = {}; //No Input Topology for Mesh shaders.
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} };
 	pCI.viewportState.scissors = { {{(int32_t)0, (int32_t)0}, {width, height}} };
@@ -673,6 +678,7 @@ void MeshShader()
 	p1CI.shaders = { postProcessVertexShader, postProcessFragmentShader };
 	p1CI.vertexInputState.vertexInputBindingDescriptions = {};
 	p1CI.vertexInputState.vertexInputAttributeDescriptions = {};
+	p1CI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	p1CI.multisampleState = { Image::SampleCountBit::SAMPLE_COUNT_1_BIT, false, 1.0f, UINT32_MAX, false, false };
 	p1CI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
 	p1CI.depthStencilState = { false, false , CompareOp::NEVER, false, false, {}, {}, 0.0f, 1.0f };
@@ -728,9 +734,10 @@ void MeshShader()
 		{
 			context->DeviceWaitIdle();
 
+			taskShader->Recompile();
 			meshShader->Recompile();
 			fragmentShader->Recompile();
-			pCI.shaders = { meshShader, fragmentShader };
+			pCI.shaders = { taskShader, meshShader, fragmentShader };
 			pipeline = Pipeline::Create(&pCI);
 
 			postProcessVertexShader->Recompile();
