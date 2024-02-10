@@ -103,7 +103,7 @@ void MeshShader()
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "MeshShader: Mesh Shader Module";
 	shaderCI.device = context->GetDevice();
-	shaderCI.stageAndEntryPoints = { {Shader::StageBit::MESH_BIT_EXT, "ms_main"} };
+	shaderCI.stageAndEntryPoints = { {Shader::StageBit::MESH_BIT, "ms_main"} };
 	shaderCI.binaryFilepath = "../shaderbin/meshshader_ms_6_5_ms_main.spv";
 	shaderCI.binaryCode = {};
 	shaderCI.recompileArguments = compileArguments[0];
@@ -547,14 +547,14 @@ void MeshShader()
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic: DescSetLayout1";
 	setLayoutCI.device = context->GetDevice();
-	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT } };
+	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT } };
 	DescriptorSetLayoutRef setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "Basic: DescSetLayout2";
 	setLayoutCI.descriptorSetLayoutBinding = {
-		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT },
+		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::MESH_BIT },
 		{1, DescriptorType::COMBINED_IMAGE_SAMPLER, 1, Shader::StageBit::FRAGMENT_BIT },
-		{2, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT }, //D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
-		{3, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT_EXT }	//D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
+		{2, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT }, //D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
+		{3, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::MESH_BIT }	//D3D12_STRUCTURED_BUFFER as STORAGE_BUFFER implies UAV.
 	};
 	DescriptorSetLayoutRef setLayout2 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "PostProcess: DescSetLayout3";
