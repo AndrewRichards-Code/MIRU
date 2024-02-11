@@ -21,6 +21,8 @@ RenderPass::~RenderPass()
 	MIRU_CPU_PROFILE_FUNCTION();
 }
 
+#define OFFSET_AND_SIZE(m) (offsetof(PipelineStateStream, m)), sizeof(PipelineStateStream::m)
+
 //Pipeline
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
@@ -34,24 +36,24 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	if (m_CI.type == base::PipelineType::GRAPHICS)
 	{
 		//ShaderStages
-		for (auto& shader : m_CI.shaders)
+		for (const auto& shader : m_CI.shaders)
 		{
 			switch (shader->GetCreateInfo().stageAndEntryPoints[0].first)
 			{
 			case Shader::StageBit::VERTEX_BIT:
-				m_GPSD.VS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
-			case Shader::StageBit::PIXEL_BIT:
-				m_GPSD.PS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.VS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(VS)); continue;
 			case Shader::StageBit::DOMAIN_BIT:
-				m_GPSD.DS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.DS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DS)); continue;
 			case Shader::StageBit::HULL_BIT:
-				m_GPSD.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(HS)); continue;
 			case Shader::StageBit::GEOMETRY_BIT:
-				m_GPSD.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(GS)); continue;
+			case Shader::StageBit::PIXEL_BIT:
+				m_PipelineStateStream.PS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(PS)); continue;
 			case Shader::StageBit::AMPLIFICATION_BIT:
-				AS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.AS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(AS)); continue;
 			case Shader::StageBit::MESH_BIT:
-				MS = ref_cast<Shader>(shader)->m_ShaderByteCode; continue;
+				m_PipelineStateStream.MS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(MS)); continue;
 			default:
 				continue;
 			}
@@ -81,113 +83,128 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			il.InstanceDataStepRate = static_cast<UINT>(inputRate);
 			inputLayout.push_back(il);
 		}
-		m_GPSD.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
+		m_PipelineStateStream.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
+		if (!inputLayout.empty())
+		{
+			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(InputLayout));
+		}
 
 		//InputAssembly
 		switch (m_CI.inputAssemblyState.topology)
 		{
 		case base::PrimitiveTopology::POINT_LIST:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
+			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
 		case base::PrimitiveTopology::LINE_LIST:
 		case base::PrimitiveTopology::LINE_STRIP:
 		case base::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
 		case base::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
+			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
 		case base::PrimitiveTopology::TRIANGLE_LIST:
 		case base::PrimitiveTopology::TRIANGLE_STRIP:
 		case base::PrimitiveTopology::TRIANGLE_FAN:
 		case base::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
 		case base::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
+			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
 		case base::PrimitiveTopology::PATCH_LIST:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
+			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
 		default:
-			m_GPSD.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
+			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
+		}
+		if (m_PipelineStateStream.PrimitiveTopologyType != D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED && m_PipelineStateStream.MS.operator const D3D12_SHADER_BYTECODE &().BytecodeLength == 0)
+		{
+			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(PrimitiveTopologyType));
 		}
 
 		//Tessellation
-		m_GPSD.StreamOutput = {};
+		m_PipelineStateStream.StreamOutput = {};
+		if (m_PipelineStateStream.StreamOutput.operator const D3D12_STREAM_OUTPUT_DESC & ().NumEntries != 0)
+		{
+			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(StreamOutput));
+		}
 
 		//Viewport
 		for (auto& viewport : m_CI.viewportState.viewports)
 			m_Viewports.push_back({ viewport.x, viewport.y, viewport.width, viewport.height, viewport.minDepth, viewport.maxDepth });
 		for (auto& scissor : m_CI.viewportState.scissors)
 			m_Scissors.push_back({ static_cast<LONG>(scissor.offset.x), static_cast<LONG>(scissor.offset.y), static_cast<LONG>(scissor.extent.width), static_cast<LONG>(scissor.extent.height) });
-
+		
 		//Rasterisation
-		m_GPSD.RasterizerState.FillMode = m_CI.rasterisationState.polygonMode == base::PolygonMode::LINE ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
-		m_GPSD.RasterizerState.CullMode = static_cast<D3D12_CULL_MODE>(static_cast<uint32_t>(m_CI.rasterisationState.cullMode) % 3 + 1); //%3 because d3d12 has no FRONT_AND_BACK
-		m_GPSD.RasterizerState.FrontCounterClockwise = !static_cast<bool>(m_CI.rasterisationState.frontFace);
-		m_GPSD.RasterizerState.DepthBias = static_cast<INT>(m_CI.rasterisationState.depthBiasConstantFactor);
-		m_GPSD.RasterizerState.DepthBiasClamp = m_CI.rasterisationState.depthBiasClamp;
-		m_GPSD.RasterizerState.SlopeScaledDepthBias = m_CI.rasterisationState.depthBiasSlopeFactor;
-		m_GPSD.RasterizerState.DepthClipEnable = m_CI.rasterisationState.depthClampEnable;
-		m_GPSD.RasterizerState.MultisampleEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT; //Sets AA algorithm
-		m_GPSD.RasterizerState.AntialiasedLineEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;//Sets AA algorithm
-		m_GPSD.RasterizerState.ForcedSampleCount = 0;
-		m_GPSD.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
+		D3D12_RASTERIZER_DESC& rasterizerState = m_PipelineStateStream.RasterizerState;
+		rasterizerState.FillMode = m_CI.rasterisationState.polygonMode == base::PolygonMode::LINE ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+		rasterizerState.CullMode = static_cast<D3D12_CULL_MODE>(static_cast<uint32_t>(m_CI.rasterisationState.cullMode) % 3 + 1); //%3 because d3d12 has no FRONT_AND_BACK
+		rasterizerState.FrontCounterClockwise = !static_cast<bool>(m_CI.rasterisationState.frontFace);
+		rasterizerState.DepthBias = static_cast<INT>(m_CI.rasterisationState.depthBiasConstantFactor);
+		rasterizerState.DepthBiasClamp = m_CI.rasterisationState.depthBiasClamp;
+		rasterizerState.SlopeScaledDepthBias = m_CI.rasterisationState.depthBiasSlopeFactor;
+		rasterizerState.DepthClipEnable = m_CI.rasterisationState.depthClampEnable;
+		rasterizerState.MultisampleEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT; //Sets AA algorithm
+		rasterizerState.AntialiasedLineEnable = m_CI.multisampleState.rasterisationSamples > base::Image::SampleCountBit::SAMPLE_COUNT_1_BIT;//Sets AA algorithm
+		rasterizerState.ForcedSampleCount = 0;
+		rasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	
 		//Multisample
-		m_GPSD.SampleDesc.Count = static_cast<UINT>(m_CI.multisampleState.rasterisationSamples);
-		m_GPSD.SampleDesc.Quality = 0;
-		m_GPSD.SampleMask = static_cast<UINT>(m_CI.multisampleState.sampleMask);
+		DXGI_SAMPLE_DESC& sampleDesc = m_PipelineStateStream.SampleDesc;
+		sampleDesc.Count = static_cast<UINT>(m_CI.multisampleState.rasterisationSamples);
+		sampleDesc.Quality = 0;
+		m_PipelineStateStream.SampleMask = static_cast<UINT>(m_CI.multisampleState.sampleMask);
 
 		//DepthStencil
-		m_GPSD.DepthStencilState.DepthEnable = m_CI.depthStencilState.depthTestEnable;
-		m_GPSD.DepthStencilState.DepthWriteMask = static_cast<D3D12_DEPTH_WRITE_MASK>(m_CI.depthStencilState.depthWriteEnable);
-		m_GPSD.DepthStencilState.DepthFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.depthCompareOp) + 1);
-		m_GPSD.DepthStencilState.StencilEnable = m_CI.depthStencilState.stencilTestEnable;
-		m_GPSD.DepthStencilState.StencilReadMask = static_cast<UINT8>(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.compareMask : m_CI.depthStencilState.front.compareMask);
-		m_GPSD.DepthStencilState.StencilWriteMask = static_cast<UINT8>(m_GPSD.RasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.writeMask : m_CI.depthStencilState.front.writeMask);
-		m_GPSD.DepthStencilState.FrontFace.StencilFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.failOp) + 1);
-		m_GPSD.DepthStencilState.FrontFace.StencilDepthFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.depthFailOp) + 1);
-		m_GPSD.DepthStencilState.FrontFace.StencilPassOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.passOp) + 1);
-		m_GPSD.DepthStencilState.FrontFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.front.compareOp) + 1);
-		m_GPSD.DepthStencilState.BackFace.StencilFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.failOp) + 1);
-		m_GPSD.DepthStencilState.BackFace.StencilDepthFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.depthFailOp) + 1);
-		m_GPSD.DepthStencilState.BackFace.StencilPassOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.passOp) + 1);
-		m_GPSD.DepthStencilState.BackFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.back.compareOp) + 1);
-
+		D3D12_DEPTH_STENCIL_DESC1& depthStencilState = m_PipelineStateStream.DepthStencilState;
+		depthStencilState.DepthEnable = m_CI.depthStencilState.depthTestEnable;
+		depthStencilState.DepthWriteMask = static_cast<D3D12_DEPTH_WRITE_MASK>(m_CI.depthStencilState.depthWriteEnable);
+		depthStencilState.DepthFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.depthCompareOp) + 1);
+		depthStencilState.StencilEnable = m_CI.depthStencilState.stencilTestEnable;
+		depthStencilState.StencilReadMask = static_cast<UINT8>(rasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.compareMask : m_CI.depthStencilState.front.compareMask);
+		depthStencilState.StencilWriteMask = static_cast<UINT8>(rasterizerState.CullMode == D3D12_CULL_MODE_FRONT ? m_CI.depthStencilState.back.writeMask : m_CI.depthStencilState.front.writeMask);
+		depthStencilState.FrontFace.StencilFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.failOp) + 1);
+		depthStencilState.FrontFace.StencilDepthFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.depthFailOp) + 1);
+		depthStencilState.FrontFace.StencilPassOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.front.passOp) + 1);
+		depthStencilState.FrontFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.front.compareOp) + 1);
+		depthStencilState.BackFace.StencilFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.failOp) + 1);
+		depthStencilState.BackFace.StencilDepthFailOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.depthFailOp) + 1);
+		depthStencilState.BackFace.StencilPassOp = static_cast<D3D12_STENCIL_OP>(static_cast<uint32_t>(m_CI.depthStencilState.back.passOp) + 1);
+		depthStencilState.BackFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.back.compareOp) + 1);
+		
 		//ColourBlend
-		m_GPSD.BlendState.AlphaToCoverageEnable = m_CI.multisampleState.alphaToCoverageEnable;
-		m_GPSD.BlendState.IndependentBlendEnable = true;
-		size_t i = 0;
-		for (auto& blend : m_CI.colourBlendState.attachments)
+		D3D12_BLEND_DESC& blendState = m_PipelineStateStream.BlendState;
+		blendState.AlphaToCoverageEnable = m_CI.multisampleState.alphaToCoverageEnable;
+		blendState.IndependentBlendEnable = true;
+		for (size_t i = 0; i < std::min(m_CI.colourBlendState.attachments.size(), size_t(8)); i++)
 		{
-			m_GPSD.BlendState.RenderTarget[i].BlendEnable = blend.blendEnable;
-			m_GPSD.BlendState.RenderTarget[i].LogicOpEnable = m_CI.colourBlendState.logicOpEnable;
-			m_GPSD.BlendState.RenderTarget[i].SrcBlend = ToD3D12_BLEND(blend.srcColourBlendFactor);
-			m_GPSD.BlendState.RenderTarget[i].DestBlend = ToD3D12_BLEND(blend.dstColourBlendFactor);
-			m_GPSD.BlendState.RenderTarget[i].BlendOp = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.colourBlendOp) + 1);
-			m_GPSD.BlendState.RenderTarget[i].SrcBlendAlpha = ToD3D12_BLEND(blend.srcAlphaBlendFactor);
-			m_GPSD.BlendState.RenderTarget[i].DestBlendAlpha = ToD3D12_BLEND(blend.dstAlphaBlendFactor);
-			m_GPSD.BlendState.RenderTarget[i].BlendOpAlpha = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.alphaBlendOp) + 1);
-			m_GPSD.BlendState.RenderTarget[i].LogicOp = ToD3D12_LOGIC_OP(m_CI.colourBlendState.logicOp);
-			m_GPSD.BlendState.RenderTarget[i].RenderTargetWriteMask = static_cast<UINT8>(blend.colourWriteMask);
+			const auto& blend = m_CI.colourBlendState.attachments[i];
+			D3D12_RENDER_TARGET_BLEND_DESC& renderTarget = blendState.RenderTarget[i];
 
-			i++;
-			if (i >= 8)
-				break;
+			renderTarget.BlendEnable = blend.blendEnable;
+			renderTarget.LogicOpEnable = m_CI.colourBlendState.logicOpEnable;
+			renderTarget.SrcBlend = ToD3D12_BLEND(blend.srcColourBlendFactor);
+			renderTarget.DestBlend = ToD3D12_BLEND(blend.dstColourBlendFactor);
+			renderTarget.BlendOp = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.colourBlendOp) + 1);
+			renderTarget.SrcBlendAlpha = ToD3D12_BLEND(blend.srcAlphaBlendFactor);
+			renderTarget.DestBlendAlpha = ToD3D12_BLEND(blend.dstAlphaBlendFactor);
+			renderTarget.BlendOpAlpha = static_cast<D3D12_BLEND_OP>(static_cast<uint32_t>(blend.alphaBlendOp) + 1);
+			renderTarget.LogicOp = ToD3D12_LOGIC_OP(m_CI.colourBlendState.logicOp);
+			renderTarget.RenderTargetWriteMask = static_cast<UINT8>(blend.colourWriteMask);
 		}
 
-		//Dynamic
-
 		//RTV and DSV
+		D3D12_RT_FORMAT_ARRAY& renderTargetFormats = m_PipelineStateStream.RTVFormats;
 		if (m_CI.renderPass)
 		{
-			size_t j = 0;
-			for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].colourAttachments)
-			{
-				if (attachment.layout == Image::Layout::COLOUR_ATTACHMENT_OPTIMAL)
-					m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+			const RenderPass::CreateInfo& renderPassCI = m_CI.renderPass->GetCreateInfo();
 
-				j++;
-				if (j >= 8)
-					break;
-			}
-			m_GPSD.NumRenderTargets = static_cast<UINT>(j);
-			for (auto& attachment : m_CI.renderPass->GetCreateInfo().subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment)
+			//RTV
+			size_t i = 0;
+			for (; i < std::min(renderPassCI.subpassDescriptions[m_CI.subpassIndex].colourAttachments.size(), size_t(8)); i++)
 			{
+				const RenderPass::AttachmentReference& attachment = renderPassCI.subpassDescriptions[m_CI.subpassIndex].colourAttachments[i];
+				renderTargetFormats.RTFormats[i] = Image::ToD3D12ImageFormat(renderPassCI.attachments[attachment.attachmentIndex].format);
+			}
+			renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
+
+			//DSV
+			if (!renderPassCI.subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment.empty())
+			{
+				const RenderPass::AttachmentReference& attachment = renderPassCI.subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment[0];//There can be only one DSV.
 				if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 					|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
 					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
@@ -197,94 +214,99 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 					|| attachment.layout == Image::Layout::STENCIL_ATTACHMENT_OPTIMAL
 					|| attachment.layout == Image::Layout::STENCIL_READ_ONLY_OPTIMAL)
 				{
-					m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+					m_PipelineStateStream.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
 				}
-
-				break; //There can be only one DSV.
 			}
-			if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_GPSD.DepthStencilState = {};
+			if (m_PipelineStateStream.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_PipelineStateStream.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
 		}
 		else
 		{
-			size_t j = 0;
-			for (auto& colourAttachmentFormat : m_CI.dynamicRendering.colourAttachmentFormats)
+			size_t i = 0;
+			for (; i < std::min(m_CI.dynamicRendering.colourAttachmentFormats.size(), size_t(8)); i++)
 			{
-				m_GPSD.RTVFormats[j] = Image::ToD3D12ImageFormat(colourAttachmentFormat);
-				
-				j++;
-				if (j >= 8)
-					break;
+				renderTargetFormats.RTFormats[i] = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.colourAttachmentFormats[i]);
 			}
-			m_GPSD.NumRenderTargets = static_cast<UINT>(j);
-			m_GPSD.DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
+			renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
 
-			if (m_GPSD.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_GPSD.DepthStencilState = {};
+			//DSV
+			m_PipelineStateStream.DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
+			if (m_PipelineStateStream.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_PipelineStateStream.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
 		}
 
-		//Fill D3D12 structure
-		m_GPSD.pRootSignature = m_GlobalRootSignature.rootSignature;
-		m_GPSD.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-		m_GPSD.NodeMask = 0;
-		m_GPSD.CachedPSO = {};
-		m_GPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(RasterizerState));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(SampleDesc));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(SampleMask));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DepthStencilState));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(BlendState));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(RTVFormats));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DSVFormat));
 
-		//Pipeline Extensions
-		CD3DX12_PIPELINE_STATE_STREAM2 gpss2(m_GPSD);
+		//Others
+		m_PipelineStateStream.pRootSignature = m_GlobalRootSignature.rootSignature;
+		m_PipelineStateStream.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+		m_PipelineStateStream.NodeMask = 0;
+		m_PipelineStateStream.CachedPSO = {};
+		m_PipelineStateStream.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(pRootSignature));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(IBStripCutValue));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(NodeMask));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(CachedPSO));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(Flags));
 
 		//ViewInstancing
 		uint32_t viewMask = 0;
 		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
+		{
 			viewMask = m_CI.renderPass->GetCreateInfo().multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)];
+		}
 		else
+		{
 			viewMask = m_CI.dynamicRendering.viewMask;
-		
+		}
 		if (viewMask > 0)
 		{
-			m_ViewInstancingDesc.ViewInstanceCount = std::bit_width(viewMask);
-			m_ViewInstanceLocations.resize(m_ViewInstancingDesc.ViewInstanceCount);
+			D3D12_VIEW_INSTANCING_DESC& viewInstancingDesc = m_PipelineStateStream.ViewInstancingDesc;
+			viewInstancingDesc.ViewInstanceCount = std::bit_width(viewMask);
+			m_ViewInstanceLocations.resize(viewInstancingDesc.ViewInstanceCount);
 			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
 			{
 				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(i);
 				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
 			}
-			m_ViewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
-			m_ViewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
-
-			gpss2.ViewInstancingDesc = CD3DX12_VIEW_INSTANCING_DESC(m_ViewInstancingDesc);
-		}
-		
-		//Amplification and Mesh Shaders
-		if (MS.BytecodeLength > 0)
-		{
-			gpss2.MS = MS;
-			if (AS.BytecodeLength > 0)
-				gpss2.AS = AS;
+			viewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
+			viewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
+			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(ViewInstancingDesc));
 		}
 
-		D3D12_PIPELINE_STATE_STREAM_DESC gpssd;
-		gpssd.SizeInBytes = sizeof(gpss2);
-		gpssd.pPipelineStateSubobjectStream = &gpss2;
+		m_PipelineStateStreamDesc.SizeInBytes = m_PipelineStateStreamObjects.size() * sizeof(void*);
+		m_PipelineStateStreamDesc.pPipelineStateSubobjectStream = m_PipelineStateStreamObjects.data();
 
-		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&gpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
+		auto ptr = m_PipelineStateStreamObjects.data();
+
+		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&m_PipelineStateStreamDesc, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::COMPUTE)
 	{
-		m_CPSD.pRootSignature = m_GlobalRootSignature.rootSignature;
-		m_CPSD.CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
-		m_CPSD.NodeMask = 0;
-		m_CPSD.CachedPSO = {};
-		m_CPSD.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		m_PipelineStateStream.pRootSignature = m_GlobalRootSignature.rootSignature;
+		m_PipelineStateStream.CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
+		m_PipelineStateStream.NodeMask = 0;
+		m_PipelineStateStream.CachedPSO = {};
+		m_PipelineStateStream.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-		CD3DX12_PIPELINE_STATE_STREAM2 cpss2(m_CPSD);
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(pRootSignature));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(CS));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(NodeMask));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(CachedPSO));
+		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(Flags));
 
-		D3D12_PIPELINE_STATE_STREAM_DESC cpssd;
-		cpssd.SizeInBytes = sizeof(cpss2);
-		cpssd.pPipelineStateSubobjectStream = &cpss2;
+		m_PipelineStateStreamDesc.SizeInBytes = m_PipelineStateStreamObjects.size() * sizeof(void*);
+		m_PipelineStateStreamDesc.pPipelineStateSubobjectStream = m_PipelineStateStreamObjects.data();
 
-		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&cpssd, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
+		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&m_PipelineStateStreamDesc, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
 	}
 	else if (m_CI.type == base::PipelineType::RAY_TRACING)
@@ -762,4 +784,14 @@ Pipeline::RootSignature Pipeline::CreateRootSignature(const base::Pipeline::Pipe
 	MIRU_FATAL(m_Device->CreateRootSignature(0, result.serializedRootSignature->GetBufferPointer(), result.serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&result.rootSignature)), "ERROR: D3D12: Failed to create RootSignature.");
 
 	return result;
+}
+
+void Pipeline::AddPipelineStateStreamToDesc(size_t offset, size_t size)
+{
+	const size_t& count = size / sizeof(void*);
+	const size_t offsetCount = m_PipelineStateStreamObjects.size();
+	m_PipelineStateStreamObjects.resize(m_PipelineStateStreamObjects.size() + count);
+
+	const void* dataPtr = reinterpret_cast<const void*>(reinterpret_cast<const uint8_t*>(&m_PipelineStateStream) + offset);
+	memcpy(m_PipelineStateStreamObjects.data() + offsetCount, dataPtr, size);
 }
