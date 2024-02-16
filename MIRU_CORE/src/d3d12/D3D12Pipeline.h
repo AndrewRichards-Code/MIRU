@@ -89,7 +89,7 @@ namespace d3d12
 		ID3D12PipelineState* m_Pipeline = nullptr;
 		D3D12_PIPELINE_STATE_STREAM_DESC m_PipelineStateStreamDesc = {};
 		std::vector<void*> m_PipelineStateStreamObjects = {};
-		PipelineStateStream m_PipelineStateStream = {};
+		PipelineStateStream* m_PipelineStateStream = nullptr;
 
 		std::vector<D3D12_VIEWPORT> m_Viewports = {};
 		std::vector<D3D12_RECT> m_Scissors = {};

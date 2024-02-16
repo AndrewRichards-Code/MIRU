@@ -35,25 +35,28 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 	if (m_CI.type == base::PipelineType::GRAPHICS)
 	{
+		PipelineStateStream pipelineStateStream;
+		m_PipelineStateStream = &pipelineStateStream;
+
 		//ShaderStages
 		for (const auto& shader : m_CI.shaders)
 		{
 			switch (shader->GetCreateInfo().stageAndEntryPoints[0].first)
 			{
 			case Shader::StageBit::VERTEX_BIT:
-				m_PipelineStateStream.VS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(VS)); continue;
+				m_PipelineStateStream->VS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(VS)); continue;
 			case Shader::StageBit::DOMAIN_BIT:
-				m_PipelineStateStream.DS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DS)); continue;
+				m_PipelineStateStream->DS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DS)); continue;
 			case Shader::StageBit::HULL_BIT:
-				m_PipelineStateStream.HS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(HS)); continue;
+				m_PipelineStateStream->HS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(HS)); continue;
 			case Shader::StageBit::GEOMETRY_BIT:
-				m_PipelineStateStream.GS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(GS)); continue;
+				m_PipelineStateStream->GS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(GS)); continue;
 			case Shader::StageBit::PIXEL_BIT:
-				m_PipelineStateStream.PS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(PS)); continue;
+				m_PipelineStateStream->PS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(PS)); continue;
 			case Shader::StageBit::AMPLIFICATION_BIT:
-				m_PipelineStateStream.AS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(AS)); continue;
+				m_PipelineStateStream->AS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(AS)); continue;
 			case Shader::StageBit::MESH_BIT:
-				m_PipelineStateStream.MS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(MS)); continue;
+				m_PipelineStateStream->MS = ref_cast<Shader>(shader)->m_ShaderByteCode; AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(MS)); continue;
 			default:
 				continue;
 			}
@@ -83,7 +86,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			il.InstanceDataStepRate = static_cast<UINT>(inputRate);
 			inputLayout.push_back(il);
 		}
-		m_PipelineStateStream.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
+		m_PipelineStateStream->InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
 		if (!inputLayout.empty())
 		{
 			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(InputLayout));
@@ -93,31 +96,31 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		switch (m_CI.inputAssemblyState.topology)
 		{
 		case base::PrimitiveTopology::POINT_LIST:
-			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
+			m_PipelineStateStream->PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT; break;
 		case base::PrimitiveTopology::LINE_LIST:
 		case base::PrimitiveTopology::LINE_STRIP:
 		case base::PrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
 		case base::PrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
-			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
+			m_PipelineStateStream->PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE; break;
 		case base::PrimitiveTopology::TRIANGLE_LIST:
 		case base::PrimitiveTopology::TRIANGLE_STRIP:
 		case base::PrimitiveTopology::TRIANGLE_FAN:
 		case base::PrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
 		case base::PrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
-			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
+			m_PipelineStateStream->PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; break;
 		case base::PrimitiveTopology::PATCH_LIST:
-			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
+			m_PipelineStateStream->PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH; break;
 		default:
-			m_PipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
+			m_PipelineStateStream->PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED; break;
 		}
-		if (m_PipelineStateStream.PrimitiveTopologyType != D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED && m_PipelineStateStream.MS.operator const D3D12_SHADER_BYTECODE &().BytecodeLength == 0)
+		if (m_PipelineStateStream->PrimitiveTopologyType != D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED && m_PipelineStateStream->MS.operator const D3D12_SHADER_BYTECODE &().BytecodeLength == 0)
 		{
 			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(PrimitiveTopologyType));
 		}
 
 		//Tessellation
-		m_PipelineStateStream.StreamOutput = {};
-		if (m_PipelineStateStream.StreamOutput.operator const D3D12_STREAM_OUTPUT_DESC & ().NumEntries != 0)
+		m_PipelineStateStream->StreamOutput = {};
+		if (m_PipelineStateStream->StreamOutput.operator const D3D12_STREAM_OUTPUT_DESC & ().NumEntries != 0)
 		{
 			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(StreamOutput));
 		}
@@ -129,7 +132,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_Scissors.push_back({ static_cast<LONG>(scissor.offset.x), static_cast<LONG>(scissor.offset.y), static_cast<LONG>(scissor.extent.width), static_cast<LONG>(scissor.extent.height) });
 		
 		//Rasterisation
-		D3D12_RASTERIZER_DESC& rasterizerState = m_PipelineStateStream.RasterizerState;
+		D3D12_RASTERIZER_DESC& rasterizerState = m_PipelineStateStream->RasterizerState;
 		rasterizerState.FillMode = m_CI.rasterisationState.polygonMode == base::PolygonMode::LINE ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
 		rasterizerState.CullMode = static_cast<D3D12_CULL_MODE>(static_cast<uint32_t>(m_CI.rasterisationState.cullMode) % 3 + 1); //%3 because d3d12 has no FRONT_AND_BACK
 		rasterizerState.FrontCounterClockwise = !static_cast<bool>(m_CI.rasterisationState.frontFace);
@@ -143,13 +146,13 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		rasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 	
 		//Multisample
-		DXGI_SAMPLE_DESC& sampleDesc = m_PipelineStateStream.SampleDesc;
+		DXGI_SAMPLE_DESC& sampleDesc = m_PipelineStateStream->SampleDesc;
 		sampleDesc.Count = static_cast<UINT>(m_CI.multisampleState.rasterisationSamples);
 		sampleDesc.Quality = 0;
-		m_PipelineStateStream.SampleMask = static_cast<UINT>(m_CI.multisampleState.sampleMask);
+		m_PipelineStateStream->SampleMask = static_cast<UINT>(m_CI.multisampleState.sampleMask);
 
 		//DepthStencil
-		D3D12_DEPTH_STENCIL_DESC1& depthStencilState = m_PipelineStateStream.DepthStencilState;
+		D3D12_DEPTH_STENCIL_DESC1& depthStencilState = m_PipelineStateStream->DepthStencilState;
 		depthStencilState.DepthEnable = m_CI.depthStencilState.depthTestEnable;
 		depthStencilState.DepthWriteMask = static_cast<D3D12_DEPTH_WRITE_MASK>(m_CI.depthStencilState.depthWriteEnable);
 		depthStencilState.DepthFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.depthCompareOp) + 1);
@@ -166,7 +169,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		depthStencilState.BackFace.StencilFunc = static_cast<D3D12_COMPARISON_FUNC>(static_cast<uint32_t>(m_CI.depthStencilState.back.compareOp) + 1);
 		
 		//ColourBlend
-		D3D12_BLEND_DESC& blendState = m_PipelineStateStream.BlendState;
+		D3D12_BLEND_DESC& blendState = m_PipelineStateStream->BlendState;
 		blendState.AlphaToCoverageEnable = m_CI.multisampleState.alphaToCoverageEnable;
 		blendState.IndependentBlendEnable = true;
 		for (size_t i = 0; i < std::min(m_CI.colourBlendState.attachments.size(), size_t(8)); i++)
@@ -187,7 +190,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		}
 
 		//RTV and DSV
-		D3D12_RT_FORMAT_ARRAY& renderTargetFormats = m_PipelineStateStream.RTVFormats;
+		D3D12_RT_FORMAT_ARRAY& renderTargetFormats = m_PipelineStateStream->RTVFormats;
 		if (m_CI.renderPass)
 		{
 			const RenderPass::CreateInfo& renderPassCI = m_CI.renderPass->GetCreateInfo();
@@ -214,11 +217,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 					|| attachment.layout == Image::Layout::STENCIL_ATTACHMENT_OPTIMAL
 					|| attachment.layout == Image::Layout::STENCIL_READ_ONLY_OPTIMAL)
 				{
-					m_PipelineStateStream.DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
+					m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
 				}
 			}
-			if (m_PipelineStateStream.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_PipelineStateStream.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
+			if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
 		}
 		else
 		{
@@ -230,9 +233,9 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
 
 			//DSV
-			m_PipelineStateStream.DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
-			if (m_PipelineStateStream.DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_PipelineStateStream.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
+			m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
+			if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+				m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
 		}
 
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(RasterizerState));
@@ -244,11 +247,11 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(DSVFormat));
 
 		//Others
-		m_PipelineStateStream.pRootSignature = m_GlobalRootSignature.rootSignature;
-		m_PipelineStateStream.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-		m_PipelineStateStream.NodeMask = 0;
-		m_PipelineStateStream.CachedPSO = {};
-		m_PipelineStateStream.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		m_PipelineStateStream->pRootSignature = m_GlobalRootSignature.rootSignature;
+		m_PipelineStateStream->IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+		m_PipelineStateStream->NodeMask = 0;
+		m_PipelineStateStream->CachedPSO = {};
+		m_PipelineStateStream->Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(pRootSignature));
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(IBStripCutValue));
@@ -268,7 +271,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		}
 		if (viewMask > 0)
 		{
-			D3D12_VIEW_INSTANCING_DESC& viewInstancingDesc = m_PipelineStateStream.ViewInstancingDesc;
+			D3D12_VIEW_INSTANCING_DESC& viewInstancingDesc = m_PipelineStateStream->ViewInstancingDesc;
 			viewInstancingDesc.ViewInstanceCount = std::bit_width(viewMask);
 			m_ViewInstanceLocations.resize(viewInstancingDesc.ViewInstanceCount);
 			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
@@ -288,14 +291,20 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&m_PipelineStateStreamDesc, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
+
+		m_PipelineStateStreamObjects.clear();
+		m_PipelineStateStream = nullptr;
 	}
 	else if (m_CI.type == base::PipelineType::COMPUTE)
 	{
-		m_PipelineStateStream.pRootSignature = m_GlobalRootSignature.rootSignature;
-		m_PipelineStateStream.CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
-		m_PipelineStateStream.NodeMask = 0;
-		m_PipelineStateStream.CachedPSO = {};
-		m_PipelineStateStream.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		PipelineStateStream pipelineStateStream;
+		m_PipelineStateStream = &pipelineStateStream;
+
+		m_PipelineStateStream->pRootSignature = m_GlobalRootSignature.rootSignature;
+		m_PipelineStateStream->CS = ref_cast<Shader>(m_CI.shaders[0])->m_ShaderByteCode;
+		m_PipelineStateStream->NodeMask = 0;
+		m_PipelineStateStream->CachedPSO = {};
+		m_PipelineStateStream->Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(pRootSignature));
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(CS));
@@ -308,6 +317,9 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&m_PipelineStateStreamDesc, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Compute Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Compute Pipeline");
+
+		m_PipelineStateStreamObjects.clear();
+		m_PipelineStateStream = nullptr;
 	}
 	else if (m_CI.type == base::PipelineType::RAY_TRACING)
 	{
@@ -792,6 +804,6 @@ void Pipeline::AddPipelineStateStreamToDesc(size_t offset, size_t size)
 	const size_t offsetCount = m_PipelineStateStreamObjects.size();
 	m_PipelineStateStreamObjects.resize(m_PipelineStateStreamObjects.size() + count);
 
-	const void* dataPtr = reinterpret_cast<const void*>(reinterpret_cast<const uint8_t*>(&m_PipelineStateStream) + offset);
+	const void* dataPtr = reinterpret_cast<const void*>(reinterpret_cast<const uint8_t*>(m_PipelineStateStream) + offset);
 	memcpy(m_PipelineStateStreamObjects.data() + offsetCount, dataPtr, size);
 }
