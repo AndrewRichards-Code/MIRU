@@ -60,8 +60,8 @@ static void WindowUpdate()
 
 void Multiview()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
@@ -70,7 +70,7 @@ void Multiview()
 	Context::CreateInfo contextCI;
 	contextCI.applicationName = "MIRU_TEST";
 	contextCI.extensions = Context::ExtensionsBit::MULTIVIEW;
-	contextCI.debugValidationLayers = false;
+	contextCI.debugValidationLayers = true;
 	contextCI.deviceDebugName = "GPU Device";
 	contextCI.pNext = nullptr;
 	ContextRef context = Context::Create(&contextCI);
@@ -642,13 +642,15 @@ void Multiview()
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	SemaphoreRef acquire = Semaphore::Create(&acquireSemaphoreCI);
-	SemaphoreRef submit = Semaphore::Create(&submitSemaphoreCI);
+	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
 	uint32_t frameCount = 0;
+	uint32_t swapchainImageIndex = 0;
 	float r = 1.00f;
 	float g = 0.00f;
 	float b = 0.00f;
@@ -673,10 +675,7 @@ void Multiview()
 			pShowCI.shaders = { showVertexShader, showFragmentShader };
 			showPipeline = Pipeline::Create(&pShowCI);
 
-			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
-
 			shaderRecompile = false;
-			frameIndex = 0;
 		}
 		if (swapchain->m_Resized || windowResize)
 		{
@@ -724,8 +723,8 @@ void Multiview()
 			showFramebuffer1 = Framebuffer::Create(&showFramebufferCI_1);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = Semaphore::Create(&acquireSemaphoreCI);
-			submit = Semaphore::Create(&submitSemaphoreCI);
+			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 			swapchain->m_Resized = false;
 			windowResize = false;
@@ -751,10 +750,10 @@ void Multiview()
 				r += increment;
 			}
 
-			swapchain->AcquireNextImage(acquire, frameIndex);
-
 			draws[frameIndex]->Wait();
 			draws[frameIndex]->Reset();
+
+			swapchain->AcquireNextImage(acquires[frameIndex], swapchainImageIndex);
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
@@ -771,7 +770,7 @@ void Multiview()
 			cmdBuffer->EndDebugLabel(frameIndex);
 
 			cmdBuffer->BeginDebugLabel(frameIndex, "Show");
-			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? showFramebuffer0 : showFramebuffer1, { {0.0f, 0.0f, 0.0f, 1.0f} });
+			cmdBuffer->BeginRenderPass(frameIndex, swapchainImageIndex == 0 ? showFramebuffer0 : showFramebuffer1, { {0.0f, 0.0f, 0.0f, 1.0f} });
 			cmdBuffer->BindPipeline(frameIndex, showPipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p2 }, 0, showPipeline);
 			cmdBuffer->Draw(frameIndex, 12);
@@ -780,10 +779,10 @@ void Multiview()
 
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submit, frameIndex);
+			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
@@ -800,6 +799,7 @@ void Multiview()
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
 			//cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
 
+			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;
 		}
 	}

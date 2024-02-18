@@ -60,8 +60,8 @@ static void WindowUpdate()
 
 void Raytracing()
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
@@ -108,7 +108,7 @@ void Raytracing()
 		{ Shader::StageBit::CLOSEST_HIT_BIT, "closest_hit_main"},
 		{ Shader::StageBit::MISS_BIT, "miss_main"},
 	};
-	shaderCI.binaryFilepath = "res/bin/raytracing_lib_6_3.spv";
+	shaderCI.binaryFilepath = "../shaderbin/raytracing_lib_6_3.spv";
 	shaderCI.binaryCode = {};
 	shaderCI.recompileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/raytracing_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } })[0];
 	ShaderRef raytracingShader = Shader::Create(&shaderCI);
@@ -511,13 +511,14 @@ void Raytracing()
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	SemaphoreRef acquire = Semaphore::Create(&acquireSemaphoreCI);
-	SemaphoreRef submit = Semaphore::Create(&submitSemaphoreCI);
+	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
 	uint32_t frameCount = 0;
+	uint32_t swapchainImageIndex = 0;
 	float r = 1.00f;
 	float g = 0.00f;
 	float b = 0.00f;
@@ -543,10 +544,8 @@ void Raytracing()
 				{ handles[2].first, handles[2].second, {} }
 			};
 			sbt = ShaderBindingTable::Create(&sbtCI);
-			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			shaderRecompile = false;
-			frameIndex = 0;
 		}
 		if (swapchain->m_Resized || windowResize)
 		{
@@ -568,8 +567,8 @@ void Raytracing()
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = Semaphore::Create(&acquireSemaphoreCI);
-			submit = Semaphore::Create(&submitSemaphoreCI);
+			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 			swapchain->m_Resized = false;
 			windowResize = false;
@@ -618,10 +617,10 @@ void Raytracing()
 				r += increment;
 			}
 
-			swapchain->AcquireNextImage(acquire, frameIndex);
-
 			draws[frameIndex]->Wait();
 			draws[frameIndex]->Reset();
+
+			swapchain->AcquireNextImage(acquires[frameIndex], swapchainImageIndex);
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
@@ -646,7 +645,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.image = swapchain->m_SwapchainImages[frameIndex];
+			bCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
 			bCI.oldLayout = Image::Layout::UNKNOWN;
 			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -655,7 +654,7 @@ void Raytracing()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b2 });
 
 			cmdBuffer->CopyImage(frameIndex, RT_RWImage, Image::Layout::TRANSFER_SRC_OPTIMAL,
-				swapchain->m_SwapchainImages[frameIndex], Image::Layout::TRANSFER_DST_OPTIMAL,
+				swapchain->m_SwapchainImages[swapchainImageIndex], Image::Layout::TRANSFER_DST_OPTIMAL,
 				{ { {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0, 0, 0}, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0, 0, 0},
 				{RT_RWImage->GetCreateInfo().width, RT_RWImage->GetCreateInfo().height, 1} } });
 
@@ -675,7 +674,7 @@ void Raytracing()
 			bCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
 			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			bCI.image = swapchain->m_SwapchainImages[frameIndex];
+			bCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
 			bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
 			bCI.newLayout = Image::Layout::PRESENT_SRC;
 			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -684,10 +683,10 @@ void Raytracing()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { b2 });
 			cmdBuffer->End(frameIndex);
 			
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submit, frameIndex);
+			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
@@ -703,6 +702,7 @@ void Raytracing()
 
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
 
+			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;
 		}
 	}

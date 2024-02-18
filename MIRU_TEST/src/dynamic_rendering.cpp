@@ -61,8 +61,8 @@ static void WindowUpdate()
 
 void DynamicRendering()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
 
@@ -474,13 +474,15 @@ void DynamicRendering()
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	SemaphoreRef acquire = Semaphore::Create(&acquireSemaphoreCI);
-	SemaphoreRef submit = Semaphore::Create(&submitSemaphoreCI);
+	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
+
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
 	uint32_t frameCount = 0;
+	uint32_t swapchainImageIndex = 0;
 	float r = 1.00f;
 	float g = 0.00f;
 	float b = 0.00f;
@@ -500,10 +502,7 @@ void DynamicRendering()
 			pCI.shaders = { vertexShader, fragmentShader };
 			pipeline = Pipeline::Create(&pCI);
 
-			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
-
 			shaderRecompile = false;
-			frameIndex = 0;
 		}
 		if (swapchain->m_Resized || windowResize)
 		{
@@ -516,8 +515,8 @@ void DynamicRendering()
 			depthImageView = ImageView::Create(&depthImageViewCI);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = Semaphore::Create(&acquireSemaphoreCI);
-			submit = Semaphore::Create(&submitSemaphoreCI);
+			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 			swapchain->m_Resized = false;
 			windowResize = false;
@@ -543,14 +542,14 @@ void DynamicRendering()
 				r += increment;
 			}
 
-			swapchain->AcquireNextImage(acquire, frameIndex);
-
 			draws[frameIndex]->Wait();
 			draws[frameIndex]->Reset();
 
+			swapchain->AcquireNextImage(acquires[frameIndex], swapchainImageIndex);
+
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			RenderingAttachmentInfo colourRAI = { swapchain->m_SwapchainImageViews[frameIndex], Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, RenderPass::AttachmentLoadOp::CLEAR, RenderPass::AttachmentStoreOp::STORE, {r, g, b, 1.0f}};
+			RenderingAttachmentInfo colourRAI = { swapchain->m_SwapchainImageViews[swapchainImageIndex], Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, RenderPass::AttachmentLoadOp::CLEAR, RenderPass::AttachmentStoreOp::STORE, {r, g, b, 1.0f}};
 			RenderingAttachmentInfo depthRAI = { depthImageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, RenderPass::AttachmentLoadOp::CLEAR, RenderPass::AttachmentStoreOp::DONT_CARE, {0.0f, 0} };
 			
 			Barrier::CreateInfo barrierColourCI;
@@ -559,7 +558,7 @@ void DynamicRendering()
 			barrierColourCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			barrierColourCI.image = swapchain->m_SwapchainImages[frameIndex];
+			barrierColourCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
 			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -597,7 +596,7 @@ void DynamicRendering()
 			barrierPresentCI.dstAccess = Barrier::AccessBit::NONE_BIT;
 			barrierPresentCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierPresentCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-			barrierPresentCI.image = swapchain->m_SwapchainImages[frameIndex];
+			barrierPresentCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
 			barrierPresentCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierPresentCI.newLayout = Image::Layout::PRESENT_SRC;
 			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -605,10 +604,10 @@ void DynamicRendering()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submit, frameIndex);
+			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
@@ -625,6 +624,7 @@ void DynamicRendering()
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
 			cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
 
+			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;
 		}
 	}

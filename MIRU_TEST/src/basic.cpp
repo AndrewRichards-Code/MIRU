@@ -707,13 +707,14 @@ void Basic()
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
 	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
-	SemaphoreRef acquire = Semaphore::Create(&acquireSemaphoreCI);
-	SemaphoreRef submit = Semaphore::Create(&submitSemaphoreCI);
+	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
 	uint32_t frameIndex = 0;
 	uint32_t frameCount = 0;
+	uint32_t swapchainImageIndex = 0;
 	float r = 1.00f;
 	float g = 0.00f;
 	float b = 0.00f;
@@ -738,33 +739,7 @@ void Basic()
 			p1CI.shaders = { postProcessVertexShader, postProcessFragmentShader };
 			postProcessPipeline = Pipeline::Create(&p1CI);
 
-			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
-
 			shaderRecompile = false;
-			frameIndex = 0;
-
-			//Transition any resource into the correct states.
-			{
-				cmdBuffer->Reset(2, false);
-				cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
-
-				Barrier::CreateInfo bCI;
-				bCI.type = Barrier::Type::IMAGE;
-				bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-				bCI.dstAccess = Barrier::AccessBit::NONE_BIT;
-				bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-				bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-				bCI.image = resolveAndInputImage;
-				bCI.oldLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-				bCI.newLayout = Image::Layout::UNKNOWN;
-				bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
-				BarrierRef b = Barrier::Create(&bCI);
-				cmdBuffer->PipelineBarrier(2, PipelineStageBit::BOTTOM_OF_PIPE_BIT, PipelineStageBit::TOP_OF_PIPE_BIT, DependencyBit::NONE_BIT, { b });
-
-				cmdBuffer->End(2);
-			}
-			CommandBuffer::SubmitInfo si = { { 2 }, {}, {}, {}, {}, {}, };
-			cmdBuffer->Submit({ si }, nullptr);
 		}
 		if (swapchain->m_Resized || windowResize)
 		{
@@ -812,8 +787,8 @@ void Basic()
 			framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-			acquire = Semaphore::Create(&acquireSemaphoreCI);
-			submit = Semaphore::Create(&submitSemaphoreCI);
+			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
+			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
 			swapchain->m_Resized = false;
 			windowResize = false;
@@ -839,20 +814,21 @@ void Basic()
 				r += increment;
 			}
 
-			swapchain->AcquireNextImage(acquire, frameIndex);
-
 			draws[frameIndex]->Wait();
 			draws[frameIndex]->Reset();
 
+			swapchain->AcquireNextImage(acquires[frameIndex], swapchainImageIndex);
+
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(frameIndex, frameIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0}, {r, g, b, 1.0f}, {r, g, b, 1.0f} });
+			cmdBuffer->BeginRenderPass(frameIndex, swapchainImageIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0}, {r, g, b, 1.0f}, {r, g, b, 1.0f} });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p0 }, 0, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p1 }, 1, pipeline);
 			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
 			cmdBuffer->BindIndexBuffer(frameIndex, ibv);
 			cmdBuffer->DrawIndexed(frameIndex, 36);
+
 			cmdBuffer->NextSubpass(frameIndex);
 			cmdBuffer->BindPipeline(frameIndex, postProcessPipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet1 }, 0, postProcessPipeline);
@@ -860,10 +836,10 @@ void Basic()
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquire }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submit }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submit, frameIndex);
+			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
@@ -880,6 +856,7 @@ void Basic()
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
 			cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
 
+			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;
 		}
 	}
