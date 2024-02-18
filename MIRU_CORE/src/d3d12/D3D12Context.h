@@ -103,17 +103,17 @@ namespace d3d12
 		//Member
 	public:
 		//Debug
-		ID3D12Debug* m_Debug;
-		ID3D12InfoQueue* m_InfoQueue;
-		DWORD m_CallbackCookie;
+		ID3D12Debug* m_Debug = nullptr;
+		ID3D12InfoQueue* m_InfoQueue = nullptr;
+		DWORD m_CallbackCookie = 0;
 
 		//Factory
-		IDXGIFactory4* m_Factory;
+		IDXGIFactory4* m_Factory = nullptr;
 
 		//Device
-		ID3D12Device* m_Device;
-		PhysicalDevices m_PhysicalDevices;
-		size_t m_PhysicalDeviceIndex;
+		ID3D12Device* m_Device = nullptr;
+		PhysicalDevices m_PhysicalDevices = {};
+		size_t m_PhysicalDeviceIndex = 0;
 
 		//Queue
 		std::vector<ID3D12CommandQueue*> m_Queues;

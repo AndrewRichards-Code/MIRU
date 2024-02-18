@@ -95,27 +95,28 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
 
 	m_RI.activeExtensions &= m_CI.extensions;
-
 	m_RI.deviceName = arc::ToString(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_AdapterDesc.Description);
-	
 
 	//Create Info Queue
-	m_Device->QueryInterface(IID_PPV_ARGS(&m_InfoQueue));
-	if (m_InfoQueue)
+	if (m_CI.debugValidationLayers)
 	{
-		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
-		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, false);
-		m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_MESSAGE, false);
+		m_Device->QueryInterface(IID_PPV_ARGS(&m_InfoQueue));
+		if (m_InfoQueue)
+		{
+			m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+			m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+			m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, false);
+			m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, false);
+			m_InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_MESSAGE, false);
 
-		D3D12_MESSAGE_ID filteredMessageIDs[2] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE };
-		D3D12_INFO_QUEUE_FILTER filter = {};
-		filter.DenyList.pIDList = filteredMessageIDs;
-		filter.DenyList.NumIDs = _countof(filteredMessageIDs);
-		m_InfoQueue->AddStorageFilterEntries(&filter);
+			D3D12_MESSAGE_ID filteredMessageIDs[2] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE };
+			D3D12_INFO_QUEUE_FILTER filter = {};
+			filter.DenyList.pIDList = filteredMessageIDs;
+			filter.DenyList.NumIDs = _countof(filteredMessageIDs);
+			m_InfoQueue->AddStorageFilterEntries(&filter);
 
-		reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->RegisterMessageCallback(MessageCallbackFunction, D3D12_MESSAGE_CALLBACK_FLAG_NONE, this, &m_CallbackCookie);
+			reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->RegisterMessageCallback(MessageCallbackFunction, D3D12_MESSAGE_CALLBACK_FLAG_NONE, this, &m_CallbackCookie);
+		}
 	}
 
 	//Create Queues
