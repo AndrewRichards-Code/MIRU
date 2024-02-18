@@ -276,18 +276,16 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_ViewInstanceLocations.resize(viewInstancingDesc.ViewInstanceCount);
 			for (size_t i = 0; i < m_ViewInstanceLocations.size(); i++)
 			{
-				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(i);
 				m_ViewInstanceLocations[i].ViewportArrayIndex = 0;
+				m_ViewInstanceLocations[i].RenderTargetArrayIndex = static_cast<UINT>(i);
 			}
 			viewInstancingDesc.pViewInstanceLocations = m_ViewInstanceLocations.data();
-			viewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_ENABLE_VIEW_INSTANCE_MASKING;
+			viewInstancingDesc.Flags = D3D12_VIEW_INSTANCING_FLAG_NONE;
 			AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(ViewInstancingDesc));
 		}
 
 		m_PipelineStateStreamDesc.SizeInBytes = m_PipelineStateStreamObjects.size() * sizeof(void*);
 		m_PipelineStateStreamDesc.pPipelineStateSubobjectStream = m_PipelineStateStreamObjects.data();
-
-		auto ptr = m_PipelineStateStreamObjects.data();
 
 		MIRU_FATAL(reinterpret_cast<ID3D12Device2*>(m_Device)->CreatePipelineState(&m_PipelineStateStreamDesc, IID_PPV_ARGS(&m_Pipeline)), "ERROR: D3D12: Failed to create Graphics Pipeline.");
 		D3D12SetName(m_Pipeline, m_CI.debugName + " : Graphics Pipeline");
