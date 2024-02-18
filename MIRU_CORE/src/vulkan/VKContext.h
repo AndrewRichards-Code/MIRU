@@ -26,6 +26,9 @@ namespace vulkan
 				//VK_KHR_ray_tracing_pipeline
 				VkPhysicalDeviceRayTracingPipelineFeaturesKHR m_RayTracingPipelineFeatures;
 				VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_RayTracingPipelineProperties;
+
+				//VK_KHR_ray_query
+				VkPhysicalDeviceRayQueryFeaturesKHR m_RayQueryFeatures;
 				
 				//VK_KHR_acceleration_structure
 				VkPhysicalDeviceAccelerationStructureFeaturesKHR m_AccelerationStructureFeatures;

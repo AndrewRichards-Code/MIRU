@@ -15,7 +15,7 @@ namespace base
 			
 			//STATUS: O
 			//D3D12: https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html
-			//Vulkan: VK_KHR_ray_tracing_pipeline and VK_KHR_acceleration_structure: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap38.html#ray-tracing
+			//Vulkan: VK_KHR_ray_tracing_pipeline, VK_KHR_ray_query and VK_KHR_acceleration_structure: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap38.html#ray-tracing
 			RAY_TRACING					= 0x00000001,
 			
 			//STATUS: X

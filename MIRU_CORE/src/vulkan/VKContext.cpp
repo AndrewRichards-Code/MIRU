@@ -449,6 +449,7 @@ void Context::AddExtensions()
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::RAY_TRACING))
 		{
 			m_DeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+			m_DeviceExtensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
 			m_DeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
 
 			//Required by VK_KHR_acceleration_structure.
@@ -601,6 +602,12 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_RayTracingPipelineFeatures;
 				nextPropsAddr = &pdi.m_RayTracingPipelineFeatures.pNext;
 			}
+			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_RAY_QUERY_EXTENSION_NAME))
+			{
+				pdi.m_RayQueryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+				*nextPropsAddr = &pdi.m_RayQueryFeatures;
+				nextPropsAddr = &pdi.m_RayQueryFeatures.pNext;
+			}
 			if (IsActive(pContext->m_ActiveDeviceExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
 			{
 				pdi.m_AccelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
@@ -730,6 +737,10 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			}
 			pdi.m_Properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 			vkGetPhysicalDeviceProperties2(pdi.m_PhysicalDevice, &pdi.m_Properties2);
+
+			//VkPhysicalDeviceFragmentShadingRateFeaturesKHR is not supported at the moment.
+			//This feature therefore must be disabled if mesh shader is requested.
+			pdi.m_DeviceMeshShaderFeatures.primitiveFragmentShadingRateMeshShader = false;
 		}
 #endif
 	}

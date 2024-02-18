@@ -78,7 +78,7 @@ namespace miru
 		//Current Extensions
 
 		//VK_KHR_get_physical_device_properties2 - Promoted to Vulkan 1.1
-#if !defined(MIRU_VK_API_VERSION_1_1)
+#if MIRU_VK_API_VERSION_1_1
 		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFeatures2);
 		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceFormatProperties2);
 		MIRU_PFN_DEFINITION_LOAD(vkGetPhysicalDeviceImageFormatProperties2);
@@ -204,7 +204,7 @@ namespace miru
 		}
 
 		//VK_KHR_buffer_device_address - Promoted to Vulkan 1.2
-#if !defined(MIRU_VK_API_VERSION_1_2)
+#if MIRU_VK_API_VERSION_1_2
 		MIRU_PFN_DEFINITION_LOAD(vkGetBufferDeviceAddress);
 		MIRU_PFN_DEFINITION_LOAD(vkGetBufferOpaqueCaptureAddress);
 		MIRU_PFN_DEFINITION_LOAD(vkGetDeviceMemoryOpaqueCaptureAddress);
@@ -242,7 +242,7 @@ namespace miru
 		}
 
 		//VK_KHR_timeline_semaphore - Promoted to Vulkan 1.2
-#if !defined(MIRU_VK_API_VERSION_1_2)
+#if MIRU_VK_API_VERSION_1_2
 		MIRU_PFN_DEFINITION_LOAD(vkGetSemaphoreCounterValue);
 		MIRU_PFN_DEFINITION_LOAD(vkSignalSemaphore);
 		MIRU_PFN_DEFINITION_LOAD(vkWaitSemaphores);
@@ -261,7 +261,7 @@ namespace miru
 		}
 
 		//VK_KHR_synchronization2 - Promoted to Vulkan 1.3
-#if !defined(MIRU_VK_API_VERSION_1_3)
+#if MIRU_VK_API_VERSION_1_3
 		MIRU_PFN_DEFINITION_LOAD(vkCmdPipelineBarrier2);
 		MIRU_PFN_DEFINITION_LOAD(vkCmdResetEvent2);
 		MIRU_PFN_DEFINITION_LOAD(vkCmdSetEvent2);
@@ -303,7 +303,7 @@ namespace miru
 		}
 
 		//VK_KHR_dynamic_rendering - Promoted to Vulkan 1.3
-#if !defined(MIRU_VK_API_VERSION_1_3)
+#if MIRU_VK_API_VERSION_1_3
 		MIRU_PFN_DEFINITION_LOAD(vkCmdBeginRendering);
 		MIRU_PFN_DEFINITION_LOAD(vkCmdEndRendering);
 #else
