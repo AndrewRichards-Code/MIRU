@@ -253,6 +253,15 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				for (const auto& arg : w_arguments)
 					wchar_arguments.push_back(arg.c_str());
 
+				std::stringstream ss;
+				ss << "Compiling: ";
+				ss << c_arguments[0] + " ";
+				ss << arguments.shaderModel + " ";
+				ss << arguments.entryPoint;
+				ss << " -> ";
+				ss << c_arguments[2];
+				printf("%s\n", ss.str().c_str());
+
 				IDxcResult* results = nullptr;
 				MIRU_WARN(compiler->Compile(&source, wchar_arguments.data(), static_cast<UINT32>(wchar_arguments.size()), includeHandler, IID_PPV_ARGS(&results)), "WARN: BASE: IDxcCompiler3::Compile failed.");
 
@@ -272,7 +281,8 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 				if (errors != nullptr && errors->GetStringLength() != 0)
 				{
 					LogDXCCommandLineArgs();
-					MIRU_WARN(true, (char*)errors->GetStringPointer());
+					std::string errorMessage = "\n" + std::string((char*)errors->GetStringPointer());
+					MIRU_WARN(true, errorMessage.c_str());
 				}
 				MIRU_D3D12_SAFE_RELEASE(errorsName);
 				MIRU_D3D12_SAFE_RELEASE(errors);
