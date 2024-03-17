@@ -153,26 +153,31 @@ if (WIN32)
 	
 	RestoreNuGutPackages()
 	target_sources(MIRU_CORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/packages.config")
-	target_include_directories(MIRU_CORE PRIVATE 
-		"${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/"
-		"${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/"
-		"${CMAKE_BINARY_DIR}/packages/WinPixEventRuntime.1.0.231030001/")
 
-	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/D3D12Core.dll" "D3D12/")
-	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/D3D12Core.pdb" "D3D12/")
-	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/d3d12SDKLayers.dll" "D3D12/")
-	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.D3D12.1.610.5/build/native/bin/x64/d3d12SDKLayers.pdb" "D3D12/")
+	set(MIRU_D3D12_AGILITY_SDK "Microsoft.Direct3D.D3D12.1.613.0")
+	set(MIRU_D3D12_DXC_SDK "Microsoft.Direct3D.DXC.1.8.2403.18")
+	set(MIRU_WIN_PIX_EVENT_RT "WinPixEventRuntime.1.0.231030001")
+
+	target_include_directories(MIRU_CORE PRIVATE 
+		"${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_AGILITY_SDK}/"
+		"${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/"
+		"${CMAKE_BINARY_DIR}/packages/${MIRU_WIN_PIX_EVENT_RT}/")
+
+	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_AGILITY_SDK}/build/native/bin/x64/D3D12Core.dll" "D3D12/")
+	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_AGILITY_SDK}/build/native/bin/x64/D3D12Core.pdb" "D3D12/")
+	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_AGILITY_SDK}/build/native/bin/x64/d3d12SDKLayers.dll" "D3D12/")
+	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_AGILITY_SDK}/build/native/bin/x64/d3d12SDKLayers.pdb" "D3D12/")
 
 	if (NOT DXCOMPILER_FOUND)
-		target_link_directories(MIRU_CORE PRIVATE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/build/native/lib/x64/" "")
+		target_link_directories(MIRU_CORE PRIVATE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/build/native/lib/x64/" "")
 		target_link_libraries(MIRU_CORE PRIVATE dxcompiler.lib)
 		set(DXCOMPILER_FOUND TRUE)
 		message(STATUS "dxcompiler found.")
 
-		CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/build/native/bin/x64/dxcompiler.dll" "")
-		CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/build/native/bin/x64/dxcompiler.pdb" "")
+		CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/build/native/bin/x64/dxcompiler.dll" "")
+		CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/build/native/bin/x64/dxcompiler.pdb" "")
 	endif()
-	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/Microsoft.Direct3D.DXC.1.7.2212.23/build/native/bin/x64/dxil.dll" "")
+	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/build/native/bin/x64/dxil.dll" "")
 endif()
 
 find_package(Vulkan)
