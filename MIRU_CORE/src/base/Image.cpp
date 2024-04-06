@@ -291,12 +291,12 @@ uint32_t Image::GetFormatSize(Image::Format format)
 
 uint32_t Image::GetFormatComponents(FormatData formatData)
 {
-	return formatData.R > 0 ? 1 : 0
-		+ formatData.G > 0 ? 1 : 0
-		+ formatData.B > 0 ? 1 : 0
-		+ formatData.A > 0 ? 1 : 0
-		+ formatData.D > 0 ? 1 : 0
-		+ formatData.S > 0 ? 1 : 0;
+	return (formatData.R > 0 ? 1 : 0)
+		+ (formatData.G > 0 ? 1 : 0)
+		+ (formatData.B > 0 ? 1 : 0)
+		+ (formatData.A > 0 ? 1 : 0)
+		+ (formatData.D > 0 ? 1 : 0)
+		+ (formatData.S > 0 ? 1 : 0);
 }
 
 uint32_t Image::GetFormatComponents(Image::Format format)
