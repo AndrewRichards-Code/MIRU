@@ -2,17 +2,15 @@
 #include "MSCDocumentation.h"
 #include "miru_core.h"
 
+#include <future>
+
 using namespace miru;
+using namespace base;
 using namespace shader_compiler;
 
 bool FoundArg(const std::string& arg, const std::string& value)
 {
 	return (arg.find(value) != std::string::npos);
-}
-
-void BuildBinary(base::Shader::CompileArguments compileArgs)
-{
-	base::Shader::CompileShaderFromSource(compileArgs);
 }
 
 int main(int argc, const char** argv)
@@ -72,6 +70,7 @@ int main(int argc, const char** argv)
 		}
 	}
 
+	std::vector<std::future<void>> rafFutures;
 	bool raf = false;
 	for (int i = 0; i < argc; i++)
 	{
@@ -86,15 +85,33 @@ int main(int argc, const char** argv)
 
 			if (FoundArg(arg, ".json"))
 			{
-				std::filesystem::path filepath = arg;
-				const std::vector<base::Shader::CompileArguments> compileArguments 
-					= base::Shader::LoadCompileArgumentsFromFile(
-					filepath, rafEnvironmentVariables);
+				rafFutures.emplace_back(
+					std::async(std::launch::async, 
+						[&](std::string arg) -> void 
+						{
+							std::filesystem::path filepath = arg;
+							const std::vector<Shader::CompileArguments> compileArguments = Shader::LoadCompileArgumentsFromFile(filepath, rafEnvironmentVariables);
 
-				for (const auto& compileArgument : compileArguments)
-				{
-					BuildBinary(compileArgument);
-				}
+							std::vector<std::future<void>> compileFutures;
+							for (const auto& compileArgument : compileArguments)
+							{
+								compileFutures.emplace_back(
+									std::async(std::launch::async, 
+										[](const Shader::CompileArguments& compileArgument) -> void 
+										{ 
+											Shader::CompileShaderFromSource(compileArgument); 
+										}, 
+										compileArgument));
+							}
+
+							for (const auto& compileFuture : compileFutures)
+							{
+								if (compileFuture.valid())
+									compileFuture.wait();
+							}
+							compileFutures.clear();
+						},
+						arg));
 			}
 		}
 		else 
@@ -105,6 +122,12 @@ int main(int argc, const char** argv)
 	}
 	if (raf)
 	{
+		for (const auto& rafFuture : rafFutures)
+		{
+			if (rafFuture.valid())
+				rafFuture.wait();
+		}
+		rafFutures.clear();
 		return 0;
 	}
 
@@ -205,7 +228,7 @@ int main(int argc, const char** argv)
 	}
 
 	//Build binary
-	base::Shader::CompileArguments compileArgs;
+	Shader::CompileArguments compileArgs;
 	compileArgs.hlslFilepath = filepath;
 	compileArgs.outputDirectory = outputDir;
 	compileArgs.includeDirectories = includeDirs;
@@ -215,7 +238,7 @@ int main(int argc, const char** argv)
 	compileArgs.cso = cso;
 	compileArgs.spv = spv;
 	compileArgs.dxcArguments = dxc_args;
-	BuildBinary(compileArgs);
+	Shader::CompileShaderFromSource(compileArgs);
 
 	if (pause)
 	{
