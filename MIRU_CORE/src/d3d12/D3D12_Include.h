@@ -14,7 +14,7 @@
 #define MIRU_D3D12_AGILITY_SDK_SET_VERSION_AND_PATH \
 extern "C"\
 {\
-	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 613;\
+	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 614;\
 	__declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";\
 }
 
