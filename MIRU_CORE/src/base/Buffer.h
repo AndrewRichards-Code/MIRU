@@ -17,6 +17,12 @@ namespace base
 			uint32_t height;
 			uint32_t depthOrArraySize;
 			uint32_t pixelSize;
+
+			template<typename T>
+			T GetTotalSize()
+			{
+				return static_cast<T>(width * height * depthOrArraySize * pixelSize);
+			}
 		};
 		struct Copy
 		{
