@@ -684,9 +684,12 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 
 	//BLAS and TLAS must be built in seperate commands.
 	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfosBLAS;
-	std::vector<std::vector<VkAccelerationStructureBuildRangeInfoKHR>> vkBuildRangeInfosBLAS;
+	std::vector<VkAccelerationStructureBuildRangeInfoKHR> vkBuildRangeInfosBLAS;
+	std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> vkBuildRangeInfoPtrsBLAS;
+
 	std::vector<VkAccelerationStructureBuildGeometryInfoKHR> vkBuildGeometryInfosTLAS;
-	std::vector<std::vector<VkAccelerationStructureBuildRangeInfoKHR>> vkBuildRangeInfosTLAS;
+	std::vector<VkAccelerationStructureBuildRangeInfoKHR> vkBuildRangeInfosTLAS;
+	std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> vkBuildRangeInfoPtrsTLAS;
 
 	for (size_t i = 0; i < buildGeometryInfos.size(); i++)
 	{
@@ -699,23 +702,27 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		if (asbgi.type == VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR)
 		{
 			vkBuildGeometryInfosBLAS.push_back(asbgi);
-			vkBuildRangeInfosBLAS.push_back({});
 			for (auto& bri : buildRangeInfos[i])
-				vkBuildRangeInfosBLAS.back().push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
+				vkBuildRangeInfosBLAS.push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
 
 		}
 		else if (asbgi.type == VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR)
 		{
 			vkBuildGeometryInfosTLAS.push_back(asbgi);
-			vkBuildRangeInfosTLAS.push_back({});
 			for (auto& bri : buildRangeInfos[i])
-				vkBuildRangeInfosTLAS.back().push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
+				vkBuildRangeInfosTLAS.push_back({ bri.primitiveCount, bri.primitiveOffset, bri.firstVertex, bri.transformOffset });
 		}
 		else
 		{
 			MIRU_FATAL(true, "ERROR: VULKAN: VkAccelerationStructureTypeKHR is not VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR or VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR.");
 		}
 	}
+
+	for (const VkAccelerationStructureBuildRangeInfoKHR& vkBuildRangeInfoBLAS : vkBuildRangeInfosBLAS)
+		vkBuildRangeInfoPtrsBLAS.push_back(&vkBuildRangeInfoBLAS);
+
+	for (const VkAccelerationStructureBuildRangeInfoKHR& vkBuildRangeInfoTLAS : vkBuildRangeInfosTLAS)
+		vkBuildRangeInfoPtrsTLAS.push_back(&vkBuildRangeInfoTLAS);
 
 	if (!vkBuildGeometryInfosBLAS.empty())
 	{
@@ -725,7 +732,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
 		barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_SHADER_READ_BIT;
 		vkCmdPipelineBarrier(m_CmdBuffers[index], VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
-		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosBLAS.size()), vkBuildGeometryInfosBLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfosBLAS.data()));
+		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosBLAS.size()), vkBuildGeometryInfosBLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfoPtrsBLAS.data()));
 	}
 	if (!vkBuildGeometryInfosTLAS.empty())
 	{
@@ -735,7 +742,7 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
 		barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR | VK_ACCESS_SHADER_READ_BIT;
 		vkCmdPipelineBarrier(m_CmdBuffers[index], VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
-		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosTLAS.size()), vkBuildGeometryInfosTLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfosTLAS.data()));
+		vkCmdBuildAccelerationStructuresKHR(m_CmdBuffers[index], static_cast<uint32_t>(vkBuildGeometryInfosTLAS.size()), vkBuildGeometryInfosTLAS.data(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(vkBuildRangeInfoPtrsTLAS.data()));
 	}
 }
 

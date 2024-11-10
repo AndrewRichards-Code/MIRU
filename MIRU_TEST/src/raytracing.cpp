@@ -60,8 +60,8 @@ static void WindowUpdate()
 
 void Raytracing()
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
+	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
+	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
 	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
@@ -312,7 +312,7 @@ void Raytracing()
 	Buffer::CreateInfo asBufferCI;
 	asBufferCI.debugName = "BLASBuffer";
 	asBufferCI.device = context->GetDevice();
-	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
+	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	asBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
 	asBufferCI.allocator = gpu_alloc_0;
