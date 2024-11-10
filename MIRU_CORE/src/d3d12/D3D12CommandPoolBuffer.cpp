@@ -792,6 +792,24 @@ void CommandBuffer::EndRendering(uint32_t index)
 
 			ResolveImage(index, colourImage, colourAttachment.imageLayout, resolveImage, colourAttachment.resolveImageLayout, { resolveRegion });
 		}
+
+		ImageViewRef imageView = ref_cast<ImageView>(colourAttachment.imageView);
+		if (!imageView->IsSwapchainImageView())
+		{
+			ImageRef image = ref_cast<Image>(imageView->GetCreateInfo().image);
+			D3D12_CPU_DESCRIPTOR_HANDLE& RTVDescHandle = imageView->m_RTVDescHandle;
+			RTVDescHandle.ptr = 0;
+		}
+	}
+	if (renderingResource.RenderingInfo.pDepthAttachment)
+	{
+		ImageViewRef imageView = ref_cast<ImageView>(renderingResource.RenderingInfo.pDepthAttachment->imageView);
+		if (!imageView->IsSwapchainImageView())
+		{
+			ImageRef image = ref_cast<Image>(imageView->GetCreateInfo().image);
+			D3D12_CPU_DESCRIPTOR_HANDLE& DSVDescHandle = imageView->m_DSVDescHandle;
+			DSVDescHandle.ptr = 0;
+		}
 	}
 }
 

@@ -180,6 +180,7 @@ if (WIN32)
 	CopyToBinaryDirPostBuild(MIRU_CORE "${CMAKE_BINARY_DIR}/packages/${MIRU_D3D12_DXC_SDK}/build/native/bin/x64/dxil.dll" "")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH $ENV{VULKAN_SDK})
 find_package(Vulkan)
 if (Vulkan_FOUND)
 	message(STATUS "Vulkan supported.")
