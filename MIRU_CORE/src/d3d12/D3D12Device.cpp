@@ -1,61 +1,24 @@
-#include "D3D12Context.h"
+#include "D3D12Instance.h"
+#include "D3D12PhysicalDevice.h"
+#include "D3D12Device.h"
 #include "D3D12Sync.h"
-#include "D3D12Shader.h"
-#include <sstream>
 
 using namespace miru;
 using namespace d3d12;
 
-Context::Context(Context::CreateInfo* pCreateInfo)
+Device::Device(Device::CreateInfo* pCreateInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
 
-	//OpenXR Data
-	OpenXRD3D12Data* openXRD3D12Data = reinterpret_cast<OpenXRD3D12Data*>(m_CI.pNext);
-	if (!(openXRD3D12Data && openXRD3D12Data->type == CreateInfoExtensionStructureTypes::OPENXR_D3D12_DATA))
-		openXRD3D12Data = nullptr;
+	InstanceRef instance = ref_cast<Instance>(GetInstance());
+	PhysicalDeviceRef physicalDevice = ref_cast<PhysicalDevice>(m_CI.physicalDevice);
+	IDXGIAdapter4*& adapter = physicalDevice->m_Adapter;
 
-	//Setup Debug
-	if (m_CI.debugValidationLayers)
-	{
-		MIRU_FATAL(D3D12GetDebugInterface(IID_PPV_ARGS(&m_Debug)), "ERROR: D3D12: Failed to get DebugInterface.");
-		m_Debug->EnableDebugLayer();
-		#if !defined(MIRU_WIN64_UWP)
-		reinterpret_cast<ID3D12Debug1*>(m_Debug)->SetEnableGPUBasedValidation(true);
-		#endif
-	}
-
-	//Create Factory
-	UINT createFactoryFlags = 0;
-	if (m_CI.debugValidationLayers)
-		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-	MIRU_FATAL(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_Factory)), "ERROR: D3D12: Failed to create IDXGIFactory4.");
-
-	//Create PhysicalDevices
-	m_PhysicalDevices = PhysicalDevices(m_Factory);
-	m_PhysicalDeviceIndex = 0;
-	
-	IDXGIAdapter4* adapter = m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_Adapter;
-	if (openXRD3D12Data)
-	{
-		for (const auto& physicalDeviceInfo : m_PhysicalDevices.m_PDIs)
-		{
-			const LUID& openXRAdapterLuid = openXRD3D12Data->adapterLuid;
-			const LUID& adapterLuid = physicalDeviceInfo.m_AdapterDesc.AdapterLuid;
-			if (memcmp(&openXRAdapterLuid, &adapterLuid, sizeof(LUID)) == 0)
-			{
-				adapter = physicalDeviceInfo.m_Adapter;
-				break;
-			}
-			m_PhysicalDeviceIndex++;
-		}
-	}
-
-	//Check provide feature level
+	//Check provided feature level
 	D3D_FEATURE_LEVEL featureLevel;
-	for (size_t i = 0; i < _countof(m_Features.featureLevelsList); i++)
+	for (size_t i = 0; i < std::size(m_Features.featureLevelsList); i++)
 	{
 		featureLevel = m_Features.featureLevelsList[i];
 		HRESULT res = D3D12CreateDevice(adapter, featureLevel, __uuidof(ID3D12Device), nullptr);
@@ -64,18 +27,24 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		else
 			continue;
 	}
+
+	//OpenXR Data
+	Instance::OpenXRD3D12Data* openXRD3D12Data = reinterpret_cast<Instance::OpenXRD3D12Data*>(instance->GetCreateInfo().pNext);
+	if (!(openXRD3D12Data && openXRD3D12Data->type == Instance::CreateInfoExtensionStructureTypes::OPENXR_D3D12_DATA))
+		openXRD3D12Data = nullptr;
+
 	if (openXRD3D12Data && featureLevel < openXRD3D12Data->minFeatureLevel)
 	{
 		MIRU_FATAL(true, "ERROR: D3D12: Selected D3D_FEATURE_LEVEL is less than the minimum for OpenXR.");
 	}
 
+	//Create Device
+	MIRU_FATAL(D3D12CreateDevice(adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device.");
+	D3D12SetName(m_Device, m_CI.debugName);
+
 	m_RI.apiVersionMajor = (((uint32_t)(featureLevel) >> 12) & 0xFU);
 	m_RI.apiVersionMinor = (((uint32_t)(featureLevel) >> 8) & 0xFU);
 	m_RI.apiVersionPatch = 0;
-	
-	//Create Device
-	MIRU_FATAL(D3D12CreateDevice(adapter, featureLevel, IID_PPV_ARGS(&m_Device)), "ERROR: D3D12: Failed to create Device.");
-	D3D12SetName(m_Device, m_CI.deviceDebugName);
 
 	//Enumerate D3D12 Device Features
 	m_Features = Features(m_Device);
@@ -95,7 +64,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
 
 	m_RI.activeExtensions &= m_CI.extensions;
-	m_RI.deviceName = arc::ToString(m_PhysicalDevices.m_PDIs[m_PhysicalDeviceIndex].m_AdapterDesc.Description);
+	m_RI.deviceName = arc::ToString(physicalDevice->m_AdapterDesc.Description);
 
 	//Create Info Queue
 	if (m_CI.debugValidationLayers)
@@ -112,7 +81,7 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 			D3D12_MESSAGE_ID filteredMessageIDs[2] = { D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE, D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE };
 			D3D12_INFO_QUEUE_FILTER filter = {};
 			filter.DenyList.pIDList = filteredMessageIDs;
-			filter.DenyList.NumIDs = _countof(filteredMessageIDs);
+			filter.DenyList.NumIDs = std::size(filteredMessageIDs);
 			m_InfoQueue->AddStorageFilterEntries(&filter);
 
 			reinterpret_cast<ID3D12InfoQueue1*>(m_InfoQueue)->RegisterMessageCallback(MessageCallbackFunction, D3D12_MESSAGE_CALLBACK_FLAG_NONE, this, &m_CallbackCookie);
@@ -132,11 +101,11 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		MIRU_FATAL(m_Device->CreateCommandQueue(&m_QueueDescs[i], IID_PPV_ARGS(&m_Queues[i])), "ERROR: D3D12: Failed to create CommandQueue.");
 
 		std::string typeStr = i == 0 ? "Direct" : i == 1 ? "Compute" : i == 2 ? "Copy" : "";
-		D3D12SetName(m_Queues[i], m_CI.deviceDebugName + ": Queue - " + typeStr);
+		D3D12SetName(m_Queues[i], m_CI.debugName + ": Queue - " + typeStr);
 	}
 }
 
-Context::~Context()
+Device::~Device()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -153,11 +122,6 @@ Context::~Context()
 
 	MIRU_D3D12_SAFE_RELEASE(m_Device);
 
-	for (auto& physicalDeviceInfo : m_PhysicalDevices.m_PDIs)
-		MIRU_D3D12_SAFE_RELEASE(physicalDeviceInfo.m_Adapter);
-
-	MIRU_D3D12_SAFE_RELEASE(m_Factory);
-
 	if (debugDevice)
 	{
 		debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_IGNORE_INTERNAL);
@@ -165,22 +129,7 @@ Context::~Context()
 	}
 }
 
-Context::PhysicalDevices::PhysicalDevices(IDXGIFactory4* factory)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	UINT i = 0;
-	IDXGIAdapter1* adapter;
-	DXGI_ADAPTER_DESC adapterDesc = {};
-	while (factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND)
-	{
-		adapter->GetDesc(&adapterDesc);
-		m_PDIs.push_back({ reinterpret_cast<IDXGIAdapter4*>(adapter), adapterDesc });
-		i++;
-	}
-}
-
-void Context::DeviceWaitIdle()
+void Device::DeviceWaitIdle()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -190,7 +139,7 @@ void Context::DeviceWaitIdle()
 	ci.device = m_Device;
 	ci.signaled = false;
 	ci.timeout = UINT64_MAX; //In nanoseconds
-	
+
 	for (auto& queue : m_Queues)
 	{
 		fence = Fence::Create(&ci);
@@ -198,13 +147,13 @@ void Context::DeviceWaitIdle()
 		ref_cast<Fence>(fence)->GetValue()++;
 		queue->Signal(ref_cast<Fence>(fence)->m_Fence, ref_cast<Fence>(fence)->GetValue());
 		fence->Wait();
-		
+
 		fence->~Fence();
 		fence = nullptr;
 	}
 }
 
-void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
+void Device::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
 {
 	std::string category = std::string(magic_enum::enum_name<D3D12_MESSAGE_CATEGORY>(Category));
 	std::string severity = std::string(magic_enum::enum_name<D3D12_MESSAGE_SEVERITY>(Severity));
@@ -220,37 +169,39 @@ void Context::MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MES
 
 	switch (Severity)
 	{
-		case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-		{
-			MIRU_FATAL(uint32_t(ID), errorMessageStr.c_str());
-			ARC_DEBUG_BREAK;
-			break;
-		}
-		case D3D12_MESSAGE_SEVERITY_ERROR:
-		{
-			MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
-			ARC_DEBUG_BREAK;
-			break;
-		}
-		case D3D12_MESSAGE_SEVERITY_WARNING:
-		{
-			MIRU_WARN(uint32_t(ID), errorMessageStr.c_str());
-			break;
-		}
-		case D3D12_MESSAGE_SEVERITY_INFO:
-		case D3D12_MESSAGE_SEVERITY_MESSAGE:
-		{
-			MIRU_INFO(uint32_t(ID), errorMessageStr.c_str());
-			break;
-		}
+	case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+	{
+		MIRU_FATAL(uint32_t(ID), errorMessageStr.c_str());
+		ARC_DEBUG_BREAK;
+		break;
+	}
+	case D3D12_MESSAGE_SEVERITY_ERROR:
+	{
+		MIRU_ERROR(uint32_t(ID), errorMessageStr.c_str());
+		ARC_DEBUG_BREAK;
+		break;
+	}
+	case D3D12_MESSAGE_SEVERITY_WARNING:
+	{
+		MIRU_WARN(uint32_t(ID), errorMessageStr.c_str());
+		break;
+	}
+	case D3D12_MESSAGE_SEVERITY_INFO:
+	case D3D12_MESSAGE_SEVERITY_MESSAGE:
+	{
+		MIRU_INFO(uint32_t(ID), errorMessageStr.c_str());
+		break;
+	}
 	}
 }
 
-Context::Features::Features(ID3D12Device* device)
+Device::Features::Features(ID3D12Device* device)
 {
+	MIRU_CPU_PROFILE_FUNCTION();
+
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &d3d12Options, sizeof(d3d12Options)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS.");
 
-	featureLevels.NumFeatureLevels = _countof(featureLevelsList);
+	featureLevels.NumFeatureLevels = std::size(featureLevelsList);
 	featureLevels.pFeatureLevelsRequested = featureLevelsList;
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featureLevels, sizeof(featureLevels)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_FEATURE_LEVELS.");
 
@@ -359,11 +310,11 @@ Context::Features::Features(ID3D12Device* device)
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &d3d12Options12, sizeof(d3d12Options12)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS12.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS13, &d3d12Options13, sizeof(d3d12Options13)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS13.");
-	
+
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS14, &d3d12Options14, sizeof(d3d12Options14)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS14.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &d3d12Options15, sizeof(d3d12Options15)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS15.");
-	
+
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &d3d12Options16, sizeof(d3d12Options16)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS16.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &d3d12Options17, sizeof(d3d12Options17)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS17.");
@@ -371,4 +322,8 @@ Context::Features::Features(ID3D12Device* device)
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &d3d12Options18, sizeof(d3d12Options18)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS18.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &d3d12Options19, sizeof(d3d12Options19)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS19.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS20, &d3d12Options20, sizeof(d3d12Options20)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS20.");
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &d3d12Options21, sizeof(d3d12Options21)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS21.");
 }
