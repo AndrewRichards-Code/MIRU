@@ -1,4 +1,5 @@
 #include "D3D12Pipeline.h"
+#include "D3D12Device.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12Shader.h"
 #include "D3D12Image.h"
@@ -9,7 +10,7 @@ using namespace d3d12;
 
 //RenderPass
 RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -25,7 +26,7 @@ RenderPass::~RenderPass()
 
 //Pipeline
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

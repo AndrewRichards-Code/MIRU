@@ -72,7 +72,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string							debugName;
-			void*								device;
+			DeviceRef							device;
 			std::vector<AttachmentDescription>	attachments;				//List of a images and their usage throughout the whole RenderPass.
 			std::vector<SubpassDescription>		subpassDescriptions;		//List of subpass to executed with the RenderPass.
 			std::vector<SubpassDependency>		subpassDependencies;		//List of dependency between subpass. One subpass may have multiple dependcies on other subpasses.
@@ -195,7 +195,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string						debugName;
-			void*							device;
+			DeviceRef						device;
 			PipelineType					type;
 			std::vector<ShaderRef>			shaders;			//One shader only for compute; multiple for Graphics and Ray Tracing.
 			VertexInputState				vertexInputState;	//Graphics only.

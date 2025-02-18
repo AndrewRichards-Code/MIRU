@@ -1,4 +1,5 @@
 #include "VKShader.h"
+#include "VKDevice.h"
 
 #include "base/DescriptorPoolSet.h"
 
@@ -6,7 +7,7 @@ using namespace miru;
 using namespace vulkan;
 
 Shader::Shader(CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device)), m_ShaderModule(VK_NULL_HANDLE)
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device), m_ShaderModule(VK_NULL_HANDLE)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

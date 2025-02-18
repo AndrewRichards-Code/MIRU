@@ -1,5 +1,7 @@
 #include "VKSwapchain.h"
-#include "VKContext.h"
+#include "VKInstance.h"
+#include "VKPhysicalDevice.h"
+#include "VKDevice.h"
 #include "VKSync.h"
 #include "VKCommandPoolBuffer.h"
 
@@ -7,13 +9,13 @@ using namespace miru;
 using namespace vulkan;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Instance(ref_cast<Context>(pCreateInfo->context)->m_Instance),
-	m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device)
+	:m_Instance(ref_cast<Instance>(pCreateInfo->device->GetInstance())->m_Instance),
+	m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	VkPhysicalDevice physicalDevice = ref_cast<Context>(pCreateInfo->context)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
+	VkPhysicalDevice physicalDevice = ref_cast<PhysicalDevice>(pCreateInfo->device->GetPhysicalDevice())->m_PhysicalDevice;
 	uint32_t queueFamilyIndex = 0;
 
 	//Surface
@@ -182,7 +184,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_CI.context->DeviceWaitIdle();
+	m_CI.device->DeviceWaitIdle();
 
 	//Destroy old swapchain
 	for (auto& imageView : m_SwapchainImageViews)
@@ -192,7 +194,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 	vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
 
 	//Create new swapchain
-	VkPhysicalDevice physicalDevice = ref_cast<Context>(m_CI.context)->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
+	VkPhysicalDevice physicalDevice = ref_cast<PhysicalDevice>(m_CI.device->GetPhysicalDevice())->m_PhysicalDevice;
 	MIRU_FATAL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_SurfaceCapability), "ERROR: VULKAN: Failed to get PhysicalDeviceSurfaceCapabilities.");
 
 	m_SwapchainCI.imageExtent = { width, height };
@@ -251,10 +253,10 @@ void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::Semapho
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	const ContextRef& context = ref_cast<Context>(m_CI.context);
+	const DeviceRef& device = ref_cast<Device>(m_CI.device);
 	const CommandPoolRef& pool = ref_cast<CommandPool>(cmdPool);
 
-	VkQueue vkQueue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
+	VkQueue vkQueue = device->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	VkPresentInfoKHR pi = {};
 	pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

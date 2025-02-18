@@ -65,7 +65,6 @@ namespace d3d12
 		Device(Device::CreateInfo* pCreateInfo);
 		~Device();
 
-		NativeHandle GetDevice() override { return m_Device; }
 		void DeviceWaitIdle() override;
 
 		static void MessageCallbackFunction(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext);

@@ -34,7 +34,7 @@ Instance::~Instance()
 	MIRU_D3D12_SAFE_RELEASE(m_Factory);
 }
 
-base::PhysicalDeviceRefs Instance::GetPhysicalDevices()
+base::PhysicalDeviceRefs Instance::GetPhysicalDevicesInternal(base::InstanceRef instance)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -47,10 +47,9 @@ base::PhysicalDeviceRefs Instance::GetPhysicalDevices()
 		if (adapter)
 		{
 			base::PhysicalDevice::CreateInfo physicalDeviceCI;
-			physicalDeviceCI.instance = InstanceRef(this);
+			physicalDeviceCI.instance = instance;
 			physicalDeviceCI.nativeHandle = adapter;
 			physicalDevices.push_back(base::PhysicalDevice::Create(&physicalDeviceCI));
-
 		}
 		
 		MIRU_D3D12_SAFE_RELEASE(adapter);

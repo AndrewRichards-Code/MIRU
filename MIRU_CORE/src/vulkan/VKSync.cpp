@@ -1,4 +1,5 @@
 #include "VKSync.h"
+#include "VKDevice.h"
 #include "VKBuffer.h"
 #include "VKImage.h"
 
@@ -7,7 +8,7 @@ using namespace vulkan;
 
 //Fence
 Fence::Fence(Fence::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -69,7 +70,7 @@ bool Fence::Wait()
 
 //Semaphore
 Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -166,7 +167,7 @@ uint64_t Semaphore::GetCurrentValue()
 
 //Event
 Event::Event(Event::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

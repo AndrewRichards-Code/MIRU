@@ -55,7 +55,7 @@ Instance::Instance(Instance::CreateInfo* pCreateInfo)
 	m_AI.engineVersion = 2;
 	m_AI.apiVersion = apiVersion;
 
-	//Add additional instance/device layers/extensions
+	//Add additional instance layers/extensions
 	{
 		//Debug
 		if (m_CI.debugValidationLayers)
@@ -66,7 +66,6 @@ Instance::Instance(Instance::CreateInfo* pCreateInfo)
 		if (base::GraphicsAPI::IsSetNameAllowed())
 			m_Extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-		
 		//Surface and Swapchain
 		m_Extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		#if defined(VK_USE_PLATFORM_WIN32_KHR)
@@ -75,10 +74,6 @@ Instance::Instance(Instance::CreateInfo* pCreateInfo)
 		m_Extensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 		#endif
 
-		//Displays
-		m_Extensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
-		m_Extensions.push_back(VK_KHR_GET_DISPLAY_PROPERTIES_2_EXTENSION_NAME);
-		
 		//Extensions
 		AddExtensions();
 
@@ -162,7 +157,7 @@ Instance::~Instance()
 	vkDestroyInstance(m_Instance, nullptr);
 }
 
-base::PhysicalDeviceRefs Instance::GetPhysicalDevices()
+base::PhysicalDeviceRefs Instance::GetPhysicalDevicesInternal(base::InstanceRef instance)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -188,7 +183,7 @@ base::PhysicalDeviceRefs Instance::GetPhysicalDevices()
 	for (const VkPhysicalDevice& vkPhysicalDevice : vkPhysicalDevices)
 	{
 		base::PhysicalDevice::CreateInfo physicalDeviceCI;
-		physicalDeviceCI.instance = InstanceRef(this);
+		physicalDeviceCI.instance = instance;
 		physicalDeviceCI.nativeHandle = vkPhysicalDevice;
 		physicalDevices.push_back(base::PhysicalDevice::Create(&physicalDeviceCI));
 	}

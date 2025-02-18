@@ -1,11 +1,12 @@
 #include "D3D12Buffer.h"
+#include "D3D12Device.h"
 #include "D3D12Allocator.h"
 
 using namespace miru;
 using namespace d3d12;
 
 Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -141,7 +142,7 @@ D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const
 }
 
 BufferView::BufferView(BufferView::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

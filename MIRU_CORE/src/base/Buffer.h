@@ -52,7 +52,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			void*			device;
+			DeviceRef		device;
 			UsageBit		usage;
 			ImageDimension	imageDimension = { 0, 0, 0, 0 }; //For D3D12 only: If this buffer is an upload for an image.
 			size_t			size;
@@ -90,7 +90,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string	debugName;
-			void*		device;
+			DeviceRef	device;
 			Type		type;
 			BufferRef	buffer;
 			size_t		offset;

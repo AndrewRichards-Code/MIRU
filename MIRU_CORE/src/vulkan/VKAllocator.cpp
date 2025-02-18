@@ -1,6 +1,8 @@
 #define VMA_IMPLEMENTATION
 #include "VKAllocator.h"
-#include "VKContext.h"
+#include "VKDevice.h"
+#include "VKPhysicalDevice.h"
+#include "VKInstance.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -10,22 +12,25 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Device = *reinterpret_cast<VkDevice*>(m_CI.context->GetDevice());
-	const ContextRef& context = ref_cast<Context>(m_CI.context);
-	
-	bool buffer_device_address = false;
-	buffer_device_address |= context->IsActive(context->m_ActiveDeviceExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
-	buffer_device_address |= (context->m_AI.apiVersion >= VK_API_VERSION_1_2);
+	m_Device = ref_cast<Device>(pCreateInfo->device)->m_Device;
 
-	m_AI.flags = buffer_device_address ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
-	m_AI.physicalDevice = context->m_PhysicalDevices.m_PDIs[0].m_PhysicalDevice;
+	const DeviceRef& device = ref_cast<Device>(m_CI.device);
+	const PhysicalDeviceRef physicalDevice = ref_cast<PhysicalDevice>(device->GetPhysicalDevice());
+	const InstanceRef instance = ref_cast<Instance>(device->GetInstance());
+	
+	bool bufferDeviceAddress = false;
+	bufferDeviceAddress |= Instance::IsActive(device->m_ActiveExtensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+	bufferDeviceAddress |= (instance->m_AI.apiVersion >= VK_API_VERSION_1_2);
+
+	m_AI.flags = bufferDeviceAddress ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
+	m_AI.physicalDevice = physicalDevice->m_PhysicalDevice;
 	m_AI.device = m_Device;
 	m_AI.preferredLargeHeapBlockSize = static_cast<VkDeviceSize>(m_CI.blockSize);
 	m_AI.pAllocationCallbacks = nullptr;
 	m_AI.pDeviceMemoryCallbacks = nullptr;
 	m_AI.pHeapSizeLimit = nullptr;
 	m_AI.pVulkanFunctions = nullptr;
-	m_AI.instance = context->m_Instance;
+	m_AI.instance = instance->m_Instance;
 	m_AI.vulkanApiVersion = 0; // context->m_AI.apiVersion;
 	m_AI.pTypeExternalMemoryHandleTypes = nullptr;
 	

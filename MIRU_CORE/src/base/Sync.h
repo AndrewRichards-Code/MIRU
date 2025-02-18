@@ -17,7 +17,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string debugName;
-			void*		device;
+			DeviceRef	device;
 			bool		signaled;
 			uint64_t	timeout;	//In nanoseconds
 		};
@@ -51,7 +51,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string debugName;
-			void*		device;
+			DeviceRef	device;
 			Type		type;
 		};
 		//Methods
@@ -78,7 +78,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string debugName;
-			void*		device;
+			DeviceRef	device;
 		};
 		//Methods
 	public:

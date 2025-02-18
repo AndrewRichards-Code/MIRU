@@ -15,7 +15,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		std::vector<VkAccelerationStructureGeometryKHR> m_Geometries;
 		VkAccelerationStructureBuildGeometryInfoKHR m_ASBGI;
@@ -31,7 +31,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkAccelerationStructureKHR m_AS;
 		VkAccelerationStructureCreateInfoKHR m_ASCI;

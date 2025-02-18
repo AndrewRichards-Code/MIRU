@@ -1,18 +1,19 @@
 #include "D3D12Swapchain.h"
-#include "D3D12Context.h"
+#include "D3D12Instance.h"
+#include "D3D12Device.h"
 
 using namespace miru;
 using namespace d3d12;
 
 Swapchain::Swapchain(CreateInfo* pCreateInfo)
-	:m_Factory(ref_cast<Context>(pCreateInfo->context)->m_Factory),
-	m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device),
+	:m_Factory(ref_cast<Instance>(pCreateInfo->device->GetInstance())->m_Factory),
+	m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device),
 	m_Swapchain(nullptr)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	ID3D12CommandQueue* cmdQueue = ref_cast<Context>(m_CI.context)->m_Queues[0];
+	ID3D12CommandQueue* cmdQueue = ref_cast<Device>(m_CI.device)->m_Queues[0];
 
 	//Create Swapchain
 	std::pair<DXGI_FORMAT, DXGI_COLOR_SPACE_TYPE> surfaceFormat;
@@ -126,7 +127,7 @@ void Swapchain::Resize(uint32_t width, uint32_t height)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	m_CI.context->DeviceWaitIdle();
+	m_CI.device->DeviceWaitIdle();
 
 	m_Width = width;
 	m_Height = height;

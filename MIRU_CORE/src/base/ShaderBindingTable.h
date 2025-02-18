@@ -23,7 +23,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string					debugName;
-			void*						device;
+			DeviceRef					device;
 			std::vector<ShaderRecord>	shaderRecords;
 			AllocatorRef				allocator;
 		};

@@ -23,8 +23,8 @@ namespace base
 		virtual ~PhysicalDevice() = default;
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 
-		InstanceRef GetInstance() { return m_CI.instance; }
-		const bool& OpenXRValid() { return m_OpenXRValid; }
+		InstanceRef GetInstance() const { return m_CI.instance; }
+		const bool& OpenXRValid() const { return m_OpenXRValid; }
 
 		//Members
 	public:

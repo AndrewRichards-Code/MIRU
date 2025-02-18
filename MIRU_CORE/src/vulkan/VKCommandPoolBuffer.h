@@ -20,7 +20,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 		VkCommandPool m_CmdPool;
 		VkCommandPoolCreateInfo m_CmdPoolCI;
 	};

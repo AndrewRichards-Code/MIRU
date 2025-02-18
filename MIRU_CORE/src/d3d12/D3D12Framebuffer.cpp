@@ -1,4 +1,5 @@
 #include "D3D12Framebuffer.h"
+#include "D3D12Device.h"
 #include "D3D12Image.h"
 #include "D3D12DescriptorPoolSet.h"
 
@@ -8,7 +9,7 @@ using namespace miru;
 using namespace d3d12;
 
 Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -85,7 +86,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	}
 
 	m_FramebufferDescriptorPoolCI.debugName = m_CI.debugName + " : Framebuffer DescriptorPool";
-	m_FramebufferDescriptorPoolCI.device = m_Device;
+	m_FramebufferDescriptorPoolCI.device = m_CI.device;
 	m_FramebufferDescriptorPoolCI.poolSizes = poolSizes;
 	m_FramebufferDescriptorPoolCI.maxSets = 1;
 	m_FramebufferDescriptorPool = base::DescriptorPool::Create(&m_FramebufferDescriptorPoolCI);
@@ -116,7 +117,7 @@ Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
 	}
 
 	m_FramebufferDescriptorSetLayoutCI.debugName = m_CI.debugName + " : Framebuffer DescriptorSetLayout";
-	m_FramebufferDescriptorSetLayoutCI.device = m_Device;
+	m_FramebufferDescriptorSetLayoutCI.device = m_CI.device;
 	m_FramebufferDescriptorSetLayoutCI.descriptorSetLayoutBinding = framebufferDescriptorBindings;
 	m_FramebufferDescriptorSetLayout = DescriptorSetLayout::Create(&m_FramebufferDescriptorSetLayoutCI);
 

@@ -1,12 +1,13 @@
 #include "VKAccelerationStructure.h"
+#include "VKDevice.h"
 #include "VKBuffer.h"
 #include "VKPipeline.h"
 
 using namespace miru;
 using namespace vulkan;
 
-AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo) 
-	:m_Device(*reinterpret_cast<VkDevice*>(pBuildGeometryInfo->device))
+AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo)
+	:m_Device(ref_cast<Device>(pBuildGeometryInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -99,7 +100,7 @@ AccelerationStructureBuildInfo::~AccelerationStructureBuildInfo()
 }
 
 AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

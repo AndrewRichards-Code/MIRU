@@ -20,7 +20,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			ContextRef		context;
+			DeviceRef		device;
 			void*			pWindow;
 			uint32_t		width;
 			uint32_t		height;

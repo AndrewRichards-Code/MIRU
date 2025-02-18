@@ -1,11 +1,12 @@
 #include "D3D12Image.h"
+#include "D3D12Device.h"
 #include "D3D12Allocator.h"
 
 using namespace miru;
 using namespace d3d12;
 
 Image::Image(Image::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -601,7 +602,7 @@ D3D12_RESOURCE_STATES Image::ToD3D12ImageLayout(Image::Layout layout)
 }
 
 ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -899,7 +900,7 @@ ImageView::~ImageView()
 }
 
 Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

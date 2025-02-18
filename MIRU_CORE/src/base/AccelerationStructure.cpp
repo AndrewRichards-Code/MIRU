@@ -1,10 +1,12 @@
 #include "miru_core_common.h"
 #if defined (MIRU_D3D12)
 #include "d3d12/D3D12AccelerationStructure.h"
+#include "d3d12/D3D12Device.h"
 #include "d3d12/D3D12Buffer.h"
 #endif
 #if defined (MIRU_VULKAN)
 #include "vulkan/VKAccelerationStructure.h"
+#include "vulkan/VKDevice.h"
 #include "vulkan/VKBuffer.h"
 #endif
 
@@ -55,7 +57,7 @@ AccelerationStructureRef AccelerationStructure::Create(AccelerationStructure::Cr
 	}
 }
 
-DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, const AccelerationStructureRef& accelerationStructure)
+DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(DeviceRef device, const AccelerationStructureRef& accelerationStructure)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -71,7 +73,7 @@ DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, co
 		info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
 		info.pNext = nullptr;
 		info.accelerationStructure = ref_cast<vulkan::AccelerationStructure>(accelerationStructure)->m_AS;
-		return vulkan::vkGetAccelerationStructureDeviceAddressKHR(*reinterpret_cast<VkDevice*>(device), &info);
+		return vulkan::vkGetAccelerationStructureDeviceAddressKHR(ref_cast<vulkan::Device>(device)->m_Device, &info);
 		#else
 		return 0;
 		#endif
@@ -81,7 +83,7 @@ DeviceAddress miru::base::GetAccelerationStructureDeviceAddress(void* device, co
 	}
 }
 
-DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const BufferRef& buffer)
+DeviceAddress miru::base::GetBufferDeviceAddress(DeviceRef device, const BufferRef& buffer)
 {
 	switch (GraphicsAPI::GetAPI())
 	{
@@ -97,7 +99,7 @@ DeviceAddress miru::base::GetBufferDeviceAddress(void* device, const BufferRef& 
 		info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 		info.pNext = nullptr;
 		info.buffer = ref_cast<vulkan::Buffer>(buffer)->m_Buffer;
-		return vulkan::vkGetBufferDeviceAddress(*reinterpret_cast<VkDevice*>(device), &info);
+		return vulkan::vkGetBufferDeviceAddress(ref_cast<vulkan::Device>(device)->m_Device, &info);
 		#else
 		return 0;
 		#endif

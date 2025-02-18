@@ -47,7 +47,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			ContextRef		context;
+			DeviceRef		device;
 			BlockSize		blockSize;
 			PropertiesBit	properties;
 		};

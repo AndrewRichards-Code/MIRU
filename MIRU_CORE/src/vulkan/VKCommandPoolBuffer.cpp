@@ -1,5 +1,5 @@
 #include "VKCommandPoolBuffer.h"
-#include "VKContext.h"
+#include "VKDevice.h"
 #include "VKSwapchain.h"
 #include "VKSync.h"
 #include "VKImage.h"
@@ -14,7 +14,7 @@ using namespace vulkan;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->context->GetDevice()))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -53,7 +53,7 @@ void CommandPool::Reset(bool releaseResources)
 uint32_t CommandPool::GetQueueFamilyIndex(const CommandPool::QueueType& type)
 {
 	uint32_t index = 0;
-	for (auto& queueFamilyProperty : ref_cast<Context>(m_CI.context)->m_QueueFamilyProperties)
+	for (auto& queueFamilyProperty : ref_cast<Device>(m_CI.device)->m_QueueFamilyProperties)
 	{
 		VkQueueFlagBits flags = static_cast<VkQueueFlagBits>(queueFamilyProperty.queueFlags);
 		if (arc::BitwiseCheck(flags, VK_QUEUE_GRAPHICS_BIT)
@@ -230,9 +230,9 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
 
-	const ContextRef& context = ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context);
+	const DeviceRef& device = ref_cast<Device>(m_CI.commandPool->GetCreateInfo().device);
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
-	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
+	VkQueue queue = device->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	MIRU_FATAL(vkQueueSubmit(queue, static_cast<uint32_t>(vkSubmitInfos.size()), vkSubmitInfos.data(), vkFence), "ERROR: VULKAN: Failed to submit Queue.");
 }
@@ -303,9 +303,9 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 
 	VkFence vkFence = fence ? ref_cast<Fence>(fence)->m_Fence : VK_NULL_HANDLE;
 
-	const ContextRef& context = ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context);
+	const DeviceRef& device = ref_cast<Device>(m_CI.commandPool->GetCreateInfo().device);
 	const CommandPoolRef& pool = ref_cast<CommandPool>(m_CI.commandPool);
-	VkQueue queue = context->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
+	VkQueue queue = device->m_Queues[pool->GetQueueFamilyIndex(pool->GetCreateInfo().queueType)][0];
 
 	vkQueueSubmit2(queue, static_cast<uint32_t>(vkSubmitInfo2s.size()), vkSubmitInfo2s.data(), vkFence);
 }

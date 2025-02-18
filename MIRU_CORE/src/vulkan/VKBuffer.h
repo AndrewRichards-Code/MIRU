@@ -18,7 +18,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkBuffer m_Buffer;
 		VkBufferCreateInfo m_BufferCI = {};

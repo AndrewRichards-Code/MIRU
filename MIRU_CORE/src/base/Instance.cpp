@@ -30,3 +30,16 @@ InstanceRef Instance::Create(Instance::CreateInfo* pCreateInfo)
 		MIRU_FATAL(true, "ERROR: BASE: Unknown GraphicsAPI."); return nullptr;
 	}
 }
+
+PhysicalDeviceRefs Instance::GetPhysicalDevices(InstanceRef instance)
+{
+	if (instance)
+	{
+		return instance->GetPhysicalDevicesInternal(instance);
+	}
+	else
+	{
+		MIRU_FATAL(true, "ERROR: BASE: Invalid Instance.");
+		return PhysicalDeviceRefs();
+	}
+}

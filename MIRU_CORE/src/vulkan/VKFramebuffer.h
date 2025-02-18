@@ -15,7 +15,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkFramebuffer m_Framebuffer;
 		VkFramebufferCreateInfo m_FramebufferCI;

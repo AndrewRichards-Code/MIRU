@@ -50,7 +50,6 @@ namespace vulkan
 		Device(CreateInfo* pCreateInfo);
 		~Device();
 
-		NativeHandle GetDevice() override { return &m_Device; }
 		void DeviceWaitIdle() override { vkDeviceWaitIdle(m_Device); };
 
 	private:

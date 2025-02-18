@@ -28,10 +28,11 @@ namespace base
 		struct CreateInfo
 		{
 			std::string	debugName;
-			ContextRef	context;
+			DeviceRef	device;
 			FlagBit		flags;
 			QueueType	queueType;
 		};
+		
 		//Methods
 	public:
 		static CommandPoolRef Create(CreateInfo* pCreateInfo);

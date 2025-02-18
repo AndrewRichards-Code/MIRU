@@ -2,6 +2,7 @@
 
 #include "miru_core_common.h"
 #include "PipelineHelper.h"
+#include "Device.h"
 
 namespace miru
 {
@@ -138,7 +139,7 @@ namespace base
 				HOST_DEVICE
 			};
 
-			void*						device;
+			DeviceRef					device;
 			Type						type;
 			FlagBit						flags;
 			Mode						mode;
@@ -195,7 +196,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			void*			device;
+			DeviceRef		device;
 			FlagBit			flags;
 			BufferRef		buffer;
 			size_t			offset;
@@ -215,7 +216,7 @@ namespace base
 		CreateInfo m_CI = {};
 	};
 
-	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(void* device, const AccelerationStructureRef& accelerationStructure);
-	MIRU_API DeviceAddress GetBufferDeviceAddress(void* device, const BufferRef& buffer);
+	MIRU_API DeviceAddress GetAccelerationStructureDeviceAddress(DeviceRef device, const AccelerationStructureRef& accelerationStructure);
+	MIRU_API DeviceAddress GetBufferDeviceAddress(DeviceRef device, const BufferRef& buffer);
 }
 }

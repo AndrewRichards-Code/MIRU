@@ -1,11 +1,12 @@
 #include "VKBuffer.h"
+#include "VKDevice.h"
 #include "base/Allocator.h"
 
 using namespace miru;
 using namespace vulkan;
 
 Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -54,7 +55,7 @@ Buffer::~Buffer()
 }
 
 BufferView::BufferView(CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

@@ -1,5 +1,5 @@
 #include "D3D12CommandPoolBuffer.h"
-#include "D3D12Context.h"
+#include "D3D12Device.h"
 #include "D3D12Swapchain.h"
 #include "D3D12Sync.h"
 #include "D3D12Buffer.h"
@@ -16,12 +16,12 @@ using namespace d3d12;
 
 //CmdPool
 CommandPool::CommandPool(CommandPool::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Context>(pCreateInfo->context)->m_Device)
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Queue = ref_cast<Context>(pCreateInfo->context)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
+	m_Queue = ref_cast<Device>(pCreateInfo->device)->m_Queues[GetCommandQueueIndex(pCreateInfo->queueType)];
 }
 
 CommandPool::~CommandPool()
@@ -55,7 +55,7 @@ void CommandPool::Reset(bool releaseResources)
 uint32_t CommandPool::GetCommandQueueIndex(const CommandPool::QueueType& type)
 {
 	uint32_t index = 0;
-	for (auto& queueDesc : ref_cast<Context>(m_CI.context)->m_QueueDescs)
+	for (auto& queueDesc : ref_cast<Device>(m_CI.device)->m_QueueDescs)
 	{
 		D3D12_COMMAND_LIST_TYPE flags = queueDesc.Type;
 		if (flags == D3D12_COMMAND_LIST_TYPE_DIRECT && type == QueueType::GRAPHICS)
@@ -95,7 +95,7 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 		End(static_cast<uint32_t>(i));
 	}
 
-	switch (ref_cast<Context>(m_CI.commandPool->GetCreateInfo().context)->m_Features.d3d12Options.ResourceBindingTier)
+	switch (ref_cast<Device>(m_CI.commandPool->GetCreateInfo().device)->m_Features.d3d12Options.ResourceBindingTier)
 	{
 	case D3D12_RESOURCE_BINDING_TIER_3:
 	{
@@ -110,8 +110,8 @@ CommandBuffer::CommandBuffer(CommandBuffer::CreateInfo* pCreateInfo)
 	case D3D12_RESOURCE_BINDING_TIER_1:
 	default:
 	{
-		const auto& contextRI = m_CI.commandPool->GetCreateInfo().context->GetResultInfo();
-		uint32_t maxUAVsPerStage = (contextRI.apiVersionMajor == 11 && contextRI.apiVersionMinor == 0) ? 8 : 64;
+		const auto& deviceRI = m_CI.commandPool->GetCreateInfo().device->GetResultInfo();
+		uint32_t maxUAVsPerStage = (deviceRI.apiVersionMajor == 11 && deviceRI.apiVersionMinor == 0) ? 8 : 64;
 		m_ResourceBindingCapabilities = { 1000000, 14, 128, maxUAVsPerStage, 16, 2048 };
 		break;
 	}
@@ -429,7 +429,7 @@ void CommandBuffer::ClearColourImage(uint32_t index, const base::ImageRef& image
 		{
 			ImageView::CreateInfo imageViewCI;
 			imageViewCI.debugName = "CommandBuffer::ClearColourImage RTV: " + std::to_string(h) + " MIP: " + std::to_string(i);
-			imageViewCI.device = m_Device;
+			imageViewCI.device = m_CI.commandPool->GetCreateInfo().device;
 			imageViewCI.image = image;
 			imageViewCI.viewType = image->GetCreateInfo().type;
 			imageViewCI.subresourceRange = subresourceRanges[h];
@@ -472,7 +472,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 		{
 			ImageView::CreateInfo imageViewCI;
 			imageViewCI.debugName = "CommandBuffer::ClearColourImage DSV: " + std::to_string(h) + " MIP: " + std::to_string(i);
-			imageViewCI.device = m_Device;
+			imageViewCI.device = m_CI.commandPool->GetCreateInfo().device;;
 			imageViewCI.image = image;
 			imageViewCI.viewType = image->GetCreateInfo().type;
 			imageViewCI.subresourceRange = subresourceRanges[h];
@@ -1028,9 +1028,9 @@ void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector
 		const AccelerationStructureBuildInfo::BuildGeometryInfo& bgi = buildGeometryInfo->GetBuildGeometryInfo();
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().context->GetDevice(), bgi.dstAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.DestAccelerationStructureData = bgi.dstAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().device, bgi.dstAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.Inputs = ref_cast<AccelerationStructureBuildInfo>(buildGeometryInfo)->m_BRASI;
-		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().context->GetDevice(), bgi.srcAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
+		desc.SourceAccelerationStructureData = bgi.srcAccelerationStructure ? static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(GetAccelerationStructureDeviceAddress(m_CI.commandPool->GetCreateInfo().device, bgi.srcAccelerationStructure)) : D3D12_GPU_VIRTUAL_ADDRESS(0);
 		desc.ScratchAccelerationStructureData = static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(bgi.scratchData.deviceAddress);
 		
 		reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
@@ -1195,7 +1195,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 
 	CHECK_VALID_INDEX_RETURN(index);
 
-	const bool& useBarrier2 = arc::BitwiseCheck(m_CI.commandPool->GetCreateInfo().context->GetResultInfo().activeExtensions, base::Context::ExtensionsBit::SYNCHRONISATION_2);
+	const bool& useBarrier2 = arc::BitwiseCheck(m_CI.commandPool->GetCreateInfo().device->GetResultInfo().activeExtensions, base::Device::ExtensionsBit::SYNCHRONISATION_2);
 
 	Barrier::CreateInfo bCI;
 	Barrier2::CreateInfo b2CI;

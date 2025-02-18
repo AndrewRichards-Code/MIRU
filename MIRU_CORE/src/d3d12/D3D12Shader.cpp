@@ -1,4 +1,5 @@
 #include "D3D12Shader.h"
+#include "D3D12Device.h"
 
 #include "base/DescriptorPoolSet.h"
 
@@ -9,7 +10,7 @@ using namespace miru;
 using namespace d3d12;
 
 Shader::Shader(CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

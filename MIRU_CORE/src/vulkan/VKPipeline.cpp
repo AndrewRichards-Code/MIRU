@@ -1,14 +1,14 @@
 #include "VKPipeline.h"
+#include "VKDevice.h"
 #include "VKDescriptorPoolSet.h"
 #include "VKShader.h"
-#include "VKContext.h"
 
 using namespace miru;
 using namespace vulkan;
 
 //RenderPass
 RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -115,7 +115,7 @@ RenderPass::~RenderPass()
 
 //Pipeline
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -423,9 +423,9 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		VKSetName<VkPipeline>(m_Device, m_Pipeline, m_CI.debugName + " : Ray Tracing Pipeline");
 
 		//Get ShaderHandles
-		const ContextRef& vkContext = ref_cast<Context>(m_CI.rayTracingInfo.allocator->GetCreateInfo().context);
-		uint32_t vkHandleSize = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleSize;
-		uint32_t vkHandleSizeAligned = vkContext->m_PhysicalDevices.m_PDIs[0].m_RayTracingPipelineProperties.shaderGroupHandleAlignment;
+		const DeviceRef& device = ref_cast<Device>(m_CI.rayTracingInfo.allocator->GetCreateInfo().device);
+		uint32_t vkHandleSize = device->m_FeatureAndProperties.m_RayTracingPipelineProperties.shaderGroupHandleSize;
+		uint32_t vkHandleSizeAligned = device->m_FeatureAndProperties.m_RayTracingPipelineProperties.shaderGroupHandleAlignment;
 
 		const uint32_t& handleSize = vkHandleSize;
 		const size_t handleSizeAligned = arc::Align(vkHandleSize, vkHandleSizeAligned);

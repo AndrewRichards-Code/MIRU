@@ -1,4 +1,5 @@
 #include "D3D12DescriptorPoolSet.h"
+#include "D3D12Device.h"
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
 #include "D3D12AccelerationStructure.h"
@@ -8,7 +9,7 @@ using namespace d3d12;
 
 //DescriptorPool
 DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -22,7 +23,7 @@ DescriptorPool::~DescriptorPool()
 
 //DescriptorSetLayout
 DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -139,7 +140,7 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(ref_cast<DescriptorPool>(pCreateInfo->descriptorPool)->GetCreateInfo().device))
+	:m_Device(ref_cast<Device>(pCreateInfo->descriptorPool->GetCreateInfo().device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

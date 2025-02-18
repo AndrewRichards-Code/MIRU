@@ -14,20 +14,33 @@ Device::Device(CreateInfo* pCreateInfo)
 	InstanceRef instance = ref_cast<Instance>(GetInstance());
 	PhysicalDeviceRef physicalDeviceRef = ref_cast<PhysicalDevice>(m_CI.physicalDevice);
 	VkPhysicalDevice physicalDevice = reinterpret_cast<VkPhysicalDevice>(physicalDeviceRef->m_CI.nativeHandle);
-
-	//Device
-	AddExtensions();
-
-	//OpenXR Data
-	Instance::OpenXRVulkanData* openXRVulkanData = reinterpret_cast<Instance::OpenXRVulkanData*>(instance->GetCreateInfo().pNext);
-	if (!(openXRVulkanData && openXRVulkanData->type == Instance::CreateInfoExtensionStructureTypes::OPENXR_VULKAN_DATA))
-		openXRVulkanData = nullptr;
-
-	//OpenXR Extensions
-	if (openXRVulkanData)
+	
+	//Add additional device layers/extensions
 	{
-		for (const auto& deviceExtension : openXRVulkanData->deviceExtensions)
-			m_Extensions.push_back(deviceExtension);
+		//Debug
+		if (m_CI.debugValidationLayers)
+		{
+			m_Layers.push_back("VK_LAYER_KHRONOS_validation");
+			m_Layers.push_back("VK_LAYER_KHRONOS_synchronization2");
+		}
+
+		//Surface and Swapchain
+		m_Extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+		//Device
+		AddExtensions();
+
+		//OpenXR Data
+		Instance::OpenXRVulkanData* openXRVulkanData = reinterpret_cast<Instance::OpenXRVulkanData*>(instance->GetCreateInfo().pNext);
+		if (!(openXRVulkanData && openXRVulkanData->type == Instance::CreateInfoExtensionStructureTypes::OPENXR_VULKAN_DATA))
+			openXRVulkanData = nullptr;
+
+		//OpenXR Extensions
+		if (openXRVulkanData)
+		{
+			for (const auto& deviceExtension : openXRVulkanData->deviceExtensions)
+				m_Extensions.push_back(deviceExtension);
+		}
 	}
 
 	uint32_t queueFamilyPropertiesCount = 0;
@@ -109,8 +122,8 @@ Device::Device(CreateInfo* pCreateInfo)
 
 	SetResultInfo();
 
-	//Set Names
-	//VKSetName<VkInstance>(m_Device, m_Instance, std::string(m_AI.pEngineName) + " - VkInstance");
+	//Set Name
+	VKSetName<VkInstance>(m_Device, instance->m_Instance, "Instance: " + std::string(instance->m_AI.pEngineName));
 	VKSetName<VkPhysicalDevice>(m_Device, physicalDevice, "PhysicalDevice: " + std::string(physicalDeviceRef->m_Properties.deviceName));
 	VKSetName<VkDevice>(m_Device, m_Device, m_CI.debugName);
 
@@ -307,8 +320,8 @@ Device::FeaturesAndProperties::FeaturesAndProperties(const Device* device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	PhysicalDeviceRef physicalDevice = ref_cast<PhysicalDevice>(device->m_CI.physicalDevice);
-	Instance* instance = ((vulkan::Instance*)physicalDevice->m_CI.instance);
+	PhysicalDeviceRef physicalDevice = ref_cast<PhysicalDevice>(device->GetPhysicalDevice());
+	InstanceRef instance = ref_cast<Instance>(device->GetInstance());
 
 	uint32_t instanceApiVersion = instance->m_AI.apiVersion;
 	uint32_t deviceApiVersion = physicalDevice->m_Properties.apiVersion;

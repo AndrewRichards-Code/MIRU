@@ -37,7 +37,10 @@ namespace base
 		const CreateInfo& GetCreateInfo() { return m_CI; }
 		const ResultInfo& GetResultInfo() { return m_RI; }
 
-		virtual PhysicalDeviceRefs GetPhysicalDevices() = 0;
+		static PhysicalDeviceRefs GetPhysicalDevices(InstanceRef instance);
+
+	protected:
+		virtual PhysicalDeviceRefs GetPhysicalDevicesInternal(InstanceRef instance) = 0;
 
 		//Members
 	protected:

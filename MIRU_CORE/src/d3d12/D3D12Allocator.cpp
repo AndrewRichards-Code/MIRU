@@ -1,5 +1,6 @@
 #include "D3D12Allocator.h"
-#include "D3D12Context.h"
+#include "D3D12Device.h"
+#include "D3D12PhysicalDevice.h"
 
 using namespace miru;
 using namespace d3d12;
@@ -9,14 +10,13 @@ Allocator::Allocator(Allocator::CreateInfo* pCreateInfo)
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	m_CI = *pCreateInfo;
-	m_Device = reinterpret_cast<ID3D12Device*>(m_CI.context->GetDevice());
-
+	m_Device = ref_cast<Device>(m_CI.device)->m_Device;
 
 	m_AllocatorDesc.Flags = D3D12MA::ALLOCATOR_FLAG_NONE;
 	m_AllocatorDesc.pDevice = m_Device;
 	m_AllocatorDesc.PreferredBlockSize = static_cast<UINT64>(m_CI.blockSize);
 	m_AllocatorDesc.pAllocationCallbacks = nullptr;
-	m_AllocatorDesc.pAdapter = dynamic_cast<IDXGIAdapter*>(ref_cast<Context>(m_CI.context)->m_PhysicalDevices.m_PDIs[0].m_Adapter);
+	m_AllocatorDesc.pAdapter = reinterpret_cast<IDXGIAdapter*>(ref_cast<PhysicalDevice>(m_CI.device->GetPhysicalDevice())->m_Adapter);
 
 	MIRU_FATAL(D3D12MA::CreateAllocator(&m_AllocatorDesc, &m_Allocator), "ERROR: D3D12: Failed to create Allocator.");
 	//D3D12SetName(m_MemoryHeap, m_CI.debugName);

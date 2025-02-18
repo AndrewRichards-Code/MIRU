@@ -16,7 +16,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkDescriptorPool m_DescriptorPool;
 		VkDescriptorPoolCreateInfo m_DescriptorPoolCI;
@@ -32,7 +32,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkDescriptorSetLayoutCreateInfo m_DescriptorSetLayoutCI;
@@ -53,7 +53,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 		VkDescriptorSetAllocateInfo m_DescriptorSetAI;

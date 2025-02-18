@@ -26,7 +26,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkShaderModule m_ShaderModule;
 		VkShaderModuleCreateInfo m_ShaderModuleCI;

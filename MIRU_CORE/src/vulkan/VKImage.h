@@ -54,7 +54,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkSampler m_Sampler;
 		VkSamplerCreateInfo m_SamplerCI = {};

@@ -29,7 +29,7 @@ namespace vulkan
 		Instance(Instance::CreateInfo* pCreateInfo);
 		~Instance();
 
-		base::PhysicalDeviceRefs GetPhysicalDevices() override;
+		base::PhysicalDeviceRefs GetPhysicalDevicesInternal(base::InstanceRef instance) override;
 
 		static bool IsActive(std::vector<const char*> list, const char* name);
 

@@ -1,5 +1,5 @@
 #include "miru_core_common.h"
-#include "base/Context.h"
+#include "base/Device.h"
 #if defined (MIRU_D3D12)
 #include "d3d12/D3D12Swapchain.h"
 #include "d3d12/D3D12Image.h"
@@ -47,7 +47,7 @@ void Swapchain::FillSwapchainImageAndViews(void** ppImages, void* pImageViews, u
 
 	Image::CreateInfo swapchainImageCI;
 	swapchainImageCI.debugName = "SwapchainImage";
-	swapchainImageCI.device = m_CI.context->GetDevice();
+	swapchainImageCI.device = m_CI.device;
 	swapchainImageCI.type = Image::Type::TYPE_2D;
 	swapchainImageCI.format = Image::Format::UNKNOWN;
 	swapchainImageCI.width = width;
@@ -64,7 +64,7 @@ void Swapchain::FillSwapchainImageAndViews(void** ppImages, void* pImageViews, u
 
 	ImageView::CreateInfo swapchainImageViewCI;
 	swapchainImageViewCI.debugName = "SwapchainImageViewCI";
-	swapchainImageViewCI.device = m_CI.context->GetDevice();
+	swapchainImageViewCI.device = m_CI.device;
 	swapchainImageViewCI.image = nullptr;
 	swapchainImageViewCI.viewType = Image::Type::TYPE_2D;
 	swapchainImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };

@@ -1,4 +1,5 @@
 #include "D3D12Sync.h"
+#include "D3D12Device.h"
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
 
@@ -7,7 +8,7 @@ using namespace d3d12;
 
 //Fence
 Fence::Fence(Fence::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -73,7 +74,7 @@ void Fence::Signal()
 
 //Semaphore
 Semaphore::Semaphore(Semaphore::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

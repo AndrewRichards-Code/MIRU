@@ -136,7 +136,7 @@ void Device::DeviceWaitIdle()
 	base::FenceRef fence;
 	Fence::CreateInfo ci;
 	ci.debugName = "";
-	ci.device = m_Device;
+	ci.device = DeviceRef(DeviceRef(), this); //Aliasing constructor: https://en.cppreference.com/w/cpp/memory/shared_ptr/shared_ptr
 	ci.signaled = false;
 	ci.timeout = UINT64_MAX; //In nanoseconds
 

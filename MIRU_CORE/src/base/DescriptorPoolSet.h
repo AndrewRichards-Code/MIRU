@@ -40,7 +40,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string				debugName;
-			void*					device;
+			DeviceRef				device;
 			std::vector<PoolSize>	poolSizes;
 			uint32_t				maxSets;
 		};
@@ -69,7 +69,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string				debugName;
-			void*					device;
+			DeviceRef				device;
 			std::vector<Binding>	descriptorSetLayoutBinding; //Order by type and then by ascending binding number.
 		};
 		//Methods

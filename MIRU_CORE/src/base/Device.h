@@ -111,10 +111,9 @@ namespace miru
 			const CreateInfo& GetCreateInfo() { return m_CI; }
 			const ResultInfo& GetResultInfo() { return m_RI; }
 
-			InstanceRef GetInstance() { return m_CI.physicalDevice->GetInstance(); }
-			PhysicalDeviceRef GetPhysicalDevice() { return m_CI.physicalDevice; }
+			InstanceRef GetInstance() const { return m_CI.physicalDevice->GetInstance(); }
+			PhysicalDeviceRef GetPhysicalDevice() const { return m_CI.physicalDevice; }
 
-			virtual NativeHandle GetDevice() = 0;
 			virtual void DeviceWaitIdle() = 0;
 
 			//Member

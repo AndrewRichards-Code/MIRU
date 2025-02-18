@@ -24,7 +24,7 @@ namespace d3d12
 		Instance(Instance::CreateInfo* pCreateInfo);
 		~Instance();
 
-		base::PhysicalDeviceRefs GetPhysicalDevices() override;
+		base::PhysicalDeviceRefs GetPhysicalDevicesInternal(base::InstanceRef instance) override;
 
 		//Member
 	public:

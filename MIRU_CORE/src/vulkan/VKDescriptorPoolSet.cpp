@@ -1,4 +1,5 @@
 #include "VKDescriptorPoolSet.h"
+#include "VKDevice.h"
 #include "VKBuffer.h"
 #include "VKImage.h"
 #include "VKAccelerationStructure.h"
@@ -8,7 +9,7 @@ using namespace vulkan;
 
 //DescriptorPool
 DescriptorPool::DescriptorPool(DescriptorPool::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -37,7 +38,7 @@ DescriptorPool::~DescriptorPool()
 
 //DescriptorSetLayout
 DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -70,7 +71,7 @@ DescriptorSetLayout::~DescriptorSetLayout()
 
 //DescriptorSet
 DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(ref_cast<DescriptorPool>(pCreateInfo->descriptorPool)->GetCreateInfo().device))
+	:m_Device(ref_cast<Device>(pCreateInfo->descriptorPool->GetCreateInfo().device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

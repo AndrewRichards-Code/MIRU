@@ -15,7 +15,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkRenderPass m_RenderPass;
 		VkRenderPassCreateInfo m_RenderPassCI;
@@ -40,7 +40,7 @@ namespace vulkan
 
 		//Members
 	public:
-		VkDevice& m_Device;
+		VkDevice m_Device;
 
 		VkPipeline m_Pipeline;
 		VkGraphicsPipelineCreateInfo m_GPCI = {};

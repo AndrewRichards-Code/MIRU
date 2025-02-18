@@ -1,4 +1,5 @@
 #include "VKFramebuffer.h"
+#include "VKDevice.h"
 #include "VKPipeline.h"
 #include "VKImage.h"
 
@@ -6,7 +7,7 @@ using namespace miru;
 using namespace vulkan;
 
 Framebuffer::Framebuffer(Framebuffer::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

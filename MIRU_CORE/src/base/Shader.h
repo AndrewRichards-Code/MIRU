@@ -87,7 +87,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string										debugName;
-			void*											device;
+			DeviceRef										device;
 			std::vector<std::pair<StageBit, std::string>>	stageAndEntryPoints;
 			std::string										binaryFilepath;
 			std::vector<char>								binaryCode;

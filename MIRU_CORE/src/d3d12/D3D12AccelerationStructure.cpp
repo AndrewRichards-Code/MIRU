@@ -1,4 +1,5 @@
 #include "D3D12AccelerationStructure.h"
+#include "D3D12Device.h"
 #include "D3D12Buffer.h"
 #include "D3D12Pipeline.h"
 
@@ -6,7 +7,7 @@ using namespace miru;
 using namespace d3d12;
 
 AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStructureBuildInfo::BuildGeometryInfo* pBuildGeometryInfo) 
-	:m_Device(reinterpret_cast<ID3D12Device*>(pBuildGeometryInfo->device))
+	:m_Device(ref_cast<Device>(pBuildGeometryInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -102,7 +103,7 @@ AccelerationStructureBuildInfo::~AccelerationStructureBuildInfo()
 }
 
 AccelerationStructure::AccelerationStructure(AccelerationStructure::CreateInfo* pCreateInfo)
-	:m_Device(reinterpret_cast<ID3D12Device*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

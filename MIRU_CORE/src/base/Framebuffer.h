@@ -13,7 +13,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string					debugName;
-			void*						device;
+			DeviceRef					device;
 			RenderPassRef				renderPass;
 			std::vector<ImageViewRef>	attachments;
 			uint32_t					width;

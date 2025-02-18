@@ -1,10 +1,11 @@
 #include "VKImage.h"
+#include "VKDevice.h"
 
 using namespace miru;
 using namespace vulkan;
 
 Image::Image(Image::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -294,7 +295,7 @@ VkImageAspectFlags Image::GetVkImageAspect(Image::Format format)
 }
 
 ImageView::ImageView(ImageView::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -328,7 +329,7 @@ ImageView::~ImageView()
 }
 
 Sampler::Sampler(Sampler::CreateInfo* pCreateInfo)
-	:m_Device(*reinterpret_cast<VkDevice*>(pCreateInfo->device))
+	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

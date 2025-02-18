@@ -278,7 +278,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string			debugName;
-			void*				device;
+			DeviceRef			device;
 			Type				type;
 			Format				format;
 			uint32_t			width;
@@ -324,7 +324,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string				debugName;
-			void*					device;
+			DeviceRef				device;
 			ImageRef				image;
 			Image::Type				viewType;
 			Image::SubresourceRange subresourceRange;
@@ -378,7 +378,7 @@ namespace base
 		struct CreateInfo
 		{
 			std::string		debugName;
-			void*			device;
+			DeviceRef		device;
 			Filter			magFilter;
 			Filter			minFilter;
 			MipmapMode		mipmapMode;
