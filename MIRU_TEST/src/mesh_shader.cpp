@@ -79,7 +79,7 @@ void MeshShader()
 	Device::CreateInfo deviceCI;
 	deviceCI.physicalDevice = physicalDevice;
 	deviceCI.debugValidationLayers = true;
-	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.extensions = Device::ExtensionsBit::MESH_SHADER;
 	deviceCI.debugName = "GPU Device";
 	DeviceRef device = Device::Create(&deviceCI);
 

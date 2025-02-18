@@ -79,7 +79,7 @@ void Sync2()
 	Device::CreateInfo deviceCI;
 	deviceCI.physicalDevice = physicalDevice;
 	deviceCI.debugValidationLayers = true;
-	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.extensions = Device::ExtensionsBit::SYNCHRONISATION_2;
 	deviceCI.debugName = "GPU Device";
 	DeviceRef device = Device::Create(&deviceCI);
 

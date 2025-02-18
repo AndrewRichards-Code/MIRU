@@ -79,7 +79,7 @@ void Raytracing()
 	Device::CreateInfo deviceCI;
 	deviceCI.physicalDevice = physicalDevice;
 	deviceCI.debugValidationLayers = true;
-	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.extensions = Device::ExtensionsBit::RAY_TRACING;
 	deviceCI.debugName = "GPU Device";
 	DeviceRef device = Device::Create(&deviceCI);
 

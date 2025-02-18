@@ -80,7 +80,7 @@ void DynamicRendering()
 	Device::CreateInfo deviceCI;
 	deviceCI.physicalDevice = physicalDevice;
 	deviceCI.debugValidationLayers = true;
-	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.extensions = Device::ExtensionsBit::DYNAMIC_RENDERING;
 	deviceCI.debugName = "GPU Device";
 	DeviceRef device = Device::Create(&deviceCI);
 
