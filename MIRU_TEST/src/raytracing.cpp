@@ -67,20 +67,28 @@ void Raytracing()
 
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
-	Context::CreateInfo contextCI;
-	contextCI.applicationName = "MIRU_TEST";
-	contextCI.extensions = Context::ExtensionsBit::RAY_TRACING;
-	contextCI.debugValidationLayers = true;
-	contextCI.deviceDebugName = "GPU Device";
-	contextCI.pNext = nullptr;
-	ContextRef context = Context::Create(&contextCI);
+	Instance::CreateInfo instanceCI;
+	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.debugValidationLayers = true;
+	instanceCI.pNext = nullptr;
+	InstanceRef instance = Instance::Create(&instanceCI);
+
+	PhysicalDeviceRefs physicalDevices = Instance::GetPhysicalDevices(instance);
+	PhysicalDeviceRef physicalDevice = physicalDevices[0]; //Pick one?
+
+	Device::CreateInfo deviceCI;
+	deviceCI.physicalDevice = physicalDevice;
+	deviceCI.debugValidationLayers = true;
+	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.debugName = "GPU Device";
+	DeviceRef device = Device::Create(&deviceCI);
 
 	//Creates the windows
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindProc;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpszClassName = contextCI.applicationName.c_str();
+	wc.lpszClassName = instanceCI.applicationName.c_str();
 	RegisterClass(&wc);
 
 	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
@@ -88,7 +96,7 @@ void Raytracing()
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
-	swapchainCI.context = context;
+	swapchainCI.device = device;
 	swapchainCI.pWindow = window;
 	swapchainCI.width = width;
 	swapchainCI.height = height;
@@ -101,7 +109,7 @@ void Raytracing()
 	//Ray Tracing library
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "RayTracing: Library Shader Module";
-	shaderCI.device = context->GetDevice();
+	shaderCI.device = device;
 	shaderCI.stageAndEntryPoints = {
 		{ Shader::StageBit::RAYGEN_BIT, "ray_generation_main"},
 		{ Shader::StageBit::ANY_HIT_BIT, "any_hit_main"},
@@ -116,7 +124,7 @@ void Raytracing()
 	//CmdPool and CmdBuffer
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
-	cmdPoolCI.context = context;
+	cmdPoolCI.device = device;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
@@ -138,7 +146,7 @@ void Raytracing()
 	//Allocator
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
-	allocCI.context = context;
+	allocCI.device = device;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
 	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
@@ -169,7 +177,7 @@ void Raytracing()
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";
-	verticesBufferCI.device = context->GetDevice();
+	verticesBufferCI.device = device;
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
@@ -182,7 +190,7 @@ void Raytracing()
 
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices Buffer";
-	indicesBufferCI.device = context->GetDevice();
+	indicesBufferCI.device = device;
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
@@ -204,7 +212,7 @@ void Raytracing()
 
 	Buffer::CreateInfo ubCI;
 	ubCI.debugName = "Model UB";
-	ubCI.device = context->GetDevice();
+	ubCI.device = device;
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
@@ -213,7 +221,7 @@ void Raytracing()
 
 	BufferView::CreateInfo ubViewMdlCI;
 	ubViewMdlCI.debugName = "Model UBView";
-	ubViewMdlCI.device = context->GetDevice();
+	ubViewMdlCI.device = device;
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.buffer = ub1;
 	ubViewMdlCI.offset = 0;
@@ -236,7 +244,7 @@ void Raytracing()
 	};
 	SceneConstants ubSceneConstantsData = { {view, {0, 0, 0}, float(width) / float(height), {0, 0, -1.5, 0}}, 0.1f, 100.0f };
 	ubCI.debugName = "SceneConstants UB";
-	ubCI.device = context->GetDevice();
+	ubCI.device = device;
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(SceneConstants);
 	ubCI.data = &ubSceneConstantsData;
@@ -245,7 +253,7 @@ void Raytracing()
 
 	BufferView::CreateInfo ubSceneConstantsCI;
 	ubSceneConstantsCI.debugName = "RTShaderConstants UBView";
-	ubSceneConstantsCI.device = context->GetDevice();
+	ubSceneConstantsCI.device = device;
 	ubSceneConstantsCI.type = BufferView::Type::UNIFORM;
 	ubSceneConstantsCI.buffer = ubSceneConstants;
 	ubSceneConstantsCI.offset = 0;
@@ -256,7 +264,7 @@ void Raytracing()
 	//RW Image
 	Image::CreateInfo RT_RWImageCI;
 	RT_RWImageCI.debugName = "RT_RWImage";
-	RT_RWImageCI.device = context->GetDevice();
+	RT_RWImageCI.device = device;
 	RT_RWImageCI.type = Image::Type::TYPE_2D;
 	RT_RWImageCI.format = swapchain->m_SwapchainImages[0]->GetCreateInfo().format;
 	RT_RWImageCI.width = width;
@@ -275,7 +283,7 @@ void Raytracing()
 
 	ImageView::CreateInfo RT_RWImageViewCI;
 	RT_RWImageViewCI.debugName = "RT_RWImageView";
-	RT_RWImageViewCI.device = context->GetDevice();
+	RT_RWImageViewCI.device = device;
 	RT_RWImageViewCI.image = RT_RWImage;
 	RT_RWImageViewCI.viewType = Image::Type::TYPE_2D;
 	RT_RWImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -284,7 +292,7 @@ void Raytracing()
 	//Acceleration structure building
 	//BLAS
 	AccelerationStructureBuildInfo::BuildGeometryInfo asbiGBI;
-	asbiGBI.device = context->GetDevice();
+	asbiGBI.device = device;
 	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::BOTTOM_LEVEL;
 	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
 	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
@@ -295,23 +303,23 @@ void Raytracing()
 	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES;
 	asbiGBI.geometries[0].triangles = {
 				VertexType::VEC3,
-				GetBufferDeviceAddress(context->GetDevice(), c_vb),
+				GetBufferDeviceAddress(device, c_vb),
 				static_cast<uint64_t>(4 * sizeof(float)),
-				_countof(vertices) / 4,
+				std::size(vertices) / 4,
 				IndexType::UINT32,
-				GetBufferDeviceAddress(context->GetDevice(), c_ib),
-				_countof(indices),
-				GetBufferDeviceAddress(context->GetDevice(), ub1)
+				GetBufferDeviceAddress(device, c_ib),
+				std::size(indices),
+				GetBufferDeviceAddress(device, ub1)
 	};
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
 	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
-	asbiGBI.maxPrimitiveCounts = _countof(indices) / 3;
+	asbiGBI.maxPrimitiveCounts = std::size(indices) / 3;
 	AccelerationStructureBuildInfoRef blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	Buffer::CreateInfo asBufferCI;
 	asBufferCI.debugName = "BLASBuffer";
-	asBufferCI.device = context->GetDevice();
+	asBufferCI.device = device;
 	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	asBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
@@ -320,7 +328,7 @@ void Raytracing()
 
 	Buffer::CreateInfo scratchBufferCI;
 	scratchBufferCI.debugName = "BLASScratchBuffer";
-	scratchBufferCI.device = context->GetDevice();
+	scratchBufferCI.device = device;
 	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	scratchBufferCI.size = blas_asbi->GetBuildSizesInfo().buildScratchSize;
 	scratchBufferCI.data = nullptr;
@@ -329,7 +337,7 @@ void Raytracing()
 
 	AccelerationStructure::CreateInfo asCI;
 	asCI.debugName = "BLAS";
-	asCI.device = context->GetDevice();
+	asCI.device = device;
 	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
 	asCI.buffer = asBuffer_BLAS;
 	asCI.offset = 0;
@@ -339,7 +347,7 @@ void Raytracing()
 	AccelerationStructureRef blas = AccelerationStructure::Create(&asCI);
 
 	asbiGBI.dstAccelerationStructure = blas;
-	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer_BLAS);
+	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_BLAS);
 	blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo blas_bri;
@@ -358,18 +366,18 @@ void Raytracing()
 	id.mask = 0xFF;
 	id.instanceShaderBindingTableRecordOffset = 0;
 	id.flags = (uint32_t)InstanceDataFlagBit::NONE_BIT;
-	id.accelerationStructureReference = GetAccelerationStructureDeviceAddress(context->GetDevice(), blas);
+	id.accelerationStructureReference = GetAccelerationStructureDeviceAddress(device, blas);
 
 	Buffer::CreateInfo idBufferCI;
 	idBufferCI.debugName = "TLASInstanceData";
-	idBufferCI.device = context->GetDevice();
+	idBufferCI.device = device;
 	idBufferCI.usage = Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT | Buffer::UsageBit::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT;
 	idBufferCI.size = sizeof(InstanceData);
 	idBufferCI.data = &id;
 	idBufferCI.allocator = cpu_alloc_0;
 	BufferRef idBuffer_TLAS = Buffer::Create(&idBufferCI);
 
-	asbiGBI.device = context->GetDevice();
+	asbiGBI.device = device;
 	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::TOP_LEVEL;
 	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
 	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
@@ -378,7 +386,7 @@ void Raytracing()
 	asbiGBI.geometries.clear();
 	asbiGBI.geometries.push_back({});
 	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::INSTANCES;
-	asbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(context->GetDevice(), idBuffer_TLAS) };
+	asbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(device, idBuffer_TLAS) };
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
 	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
@@ -386,7 +394,7 @@ void Raytracing()
 	AccelerationStructureBuildInfoRef tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	asBufferCI.debugName = "TLASBuffer";
-	asBufferCI.device = context->GetDevice();
+	asBufferCI.device = device;
 	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
 	asBufferCI.size = tlas_asbi->GetBuildSizesInfo().accelerationStructureSize;
 	asBufferCI.data = nullptr;
@@ -394,7 +402,7 @@ void Raytracing()
 	BufferRef asBuffer_TLAS = Buffer::Create(&asBufferCI);
 
 	scratchBufferCI.debugName = "TLASScratchBuffer";
-	scratchBufferCI.device = context->GetDevice();
+	scratchBufferCI.device = device;
 	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
 	scratchBufferCI.size = tlas_asbi->GetBuildSizesInfo().buildScratchSize;
 	scratchBufferCI.data = nullptr;
@@ -402,7 +410,7 @@ void Raytracing()
 	BufferRef scratchBuffer_TLAS = Buffer::Create(&scratchBufferCI);
 
 	asCI.debugName = "TLAS";
-	asCI.device = context->GetDevice();
+	asCI.device = device;
 	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
 	asCI.buffer = asBuffer_TLAS;
 	asCI.offset = 0;
@@ -412,7 +420,7 @@ void Raytracing()
 	AccelerationStructureRef tlas = AccelerationStructure::Create(&asCI);
 
 	asbiGBI.dstAccelerationStructure = tlas;
-	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(context->GetDevice(), scratchBuffer_TLAS);
+	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_TLAS);
 	tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo tlas_bri;
@@ -422,7 +430,7 @@ void Raytracing()
 	tlas_bri.transformOffset = 0;
 
 	//Transfer CmdBuffer Record and Submit
-	Fence::CreateInfo transferFenceCI = { "TransferFence", context->GetDevice(), false, UINT64_MAX };
+	Fence::CreateInfo transferFenceCI = { "TransferFence", device, false, UINT64_MAX };
 	FenceRef transferFence = Fence::Create(&transferFenceCI);
 	{
 		cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
@@ -451,13 +459,13 @@ void Raytracing()
 	//Ray tracing descriptor sets and pipeline
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "RayTracing: Descriptor Pool";
-	descriptorPoolCI.device = context->GetDevice();
+	descriptorPoolCI.device = device;
 	descriptorPoolCI.poolSizes = { {DescriptorType::UNIFORM_BUFFER, 1}, {DescriptorType::STORAGE_IMAGE, 1}, {DescriptorType::ACCELERATION_STRUCTURE, 1} };
 	descriptorPoolCI.maxSets = 1;
 	DescriptorPoolRef descriptorPoolRT = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "RayTracing: DescSetLayout1";
-	setLayoutCI.device = context->GetDevice();
+	setLayoutCI.device = device;
 	setLayoutCI.descriptorSetLayoutBinding = {
 		{0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
 		{1, DescriptorType::STORAGE_IMAGE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
@@ -476,7 +484,7 @@ void Raytracing()
 
 	Pipeline::CreateInfo raytracingPipelineCI;
 	raytracingPipelineCI.debugName = "Ray Tracing Pipeline";
-	raytracingPipelineCI.device = context->GetDevice();
+	raytracingPipelineCI.device = device;
 	raytracingPipelineCI.type = PipelineType::RAY_TRACING;
 	raytracingPipelineCI.shaders = { raytracingShader };
 	raytracingPipelineCI.dynamicStates = {};
@@ -493,7 +501,7 @@ void Raytracing()
 	//Shader Binding Table
 	ShaderBindingTable::CreateInfo sbtCI;
 	sbtCI.debugName = "Ray Tracing Pipeline";
-	sbtCI.device = context->GetDevice();
+	sbtCI.device = device;
 	sbtCI.shaderRecords = {
 		{ handles[0].first, handles[0].second, {} },
 		{ handles[1].first, handles[1].second, {} },
@@ -505,12 +513,12 @@ void Raytracing()
 	//Render Synchronisation
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
-	fenceCI.device = context->GetDevice();
+	fenceCI.device = device;
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -531,7 +539,7 @@ void Raytracing()
 
 		if (shaderRecompile)
 		{
-			context->DeviceWaitIdle();
+			device->DeviceWaitIdle();
 
 			raytracingShader->Recompile();
 			raytracingPipelineCI.shaders = { raytracingShader };
@@ -706,5 +714,5 @@ void Raytracing()
 			frameCount++;
 		}
 	}
-	context->DeviceWaitIdle();
+	device->DeviceWaitIdle();
 }

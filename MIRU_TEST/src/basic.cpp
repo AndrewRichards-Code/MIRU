@@ -121,7 +121,7 @@ void Basic()
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
 #elif defined(__ANDROID__)
 	
@@ -145,17 +145,25 @@ void Basic()
 
 #endif
 
-	Context::CreateInfo contextCI;
-	contextCI.applicationName = "MIRU_TEST";
-	contextCI.extensions = Context::ExtensionsBit::NONE;
-	contextCI.debugValidationLayers = true;
-	contextCI.deviceDebugName = "GPU Device";
-	contextCI.pNext = nullptr;
-	ContextRef context = Context::Create(&contextCI);
+	Instance::CreateInfo instanceCI;
+	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.debugValidationLayers = true;
+	instanceCI.pNext = nullptr;
+	InstanceRef instance = Instance::Create(&instanceCI);
+
+	PhysicalDeviceRefs physicalDevices = Instance::GetPhysicalDevices(instance);
+	PhysicalDeviceRef physicalDevice = physicalDevices[0]; //Pick one?
+
+	Device::CreateInfo deviceCI;
+	deviceCI.physicalDevice = physicalDevice;
+	deviceCI.debugValidationLayers = true;
+	deviceCI.extensions = Device::ExtensionsBit::NONE;
+	deviceCI.debugName = "GPU Device";
+	DeviceRef device = Device::Create(&deviceCI);
 
 	Swapchain::CreateInfo swapchainCI;
 	swapchainCI.debugName = "Swapchain";
-	swapchainCI.context = context;
+	swapchainCI.device = device;
 	swapchainCI.pWindow = window;
 	swapchainCI.width = width;
 	swapchainCI.height = height;
@@ -169,7 +177,7 @@ void Basic()
 	auto compileArguments = base::Shader::LoadCompileArgumentsFromFile("../shaderbin/basic_hlsl.json", { { "$SOLUTION_DIR", SOLUTION_DIR }, { "$BUILD_DIR", BUILD_DIR } });
 	Shader::CreateInfo shaderCI;
 	shaderCI.debugName = "Basic: Vertex Shader Module";
-	shaderCI.device = context->GetDevice();
+	shaderCI.device = device;
 	shaderCI.stageAndEntryPoints = { {Shader::StageBit::VERTEX_BIT, "vs_main"} };
 	shaderCI.binaryFilepath = "../shaderbin/basic_vs_6_0_vs_main.spv";
 	shaderCI.binaryCode = {};
@@ -197,7 +205,7 @@ void Basic()
 
 	CommandPool::CreateInfo cmdPoolCI;
 	cmdPoolCI.debugName = "CmdPool";
-	cmdPoolCI.context = context;
+	cmdPoolCI.device = device;
 	cmdPoolCI.flags = CommandPool::FlagBit::RESET_COMMAND_BUFFER_BIT;
 	cmdPoolCI.queueType = CommandPool::QueueType::GRAPHICS;
 	CommandPoolRef cmdPool = CommandPool::Create(&cmdPoolCI);
@@ -218,7 +226,7 @@ void Basic()
 
 	Allocator::CreateInfo allocCI;
 	allocCI.debugName = "CPU_ALLOC_0";
-	allocCI.context = context;
+	allocCI.device = device;
 	allocCI.blockSize = Allocator::BlockSize::BLOCK_SIZE_64MB;
 	allocCI.properties = Allocator::PropertiesBit::HOST_VISIBLE_BIT | Allocator::PropertiesBit::HOST_COHERENT_BIT;
 	AllocatorRef cpu_alloc_0 = Allocator::Create(&allocCI);
@@ -254,7 +262,7 @@ void Basic()
 
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";
-	verticesBufferCI.device = context->GetDevice();
+	verticesBufferCI.device = device;
 	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	verticesBufferCI.size = sizeof(vertices);
 	verticesBufferCI.data = vertices;
@@ -267,7 +275,7 @@ void Basic()
 
 	Buffer::CreateInfo indicesBufferCI;
 	indicesBufferCI.debugName = "Indices Buffer";
-	indicesBufferCI.device = context->GetDevice();
+	indicesBufferCI.device = device;
 	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	indicesBufferCI.size = sizeof(indices);
 	indicesBufferCI.data = indices;
@@ -280,7 +288,7 @@ void Basic()
 
 	Buffer::CreateInfo imageBufferCI;
 	imageBufferCI.debugName = "MIRU logo upload buffer";
-	imageBufferCI.device = context->GetDevice();
+	imageBufferCI.device = device;
 	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
 	imageBufferCI.size = img_width * img_height * 4;
 	imageBufferCI.data = imageData;
@@ -290,7 +298,7 @@ void Basic()
 
 	Image::CreateInfo imageCI;
 	imageCI.debugName = "MIRU logo Image";
-	imageCI.device = context->GetDevice();
+	imageCI.device = device;
 	imageCI.type = Image::Type::TYPE_CUBE;
 	imageCI.format = Image::Format::R8G8B8A8_UNORM;
 	imageCI.width = img_width;
@@ -317,14 +325,14 @@ void Basic()
 
 	Buffer::CreateInfo ubCI;
 	ubCI.debugName = "Camera UB";
-	ubCI.device = context->GetDevice();
+	ubCI.device = device;
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = 2 * sizeof(Mat4);
 	ubCI.data = ubData;
 	ubCI.allocator = cpu_alloc_0;
 	BufferRef ub1 = Buffer::Create(&ubCI);
 	ubCI.debugName = "Model UB";
-	ubCI.device = context->GetDevice();
+	ubCI.device = device;
 	ubCI.usage = Buffer::UsageBit::UNIFORM_BIT;
 	ubCI.size = sizeof(Mat4);
 	ubCI.data = &modl.a;
@@ -333,7 +341,7 @@ void Basic()
 
 	BufferView::CreateInfo ubViewCamCI;
 	ubViewCamCI.debugName = "Camera UBView";
-	ubViewCamCI.device = context->GetDevice();
+	ubViewCamCI.device = device;
 	ubViewCamCI.type = BufferView::Type::UNIFORM;
 	ubViewCamCI.buffer = ub1;
 	ubViewCamCI.offset = 0;
@@ -343,7 +351,7 @@ void Basic()
 
 	BufferView::CreateInfo ubViewMdlCI;
 	ubViewMdlCI.debugName = "Model UBView";
-	ubViewMdlCI.device = context->GetDevice();
+	ubViewMdlCI.device = device;
 	ubViewMdlCI.type = BufferView::Type::UNIFORM;
 	ubViewMdlCI.buffer = ub2;
 	ubViewMdlCI.offset = 0;
@@ -352,9 +360,9 @@ void Basic()
 	BufferViewRef ubViewMdl = BufferView::Create(&ubViewMdlCI);
 
 	//Transfer CmdBuffer
-	Fence::CreateInfo transferFenceCI = { "TransferFence", context->GetDevice(), false, UINT64_MAX };
+	Fence::CreateInfo transferFenceCI = { "TransferFence", device, false, UINT64_MAX };
 	FenceRef transferFence = Fence::Create(&transferFenceCI);
-	Semaphore::CreateInfo transferSemaphoreCI = { "TransferSemaphore", context->GetDevice() };
+	Semaphore::CreateInfo transferSemaphoreCI = { "TransferSemaphore", device };
 	SemaphoreRef transferSemaphore = Semaphore::Create(&transferSemaphoreCI);
 	{
 		cmdCopyBuffer->Begin(0, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
@@ -411,7 +419,7 @@ void Basic()
 
 	BufferView::CreateInfo vbViewCI;
 	vbViewCI.debugName = "VerticesBufferView";
-	vbViewCI.device = context->GetDevice();
+	vbViewCI.device = device;
 	vbViewCI.type = BufferView::Type::VERTEX;
 	vbViewCI.buffer = g_vb;
 	vbViewCI.offset = 0;
@@ -421,7 +429,7 @@ void Basic()
 
 	BufferView::CreateInfo ibViewCI;
 	ibViewCI.debugName = "IndicesBufferView";
-	ibViewCI.device = context->GetDevice();
+	ibViewCI.device = device;
 	ibViewCI.type = BufferView::Type::INDEX;
 	ibViewCI.buffer = g_ib;
 	ibViewCI.offset = 0;
@@ -431,7 +439,7 @@ void Basic()
 
 	ImageView::CreateInfo imageViewCI;
 	imageViewCI.debugName = "MIRU logo ImageView";
-	imageViewCI.device = context->GetDevice();
+	imageViewCI.device = device;
 	imageViewCI.image = image;
 	imageViewCI.viewType = Image::Type::TYPE_CUBE;
 	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
@@ -439,7 +447,7 @@ void Basic()
 
 	Sampler::CreateInfo samplerCI;
 	samplerCI.debugName = "Default Sampler";
-	samplerCI.device = context->GetDevice();
+	samplerCI.device = device;
 	samplerCI.magFilter = Sampler::Filter::NEAREST;
 	samplerCI.minFilter = Sampler::Filter::NEAREST;
 	samplerCI.mipmapMode = Sampler::MipmapMode::NEAREST;
@@ -460,7 +468,7 @@ void Basic()
 	//Colour MSAA
 	Image::CreateInfo colourCI;
 	colourCI.debugName = "Colour Image MSAA";
-	colourCI.device = context->GetDevice();
+	colourCI.device = device;
 	colourCI.type = Image::Type::TYPE_2D;;
 	colourCI.format = swapchain->m_SwapchainImages[0]->GetCreateInfo().format;
 	colourCI.width = width;
@@ -479,7 +487,7 @@ void Basic()
 
 	ImageView::CreateInfo colourImageViewCI;
 	colourImageViewCI.debugName = "Colour ImageView";
-	colourImageViewCI.device = context->GetDevice();
+	colourImageViewCI.device = device;
 	colourImageViewCI.image = colourImage;
 	colourImageViewCI.viewType = Image::Type::TYPE_2D;
 	colourImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -488,7 +496,7 @@ void Basic()
 	//Depth MSAA
 	Image::CreateInfo depthCI;
 	depthCI.debugName = "Depth Image";
-	depthCI.device = context->GetDevice();
+	depthCI.device = device;
 	depthCI.type = Image::Type::TYPE_2D;
 	depthCI.format = Image::Format::D32_SFLOAT;
 	depthCI.width = width;
@@ -507,7 +515,7 @@ void Basic()
 
 	ImageView::CreateInfo depthImageViewCI;
 	depthImageViewCI.debugName = "Depth ImageView";
-	depthImageViewCI.device = context->GetDevice();
+	depthImageViewCI.device = device;
 	depthImageViewCI.image = depthImage;
 	depthImageViewCI.viewType = Image::Type::TYPE_2D;
 	depthImageViewCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
@@ -516,7 +524,7 @@ void Basic()
 	//Resolve and Input
 	Image::CreateInfo resolveAndInputImageCI;
 	resolveAndInputImageCI.debugName = "Resolve and Input";
-	resolveAndInputImageCI.device = context->GetDevice();
+	resolveAndInputImageCI.device = device;
 	resolveAndInputImageCI.type = Image::Type::TYPE_2D;;
 	resolveAndInputImageCI.format = swapchain->m_SwapchainImages[0]->GetCreateInfo().format;
 	resolveAndInputImageCI.width = width;
@@ -535,7 +543,7 @@ void Basic()
 
 	ImageView::CreateInfo resolveAndInputImageViewCI;
 	resolveAndInputImageViewCI.debugName = "Resolve and Input ImageView";
-	resolveAndInputImageViewCI.device = context->GetDevice();
+	resolveAndInputImageViewCI.device = device;
 	resolveAndInputImageViewCI.image = resolveAndInputImage;
 	resolveAndInputImageViewCI.viewType = Image::Type::TYPE_2D;
 	resolveAndInputImageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
@@ -544,13 +552,13 @@ void Basic()
 	//Basic and Pipeline Descriptor sets
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "Basic: Descriptor Pool";
-	descriptorPoolCI.device = context->GetDevice();
+	descriptorPoolCI.device = device;
 	descriptorPoolCI.poolSizes = { {DescriptorType::COMBINED_IMAGE_SAMPLER, 1},  {DescriptorType::UNIFORM_BUFFER, 2}, {DescriptorType::INPUT_ATTACHMENT, 1} };
 	descriptorPoolCI.maxSets = 3;
 	DescriptorPoolRef descriptorPool = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "Basic: DescSetLayout1";
-	setLayoutCI.device = context->GetDevice();
+	setLayoutCI.device = device;
 	setLayoutCI.descriptorSetLayoutBinding = { {0, DescriptorType::UNIFORM_BUFFER, 1, Shader::StageBit::VERTEX_BIT } };
 	DescriptorSetLayoutRef setLayout1 = DescriptorSetLayout::Create(&setLayoutCI);
 	setLayoutCI.debugName = "Basic: DescSetLayout2";
@@ -587,7 +595,7 @@ void Basic()
 	//Main RenderPass
 	RenderPass::CreateInfo renderPassCI;
 	renderPassCI.debugName = "Basic: RenderPass";
-	renderPassCI.device = context->GetDevice();
+	renderPassCI.device = device;
 	renderPassCI.attachments = {
 		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,						//Colour MSAA
 		Image::SampleCountBit::SAMPLE_COUNT_8_BIT,
@@ -643,7 +651,7 @@ void Basic()
 	//Basic and PostProcessing pipelines
 	Pipeline::CreateInfo pCI;
 	pCI.debugName = "Basic";
-	pCI.device = context->GetDevice();
+	pCI.device = device;
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { vertexShader, fragmentShader };
 	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices) / 8, VertexInputRate::VERTEX} };
@@ -683,7 +691,7 @@ void Basic()
 
 	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
 	framebufferCI_0.debugName = "Framebuffer0";
-	framebufferCI_0.device = context->GetDevice();
+	framebufferCI_0.device = device;
 	framebufferCI_0.renderPass = renderPass;
 	framebufferCI_0.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[0] };
 	framebufferCI_0.width = width;
@@ -691,7 +699,7 @@ void Basic()
 	framebufferCI_0.layers = 1;
 	FramebufferRef framebuffer0 = Framebuffer::Create(&framebufferCI_0);
 	framebufferCI_1.debugName = "Framebuffer1";
-	framebufferCI_1.device = context->GetDevice();
+	framebufferCI_1.device = device;
 	framebufferCI_1.renderPass = renderPass;
 	framebufferCI_1.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[1] };
 	framebufferCI_1.width = width;
@@ -701,12 +709,12 @@ void Basic()
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
-	fenceCI.device = context->GetDevice();
+	fenceCI.device = device;
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", context->GetDevice() };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", context->GetDevice() };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -727,7 +735,7 @@ void Basic()
 
 		if (shaderRecompile)
 		{
-			context->DeviceWaitIdle();
+			device->DeviceWaitIdle();
 
 			vertexShader->Recompile();
 			fragmentShader->Recompile();
@@ -860,5 +868,5 @@ void Basic()
 			frameCount++;
 		}
 	}
-	context->DeviceWaitIdle();
+	device->DeviceWaitIdle();
 }
