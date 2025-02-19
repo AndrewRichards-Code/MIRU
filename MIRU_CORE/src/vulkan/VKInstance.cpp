@@ -73,6 +73,7 @@ Instance::Instance(Instance::CreateInfo* pCreateInfo)
 		#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
 		m_Extensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 		#endif
+		m_Extensions.push_back(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
 
 		//Extensions
 		AddExtensions();
