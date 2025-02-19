@@ -122,6 +122,8 @@ Device::Device(CreateInfo* pCreateInfo)
 
 	SetResultInfo();
 
+	MIRU_FATAL(!arc::BitwiseCheck(m_RI.activeExtensions, ExtensionsBit::DYNAMIC_RENDERING), "ERROR: VULKAN: Device doesn't support Dynamic Rendering");
+
 	//Set Name
 	VKSetName<VkInstance>(m_Device, instance->m_Instance, "Instance: " + std::string(instance->m_AI.pEngineName));
 	VKSetName<VkPhysicalDevice>(m_Device, physicalDevice, "PhysicalDevice: " + std::string(physicalDeviceRef->m_Properties.deviceName));
@@ -250,7 +252,7 @@ void Device::SetResultInfo()
 		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
 
 	//VK_KHR_timeline_semaphore
-	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan12Features.timelineSemaphore)
 		m_RI.activeExtensions |= ExtensionsBit::TIMELINE_SEMAPHORE;
 
 	//VK_EXT_mesh_shader
@@ -258,24 +260,26 @@ void Device::SetResultInfo()
 		m_RI.activeExtensions |= ExtensionsBit::MESH_SHADER;
 
 	//VK_KHR_synchronization2
-	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan13Features.synchronization2)
 		m_RI.activeExtensions |= ExtensionsBit::SYNCHRONISATION_2;
 
 	//VK_KHR_dynamic_rendering
-	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan13Features.dynamicRendering)
 		m_RI.activeExtensions |= ExtensionsBit::DYNAMIC_RENDERING;
 
 	//VK_KHR_multiview
-	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_MULTIVIEW_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan11Features.multiview)
 		m_RI.activeExtensions |= ExtensionsBit::MULTIVIEW;
 
 	//VK_EXT_shader_viewport_index_layer
-	if (Instance::IsActive(m_ActiveExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME) || (m_FeatureAndProperties.m_Vulkan12Features.shaderOutputViewportIndex && m_FeatureAndProperties.m_Vulkan12Features.shaderOutputLayer))
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_VIEWPORT_INDEX_LAYER;
 
 	//VK_KHR_shader_float16_int8, VK_KHR_16bit_storage
-	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME)
-		&& Instance::IsActive(m_ActiveExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME))
+	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME) && Instance::IsActive(m_ActiveExtensions, VK_KHR_16BIT_STORAGE_EXTENSION_NAME)
+		|| ((m_FeatureAndProperties.m_Vulkan12Features.shaderFloat16 && m_FeatureAndProperties.m_Vulkan12Features.shaderInt8) 
+			&& (m_FeatureAndProperties.m_Vulkan11Features.storageBuffer16BitAccess && m_FeatureAndProperties.m_Vulkan11Features.uniformAndStorageBuffer16BitAccess 
+				/*&& m_FeatureAndProperties.m_Vulkan11Features.storagePushConstant16 && m_FeatureAndProperties.m_Vulkan11Features.storageInputOutput16*/)))
 		m_RI.activeExtensions |= ExtensionsBit::SHADER_NATIVE_16_BIT_TYPES;
 
 	PhysicalDeviceRef physicalDevice = ref_cast<PhysicalDevice>(m_CI.physicalDevice);
