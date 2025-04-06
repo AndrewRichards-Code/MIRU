@@ -154,8 +154,9 @@ if (WIN32)
 	RestoreNuGutPackages()
 	target_sources(MIRU_CORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/packages.config")
 
-	set(MIRU_D3D12_AGILITY_SDK "Microsoft.Direct3D.D3D12.1.614.1")
-	set(MIRU_D3D12_DXC_SDK "Microsoft.Direct3D.DXC.1.8.2407.12")
+	target_compile_definitions(MIRU_CORE PRIVATE MIRU_D3D12_AGILITY_SDK_VERSION=615)
+	set(MIRU_D3D12_AGILITY_SDK "Microsoft.Direct3D.D3D12.1.615.1")
+	set(MIRU_D3D12_DXC_SDK "Microsoft.Direct3D.DXC.1.8.2502.8")
 	set(MIRU_WIN_PIX_EVENT_RT "WinPixEventRuntime.1.0.240308001") #https://github.com/microsoft/pixevents
 
 	target_include_directories(MIRU_CORE PRIVATE 
