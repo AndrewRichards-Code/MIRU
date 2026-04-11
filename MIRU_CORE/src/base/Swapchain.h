@@ -1,6 +1,7 @@
 #pragma once
 
 #include "miru_core_common.h"
+#include "PipelineHelper.h"
 
 namespace miru
 {
@@ -38,6 +39,8 @@ namespace base
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void AcquireNextImage(const SemaphoreRef& acquire, uint32_t& imageIndex) = 0;
 		virtual void Present(const CommandPoolRef& cmdPool, const SemaphoreRef& submit, uint32_t& imageIndex) = 0;
+
+		Extent2D GetSwapchainDimensions();
 
 	protected:
 		void FillSwapchainImageAndViews(void** ppImages, void* pImageViews, uint32_t width, uint32_t height, uint32_t format);

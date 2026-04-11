@@ -103,8 +103,9 @@ void Raytracing()
 	swapchainCI.swapchainCount = 2;
 	swapchainCI.vSync = true;
 	SwapchainRef swapchain = Swapchain::Create(&swapchainCI);
-	width = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().width;
-	height = swapchain->m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo().height;
+	const Extent2D& swapchainDimensions = swapchain->GetSwapchainDimensions();
+	width = swapchainDimensions.width;
+	height = swapchainDimensions.height;
 
 	//Ray Tracing library
 	Shader::CreateInfo shaderCI;

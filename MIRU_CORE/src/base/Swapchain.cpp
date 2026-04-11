@@ -116,3 +116,9 @@ void Swapchain::FillSwapchainImageAndViews(void** ppImages, void* pImageViews, u
 		i++;
 	}
 }
+
+Extent2D Swapchain::GetSwapchainDimensions()
+{
+	const Image::CreateInfo& swapchainImageCI = m_SwapchainImageViews[0]->GetCreateInfo().image->GetCreateInfo();
+	return { swapchainImageCI.width, swapchainImageCI.height };
+}
