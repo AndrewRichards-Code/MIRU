@@ -48,10 +48,6 @@ namespace vulkan
 		void ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;
 		void ClearDepthStencilImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;
 
-		void BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues) override;
-		void EndRenderPass(uint32_t index) override;
-		void NextSubpass(uint32_t index) override;
-
 		void BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo) override;
 		void EndRendering(uint32_t index) override;
 

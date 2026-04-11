@@ -6,7 +6,6 @@
 #include "D3D12Image.h"
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
-#include "D3D12Framebuffer.h"
 #include "D3D12AccelerationStructure.h"
 
 #include "Include/WinPixEventRuntime/pix3.h"
@@ -489,214 +488,6 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 	MIRU_D3D12_SAFE_RELEASE(heap);
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	RenderingResource& renderingResource = m_RenderingResources[index];
-
-	renderingResource.Framebuffer = framebuffer;
-	renderingResource.ClearValues = clearValues;
-	
-	//Transition resources to be begin render pass.
-	renderingResource.SubpassIndex = (uint32_t)-1;
-	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
-
-	std::vector<base::BarrierRef> barriers;
-	base::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = base::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-
-	size_t i = 0;
-	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
-	{
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-
-		//Set the initial layout from Image creation.
-		if (m_RenderPassAttachementImageLayouts.find(image) == m_RenderPassAttachementImageLayouts.end())
-			m_RenderPassAttachementImageLayouts[image] = image->GetCreateInfo().layout;
-		//Remove old images.
-		for (auto it = m_RenderPassAttachementImageLayouts.begin(); it != m_RenderPassAttachementImageLayouts.end();)
-		{
-			if (it->first.use_count() == 1)
-				it = m_RenderPassAttachementImageLayouts.erase(it);
-			else
-				it++;
-		}
-
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].initialLayout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-		i++;
-	}
-	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
-
-	//Begin first subpass
-	NextSubpass(index);
-};
-
-void CommandBuffer::EndRenderPass(uint32_t index) 
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	RenderingResource& renderingResource = m_RenderingResources[index];
-
-	//Resolve any attachments from the previous subpass
-	ResolvePreviousSubpassAttachments(index);
-
-	//Transition resources to be end render pass.
-	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
-	renderingResource.SubpassIndex = (uint32_t)-1;
-
-	std::vector<base::BarrierRef> barriers;
-	base::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = base::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-
-	size_t i = 0;
-	for (auto& imageView : renderingResource.Framebuffer->GetCreateInfo().attachments)
-	{
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = renderPass->GetCreateInfo().attachments[i].finalLayout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-		i++;
-	}
-	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
-};
-
-void CommandBuffer::NextSubpass(uint32_t index)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	RenderingResource& renderingResource = m_RenderingResources[index];
-
-	//Resolve any attachments from the previous subpass
-	ResolvePreviousSubpassAttachments(index);
-
-	renderingResource.SubpassIndex++;
-	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
-	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<base::ImageViewRef>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
-	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
-
-	//Transition resources for the subpass.
-	std::vector<base::BarrierRef> barriers;
-	base::Barrier::CreateInfo barrierCI = {};
-	barrierCI.type = base::Barrier::Type::IMAGE;
-	barrierCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-	barrierCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-	for (auto& input : subpassDesc.inputAttachments)
-	{
-		const base::ImageViewRef& imageView = framebufferAttachments[input.attachmentIndex];
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = input.layout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-	}
-	for (auto& colour : subpassDesc.colourAttachments)
-	{
-		const base::ImageViewRef& imageView = framebufferAttachments[colour.attachmentIndex];
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = colour.layout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-	}
-	for (auto& resolve : subpassDesc.resolveAttachments)
-	{
-		const base::ImageViewRef& imageView = framebufferAttachments[resolve.attachmentIndex];
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = resolve.layout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-	}
-	for (auto& depthStencil : subpassDesc.depthStencilAttachment)
-	{
-		const base::ImageViewRef& imageView = framebufferAttachments[depthStencil.attachmentIndex];
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = depthStencil.layout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-	}
-	for (auto& preseverse : subpassDesc.preseverseAttachments)
-	{
-		const base::ImageViewRef& imageView = framebufferAttachments[preseverse.attachmentIndex];
-		const base::ImageRef& image = imageView->GetCreateInfo().image;
-		barrierCI.image = image;
-		barrierCI.oldLayout = m_RenderPassAttachementImageLayouts[image];
-		barrierCI.newLayout = preseverse.layout;
-		barrierCI.subresourceRange = imageView->GetCreateInfo().subresourceRange;
-		barriers.push_back(base::Barrier::Create(&barrierCI));
-		m_RenderPassAttachementImageLayouts[image] = (barrierCI.newLayout != Image::Layout::UNKNOWN ? barrierCI.newLayout : barrierCI.oldLayout); //Only transition resource to defined a layout.
-	}
-	PipelineBarrier(index, base::PipelineStageBit::BOTTOM_OF_PIPE_BIT, base::PipelineStageBit::TOP_OF_PIPE_BIT, base::DependencyBit::NONE_BIT, barriers);
-
-	//Set RenderTargets
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvs;
-	D3D12_CPU_DESCRIPTOR_HANDLE dsv = {};
-	for (auto& attachment : subpassDesc.colourAttachments)
-		rtvs.push_back(ref_cast<ImageView>(framebufferAttachments[attachment.attachmentIndex])->m_RTVDescHandle);
-	if(!subpassDesc.depthStencilAttachment.empty())
-		dsv = ref_cast<ImageView>(framebufferAttachments[subpassDesc.depthStencilAttachment[0].attachmentIndex])->m_DSVDescHandle;
-	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->OMSetRenderTargets(static_cast<UINT>(rtvs.size()), rtvs.data(), false, (dsv.ptr ? &dsv : nullptr));
-
-	//Clear imageviews
-	uint32_t attachId = 0;
-	for (auto& attachment : subpassDesc.colourAttachments)
-	{
-		attachId = attachment.attachmentIndex;
-		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
-			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, renderingResource.ClearValues[attachId].colour.float32, 0, nullptr);
-	}
-	if (!subpassDesc.depthStencilAttachment.empty())
-	{
-		attachId = subpassDesc.depthStencilAttachment[0].attachmentIndex;
-		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasDSV)
-		{
-			D3D12_CLEAR_FLAGS flags = (D3D12_CLEAR_FLAGS)0;
-			FLOAT depthClearValue = 0.0f;
-			UINT8 stencilClearValue = 0;
-
-			if (renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
-			{
-				flags |= D3D12_CLEAR_FLAG_DEPTH;
-				depthClearValue = renderingResource.ClearValues[attachId].depthStencil.depth;
-			}
-			if (renderpassAttachments[attachId].stencilLoadOp == RenderPass::AttachmentLoadOp::CLEAR)
-			{
-				flags |= D3D12_CLEAR_FLAG_STENCIL;
-				stencilClearValue = static_cast<UINT8>(renderingResource.ClearValues[attachId].depthStencil.stencil);
-			}
-
-			if(flags)
-				reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearDepthStencilView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_DSVDescHandle, flags, depthClearValue, stencilClearValue, 0, nullptr);
-		}
-	}
-}
-
 void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -742,7 +533,7 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 	uint32_t attachId = 0;
 	for (auto& attachment : renderingResource.RenderingInfo.colourAttachments)
 	{
-		if (attachment.loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		if (attachment.loadOp == base::AttachmentLoadOp::CLEAR)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle, attachment.clearValue.colour.float32, 0, nullptr);
 	}
 	if (renderingResource.RenderingInfo.pDepthAttachment || renderingResource.RenderingInfo.pStencilAttachment)
@@ -751,12 +542,12 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 		FLOAT depthClearValue = 0.0f;
 		UINT8 stencilClearValue = 0;
 
-		if (renderingResource.RenderingInfo.pDepthAttachment && renderingResource.RenderingInfo.pDepthAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		if (renderingResource.RenderingInfo.pDepthAttachment && renderingResource.RenderingInfo.pDepthAttachment->loadOp == base::AttachmentLoadOp::CLEAR)
 		{
 			flags |= D3D12_CLEAR_FLAG_DEPTH;
 			depthClearValue = renderingResource.RenderingInfo.pDepthAttachment->clearValue.depthStencil.depth;
 		}
-		if (renderingResource.RenderingInfo.pStencilAttachment && renderingResource.RenderingInfo.pStencilAttachment->loadOp == RenderPass::AttachmentLoadOp::CLEAR)
+		if (renderingResource.RenderingInfo.pStencilAttachment && renderingResource.RenderingInfo.pStencilAttachment->loadOp == base::AttachmentLoadOp::CLEAR)
 		{	
 			flags |= D3D12_CLEAR_FLAG_STENCIL;
 			stencilClearValue = static_cast<UINT8>(renderingResource.RenderingInfo.pStencilAttachment->clearValue.depthStencil.stencil);
@@ -1352,50 +1143,6 @@ void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& 
 		d3d12Scissors.push_back({ static_cast<LONG>(scissor.offset.x), static_cast<LONG>(scissor.offset.y), static_cast<LONG>(scissor.extent.width), static_cast<LONG>(scissor.extent.height) });
 
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(d3d12Scissors.size()), d3d12Scissors.data());
-}
-
-void CommandBuffer::ResolvePreviousSubpassAttachments(uint32_t index)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	RenderingResource& renderingResource = m_RenderingResources[index];
-
-	if (renderingResource.SubpassIndex == RenderPass::SubpassExternal)
-		return;
-	
-	const base::RenderPassRef& renderPass = renderingResource.Framebuffer->GetCreateInfo().renderPass;
-	const RenderPass::SubpassDescription& subpassDesc = renderPass->GetCreateInfo().subpassDescriptions[renderingResource.SubpassIndex];
-	const std::vector<base::ImageViewRef>& framebufferAttachments = renderingResource.Framebuffer->GetCreateInfo().attachments;
-	const std::vector<base::RenderPass::AttachmentDescription>& renderpassAttachments = renderPass->GetCreateInfo().attachments;
-
-	if (subpassDesc.resolveAttachments.empty())
-		return;
-
-	if (subpassDesc.colourAttachments.size() < subpassDesc.resolveAttachments.size())
-	{
-		MIRU_FATAL(true, "ERROR: D3D12: More resolve attachment provide than colour attachements.");
-	}
-
-	for (size_t i = 0; i < subpassDesc.resolveAttachments.size(); i++)
-	{
-		const base::RenderPass::AttachmentReference& colour = subpassDesc.colourAttachments[i];
-		const base::RenderPass::AttachmentReference& resolve = subpassDesc.resolveAttachments[i];
-
-		const base::ImageRef& colourImage = framebufferAttachments[colour.attachmentIndex]->GetCreateInfo().image;
-		const base::ImageRef& resolveImage = framebufferAttachments[resolve.attachmentIndex]->GetCreateInfo().image;
-		const base::Image::CreateInfo& colourImageCI = colourImage->GetCreateInfo();
-		const base::Image::CreateInfo& resolveImageCI = resolveImage->GetCreateInfo();
-
-		Image::Resolve resolveRegion;
-		resolveRegion.srcSubresource = {base::Image::AspectBit::COLOUR_BIT, 0, 0, colourImageCI.arrayLayers};
-		resolveRegion.srcOffset = { 0, 0, 0 };
-		resolveRegion.dstSubresource = { base::Image::AspectBit::COLOUR_BIT, 0, 0, resolveImageCI.arrayLayers };
-		resolveRegion.dstOffset = { 0, 0, 0 };
-		resolveRegion.extent = { colourImageCI.width, colourImageCI.height, colourImageCI.depth};
-
-		ResolveImage(index, colourImage, m_RenderPassAttachementImageLayouts[colourImage], resolveImage, m_RenderPassAttachementImageLayouts[resolveImage], { resolveRegion });
-	}
 }
 
 void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)

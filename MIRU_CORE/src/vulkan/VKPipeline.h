@@ -6,27 +6,6 @@ namespace miru
 {
 namespace vulkan
 {
-	class RenderPass final : public base::RenderPass
-	{
-		//Method
-	public:
-		RenderPass(RenderPass::CreateInfo* pCreateInfo);
-		~RenderPass();
-
-		//Members
-	public:
-		VkDevice m_Device;
-
-		VkRenderPass m_RenderPass;
-		VkRenderPassCreateInfo m_RenderPassCI;
-
-		std::vector<VkAttachmentDescription> m_AttachmentDescriptions;
-		std::vector<std::array<std::vector<VkAttachmentReference>, 5>> m_AttachmentReferencesByUsageBySubpass;
-		std::vector<VkSubpassDescription> m_SubpassDescriptions;
-		std::vector<VkSubpassDependency> m_SubpassDependencies;
-		VkRenderPassMultiviewCreateInfo m_MultiviewCreateInfo;
-	};
-
 	class Pipeline final : public base::Pipeline
 	{
 		//Methods

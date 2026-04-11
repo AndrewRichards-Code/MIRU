@@ -535,62 +535,6 @@ void Sync2()
 	descriptorSet1->AddImage(0, 0, { { nullptr, resolveAndInputImageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 	descriptorSet1->Update();
 
-	//Main RenderPass
-	RenderPass::CreateInfo renderPassCI;
-	renderPassCI.debugName = "Basic: RenderPass";
-	renderPassCI.device = device;
-	renderPassCI.attachments = {
-		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,						//Colour MSAA
-		Image::SampleCountBit::SAMPLE_COUNT_8_BIT,
-		RenderPass::AttachmentLoadOp::CLEAR,
-		RenderPass::AttachmentStoreOp::STORE,
-		RenderPass::AttachmentLoadOp::DONT_CARE,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		Image::Layout::UNKNOWN,
-		Image::Layout::COLOUR_ATTACHMENT_OPTIMAL
-		},
-		{depthImage->GetCreateInfo().format,											//Depth MSAA
-		Image::SampleCountBit::SAMPLE_COUNT_8_BIT,
-		RenderPass::AttachmentLoadOp::CLEAR,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		RenderPass::AttachmentLoadOp::DONT_CARE,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		Image::Layout::UNKNOWN,
-		Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-		},
-		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,						//Resolve and input
-		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
-		RenderPass::AttachmentLoadOp::DONT_CARE,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		RenderPass::AttachmentLoadOp::DONT_CARE,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		Image::Layout::UNKNOWN,
-		Image::Layout::SHADER_READ_ONLY_OPTIMAL
-		},
-		{swapchain->m_SwapchainImages[0]->GetCreateInfo().format,						//Swapchain
-		Image::SampleCountBit::SAMPLE_COUNT_1_BIT,
-		RenderPass::AttachmentLoadOp::CLEAR,
-		RenderPass::AttachmentStoreOp::STORE,
-		RenderPass::AttachmentLoadOp::DONT_CARE,
-		RenderPass::AttachmentStoreOp::DONT_CARE,
-		Image::Layout::UNKNOWN,
-		Image::Layout::PRESENT_SRC
-		}
-	};
-	renderPassCI.subpassDescriptions = {
-		{PipelineType::GRAPHICS, {}, {{0, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {{2, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {{1, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL}}, {} },
-		{PipelineType::GRAPHICS, {{2, Image::Layout::SHADER_READ_ONLY_OPTIMAL}}, {{3, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL}}, {}, {}, {} }
-	};
-	renderPassCI.subpassDependencies = {
-		{RenderPass::SubpassExternal, 0,
-		PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
-		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT},
-		{0, 1,
-		PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT,
-		(Barrier::AccessBit)0, Barrier::AccessBit::COLOUR_ATTACHMENT_READ_BIT | Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT, DependencyBit::NONE_BIT},
-	};
-	RenderPassRef renderPass = RenderPass::Create(&renderPassCI);
-
 	//Basic and PostProcessing pipelines
 	Pipeline::CreateInfo pCI;
 	pCI.debugName = "Basic";
@@ -616,8 +560,7 @@ void Sync2()
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
 	pCI.layout = { {setLayout1, setLayout2 }, {} };
-	pCI.renderPass = renderPass;
-	pCI.subpassIndex = 0;
+	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN };
 	PipelineRef pipeline = Pipeline::Create(&pCI);
 	Pipeline::CreateInfo p1CI = pCI;
 	p1CI.debugName = "PostProcess";
@@ -628,27 +571,8 @@ void Sync2()
 	p1CI.rasterisationState = { false, false, PolygonMode::FILL, CullModeBit::NONE_BIT, FrontFace::CLOCKWISE, false, 0.0f, 0.0f, 0.0f, 1.0f };
 	p1CI.depthStencilState = { false, false , CompareOp::NEVER, false, false, {}, {}, 0.0f, 1.0f };
 	p1CI.layout = { {setLayout3 }, {} };
-	p1CI.renderPass = renderPass;
-	p1CI.subpassIndex = 1;
+	p1CI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, Image::Format::UNKNOWN, Image::Format::UNKNOWN };
 	PipelineRef postProcessPipeline = Pipeline::Create(&p1CI);
-
-	Framebuffer::CreateInfo framebufferCI_0, framebufferCI_1;
-	framebufferCI_0.debugName = "Framebuffer0";
-	framebufferCI_0.device = device;
-	framebufferCI_0.renderPass = renderPass;
-	framebufferCI_0.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[0] };
-	framebufferCI_0.width = width;
-	framebufferCI_0.height = height;
-	framebufferCI_0.layers = 1;
-	FramebufferRef framebuffer0 = Framebuffer::Create(&framebufferCI_0);
-	framebufferCI_1.debugName = "Framebuffer1";
-	framebufferCI_1.device = device;
-	framebufferCI_1.renderPass = renderPass;
-	framebufferCI_1.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[1] };
-	framebufferCI_1.width = width;
-	framebufferCI_1.height = height;
-	framebufferCI_1.layers = 1;
-	FramebufferRef framebuffer1 = Framebuffer::Create(&framebufferCI_1);
 
 	Fence::CreateInfo fenceCI;
 	fenceCI.debugName = "DrawFence";
@@ -725,16 +649,6 @@ void Sync2()
 			descriptorSet1->AddImage(0, 0, { { nullptr, resolveAndInputImageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL } });
 			descriptorSet1->Update();
 
-			framebufferCI_0.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[0] };
-			framebufferCI_0.width = width;
-			framebufferCI_0.height = height;
-			framebuffer0 = Framebuffer::Create(&framebufferCI_0);
-
-			framebufferCI_1.attachments = { colourImageView, depthImageView, resolveAndInputImageView, swapchain->m_SwapchainImageViews[1] };
-			framebufferCI_1.width = width;
-			framebufferCI_1.height = height;
-			framebuffer1 = Framebuffer::Create(&framebufferCI_1);
-
 			draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
 			acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 			submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
@@ -770,18 +684,89 @@ void Sync2()
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			cmdBuffer->BeginRenderPass(frameIndex, swapchainImageIndex == 0 ? framebuffer0 : framebuffer1, { {r, g, b, 1.0f}, {0.0f, 0}, {r, g, b, 1.0f}, {r, g, b, 1.0f} });
+			RenderingAttachmentInfo colourRAI = { colourImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::AVERAGE_BIT, resolveAndInputImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, AttachmentLoadOp::CLEAR, AttachmentStoreOp::STORE, {r, g, b, 1.0f} };
+			RenderingAttachmentInfo depthRAI = { depthImageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {0.0f, 0} };
+			RenderingAttachmentInfo colour2RAI = { resolveAndInputImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {r, g, b, 1.0f } };
+
+			Barrier::CreateInfo barrierColourCI;
+			barrierColourCI.type = Barrier::Type::IMAGE;
+			barrierColourCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			barrierColourCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
+			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
+			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			BarrierRef barrierColour = Barrier::Create(&barrierColourCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
+
+			barrierColourCI.type = Barrier::Type::IMAGE;
+			barrierColourCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			barrierColourCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.image = colourImage;
+			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
+			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			barrierColour = Barrier::Create(&barrierColourCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
+
+
+			Barrier::CreateInfo barrierDepthCI;
+			barrierDepthCI.type = Barrier::Type::IMAGE;
+			barrierDepthCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			barrierDepthCI.dstAccess = Barrier::AccessBit::DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			barrierDepthCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierDepthCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierDepthCI.image = depthImage;
+			barrierDepthCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
+			barrierDepthCI.newLayout = Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			barrierDepthCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
+			BarrierRef barrierDepth = Barrier::Create(&barrierDepthCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, DependencyBit::NONE_BIT, { barrierDepth });
+
+			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colourRAI }, &depthRAI, nullptr });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p0 }, 0, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p1 }, 1, pipeline);
 			cmdBuffer->BindVertexBuffers(frameIndex, { vbv });
 			cmdBuffer->BindIndexBuffer(frameIndex, ibv);
 			cmdBuffer->DrawIndexed(frameIndex, 36);
-			cmdBuffer->NextSubpass(frameIndex);
+			cmdBuffer->EndRendering(frameIndex);
+
+			Barrier::CreateInfo barrierResolveAndInputCI;
+			barrierColourCI.type = Barrier::Type::IMAGE;
+			barrierColourCI.srcAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			barrierColourCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
+			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.image = resolveAndInputImage;
+			barrierColourCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+			barrierColourCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			barrierColour = Barrier::Create(&barrierColourCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { barrierColour });
+
+			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colour2RAI }, nullptr, nullptr });
 			cmdBuffer->BindPipeline(frameIndex, postProcessPipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet1 }, 0, postProcessPipeline);
 			cmdBuffer->Draw(frameIndex, 3);
-			cmdBuffer->EndRenderPass(frameIndex);
+			cmdBuffer->EndRendering(frameIndex);
+
+			Barrier::CreateInfo barrierPresentCI;
+			barrierPresentCI.type = Barrier::Type::IMAGE;
+			barrierPresentCI.srcAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			barrierPresentCI.dstAccess = Barrier::AccessBit::NONE_BIT;
+			barrierPresentCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierPresentCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierPresentCI.image = swapchain->m_SwapchainImages[swapchainImageIndex];
+			barrierPresentCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+			barrierPresentCI.newLayout = Image::Layout::PRESENT_SRC;
+			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			BarrierRef barrierPresent = Barrier::Create(&barrierPresentCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
 			cmdBuffer->End(frameIndex);
 
 			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };

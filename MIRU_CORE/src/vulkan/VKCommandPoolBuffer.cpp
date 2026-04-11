@@ -5,7 +5,6 @@
 #include "VKImage.h"
 #include "VKBuffer.h"
 #include "VKPipeline.h"
-#include "VKFramebuffer.h"
 #include "VKDescriptorPoolSet.h"
 #include "VKAccelerationStructure.h"
 
@@ -478,55 +477,6 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 	vkCmdClearDepthStencilImage(m_CmdBuffers[index], ref_cast<Image>(image)->m_Image, static_cast<VkImageLayout>(layout), vkClearDepthStencil, static_cast<uint32_t>(vkSubResources.size()), vkSubResources.data());
 }
 
-void CommandBuffer::BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-
-	std::vector<VkClearValue> vkClearValue;
-	vkClearValue.reserve(clearValues.size());
-	for (auto& clearValue : clearValues)
-		vkClearValue.push_back(*reinterpret_cast<const VkClearValue*>(&clearValue));
-
-	VkRenderPassBeginInfo bi;
-	bi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	bi.pNext = nullptr;
-	bi.renderPass = ref_cast<RenderPass>(framebuffer->GetCreateInfo().renderPass)->m_RenderPass;
-	bi.framebuffer = ref_cast<Framebuffer>(framebuffer)->m_Framebuffer;
-	bi.renderArea.offset = { 0,0 };
-	bi.renderArea.extent.width = framebuffer->GetCreateInfo().width;
-	bi.renderArea.extent.height= framebuffer->GetCreateInfo().height;
-	bi.clearValueCount = static_cast<uint32_t>(vkClearValue.size());
-	bi.pClearValues = vkClearValue.data();
-
-	vkCmdBeginRenderPass(m_CmdBuffers[index], &bi, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-void CommandBuffer::EndRenderPass(uint32_t index)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdEndRenderPass(m_CmdBuffers[index]);
-}
-
-void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeline)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), ref_cast<Pipeline>(pipeline)->m_Pipeline);
-}
-
-void CommandBuffer::NextSubpass(uint32_t index)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	CHECK_VALID_INDEX_RETURN(index);
-	vkCmdNextSubpass(m_CmdBuffers[index], VK_SUBPASS_CONTENTS_INLINE);
-}
-
 void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
@@ -587,6 +537,14 @@ void CommandBuffer::EndRendering(uint32_t index)
 
 	CHECK_VALID_INDEX_RETURN(index);
 	vkCmdEndRendering(m_CmdBuffers[index]);
+}
+
+void CommandBuffer::BindPipeline(uint32_t index, const base::PipelineRef& pipeline)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdBindPipeline(m_CmdBuffers[index], static_cast<VkPipelineBindPoint>(pipeline->GetCreateInfo().type), ref_cast<Pipeline>(pipeline)->m_Pipeline);
 }
 
 void CommandBuffer::BindVertexBuffers(uint32_t index, const std::vector<base::BufferViewRef>& vertexBufferViews)

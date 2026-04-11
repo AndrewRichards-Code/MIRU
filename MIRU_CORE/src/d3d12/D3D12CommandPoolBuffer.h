@@ -48,10 +48,6 @@ namespace d3d12
 		void ClearColourImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearColourValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;
 		void ClearDepthStencilImage(uint32_t index, const base::ImageRef& image, base::Image::Layout layout, const base::Image::ClearDepthStencilValue& clear, const std::vector<base::Image::SubresourceRange>& subresourceRanges) override;
 
-		void BeginRenderPass(uint32_t index, const base::FramebufferRef& framebuffer, const std::vector<base::Image::ClearValue>& clearValues) override;
-		void EndRenderPass(uint32_t index) override;
-		void NextSubpass(uint32_t index) override;
-
 		void BeginRendering(uint32_t index, const base::RenderingInfo& renderingInfo) override;
 		void EndRendering(uint32_t index) override;
 
@@ -83,9 +79,6 @@ namespace d3d12
 
 		void SetViewport(uint32_t index, const std::vector<base::Viewport>& viewports) override;
 		void SetScissor(uint32_t index, const std::vector<base::Rect2D>& scissors) override;
-
-	private:
-		void ResolvePreviousSubpassAttachments(uint32_t index);
 
 		//Members
 	public:
@@ -120,19 +113,11 @@ namespace d3d12
 			UINT DSV_DescriptorOffset;
 			bool SetDescriptorHeap;
 
-			//RenderPass Control Info
-			base::FramebufferRef Framebuffer;
-			std::vector<base::Image::ClearValue> ClearValues;
-			uint32_t SubpassIndex = (uint32_t)-1;
-
 			//Dynamic Rendering Info
 			base::RenderingInfo RenderingInfo;
 		};
 		typedef std::vector<RenderingResource> RenderingResources;
 		RenderingResources m_RenderingResources;
-
-	private:
-		std::map<base::ImageRef, base::Image::Layout> m_RenderPassAttachementImageLayouts;
 	};
 }
 }

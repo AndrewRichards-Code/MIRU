@@ -8,20 +8,6 @@
 using namespace miru;
 using namespace d3d12;
 
-//RenderPass
-RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	m_CI = *pCreateInfo;
-}
-
-RenderPass::~RenderPass()
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-}
-
 #define OFFSET_AND_SIZE(m) (offsetof(PipelineStateStream, m)), sizeof(PipelineStateStream::m)
 
 //Pipeline
@@ -192,40 +178,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		//RTV and DSV
 		D3D12_RT_FORMAT_ARRAY& renderTargetFormats = m_PipelineStateStream->RTVFormats;
-		if (m_CI.renderPass)
-		{
-			const RenderPass::CreateInfo& renderPassCI = m_CI.renderPass->GetCreateInfo();
-
-			//RTV
-			size_t i = 0;
-			for (; i < std::min(renderPassCI.subpassDescriptions[m_CI.subpassIndex].colourAttachments.size(), size_t(8)); i++)
-			{
-				const RenderPass::AttachmentReference& attachment = renderPassCI.subpassDescriptions[m_CI.subpassIndex].colourAttachments[i];
-				renderTargetFormats.RTFormats[i] = Image::ToD3D12ImageFormat(renderPassCI.attachments[attachment.attachmentIndex].format);
-			}
-			renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
-
-			//DSV
-			if (!renderPassCI.subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment.empty())
-			{
-				const RenderPass::AttachmentReference& attachment = renderPassCI.subpassDescriptions[m_CI.subpassIndex].depthStencilAttachment[0];//There can be only one DSV.
-				if (attachment.layout == Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_STENCIL_READ_ONLY_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_ATTACHMENT_OPTIMAL
-					|| attachment.layout == Image::Layout::DEPTH_READ_ONLY_OPTIMAL
-					|| attachment.layout == Image::Layout::STENCIL_ATTACHMENT_OPTIMAL
-					|| attachment.layout == Image::Layout::STENCIL_READ_ONLY_OPTIMAL)
-				{
-					m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.renderPass->GetCreateInfo().attachments[attachment.attachmentIndex].format);
-				}
-			}
-			if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
-		}
-		else
-		{
 			size_t i = 0;
 			for (; i < std::min(m_CI.dynamicRendering.colourAttachmentFormats.size(), size_t(8)); i++)
 			{
@@ -237,7 +189,6 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 			m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
 			if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
 				m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
-		}
 
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(RasterizerState));
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(SampleDesc));
@@ -261,15 +212,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(Flags));
 
 		//ViewInstancing
-		uint32_t viewMask = 0;
-		if (m_CI.renderPass && !m_CI.renderPass->GetCreateInfo().multiview.viewMasks.empty())
-		{
-			viewMask = m_CI.renderPass->GetCreateInfo().multiview.viewMasks[static_cast<size_t>(m_CI.subpassIndex)];
-		}
-		else
-		{
-			viewMask = m_CI.dynamicRendering.viewMask;
-		}
+		uint32_t viewMask = m_CI.dynamicRendering.viewMask;
 		if (viewMask > 0)
 		{
 			D3D12_VIEW_INSTANCING_DESC& viewInstancingDesc = m_PipelineStateStream->ViewInstancingDesc;

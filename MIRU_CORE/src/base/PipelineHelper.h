@@ -369,5 +369,21 @@ namespace base
 		SUSPENDING_BIT = 0x00000002,
 		RESUMING_BIT = 0x00000004,
 	};
+
+	//Attachment Load and Store Ops
+
+	enum class AttachmentLoadOp : uint32_t
+	{
+		LOAD,
+		CLEAR,
+		DONT_CARE
+	};
+
+	enum class AttachmentStoreOp : uint32_t
+	{
+		STORE,
+		DONT_CARE,
+		NONE = 1000301000,
+	};
 }
 }

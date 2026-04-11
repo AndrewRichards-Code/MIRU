@@ -136,10 +136,6 @@ namespace base
 		virtual void ClearColourImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearColourValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
 		virtual void ClearDepthStencilImage(uint32_t index, const ImageRef& image, Image::Layout layout, const Image::ClearDepthStencilValue& clear, const std::vector<Image::SubresourceRange>& subresourceRanges) = 0;
 
-		virtual void BeginRenderPass(uint32_t index, const FramebufferRef& framebuffer, const std::vector<Image::ClearValue>& clearValues) = 0;
-		virtual void EndRenderPass(uint32_t index) = 0;
-		virtual void NextSubpass(uint32_t index) = 0;
-
 		virtual void BeginRendering(uint32_t index, const RenderingInfo& renderingInfo) = 0;
 		virtual void EndRendering(uint32_t index) = 0;
 

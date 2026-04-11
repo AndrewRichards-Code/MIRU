@@ -469,9 +469,8 @@ void DynamicRendering()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = { { DynamicState::VIEWPORT, DynamicState::SCISSOR } }; //Specify dynamics state.
-	pCI.layout = { {setLayout1, setLayout2 }, {} };
-	pCI.renderPass = nullptr;
 	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN};
+	pCI.layout = { {setLayout1, setLayout2 }, {} };
 	PipelineRef pipeline = Pipeline::Create(&pCI);
 
 	Fence::CreateInfo fenceCI;
@@ -557,8 +556,9 @@ void DynamicRendering()
 
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
-			RenderingAttachmentInfo colourRAI = { swapchain->m_SwapchainImageViews[swapchainImageIndex], Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, RenderPass::AttachmentLoadOp::CLEAR, RenderPass::AttachmentStoreOp::STORE, {r, g, b, 1.0f}};
-			RenderingAttachmentInfo depthRAI = { depthImageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, RenderPass::AttachmentLoadOp::CLEAR, RenderPass::AttachmentStoreOp::DONT_CARE, {0.0f, 0} };
+
+			RenderingAttachmentInfo colourRAI = { swapchain->m_SwapchainImageViews[swapchainImageIndex], Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::STORE, {r, g, b, 1.0f}};
+			RenderingAttachmentInfo depthRAI = { depthImageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {0.0f, 0} };
 			
 			Barrier::CreateInfo barrierColourCI;
 			barrierColourCI.type = Barrier::Type::IMAGE;
@@ -586,7 +586,6 @@ void DynamicRendering()
 			BarrierRef barrierDepth = Barrier::Create(&barrierDepthCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, DependencyBit::NONE_BIT, { barrierDepth });
 
-
 			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colourRAI }, &depthRAI, nullptr });
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->SetViewport(frameIndex, { {0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f} });
@@ -610,6 +609,7 @@ void DynamicRendering()
 			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			BarrierRef barrierPresent = Barrier::Create(&barrierPresentCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
+			
 			cmdBuffer->End(frameIndex);
 
 			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };

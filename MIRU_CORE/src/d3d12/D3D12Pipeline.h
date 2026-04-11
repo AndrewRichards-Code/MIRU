@@ -6,18 +6,6 @@ namespace miru
 {
 namespace d3d12
 {
-	class RenderPass final : public base::RenderPass
-	{
-		//Method
-	public:
-		RenderPass(RenderPass::CreateInfo* pCreateInfo);
-		~RenderPass();
-
-		//Members
-	public:
-		ID3D12Device* m_Device;
-	};
-
 	class Pipeline final : public base::Pipeline
 	{
 		//enums/structs

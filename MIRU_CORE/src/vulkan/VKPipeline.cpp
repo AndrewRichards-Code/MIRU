@@ -6,113 +6,6 @@
 using namespace miru;
 using namespace vulkan;
 
-//RenderPass
-RenderPass::RenderPass(RenderPass::CreateInfo* pCreateInfo)
-	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	m_CI = *pCreateInfo;
-
-	m_AttachmentDescriptions.reserve(m_CI.attachments.size());
-	for (auto& attachment : m_CI.attachments)
-		m_AttachmentDescriptions.push_back({
-		static_cast<VkAttachmentDescriptionFlags>(0),
-		static_cast<VkFormat>(attachment.format),
-		static_cast<VkSampleCountFlagBits>(attachment.samples),
-		static_cast<VkAttachmentLoadOp>(attachment.loadOp),
-		static_cast<VkAttachmentStoreOp>(attachment.storeOp),
-		static_cast<VkAttachmentLoadOp>(attachment.stencilLoadOp),
-		static_cast<VkAttachmentStoreOp>(attachment.stencilStoreOp),
-		static_cast<VkImageLayout>(attachment.initialLayout),
-		static_cast<VkImageLayout>(attachment.finalLayout),
-			});
-
-	for (auto& subpassDescription : m_CI.subpassDescriptions)
-	{
-		m_AttachmentReferencesByUsageBySubpass.push_back({});
-
-		for (auto& input : subpassDescription.inputAttachments)
-			m_AttachmentReferencesByUsageBySubpass.back()[0].push_back({ input.attachmentIndex, static_cast<VkImageLayout>(input.layout) });
-
-		for (auto& colour : subpassDescription.colourAttachments)
-			m_AttachmentReferencesByUsageBySubpass.back()[1].push_back({ colour.attachmentIndex, static_cast<VkImageLayout>(colour.layout) });
-
-		for (auto& resolve : subpassDescription.resolveAttachments)
-			m_AttachmentReferencesByUsageBySubpass.back()[2].push_back({ resolve.attachmentIndex, static_cast<VkImageLayout>(resolve.layout) });
-
-		for (auto& depth : subpassDescription.depthStencilAttachment)
-			m_AttachmentReferencesByUsageBySubpass.back()[3].push_back({depth.attachmentIndex, static_cast<VkImageLayout>(depth.layout) });
-
-		for (auto& preserve : subpassDescription.preseverseAttachments)
-			m_AttachmentReferencesByUsageBySubpass.back()[4].push_back({ preserve.attachmentIndex, static_cast<VkImageLayout>(preserve.layout) });
-	}
-
-	m_SubpassDescriptions.reserve(m_CI.subpassDescriptions.size());
-	size_t i = 0;
-	for (auto& subpassDescription : m_CI.subpassDescriptions)
-	{
-		m_SubpassDescriptions.push_back({
-			static_cast<VkSubpassDescriptionFlags>(0),
-			static_cast<VkPipelineBindPoint>(subpassDescription.pipelineType),
-			static_cast<uint32_t>(m_AttachmentReferencesByUsageBySubpass[i][0].size()),
-			m_AttachmentReferencesByUsageBySubpass[i][0].data(),
-			static_cast<uint32_t>(m_AttachmentReferencesByUsageBySubpass[i][1].size()),
-			m_AttachmentReferencesByUsageBySubpass[i][1].data(),
-			m_AttachmentReferencesByUsageBySubpass[i][2].data(),
-			m_AttachmentReferencesByUsageBySubpass[i][3].data(),
-			static_cast<uint32_t>(m_AttachmentReferencesByUsageBySubpass[i][4].size()),
-			reinterpret_cast<uint32_t*>(m_AttachmentReferencesByUsageBySubpass[i][4].data()),
-			});
-		i++;
-	}
-
-	m_SubpassDependencies.reserve(m_CI.subpassDependencies.size());
-	for (auto& dependency : m_CI.subpassDependencies)
-		m_SubpassDependencies.push_back({
-			dependency.srcSubpass,
-			dependency.dstSubpass,
-			static_cast<VkPipelineStageFlags>(dependency.srcStage),
-			static_cast<VkPipelineStageFlags>(dependency.dstStage),
-			static_cast<VkAccessFlags>(dependency.srcAccess),
-			static_cast<VkAccessFlags>(dependency.dstAccess),
-			static_cast<VkDependencyFlags>(dependency.dependencies)
-			});
-	
-	m_RenderPassCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	m_RenderPassCI.pNext = nullptr;
-	m_RenderPassCI.flags = 0;
-	m_RenderPassCI.attachmentCount = static_cast<uint32_t>(m_AttachmentDescriptions.size());
-	m_RenderPassCI.pAttachments = m_AttachmentDescriptions.data();
-	m_RenderPassCI.subpassCount = static_cast<uint32_t>(m_SubpassDescriptions.size());
-	m_RenderPassCI.pSubpasses = m_SubpassDescriptions.data();
-	m_RenderPassCI.dependencyCount = static_cast<uint32_t>(m_SubpassDependencies.size());
-	m_RenderPassCI.pDependencies = m_SubpassDependencies.data();
-
-	if (!m_CI.multiview.viewMasks.empty())
-	{
-		m_MultiviewCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
-		m_MultiviewCreateInfo.pNext = nullptr;
-		m_MultiviewCreateInfo.subpassCount = static_cast<uint32_t>(m_CI.multiview.viewMasks.size());
-		m_MultiviewCreateInfo.pViewMasks = m_CI.multiview.viewMasks.size() ? m_CI.multiview.viewMasks.data() : nullptr;
-		m_MultiviewCreateInfo.dependencyCount = static_cast<uint32_t>(m_CI.multiview.viewOffsets.size());
-		m_MultiviewCreateInfo.pViewOffsets = m_CI.multiview.viewOffsets.size() ? m_CI.multiview.viewOffsets.data() : nullptr;
-		m_MultiviewCreateInfo.correlationMaskCount = static_cast<uint32_t>(m_CI.multiview.correlationMasks.size());
-		m_MultiviewCreateInfo.pCorrelationMasks = m_CI.multiview.correlationMasks.size() ? m_CI.multiview.correlationMasks.data() : nullptr;
-		m_RenderPassCI.pNext = &m_MultiviewCreateInfo;
-	}
-
-	MIRU_FATAL(vkCreateRenderPass(m_Device, &m_RenderPassCI, nullptr, &m_RenderPass), "ERROR: VULKAN: Failed to create RenderPass.");
-	VKSetName<VkRenderPass>(m_Device, m_RenderPass, m_CI.debugName);
-}
-
-RenderPass::~RenderPass()
-{
-	MIRU_CPU_PROFILE_FUNCTION();
-
-	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
-}
-
 //Pipeline
 Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 	:m_Device(ref_cast<Device>(pCreateInfo->device)->m_Device)
@@ -331,11 +224,8 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.pColorBlendState = &vkColourBlendState;
 		m_GPCI.pDynamicState = &vkDynamicState;
 		m_GPCI.layout = m_PipelineLayout;
-		if (m_CI.renderPass)
-			m_GPCI.renderPass = ref_cast<RenderPass>(m_CI.renderPass)->m_RenderPass;
-		else
+		m_GPCI.renderPass = VK_NULL_HANDLE;
 			m_GPCI.pNext = &vkPipelineRenderingCI;
-		m_GPCI.subpass = m_CI.subpassIndex;
 		m_GPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_GPCI.basePipelineIndex = -1;
 
