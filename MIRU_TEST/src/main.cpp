@@ -1,6 +1,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
+//D3D12SDK exported variables for D3D12Core.dll to pick up.
+extern "C"
+{
+	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 619;
+	__declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";
+}
+
 #if defined(_WIN64)
 //Forward Declaration from other cpp files.
 void Basic();
