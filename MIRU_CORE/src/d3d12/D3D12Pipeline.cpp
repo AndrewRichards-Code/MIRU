@@ -178,17 +178,17 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 		//RTV and DSV
 		D3D12_RT_FORMAT_ARRAY& renderTargetFormats = m_PipelineStateStream->RTVFormats;
-			size_t i = 0;
-			for (; i < std::min(m_CI.dynamicRendering.colourAttachmentFormats.size(), size_t(8)); i++)
-			{
-				renderTargetFormats.RTFormats[i] = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.colourAttachmentFormats[i]);
-			}
-			renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
+		size_t i = 0;
+		for (; i < std::min(m_CI.dynamicRendering.colourAttachmentFormats.size(), size_t(8)); i++)
+		{
+			renderTargetFormats.RTFormats[i] = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.colourAttachmentFormats[i]);
+		}
+		renderTargetFormats.NumRenderTargets = static_cast<UINT>(i);
 
-			//DSV
-			m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
-			if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
-				m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
+		//DSV
+		m_PipelineStateStream->DSVFormat = Image::ToD3D12ImageFormat(m_CI.dynamicRendering.depthAttachmentFormat);
+		if (m_PipelineStateStream->DSVFormat == DXGI_FORMAT_UNKNOWN) //If no DSV, then DepthStencilState must be null.
+			m_PipelineStateStream->DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC1();
 
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(RasterizerState));
 		AddPipelineStateStreamToDesc(OFFSET_AND_SIZE(SampleDesc));
@@ -521,35 +521,35 @@ DXGI_FORMAT Pipeline::ToDXGI_FORMAT(base::VertexType type)
 	{
 	case base::VertexType::FLOAT:
 		return DXGI_FORMAT_R32_FLOAT;
-	case base::VertexType::VEC2:
+	case base::VertexType::FLOAT2:
 		return DXGI_FORMAT_R32G32_FLOAT;
-	case base::VertexType::VEC3:
+	case base::VertexType::FLOAT3:
 		return DXGI_FORMAT_R32G32B32_FLOAT;
-	case base::VertexType::VEC4:
+	case base::VertexType::FLOAT4:
 		return DXGI_FORMAT_R32G32B32A32_FLOAT;
 	case base::VertexType::INT:
 		return DXGI_FORMAT_R32_SINT;
-	case base::VertexType::IVEC2:
+	case base::VertexType::INT2:
 		return DXGI_FORMAT_R32G32_SINT;
-	case base::VertexType::IVEC3:
+	case base::VertexType::INT3:
 		return DXGI_FORMAT_R32G32B32_SINT;
-	case base::VertexType::IVEC4:
+	case base::VertexType::INT4:
 		return DXGI_FORMAT_R32G32B32A32_SINT;
 	case base::VertexType::UINT:
 		return DXGI_FORMAT_R32_UINT;
-	case base::VertexType::UVEC2:
+	case base::VertexType::UINT2:
 		return DXGI_FORMAT_R32G32_UINT;
-	case base::VertexType::UVEC3:
+	case base::VertexType::UINT3:
 		return DXGI_FORMAT_R32G32B32_UINT;
-	case base::VertexType::UVEC4:
+	case base::VertexType::UINT4:
 		return DXGI_FORMAT_R32G32B32A32_UINT;
 	case base::VertexType::DOUBLE:
 		return DXGI_FORMAT_R32_FLOAT;
-	case base::VertexType::DVEC2:
+	case base::VertexType::DOUBLE2:
 		return DXGI_FORMAT_R32G32_FLOAT;
-	case base::VertexType::DVEC3:
+	case base::VertexType::DOUBLE3:
 		return DXGI_FORMAT_R32G32B32_FLOAT;
-	case base::VertexType::DVEC4:
+	case base::VertexType::DOUBLE4:
 		return DXGI_FORMAT_R32G32B32A32_FLOAT;
 	default:
 		return DXGI_FORMAT_UNKNOWN;

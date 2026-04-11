@@ -452,7 +452,7 @@ void DynamicRendering()
 	pCI.type = PipelineType::GRAPHICS;
 	pCI.shaders = { vertexShader, fragmentShader };
 	pCI.vertexInputState.vertexInputBindingDescriptions = { {0, sizeof(vertices) / 8, VertexInputRate::VERTEX} };
-	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::VEC4, 0, "POSITION"} };
+	pCI.vertexInputState.vertexInputAttributeDescriptions = { {0, 0, VertexType::FLOAT4, 0, "POSITION"} };
 	pCI.inputAssemblyState = { PrimitiveTopology::TRIANGLE_LIST, false };
 	pCI.tessellationState = {};
 	pCI.viewportState.viewports = { {} }; //Specify number of viewports to be used.

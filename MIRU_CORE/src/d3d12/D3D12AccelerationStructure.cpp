@@ -31,7 +31,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 
 			d3d12Triangles.Transform3x4 = triangles.transformData.deviceAddress;
 			d3d12Triangles.IndexFormat = triangles.indexType == base::IndexType::UINT32 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
-			d3d12Triangles.VertexFormat = triangles.vertexFormat == base::VertexType::VEC4 ? DXGI_FORMAT_R32G32B32_FLOAT : Pipeline::ToDXGI_FORMAT(triangles.vertexFormat);
+			d3d12Triangles.VertexFormat = triangles.vertexFormat == base::VertexType::FLOAT4 ? DXGI_FORMAT_R32G32B32_FLOAT : Pipeline::ToDXGI_FORMAT(triangles.vertexFormat);
 			d3d12Triangles.IndexCount = triangles.maxIndex;
 			d3d12Triangles.VertexCount = triangles.maxVertex;
 			d3d12Triangles.IndexBuffer = triangles.indexData.deviceAddress;

@@ -116,6 +116,8 @@ namespace base
 		void GetShaderByteCode();
 		virtual void Reconstruct() = 0;
 
+		uint32_t GetSizeOfVertexType(VertexType type);
+
 		//Members
 	protected:
 		CreateInfo m_CI = {};

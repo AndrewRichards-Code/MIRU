@@ -22,21 +22,21 @@ namespace base
 	enum class VertexType : uint32_t
 	{
 		FLOAT,
-		VEC2,
-		VEC3,
-		VEC4,
+		FLOAT2,
+		FLOAT3,
+		FLOAT4,
 		DOUBLE,
-		DVEC2,
-		DVEC3,
-		DVEC4,
+		DOUBLE2,
+		DOUBLE3,
+		DOUBLE4,
 		INT,
-		IVEC2,
-		IVEC3,
-		IVEC4,
+		INT2,
+		INT3,
+		INT4,
 		UINT,
-		UVEC2,
-		UVEC3,
-		UVEC4
+		UINT2,
+		UINT3,
+		UINT4
 	};
 	struct VertexInputAttributeDescription
 	{

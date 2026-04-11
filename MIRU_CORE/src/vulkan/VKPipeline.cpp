@@ -225,7 +225,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_GPCI.pDynamicState = &vkDynamicState;
 		m_GPCI.layout = m_PipelineLayout;
 		m_GPCI.renderPass = VK_NULL_HANDLE;
-			m_GPCI.pNext = &vkPipelineRenderingCI;
+		m_GPCI.pNext = &vkPipelineRenderingCI;
 		m_GPCI.basePipelineHandle = VK_NULL_HANDLE;
 		m_GPCI.basePipelineIndex = -1;
 
@@ -412,35 +412,35 @@ VkFormat Pipeline::ToVkFormat(base::VertexType type)
 	{
 	case base::VertexType::FLOAT:
 		return VK_FORMAT_R32_SFLOAT;
-	case base::VertexType::VEC2:
+	case base::VertexType::FLOAT2:
 		return VK_FORMAT_R32G32_SFLOAT;
-	case base::VertexType::VEC3:
+	case base::VertexType::FLOAT3:
 		return VK_FORMAT_R32G32B32_SFLOAT;
-	case base::VertexType::VEC4:
+	case base::VertexType::FLOAT4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
 	case base::VertexType::INT:
 		return VK_FORMAT_R32_SINT;
-	case base::VertexType::IVEC2:
+	case base::VertexType::INT2:
 		return VK_FORMAT_R32G32_SINT;
-	case base::VertexType::IVEC3:
+	case base::VertexType::INT3:
 		return VK_FORMAT_R32G32B32_SINT;
-	case base::VertexType::IVEC4:
+	case base::VertexType::INT4:
 		return VK_FORMAT_R32G32B32A32_SINT;
 	case base::VertexType::UINT:
 		return VK_FORMAT_R32_UINT;
-	case base::VertexType::UVEC2:
+	case base::VertexType::UINT2:
 		return VK_FORMAT_R32G32_UINT;
-	case base::VertexType::UVEC3:
+	case base::VertexType::UINT3:
 		return VK_FORMAT_R32G32B32_UINT;
-	case base::VertexType::UVEC4:
+	case base::VertexType::UINT4:
 		return VK_FORMAT_R32G32B32A32_UINT;
 	case base::VertexType::DOUBLE:
 		return VK_FORMAT_R64_SFLOAT;
-	case base::VertexType::DVEC2:
+	case base::VertexType::DOUBLE2:
 		return VK_FORMAT_R64G64_SFLOAT;
-	case base::VertexType::DVEC3:
+	case base::VertexType::DOUBLE3:
 		return VK_FORMAT_R64G64B64_SFLOAT;
-	case base::VertexType::DVEC4:
+	case base::VertexType::DOUBLE4:
 		return VK_FORMAT_R64G64B64A64_SFLOAT;
 	default:
 		return VK_FORMAT_UNDEFINED;

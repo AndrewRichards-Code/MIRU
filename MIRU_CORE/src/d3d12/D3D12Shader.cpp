@@ -196,39 +196,6 @@ void Shader::D3D12ShaderReflection(
 
 									if (stage == D3D12_SHADER_VERSION_TYPE::D3D12_SHVER_VERTEX_SHADER)
 									{
-										auto sizeof_miru_base_VertexType = [](base::VertexType type) -> uint32_t
-										{
-											switch (type)
-											{
-											case miru::base::VertexType::FLOAT:
-											case miru::base::VertexType::INT:
-											case miru::base::VertexType::UINT:
-												return 4;
-											case miru::base::VertexType::VEC2:
-											case miru::base::VertexType::IVEC2:
-											case miru::base::VertexType::UVEC2:
-												return 8;
-											case miru::base::VertexType::VEC3:
-											case miru::base::VertexType::IVEC3:
-											case miru::base::VertexType::UVEC3:
-												return 12;
-											case miru::base::VertexType::VEC4:
-											case miru::base::VertexType::IVEC4:
-											case miru::base::VertexType::UVEC4:
-												return 16;
-											case miru::base::VertexType::DOUBLE:
-												return 8;
-											case miru::base::VertexType::DVEC2:
-												return 16;
-											case miru::base::VertexType::DVEC3:
-												return 24;
-											case miru::base::VertexType::DVEC4:
-												return 32;
-											default:
-												return 0;
-											}
-										};
-
 										VSIADs.clear();
 										for (UINT i = 0; i < shaderDesc.InputParameters; i++)
 										{
@@ -240,7 +207,7 @@ void Shader::D3D12ShaderReflection(
 												Shader::VertexShaderInputAttributeDescription vsiad;
 												vsiad.location = input_parameter.SemanticIndex;
 												vsiad.vertexType = D3D_REGISTER_COMPONENT_TYPE_to_miru_base_VertexType(input_parameter.ComponentType, (uint32_t)log2((double)(input_parameter.Mask + 1)));
-												vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + sizeof_miru_base_VertexType(VSIADs.back().vertexType);
+												vsiad.offset = VSIADs.empty() ? 0 : VSIADs.back().offset + GetSizeOfVertexType(VSIADs.back().vertexType);
 												vsiad.semanticName = input_parameter.SemanticName;
 												VSIADs.push_back(vsiad);
 											}

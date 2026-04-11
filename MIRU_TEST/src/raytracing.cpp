@@ -302,7 +302,7 @@ void Raytracing()
 	asbiGBI.geometries.push_back({});
 	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES;
 	asbiGBI.geometries[0].triangles = {
-				VertexType::VEC3,
+				VertexType::FLOAT3,
 				GetBufferDeviceAddress(device, c_vb),
 				static_cast<uint64_t>(4 * sizeof(float)),
 				std::size(vertices) / 4,

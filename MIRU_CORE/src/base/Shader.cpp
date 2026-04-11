@@ -6,6 +6,8 @@
 #include "vulkan/VKShader.h"
 #endif
 
+#include "PipelineHelper.h"
+
 #include "ARC/src/FileSaver.h"
 #include "ARC/src/FileLoader.h"
 #include "ARC/External/JSON/json.hpp"
@@ -399,4 +401,38 @@ void Shader::GetShaderByteCode()
 
 	m_ShaderBinary = arc::ReadBinaryFile(binFilepath);
 	MIRU_FATAL(m_ShaderBinary.empty(), "ERROR: BASE: Unable to read shader binary file.");
+}
+
+//TODO: Should this move to pipeline?
+uint32_t Shader::GetSizeOfVertexType(VertexType type)
+{
+	switch (type)
+	{
+	case miru::base::VertexType::FLOAT:
+	case miru::base::VertexType::INT:
+	case miru::base::VertexType::UINT:
+		return 4;
+	case miru::base::VertexType::FLOAT2:
+	case miru::base::VertexType::INT2:
+	case miru::base::VertexType::UINT2:
+		return 8;
+	case miru::base::VertexType::FLOAT3:
+	case miru::base::VertexType::INT3:
+	case miru::base::VertexType::UINT3:
+		return 12;
+	case miru::base::VertexType::FLOAT4:
+	case miru::base::VertexType::INT4:
+	case miru::base::VertexType::UINT4:
+		return 16;
+	case miru::base::VertexType::DOUBLE:
+		return 8;
+	case miru::base::VertexType::DOUBLE2:
+		return 16;
+	case miru::base::VertexType::DOUBLE3:
+		return 24;
+	case miru::base::VertexType::DOUBLE4:
+		return 32;
+	default:
+		return 0;
+	}
 }
