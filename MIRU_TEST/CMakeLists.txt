@@ -39,6 +39,9 @@ target_sources(MIRU_TEST PRIVATE ${SRC_CPP_FILES} ${SRC_HEADERS} ${HLSL_FILES} $
 
 target_link_libraries(MIRU_TEST PRIVATE MIRU_CORE ARC)
 
+set_target_properties(MIRU_TEST PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+set_target_properties(MIRU_TEST PROPERTIES LINK_WARNING_AS_ERROR ON)
+
 source_group("src" FILES ${SRC_CPP_FILES} ${SRC_HEADERS})
 source_group("res\\shaders" FILES ${HLSL_FILES} ${HLSL_JSON_FILES})
 source_group("res" FILES ${JSON_FILES})

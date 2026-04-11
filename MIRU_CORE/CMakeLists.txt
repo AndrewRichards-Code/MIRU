@@ -127,6 +127,10 @@ add_library(MIRU_CORE SHARED)
 target_sources(MIRU_CORE PRIVATE ${BASE_CPP_FILES} ${DEBUG_CPP_FILES} ${MAIN_CPP_FILES} ${BASE_HEADERS} ${DEBUG_HEADERS} ${MAIN_HEADERS})
 
 target_link_libraries(MIRU_CORE PRIVATE ARC)
+
+set_target_properties(MIRU_CORE PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+set_target_properties(MIRU_CORE PROPERTIES LINK_WARNING_AS_ERROR ON)
+
 set_target_properties(ARC PROPERTIES FOLDER "External")
 
 source_group("src\\base" FILES ${BASE_CPP_FILES} ${BASE_HEADERS})
@@ -203,6 +207,11 @@ if (Vulkan_FOUND)
 	target_include_directories(MIRU_CORE PRIVATE ${Vulkan_INCLUDE_DIRS})
 	target_link_directories(MIRU_CORE PRIVATE "${Vulkan_SDK_DIR}/Lib")
 	target_link_libraries(MIRU_CORE PRIVATE vulkan-1.lib optimized spirv-cross-core.lib debug spirv-cross-cored.lib) #Linux?
+
+	#Vulkan SDK does not distrub spirv-cross-cored.pdb, so ignore MSVC's warning]
+	if(MSVC)
+		target_link_options(MIRU_CORE PRIVATE "/ignore:4099")
+	endif()
 
 	if (NOT DXCOMPILER_FOUND)
 		target_link_libraries(MIRU_CORE PRIVATE dxcompiler.lib)
