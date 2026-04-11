@@ -43,7 +43,7 @@ void RenderDoc::LoadRenderDoc()
 	#elif defined(__ANDROID__)
 		s_RenderDocFullpath = "libVkLayer_GLES_RenderDoc.so"; 
 	#endif
-		s_RenderDocHandle = arc::DynamicLibrary::Load(s_RenderDocFullpath.generic_string());
+		s_RenderDocHandle = arc::DynamicLibrary::Load(s_RenderDocFullpath);
 		if (!s_RenderDocHandle)
 		{
 			std::string error_str = "WARN: BASE: Unable to load '" + s_RenderDocFullpath.generic_string() + "'.";

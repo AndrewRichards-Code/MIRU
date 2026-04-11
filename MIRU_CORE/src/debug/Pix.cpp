@@ -11,6 +11,8 @@
 #include <ShlObj.h>
 #endif
 
+#include <algorithm>
+
 using namespace miru;
 using namespace debug;
 
@@ -41,12 +43,40 @@ void Pix::LoadWinPixEventRuntime()
 {
 	if (!s_WinPixEventRuntimeHandle)
 	{
+		std::string buildDirectory(BUILD_DIR);
+		std::replace(buildDirectory.begin(), buildDirectory.end(), '/', '\\');
+		s_WinPixEventRuntimeFullpath = std::filesystem::path(buildDirectory) / "packages";
+		std::filesystem::path winPixEventRuntimeVersionFolder;
+		for (auto const& directory : std::filesystem::directory_iterator(s_WinPixEventRuntimeFullpath))
+		{
+			const std::string& winPixEventRuntimeVersionFolderStart = "WinPixEventRuntime.";
+			if (directory.is_directory() && directory.path().string().find(winPixEventRuntimeVersionFolderStart) != std::string::npos)
+			{
+				if (winPixEventRuntimeVersionFolder.empty())
+				{
+					winPixEventRuntimeVersionFolder = directory.path();
+					continue;
+				}
+
+				//Convert "WinPixEventRuntime.1.0.240308001" to "10.240308001"
+				const size_t& folderNameOffset = std::string("WinPixEventRuntime.").size();
+				std::string dirWinPixEventRuntimeVersionStr = directory.path().lexically_relative(s_WinPixEventRuntimeFullpath).string().substr(folderNameOffset).erase(1, 1);
+				std::string curWinPixEventRuntimeVersionStr = winPixEventRuntimeVersionFolder.lexically_relative(s_WinPixEventRuntimeFullpath).string().substr(folderNameOffset).erase(1, 1);
+
+				float dirWinPixEventRuntimeVersion = std::stof(dirWinPixEventRuntimeVersionStr);
+				float curWinPixEventRuntimeVersion = std::stof(curWinPixEventRuntimeVersionStr);
+				if (dirWinPixEventRuntimeVersion > curWinPixEventRuntimeVersion)
+				{
+					winPixEventRuntimeVersionFolder = directory.path();
+				}
+			}
+		}
 	#if defined (MIRU_WIN64_UWP)
-		s_WinPixEventRuntimeFullpath = std::string(BUILD_DIR) + "/packages/WinPixEventRuntime.1.0.231030001/bin/x64/WinPixEventRuntime_UAP.dll";
+		s_WinPixEventRuntimeFullpath = winPixEventRuntimeVersionFolder / "bin\\x64\\WinPixEventRuntime_UAP.dll";
 	#else
-		s_WinPixEventRuntimeFullpath = std::string(BUILD_DIR) + "/packages/WinPixEventRuntime.1.0.231030001/bin/x64/WinPixEventRuntime.dll";
+		s_WinPixEventRuntimeFullpath = winPixEventRuntimeVersionFolder / "bin\\x64\\WinPixEventRuntime.dll";
 	#endif
-		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath.generic_string());
+		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath);
 		if (!s_WinPixEventRuntimeHandle)
 		{
 			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
@@ -103,8 +133,8 @@ void Pix::LoadWinPixGpuCapturer()
 				}
 			}
 		}
-		s_WinPixGpuCapturerFullpath /= pixVersionFolder / "WinPixGpuCapturer.dll";
-		s_WinPixGpuCapturerHandle = arc::DynamicLibrary::Load(s_WinPixGpuCapturerFullpath.generic_string());
+		s_WinPixGpuCapturerFullpath = pixVersionFolder / "WinPixGpuCapturer.dll";
+		s_WinPixGpuCapturerHandle = arc::DynamicLibrary::Load(s_WinPixGpuCapturerFullpath);
 		if (!s_WinPixGpuCapturerHandle)
 		{
 			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
