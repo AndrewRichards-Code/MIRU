@@ -1,9 +1,9 @@
 #if defined(_WIN64)
 #include "miru_core.h"
+#include "common.h"
 #include "maths.h"
 
 #include "stb/stb_image.h"
-#include "Windows.h"
 
 using namespace miru;
 using namespace base;
@@ -59,17 +59,14 @@ static void WindowUpdate()
 	}
 }
 
-void DynamicRendering()
+// Test Dynamic State of Viewport and Scissor
+// One Draw call to the swapchain
+void DynamicState(uint32_t maxFrames)
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
-
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Instance::CreateInfo instanceCI;
-	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.applicationName = "MIRU_TEST_DynamicState";
 	instanceCI.debugValidationLayers = true;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
@@ -291,18 +288,21 @@ void DynamicRendering()
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
 		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
 
-		Barrier::CreateInfo bCI;
-		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
-		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
-		bCI.image = image;
-		bCI.oldLayout = Image::Layout::UNKNOWN;
-		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		BarrierRef b = Barrier::Create(&bCI);
-		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		if (GraphicsAPI::IsVulkan())
+		{
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = image;
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			BarrierRef b = Barrier::Create(&bCI);
+			cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		}
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -470,7 +470,7 @@ void DynamicRendering()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = { { DynamicState::VIEWPORT, DynamicState::SCISSOR } }; //Specify dynamics state.
-	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN};
+	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN };
 	pCI.layout = { {setLayout1, setLayout2 }, {} };
 	PipelineRef pipeline = Pipeline::Create(&pCI);
 
@@ -480,11 +480,10 @@ void DynamicRendering()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSemaphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSemaphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
-
 
 	MIRU_CPU_PROFILE_END_SESSION();
 
@@ -495,9 +494,10 @@ void DynamicRendering()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
-	MSG msg = { 0 };
+	// https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
+	
 	//Main Render Loop
-	while (!g_WindowQuit)
+	while (!g_WindowQuit && frameCount < maxFrames)
 	{
 		WindowUpdate();
 
@@ -610,13 +610,13 @@ void DynamicRendering()
 			barrierPresentCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			BarrierRef barrierPresent = Barrier::Create(&barrierPresentCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
-			
+
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())

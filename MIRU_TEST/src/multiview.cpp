@@ -58,17 +58,15 @@ static void WindowUpdate()
 	}
 }
 
-void Multiview()
+// Test Multiview draw for XR application.
+// One Draw to a 2D array attachment for each view simulatienously.
+// One Draw call to the swapchain. View are side by side.
+void Multiview(uint32_t maxFrames)
 {
-	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
-
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Instance::CreateInfo instanceCI;
-	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.applicationName = "MIRU_TEST_Multiview";
 	instanceCI.debugValidationLayers = true;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
@@ -305,18 +303,21 @@ void Multiview()
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
 		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
 
-		Barrier::CreateInfo bCI;
-		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
-		bCI.srcQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.dstQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.image = image;
-		bCI.oldLayout = Image::Layout::UNKNOWN;
-		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		BarrierRef b = Barrier::Create(&bCI);
-		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		if (GraphicsAPI::IsVulkan())
+		{
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = image;
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			BarrierRef b = Barrier::Create(&bCI);
+			cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		}
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -522,7 +523,7 @@ void Multiview()
 	pCI.colourBlendState.blendConstants[2] = 0.0f;
 	pCI.colourBlendState.blendConstants[3] = 0.0f;
 	pCI.dynamicStates = {};
-	pCI.dynamicRendering = { 0, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format}, depthCI.format, Image::Format::UNKNOWN };
+	pCI.dynamicRendering = { 0b11, { swapchain->m_SwapchainImages[0]->GetCreateInfo().format }, depthCI.format, Image::Format::UNKNOWN }; //0b11 = 0x3 - Bit-indies specifies the view indices.
 	pCI.layout = { { setLayout1, setLayout2 }, {} };
 	PipelineRef pipeline = Pipeline::Create(&pCI);
 
@@ -560,8 +561,8 @@ void Multiview()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSemaphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSemaphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -575,9 +576,10 @@ void Multiview()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
+	// https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
 	
 	//Main Render Loop
-	while (!g_WindowQuit)
+	while (!g_WindowQuit && frameCount < maxFrames)
 	{
 		WindowUpdate();
 
@@ -688,7 +690,7 @@ void Multiview()
 			barrierColourCI.image = colourImage;
 			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
-			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 2 };
 			barrierColour = Barrier::Create(&barrierColourCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
 
@@ -701,12 +703,12 @@ void Multiview()
 			barrierDepthCI.image = depthImage;
 			barrierDepthCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierDepthCI.newLayout = Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			barrierDepthCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 1 };
+			barrierDepthCI.subresourceRange = { Image::AspectBit::DEPTH_BIT, 0, 1, 0, 2 };
 			BarrierRef barrierDepth = Barrier::Create(&barrierDepthCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, PipelineStageBit::EARLY_FRAGMENT_TESTS_BIT | PipelineStageBit::LATE_FRAGMENT_TESTS_BIT, DependencyBit::NONE_BIT, { barrierDepth });
 
 			cmdBuffer->BeginDebugLabel(frameIndex, "Multiview");
-			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colourRAI }, &depthRAI, nullptr });
+			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width / 2, height}}, 2, 0b11, { colourRAI }, &depthRAI, nullptr }); //0b11 = 0x3 - Bit-indies specifies the view indices.
 			cmdBuffer->BindPipeline(frameIndex, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p0 }, 0, pipeline);
 			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSet_p1 }, 1, pipeline);
@@ -724,9 +726,9 @@ void Multiview()
 			barrierColourCI.image = colourImage;
 			barrierColourCI.oldLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
-			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 2 };
 			barrierColour = Barrier::Create(&barrierColourCI);
-			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::FRAGMENT_SHADER_BIT, DependencyBit::NONE_BIT, { barrierColour });
 
 			cmdBuffer->BeginDebugLabel(frameIndex, "Show");
 			cmdBuffer->BeginRendering(frameIndex, { { RenderingFlagBits::NONE_BIT },{{(int32_t)0, (int32_t)0}, {width, height}}, 1, 0, { colour2RAI }, nullptr, nullptr });
@@ -751,10 +753,10 @@ void Multiview()
 
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())

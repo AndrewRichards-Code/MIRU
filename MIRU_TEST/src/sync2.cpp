@@ -58,17 +58,16 @@ static void WindowUpdate()
 	}
 }
 
-void Sync2()
-{
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
+// Test Basic Rendering with Sync2 (Vulkan) / Enhanced Barriers (D3D12)
+// One Draw call to the MSAA attachment
+// One Draw call to the swapchain with post processing
+void Sync2(uint32_t maxFrames)
+{
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Instance::CreateInfo instanceCI;
-	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.applicationName = "MIRU_TEST_Sync2";
 	instanceCI.debugValidationLayers = true;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
@@ -581,8 +580,8 @@ void Sync2()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSemaphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSemaphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -595,9 +594,10 @@ void Sync2()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
+	// https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
 	
 	//Main Render Loop
-	while (!g_WindowQuit)
+	while (!g_WindowQuit && frameCount < maxFrames)
 	{
 		WindowUpdate();
 
@@ -687,7 +687,7 @@ void Sync2()
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
 			RenderingAttachmentInfo colourRAI = { colourImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::AVERAGE_BIT, resolveAndInputImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, AttachmentLoadOp::CLEAR, AttachmentStoreOp::STORE, {r, g, b, 1.0f} };
 			RenderingAttachmentInfo depthRAI = { depthImageView, Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {0.0f, 0} };
-			RenderingAttachmentInfo colour2RAI = { resolveAndInputImageView, Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {r, g, b, 1.0f } };
+			RenderingAttachmentInfo colour2RAI = { swapchain->m_SwapchainImageViews[swapchainImageIndex], Image::Layout::COLOUR_ATTACHMENT_OPTIMAL, ResolveModeBits::NONE_BIT, nullptr, Image::Layout::UNKNOWN, AttachmentLoadOp::CLEAR, AttachmentStoreOp::DONT_CARE, {r, g, b, 1.0f } };
 
 			Barrier::CreateInfo barrierColourCI;
 			barrierColourCI.type = Barrier::Type::IMAGE;
@@ -714,6 +714,17 @@ void Sync2()
 			barrierColour = Barrier::Create(&barrierColourCI);
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
 
+			barrierColourCI.type = Barrier::Type::IMAGE;
+			barrierColourCI.srcAccess = Barrier::AccessBit::SHADER_READ_BIT;
+			barrierColourCI.dstAccess = Barrier::AccessBit::COLOUR_ATTACHMENT_WRITE_BIT;
+			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			barrierColourCI.image = resolveAndInputImage;
+			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
+			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
+			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			barrierColour = Barrier::Create(&barrierColourCI);
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::FRAGMENT_SHADER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
 
 			Barrier::CreateInfo barrierDepthCI;
 			barrierDepthCI.type = Barrier::Type::IMAGE;
@@ -770,10 +781,10 @@ void Sync2()
 			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, PipelineStageBit::BOTTOM_OF_PIPE_BIT, DependencyBit::NONE_BIT, { barrierPresent });
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())

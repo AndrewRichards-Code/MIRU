@@ -95,8 +95,10 @@ static void WindowUpdate()
 
 #endif
 
-
-void Basic()
+// Test Basic Rendering
+// One Draw call to the MSAA attachment
+// One Draw call to the swapchain with post processing
+void Basic(uint32_t maxFrames)
 {
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
@@ -106,16 +108,11 @@ void Basic()
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindProc;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpszClassName = "MIRU_TEST";
+	wc.lpszClassName = "MIRU_TEST_Basic";
 	RegisterClass(&wc);
 
 	window = CreateWindow(wc.lpszClassName, wc.lpszClassName, WS_OVERLAPPEDWINDOW, 100, 100, width, height, 0, 0, 0, 0);
 	ShowWindow(window, SW_SHOW);
-
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
 
 #elif defined(__ANDROID__)
 	
@@ -133,15 +130,11 @@ void Basic()
 	}
 	arc::AndroidAssetManager = g_App->activity->assetManager;
 
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName(false);
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
-
 #endif
 
 	Instance::CreateInfo instanceCI;
 	instanceCI.applicationName = "MIRU_TEST";
-	instanceCI.debugValidationLayers = true;
+	instanceCI.debugValidationLayers = false;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
 
@@ -365,18 +358,21 @@ void Basic()
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
 		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
 
-		Barrier::CreateInfo bCI;
-		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
-		bCI.srcQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.dstQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.image = image;
-		bCI.oldLayout = Image::Layout::UNKNOWN;
-		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		BarrierRef b = Barrier::Create(&bCI);
-		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		if (GraphicsAPI::IsVulkan())
+		{
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = image;
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			BarrierRef b = Barrier::Create(&bCI);
+			cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		}
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -632,8 +628,8 @@ void Basic()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSemaphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSemaphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -646,9 +642,10 @@ void Basic()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
+	// https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
 	
 	//Main Render Loop
-	while (!g_WindowQuit)
+	while (!g_WindowQuit && frameCount < maxFrames)
 	{
 		WindowUpdate();
 
@@ -774,11 +771,11 @@ void Basic()
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.image = resolveAndInputImage;
-			barrierColourCI.oldLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
+			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			barrierColour = Barrier::Create(&barrierColourCI);
-			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
+			cmdBuffer->PipelineBarrier(frameIndex, PipelineStageBit::FRAGMENT_SHADER_BIT, PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT, DependencyBit::NONE_BIT, { barrierColour });
 
 			Barrier::CreateInfo barrierDepthCI;
 			barrierDepthCI.type = Barrier::Type::IMAGE;
@@ -835,10 +832,10 @@ void Basic()
 
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())

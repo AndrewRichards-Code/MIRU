@@ -58,17 +58,14 @@ static void WindowUpdate()
 	}
 }
 
-void MeshShader()
+// Test Mesh and Task/Amplication shaders
+// One Draw call to the swapchain
+void MeshShader(uint32_t maxFrames)
 {
-	//GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
-	GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
-	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::NONE);
-
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
 	Instance::CreateInfo instanceCI;
-	instanceCI.applicationName = "MIRU_TEST";
+	instanceCI.applicationName = "MIRU_TEST_MeshShader";
 	instanceCI.debugValidationLayers = true;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
@@ -554,8 +551,8 @@ void MeshShader()
 	fenceCI.signaled = true;
 	fenceCI.timeout = UINT64_MAX;
 	std::vector<FenceRef> draws = { Fence::Create(&fenceCI), Fence::Create(&fenceCI) };
-	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSeamphore", device };
-	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSeamphore", device };
+	Semaphore::CreateInfo acquireSemaphoreCI = { "AcquireSemaphore", device };
+	Semaphore::CreateInfo submitSemaphoreCI = { "SubmitSemaphore", device };
 	std::vector<SemaphoreRef> acquires = { Semaphore::Create(&acquireSemaphoreCI), Semaphore::Create(&acquireSemaphoreCI) };
 	std::vector<SemaphoreRef> submits = { Semaphore::Create(&submitSemaphoreCI), Semaphore::Create(&submitSemaphoreCI) };
 
@@ -568,9 +565,10 @@ void MeshShader()
 	float g = 0.00f;
 	float b = 0.00f;
 	float increment = 1.0f / 60.0f;
+	// https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html
 
 	//Main Render Loop
-	while (!g_WindowQuit)
+	while (!g_WindowQuit && frameCount < maxFrames)
 	{
 		WindowUpdate();
 
@@ -687,10 +685,10 @@ void MeshShader()
 
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())
