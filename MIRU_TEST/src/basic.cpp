@@ -469,7 +469,7 @@ void Basic(uint32_t maxFrames)
 	colourCI.arrayLayers = 1;
 	colourCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_8_BIT;
 	colourCI.usage = Image::UsageBit::COLOUR_ATTACHMENT_BIT;
-	colourCI.layout = Image::Layout::UNKNOWN;
+	colourCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.allocator = gpu_alloc_0;
@@ -759,7 +759,7 @@ void Basic(uint32_t maxFrames)
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.image = colourImage;
-			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
+			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			barrierColour = Barrier::Create(&barrierColourCI);
@@ -771,7 +771,7 @@ void Basic(uint32_t maxFrames)
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.image = resolveAndInputImage;
-			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::COLOUR_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
+			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::SHADER_READ_ONLY_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
 			barrierColour = Barrier::Create(&barrierColourCI);

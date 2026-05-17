@@ -414,7 +414,7 @@ void Multiview(uint32_t maxFrames)
 	colourCI.arrayLayers = 2;
 	colourCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	colourCI.usage = Image::UsageBit::COLOUR_ATTACHMENT_BIT | Image::UsageBit::SAMPLED_BIT;
-	colourCI.layout = Image::Layout::UNKNOWN;
+	colourCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::SHADER_READ_ONLY_OPTIMAL : Image::Layout::UNKNOWN;
 	colourCI.size = 0;
 	colourCI.data = nullptr;
 	colourCI.allocator = gpu_alloc_0;
@@ -442,7 +442,7 @@ void Multiview(uint32_t maxFrames)
 	depthCI.arrayLayers = 2;
 	depthCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	depthCI.usage = Image::UsageBit::DEPTH_STENCIL_ATTACHMENT_BIT;
-	depthCI.layout = Image::Layout::UNKNOWN;
+	depthCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL : Image::Layout::UNKNOWN;
 	depthCI.size = 0;
 	depthCI.data = nullptr;
 	depthCI.allocator = gpu_alloc_0;
@@ -688,7 +688,7 @@ void Multiview(uint32_t maxFrames)
 			barrierColourCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
 			barrierColourCI.image = colourImage;
-			barrierColourCI.oldLayout = Image::Layout::UNKNOWN;
+			barrierColourCI.oldLayout = GraphicsAPI::IsD3D12() ? Image::Layout::SHADER_READ_ONLY_OPTIMAL : Image::Layout::UNKNOWN;
 			barrierColourCI.newLayout = Image::Layout::COLOUR_ATTACHMENT_OPTIMAL;
 			barrierColourCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 2 };
 			barrierColour = Barrier::Create(&barrierColourCI);
