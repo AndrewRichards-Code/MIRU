@@ -20,8 +20,8 @@ Device::Device(CreateInfo* pCreateInfo)
 		//Debug
 		if (m_CI.debugValidationLayers)
 		{
-			m_Layers.push_back("VK_LAYER_KHRONOS_validation");
-			m_Layers.push_back("VK_LAYER_KHRONOS_synchronization2");
+			//m_Layers.push_back("VK_LAYER_KHRONOS_validation");
+			//m_Layers.push_back("VK_LAYER_KHRONOS_synchronization2");
 		}
 
 		//Surface and Swapchain
