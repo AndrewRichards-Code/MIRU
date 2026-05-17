@@ -1,4 +1,5 @@
 #pragma once
+#include "miru_core_common.h"
 #include "debug/Pix.h"
 #include "debug/RenderDoc.h"
 
