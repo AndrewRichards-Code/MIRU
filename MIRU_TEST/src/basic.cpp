@@ -134,7 +134,7 @@ void Basic(uint32_t maxFrames)
 
 	Instance::CreateInfo instanceCI;
 	instanceCI.applicationName = "MIRU_TEST";
-	instanceCI.debugValidationLayers = false;
+	instanceCI.debugValidationLayers = true;
 	instanceCI.pNext = nullptr;
 	InstanceRef instance = Instance::Create(&instanceCI);
 
