@@ -1,12 +1,12 @@
 #include "VKCommandPoolBuffer.h"
 #include "VKDevice.h"
-#include "VKSwapchain.h"
 #include "VKSync.h"
 #include "VKImage.h"
 #include "VKBuffer.h"
 #include "VKPipeline.h"
 #include "VKDescriptorPoolSet.h"
 #include "VKAccelerationStructure.h"
+#include "VKQuery.h"
 
 using namespace miru;
 using namespace vulkan;
@@ -871,4 +871,50 @@ void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& 
 		vkRect2D.push_back({ {scissor.offset.x, scissor.offset.y}, {scissor.extent.width, scissor.extent.height} });
 
 	vkCmdSetScissor(m_CmdBuffers[index], 0, static_cast<uint32_t>(vkRect2D.size()), vkRect2D.data());
+}
+
+void CommandBuffer::ResetQueryPool(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdResetQueryPool(m_CmdBuffers[index], ref_cast<QueryPool>(queryPool)->m_QueryPool, firstQuery, queryCount);
+}
+
+void CommandBuffer::BeginQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	VkQueryControlFlags flags = VkQueryControlFlags(0);
+	if (queryPool->GetCreateInfo().type == QueryPool::Type::OCCLUSION)
+		flags = VK_QUERY_CONTROL_PRECISE_BIT;
+
+	vkCmdBeginQuery(m_CmdBuffers[index], ref_cast<QueryPool>(queryPool)->m_QueryPool, queryIndex, flags);
+}
+
+void CommandBuffer::EndQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdEndQuery(m_CmdBuffers[index], ref_cast<QueryPool>(queryPool)->m_QueryPool, queryIndex);
+}
+
+void CommandBuffer::WriteTimestamp(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex, base::PipelineStageBit pipelineStage)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdWriteTimestamp(m_CmdBuffers[index], static_cast<VkPipelineStageFlagBits>(pipelineStage), ref_cast<QueryPool>(queryPool)->m_QueryPool, queryIndex);
+}
+
+void CommandBuffer::CopyQueryPoolToBuffer(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount, const base::BufferRef& buffer, uint64_t offset, uint64_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	VkQueryResultFlags flags = static_cast<VkQueryResultFlags>(QueryPool::ResultFlagBit::RESULT_64_BIT | QueryPool::ResultFlagBit::RESULT_WAIT_BIT);
+	vkCmdCopyQueryPoolResults(m_CmdBuffers[index], ref_cast<QueryPool>(queryPool)->m_QueryPool, firstQuery, queryCount,
+		ref_cast<Buffer>(buffer)->m_Buffer, offset, stride, flags);
 }

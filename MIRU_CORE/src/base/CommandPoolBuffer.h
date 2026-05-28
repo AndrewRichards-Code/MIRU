@@ -168,6 +168,12 @@ namespace base
 		virtual void SetViewport(uint32_t index, const std::vector<Viewport>& viewports) = 0;
 		virtual void SetScissor(uint32_t index, const std::vector<Rect2D>& scissors) = 0;
 
+		virtual void ResetQueryPool(uint32_t index, const QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount) = 0;
+		virtual void BeginQuery(uint32_t index, const QueryPoolRef& queryPool, uint32_t queryIndex) = 0;
+		virtual void EndQuery(uint32_t index, const QueryPoolRef& queryPool, uint32_t queryIndex) = 0;
+		virtual void WriteTimestamp(uint32_t index, const QueryPoolRef& queryPool, uint32_t queryIndex, PipelineStageBit pipelineStage) = 0;
+		virtual void CopyQueryPoolToBuffer(uint32_t index, const QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount, const BufferRef& buffer, uint64_t offset, uint64_t stride) = 0;
+
 	protected:
 		inline bool CheckValidIndex(uint32_t index) { return (index < m_CI.commandBufferCount); }
 		#define CHECK_VALID_INDEX_RETURN(index) if (!CheckValidIndex(index)) {return;}

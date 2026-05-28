@@ -80,6 +80,12 @@ namespace d3d12
 		void SetViewport(uint32_t index, const std::vector<base::Viewport>& viewports) override;
 		void SetScissor(uint32_t index, const std::vector<base::Rect2D>& scissors) override;
 
+		void ResetQueryPool(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount) override;
+		void BeginQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex) override;
+		void EndQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex) override;
+		void WriteTimestamp(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex, base::PipelineStageBit pipelineStage) override;
+		void CopyQueryPoolToBuffer(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount, const base::BufferRef& buffer, uint64_t offset, uint64_t stride) override;
+
 		//Members
 	public:
 		ID3D12Device* m_Device;

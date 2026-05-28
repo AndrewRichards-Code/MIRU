@@ -1,12 +1,12 @@
 #include "D3D12CommandPoolBuffer.h"
 #include "D3D12Device.h"
-#include "D3D12Swapchain.h"
 #include "D3D12Sync.h"
 #include "D3D12Buffer.h"
 #include "D3D12Image.h"
 #include "D3D12Pipeline.h"
 #include "D3D12DescriptorPoolSet.h"
 #include "D3D12AccelerationStructure.h"
+#include "D3D12Query.h"
 
 #include "Include/WinPixEventRuntime/pix3.h"
 
@@ -1100,13 +1100,13 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			bCI.newLayout = Image::Layout::D3D12_RESOLVE_SOURCE;
 			bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
 			base::BarrierRef preResolveBarrierSrc = Barrier::Create(&bCI);
-			
+
 			bCI.image = dstImage;
 			bCI.oldLayout = dstImageLayout;
 			bCI.newLayout = Image::Layout::D3D12_RESOLVE_DEST;
 			bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
 			base::BarrierRef preResolveBarrierDst = Barrier::Create(&bCI);
-			
+
 			PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
 		}
 
@@ -1150,7 +1150,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			b2CI.newLayout = srcImageLayout;
 			b2CI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
 			base::Barrier2Ref postResolveBarrierSrc = Barrier2::Create(&b2CI);
-			
+
 			b2CI.srcStageMask = base::PipelineStageBit::RESOLVE_BIT;
 			b2CI.srcAccess = Barrier::AccessBit::D3D12_RESOLVE_DEST;
 			b2CI.dstStageMask = base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT;
@@ -1160,7 +1160,7 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			b2CI.newLayout = dstImageLayout;
 			b2CI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
 			base::Barrier2Ref postResolveBarrierDst = Barrier2::Create(&b2CI);
-			
+
 			PipelineBarrier2(index, { base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst } });
 		}
 		else
@@ -1170,16 +1170,37 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			bCI.newLayout = srcImageLayout;
 			bCI.subresourceRange = { resolveRegion.srcSubresource.aspectMask, resolveRegion.srcSubresource.mipLevel, 1, resolveRegion.srcSubresource.baseArrayLayer, resolveRegion.srcSubresource.arrayLayerCount };
 			base::BarrierRef postResolveBarrierSrc = Barrier::Create(&bCI);
-			
+
 			bCI.image = dstImage;
 			bCI.oldLayout = Image::Layout::D3D12_RESOLVE_DEST;
 			bCI.newLayout = dstImageLayout;
 			bCI.subresourceRange = { resolveRegion.dstSubresource.aspectMask, resolveRegion.dstSubresource.mipLevel, 1, resolveRegion.dstSubresource.baseArrayLayer, resolveRegion.dstSubresource.arrayLayerCount };
 			base::BarrierRef postResolveBarrierDst = Barrier::Create(&bCI);
-			
+
 			PipelineBarrier(index, base::PipelineStageBit::TRANSFER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { postResolveBarrierSrc, postResolveBarrierDst });
 		}
 	}
+}
+
+void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	BYTE r = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[0], 0.0f, 255.0f));
+	BYTE g = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[1], 0.0f, 255.0f));
+	BYTE b = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[2], 0.0f, 255.0f));
+	if (PIXBeginEventOnCommandList)
+		PIXBeginEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]), PIX_COLOR(r, g, b), label.c_str());
+}
+
+void CommandBuffer::EndDebugLabel(uint32_t index)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	if (PIXEndEventOnCommandList)
+		PIXEndEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]));
 }
 
 void CommandBuffer::SetViewport(uint32_t index, const std::vector<base::Viewport>& viewports)
@@ -1208,23 +1229,49 @@ void CommandBuffer::SetScissor(uint32_t index, const std::vector<base::Rect2D>& 
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->RSSetScissorRects(static_cast<UINT>(d3d12Scissors.size()), d3d12Scissors.data());
 }
 
-void CommandBuffer::BeginDebugLabel(uint32_t index, const std::string& label, std::array<float, 4> rgba)
+void CommandBuffer::ResetQueryPool(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	BYTE r = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[0], 0.0f, 255.0f));
-	BYTE g = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[1], 0.0f, 255.0f));
-	BYTE b = static_cast<BYTE>(std::clamp(static_cast<float>(0xFF) * rgba[2], 0.0f, 255.0f));
-	if (PIXBeginEventOnCommandList)
-		PIXBeginEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]), PIX_COLOR(r, g, b), label.c_str());
+	//No Reset functionality in D3D12.
 }
 
-void CommandBuffer::EndDebugLabel(uint32_t index)
+void CommandBuffer::BeginQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	if (PIXEndEventOnCommandList)
-		PIXEndEventOnCommandList(reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index]));
+	QueryPoolRef d3d12QueryPool = ref_cast<QueryPool>(queryPool);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->BeginQuery(d3d12QueryPool->m_QueryHeap, d3d12QueryPool->GetQueryType(), queryIndex);
 }
+
+void CommandBuffer::EndQuery(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	QueryPoolRef d3d12QueryPool = ref_cast<QueryPool>(queryPool);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->EndQuery(d3d12QueryPool->m_QueryHeap, d3d12QueryPool->GetQueryType(), queryIndex);
+}
+
+void CommandBuffer::WriteTimestamp(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t queryIndex, base::PipelineStageBit pipelineStage)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	MIRU_FATAL(!(queryPool->GetCreateInfo().type == QueryPool::Type::TIMESTAMP), "ERROR: D3D12: Can not WriteTimestamp. QueryPool is not of type: TIMESTAMP.");
+	EndQuery(index, queryPool, queryIndex);
+}
+
+void CommandBuffer::CopyQueryPoolToBuffer(uint32_t index, const base::QueryPoolRef& queryPool, uint32_t firstQuery, uint32_t queryCount, const base::BufferRef& buffer, uint64_t offset, uint64_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	QueryPoolRef d3d12QueryPool = ref_cast<QueryPool>(queryPool);
+	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResolveQueryData(
+		d3d12QueryPool->m_QueryHeap, d3d12QueryPool->GetQueryType(), firstQuery, queryCount,
+		ref_cast<Buffer>(buffer)->m_Buffer, offset);
+}
+

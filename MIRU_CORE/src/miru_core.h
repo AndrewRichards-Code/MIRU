@@ -14,3 +14,4 @@
 #include "base/ShaderBindingTable.h"
 #include "base/Swapchain.h"
 #include "base/Sync.h"
+#include "base/Query.h"
