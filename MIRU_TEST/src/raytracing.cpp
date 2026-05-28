@@ -310,7 +310,9 @@ void Raytracing(uint32_t maxFrames)
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
 	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
-	asbiGBI.maxPrimitiveCounts = std::size(indices) / 3;
+	asbiGBI.maxPrimitiveCounts.clear();
+	asbiGBI.maxPrimitiveCounts.push_back({});
+	asbiGBI.maxPrimitiveCounts[0] = std::size(indices) / 3;
 	AccelerationStructureBuildInfoRef blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	Buffer::CreateInfo asBufferCI;

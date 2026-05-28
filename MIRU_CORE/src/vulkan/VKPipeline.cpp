@@ -304,7 +304,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 		m_RTPCI.pGroups = vkShaderGroupInfos.data();
 		m_RTPCI.maxPipelineRayRecursionDepth = m_CI.rayTracingInfo.maxRecursionDepth;
 		m_RTPCI.pLibraryInfo = nullptr;
-		m_RTPCI.pLibraryInterface;
+		m_RTPCI.pLibraryInterface = nullptr;
 		m_RTPCI.pDynamicState = &vkDynamicState;
 		m_RTPCI.layout = m_PipelineLayout;
 		m_RTPCI.basePipelineHandle = VK_NULL_HANDLE;

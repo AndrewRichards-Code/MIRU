@@ -148,7 +148,7 @@ namespace base
 			std::vector<Geometry>		geometries;
 			DeviceOrHostAddress			scratchData;
 			BuildType					buildType;
-			uint32_t					maxPrimitiveCounts;
+			std::vector<uint32_t>		maxPrimitiveCounts;
 		};
 		struct BuildSizesInfo
 		{

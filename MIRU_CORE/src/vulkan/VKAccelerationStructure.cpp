@@ -87,7 +87,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	m_ASBSI.accelerationStructureSize = 0;
 	m_ASBSI.updateScratchSize = 0;
 	m_ASBSI.buildScratchSize = 0;
-	vkGetAccelerationStructureBuildSizesKHR(m_Device, static_cast<VkAccelerationStructureBuildTypeKHR>(m_BGI.buildType), &m_ASBGI, &m_BGI.maxPrimitiveCounts, &m_ASBSI);
+	vkGetAccelerationStructureBuildSizesKHR(m_Device, static_cast<VkAccelerationStructureBuildTypeKHR>(m_BGI.buildType), &m_ASBGI, m_BGI.maxPrimitiveCounts.data(), &m_ASBSI);
 
 	//Crossplatform assignment
 	m_BSI.accelerationStructureSize = m_ASBSI.accelerationStructureSize;
