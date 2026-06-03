@@ -634,7 +634,7 @@ void CommandBuffer::Dispatch(uint32_t index, uint32_t groupCountX, uint32_t grou
 	vkCmdDispatch(m_CmdBuffers[index], groupCountX, groupCountY, groupCountZ);
 }
 
-void CommandBuffer::BuildAccelerationStructure(uint32_t index, const std::vector<base::AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
+void CommandBuffer::BuildAccelerationStructures(uint32_t index, const std::vector<base::AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

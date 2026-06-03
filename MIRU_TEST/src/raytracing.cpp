@@ -349,7 +349,7 @@ void Raytracing(uint32_t maxFrames)
 	blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo blas_bri;
-	blas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
+	blas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts[0];
 	blas_bri.primitiveOffset = 0;
 	blas_bri.firstVertex = 0;
 	blas_bri.transformOffset = 0;
@@ -388,7 +388,9 @@ void Raytracing(uint32_t maxFrames)
 	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
 	asbiGBI.scratchData = DeviceOrHostAddressNull;
 	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
-	asbiGBI.maxPrimitiveCounts = 1;
+	asbiGBI.maxPrimitiveCounts.clear();
+	asbiGBI.maxPrimitiveCounts.push_back({});
+	asbiGBI.maxPrimitiveCounts[0] = 1;
 	AccelerationStructureBuildInfoRef tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	asBufferCI.debugName = "TLASBuffer";
@@ -422,7 +424,7 @@ void Raytracing(uint32_t maxFrames)
 	tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo tlas_bri;
-	tlas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts;
+	tlas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts[0];
 	tlas_bri.primitiveOffset = 0;
 	tlas_bri.firstVertex = 0;
 	tlas_bri.transformOffset = 0;
@@ -446,7 +448,7 @@ void Raytracing(uint32_t maxFrames)
 		BarrierRef b = Barrier::Create(&bCI);
 		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
 
-		cmdBuffer->BuildAccelerationStructure(2, { blas_asbi, tlas_asbi }, { { blas_bri }, { tlas_bri } });
+		cmdBuffer->BuildAccelerationStructures(2, { blas_asbi, tlas_asbi }, { { blas_bri }, { tlas_bri } });
 
 		cmdBuffer->End(2);
 	}

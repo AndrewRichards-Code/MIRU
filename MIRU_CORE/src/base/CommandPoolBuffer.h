@@ -152,7 +152,7 @@ namespace base
 
 		virtual void Dispatch(uint32_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
-		virtual void BuildAccelerationStructure(uint32_t index, const std::vector<AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
+		virtual void BuildAccelerationStructures(uint32_t index, const std::vector<AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
 		virtual void TraceRays(uint32_t index, const StridedDeviceAddressRegion* pRaygenShaderBindingTable, const StridedDeviceAddressRegion* pMissShaderBindingTable, const StridedDeviceAddressRegion* pHitShaderBindingTable, const StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
 
 		virtual void CopyBuffer(uint32_t index, const BufferRef& srcBuffer, const BufferRef& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
