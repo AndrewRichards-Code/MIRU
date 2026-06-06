@@ -46,7 +46,7 @@ void Pix::LoadWinPixEventRuntime()
 	#else
 		s_WinPixEventRuntimeFullpath = std::string(BUILD_DIR) + "/packages/WinPixEventRuntime.1.0.240308001/bin/x64/WinPixEventRuntime.dll";
 	#endif
-		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath.generic_string());
+		s_WinPixEventRuntimeHandle = arc::DynamicLibrary::Load(s_WinPixEventRuntimeFullpath);
 		if (!s_WinPixEventRuntimeHandle)
 		{
 			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixEventRuntimeFullpath.generic_string() + "'.";
@@ -104,7 +104,7 @@ void Pix::LoadWinPixGpuCapturer()
 			}
 		}
 		s_WinPixGpuCapturerFullpath /= pixVersionFolder / "WinPixGpuCapturer.dll";
-		s_WinPixGpuCapturerHandle = arc::DynamicLibrary::Load(s_WinPixGpuCapturerFullpath.generic_string());
+		s_WinPixGpuCapturerHandle = arc::DynamicLibrary::Load(s_WinPixGpuCapturerFullpath);
 		if (!s_WinPixGpuCapturerHandle)
 		{
 			std::string error_str = "WARN: BASE: Unable to load '" + s_WinPixGpuCapturerFullpath.generic_string() + "'.";
