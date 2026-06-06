@@ -6,7 +6,7 @@
 
 extern "C"
 {
-	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 614;
+	__declspec(dllexport) extern const unsigned int D3D12SDKVersion = 619;
 	__declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";
 }
 
@@ -836,10 +836,10 @@ void Basic()
 			cmdBuffer->EndRenderPass(frameIndex);
 			cmdBuffer->End(frameIndex);
 
-			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[frameIndex] }, {} };
+			CommandBuffer::SubmitInfo mainSI = { { frameIndex }, { acquires[frameIndex] }, {}, { base::PipelineStageBit::COLOUR_ATTACHMENT_OUTPUT_BIT }, { submits[swapchainImageIndex] }, {} };
 			cmdBuffer->Submit({ mainSI }, draws[frameIndex]);
 
-			swapchain->Present(cmdPool, submits[frameIndex], swapchainImageIndex);
+			swapchain->Present(cmdPool, submits[swapchainImageIndex], swapchainImageIndex);
 
 			proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
 			if (GraphicsAPI::IsVulkan())

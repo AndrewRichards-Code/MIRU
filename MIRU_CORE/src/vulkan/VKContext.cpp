@@ -62,8 +62,8 @@ Context::Context(Context::CreateInfo* pCreateInfo)
 		{
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 			m_InstanceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
-			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
-			m_DeviceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
+			//m_DeviceLayers.push_back("VK_LAYER_KHRONOS_validation");
+			//m_DeviceLayers.push_back("VK_LAYER_KHRONOS_synchronization2");
 		}
 		if (base::GraphicsAPI::IsSetNameAllowed())
 			m_InstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -680,6 +680,12 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 				*nextPropsAddr = &pdi.m_Vulkan13Features;
 				nextPropsAddr = &pdi.m_Vulkan13Features.pNext;
 			}
+			if (deviceApiVersion >= VK_API_VERSION_1_4)
+			{
+				pdi.m_Vulkan14Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+				*nextPropsAddr = &pdi.m_Vulkan14Features;
+				nextPropsAddr = &pdi.m_Vulkan14Features.pNext;
+			}
 			pdi.m_Features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 			vkGetPhysicalDeviceFeatures2(pdi.m_PhysicalDevice, &pdi.m_Features2);
 		
@@ -733,6 +739,12 @@ void Context::PhysicalDevices::FillOutFeaturesAndProperties(Context* pContext)
 			{
 				pdi.m_Vulkan13Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
 				*nextPropsAddr = &pdi.m_Vulkan13Properties;
+				nextPropsAddr = &pdi.m_Vulkan13Properties.pNext;
+			}
+			if (deviceApiVersion >= VK_API_VERSION_1_4)
+			{
+				pdi.m_Vulkan14Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES;
+				*nextPropsAddr = &pdi.m_Vulkan14Properties;
 				nextPropsAddr = &pdi.m_Vulkan13Properties.pNext;
 			}
 			pdi.m_Properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;

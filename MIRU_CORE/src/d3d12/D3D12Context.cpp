@@ -371,4 +371,49 @@ Context::Features::Features(ID3D12Device* device)
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &d3d12Options18, sizeof(d3d12Options18)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS18.");
 
 	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &d3d12Options19, sizeof(d3d12Options19)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS19.");
+	
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS20, &d3d12Options20, sizeof(d3d12Options20)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS20.");
+	
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_PREDICATION, &predication, sizeof(predication)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_PREDICATION.");
+	
+	for (uint32_t i = 0; i <= uint32_t(DXGI_FORMAT_B4G4R4A4_UNORM); i++)
+	{
+		std::vector<std::vector<D3D12_FEATURE_DATA_PLACED_RESOURCE_SUPPORT_INFO>> _placedResourceSupportInfo;
+		for (uint32_t j = 0; j <= uint32_t(D3D12_RESOURCE_DIMENSION_TEXTURE3D); j++)
+		{
+			std::vector<D3D12_FEATURE_DATA_PLACED_RESOURCE_SUPPORT_INFO> __placedResourceSupportInfo;
+			for (uint32_t k = 0; k <= uint32_t(D3D12_HEAP_TYPE_GPU_UPLOAD); k++)
+			{
+				D3D12_FEATURE_DATA_PLACED_RESOURCE_SUPPORT_INFO placedResourceSupportInfo = { DXGI_FORMAT(i), D3D12_RESOURCE_DIMENSION(j), { D3D12_HEAP_TYPE(k), D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 } };
+				MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_PLACED_RESOURCE_SUPPORT_INFO, &placedResourceSupportInfo, sizeof(placedResourceSupportInfo)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_PLACED_RESOURCE_SUPPORT_INFO.");
+				__placedResourceSupportInfo.push_back(placedResourceSupportInfo);
+			}
+			_placedResourceSupportInfo.push_back(__placedResourceSupportInfo);
+		}
+		placedResourceSupportInfos.push_back(_placedResourceSupportInfo);
+	}
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_HARDWARE_COPY, &hardwareCopy, sizeof(hardwareCopy)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_HARDWARE_COPY.");
+		
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &d3d12Options21, sizeof(d3d12Options21)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS21.");
+		
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_TIGHT_ALIGNMENT, &tightAlignment, sizeof(tightAlignment)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_TIGHT_ALIGNMENT.");
+		
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_APPLICATION_SPECIFIC_DRIVER_STATE, &applicationSpecificDriverState, sizeof(applicationSpecificDriverState)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_APPLICATION_SPECIFIC_DRIVER_STATE.");
+		
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_BYTECODE_BYPASS_HASH_SUPPORTED, &bytecodeBypassHashSupported, sizeof(bytecodeBypassHashSupported)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_BYTECODE_BYPASS_HASH_SUPPORTED.");
+	
+	for (uint32_t i = 0; i <= D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE; i++)
+	{
+		std::vector<D3D12_FEATURE_DATA_BARRIER_LAYOUT> _barrierLayouts;
+		for (uint32_t j = 0; j <= D3D12_BARRIER_LAYOUT_DIRECT_QUEUE_GENERIC_READ_COMPUTE_QUEUE_ACCESSIBLE; j++)
+		{
+			D3D12_FEATURE_DATA_BARRIER_LAYOUT barrierLayout = { D3D12_COMMAND_LIST_TYPE(i), D3D12_BARRIER_LAYOUT(j), false };
+			MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_BARRIER_LAYOUT, &barrierLayout, sizeof(barrierLayout)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_BARRIER_LAYOUT.");
+			_barrierLayouts.push_back(barrierLayout);
+		}
+		barrierLayouts.push_back(_barrierLayouts);
+	}
+
+	MIRU_WARN(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS22, &d3d12Options22, sizeof(d3d12Options22)), "WARN: D3D12: Unable to CheckFeatureSupport for D3D12_FEATURE_D3D12_OPTIONS22.");
 }

@@ -69,6 +69,9 @@ namespace vulkan
 
 				VkPhysicalDeviceVulkan13Features m_Vulkan13Features;
 				VkPhysicalDeviceVulkan13Properties m_Vulkan13Properties;
+
+				VkPhysicalDeviceVulkan14Features m_Vulkan14Features;
+				VkPhysicalDeviceVulkan14Properties m_Vulkan14Properties;
 				
 			};
 			std::vector<PhysicalDeviceInfo> m_PDIs;
