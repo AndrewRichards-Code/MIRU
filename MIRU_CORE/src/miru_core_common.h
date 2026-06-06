@@ -222,7 +222,7 @@ inline arc::Log MiruCoreLog("MIRU_CORE");
 
 #define MIRU_ASSERT(x) ARC_ASSERT((x));
 
-#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "%s", y); ARC_ASSERT(false); }
-#define MIRU_ERROR(x, y) if((x) != 0) { ARC_ERROR(static_cast<int64_t>(x), "%s", y); }
-#define MIRU_WARN(x, y) if((x) != 0) { ARC_WARN(static_cast<int64_t>(x), "%s", y); }
-#define MIRU_INFO(x, y) if((x) != 0) { ARC_INFO(static_cast<int64_t>(x), "%s", y); }
+#define MIRU_FATAL(x, y) if((x) != 0) { ARC_FATAL(static_cast<int64_t>(x), "{}", y); ARC_ASSERT(false); }
+#define MIRU_ERROR(x, y) if((x) != 0) { ARC_ERROR(static_cast<int64_t>(x), "{}", y); }
+#define MIRU_WARN(x, y) if((x) != 0) { ARC_WARN(static_cast<int64_t>(x), "{}", y); }
+#define MIRU_INFO(x, y) if((x) != 0) { ARC_INFO(static_cast<int64_t>(x), "{}", y); }
