@@ -362,18 +362,21 @@ void Basic()
 		cmdCopyBuffer->CopyBuffer(0, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
 		cmdCopyBuffer->CopyBuffer(0, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
 
-		Barrier::CreateInfo bCI;
-		bCI.type = Barrier::Type::IMAGE;
-		bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
-		bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
-		bCI.srcQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.dstQueueFamilyIndex =Barrier::QueueFamilyIgnored;
-		bCI.image = image;
-		bCI.oldLayout = Image::Layout::UNKNOWN;
-		bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
-		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
-		BarrierRef b = Barrier::Create(&bCI);
-		cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		if (GraphicsAPI::IsVulkan())
+		{
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = image;
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 6 };
+			BarrierRef b = Barrier::Create(&bCI);
+			cmdCopyBuffer->PipelineBarrier(0, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		}
 		cmdCopyBuffer->CopyBufferToImage(0, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
 			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 1, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}},
@@ -526,7 +529,7 @@ void Basic()
 	resolveAndInputImageCI.arrayLayers = 1;
 	resolveAndInputImageCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
 	resolveAndInputImageCI.usage = Image::UsageBit::COLOUR_ATTACHMENT_BIT | Image::UsageBit::INPUT_ATTACHMENT_BIT;
-	resolveAndInputImageCI.layout = Image::Layout::UNKNOWN;
+	resolveAndInputImageCI.layout = GraphicsAPI::IsD3D12() ? Image::Layout::SHADER_READ_ONLY_OPTIMAL : Image::Layout::UNKNOWN;
 	resolveAndInputImageCI.size = 0;
 	resolveAndInputImageCI.data = nullptr;
 	resolveAndInputImageCI.allocator = gpu_alloc_0;

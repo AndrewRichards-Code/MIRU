@@ -63,7 +63,7 @@ void Multiview()
 	GraphicsAPI::SetAPI(GraphicsAPI::API::D3D12);
 	//GraphicsAPI::SetAPI(GraphicsAPI::API::VULKAN);
 	GraphicsAPI::AllowSetName();
-	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::PIX);
+	GraphicsAPI::LoadGraphicsDebugger(debug::GraphicsDebugger::DebuggerType::RENDER_DOC);
 
 	MIRU_CPU_PROFILE_BEGIN_SESSION("miru_profile_result.txt");
 
