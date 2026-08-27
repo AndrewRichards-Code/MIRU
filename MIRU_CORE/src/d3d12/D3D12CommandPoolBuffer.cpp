@@ -1231,6 +1231,12 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			resolveMode = colourAttachment.resolveMode;
 	}
 
+	//If dynamic rendering is not being used, RenderingInfo will be zeroed out, so just use ResolveModeBits::AVERAGE_BIT.
+	if (renderingResource.RenderingInfo.colourAttachments.empty())
+	{
+		resolveMode = base::ResolveModeBits::AVERAGE_BIT;
+	}
+
 	D3D12_RESOLVE_MODE d3d12ResolveMode = D3D12_RESOLVE_MODE(0);
 	switch (resolveMode)
 	{
