@@ -671,6 +671,13 @@ void CommandBuffer::NextSubpass(uint32_t index)
 		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV && renderpassAttachments[attachId].loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, renderingResource.ClearValues[attachId].colour.float32, 0, nullptr);
 	}
+	for (auto& attachment : subpassDesc.resolveAttachments) //Clear Resolve attachments now for D3D12 validation.
+	{
+		attachId = attachment.attachmentIndex;
+		if (ref_cast<Framebuffer>(renderingResource.Framebuffer)->m_ImageView_RTV_DSV_SRVs[attachId].HasRTV)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(framebufferAttachments[attachId])->m_RTVDescHandle, renderingResource.ClearValues[attachId].colour.float32, 0, nullptr);
+
+	}
 	if (!subpassDesc.depthStencilAttachment.empty())
 	{
 		attachId = subpassDesc.depthStencilAttachment[0].attachmentIndex;
@@ -722,6 +729,20 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 			renderingResource.RTV_DescriptorOffset += RTV_DescriptorSize;
 		}
 		rtvs.push_back(RTVDescHandle);
+
+		if (attachment.resolveImageView)
+		{
+			ImageViewRef imageView = ref_cast<ImageView>(attachment.resolveImageView);
+			ImageRef image = ref_cast<Image>(imageView->GetCreateInfo().image);
+			D3D12_CPU_DESCRIPTOR_HANDLE& RTVDescHandle = imageView->m_RTVDescHandle;
+			if (!RTVDescHandle.ptr)
+			{
+				RTVDescHandle.ptr = renderingResource.RTV_DescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + renderingResource.RTV_DescriptorOffset;
+				m_Device->CreateRenderTargetView(image->m_Image, &(imageView->m_RTVDesc), RTVDescHandle);
+				renderingResource.RTV_DescriptorOffset += RTV_DescriptorSize;
+			}
+			// Resolve targets are not pushed back to rtvs for OMSetRenderTargets(), but RTVDescHandle is need for clearing the image.
+		}
 	}
 	if (renderingResource.RenderingInfo.pDepthAttachment)
 	{
@@ -744,6 +765,10 @@ void CommandBuffer::BeginRendering(uint32_t index, const base::RenderingInfo& re
 	{
 		if (attachment.loadOp == RenderPass::AttachmentLoadOp::CLEAR)
 			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(attachment.imageView)->m_RTVDescHandle, attachment.clearValue.colour.float32, 0, nullptr);
+		
+		// Always clear to initialise the image.
+		if (attachment.resolveImageView)
+			reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ClearRenderTargetView(ref_cast<ImageView>(attachment.resolveImageView)->m_RTVDescHandle, attachment.clearValue.colour.float32, 0, nullptr);
 	}
 	if (renderingResource.RenderingInfo.pDepthAttachment || renderingResource.RenderingInfo.pStencilAttachment)
 	{
@@ -1189,11 +1214,48 @@ void CommandBuffer::CopyImageToBuffer(uint32_t index, const base::ImageRef& srcI
 	}
 }
 
-void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage, Image::Layout srcImageLayout, const base::ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
+void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage, base::Image::Layout srcImageLayout, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Resolve>& resolveRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
+
+	const RenderingResource& renderingResource = m_RenderingResources[index];
+
+	base::ResolveModeBits resolveMode = base::ResolveModeBits::NONE_BIT;
+	for (const auto& colourAttachment : renderingResource.RenderingInfo.colourAttachments)
+	{
+		bool srcSame = ref_cast<Image>(colourAttachment.imageView->GetCreateInfo().image)->m_Image == ref_cast<Image>(srcImage)->m_Image;
+		bool dstSame = ref_cast<Image>(colourAttachment.resolveImageView->GetCreateInfo().image)->m_Image == ref_cast<Image>(dstImage)->m_Image;
+		if (srcSame && dstSame)
+			resolveMode = colourAttachment.resolveMode;
+	}
+
+	D3D12_RESOLVE_MODE d3d12ResolveMode = D3D12_RESOLVE_MODE(0);
+	switch (resolveMode)
+	{
+	default:
+	case base::ResolveModeBits::NONE_BIT:
+		d3d12ResolveMode = D3D12_RESOLVE_MODE_DECOMPRESS;
+		break;
+	case base::ResolveModeBits::SAMPLE_ZERO_BIT:
+		d3d12ResolveMode = D3D12_RESOLVE_MODE_MIN;
+		break;
+	case base::ResolveModeBits::AVERAGE_BIT:
+		d3d12ResolveMode = D3D12_RESOLVE_MODE_AVERAGE;
+		break;
+	case base::ResolveModeBits::MIN_BIT:
+		d3d12ResolveMode = D3D12_RESOLVE_MODE_MIN;
+		break;
+	case base::ResolveModeBits::MAX_BIT:
+		d3d12ResolveMode = D3D12_RESOLVE_MODE_MAX;
+		break;
+	};
+
+	auto D3D12CalculateSubresource = [](const base::Image::CreateInfo& createInfo, const base::Image::SubresourceLayers& subresourceLayer, UINT arrayLayerOffset) -> UINT
+		{
+			return Image::D3D12CalculateSubresource(subresourceLayer.mipLevel, subresourceLayer.baseArrayLayer + arrayLayerOffset, 0, createInfo.mipLevels, createInfo.arrayLayers);
+		};
 
 	const bool& useBarrier2 = arc::BitwiseCheck(m_CI.commandPool->GetCreateInfo().context->GetResultInfo().activeExtensions, base::Context::ExtensionsBit::SYNCHRONISATION_2);
 
@@ -1201,6 +1263,12 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 	Barrier2::CreateInfo b2CI;
 	for (auto& resolveRegion : resolveRegions)
 	{
+		D3D12_RECT srcRect = {};
+		srcRect.left = static_cast<UINT>(resolveRegion.srcOffset.x);
+		srcRect.top = static_cast<UINT>(resolveRegion.srcOffset.y);
+		srcRect.right = static_cast<UINT>(resolveRegion.extent.width);
+		srcRect.bottom = static_cast<UINT>(resolveRegion.extent.height);
+
 		if (useBarrier2)
 		{
 			b2CI.type = Barrier::Type::IMAGE;
@@ -1250,12 +1318,6 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 			PipelineBarrier(index, base::PipelineStageBit::FRAGMENT_SHADER_BIT, base::PipelineStageBit::TRANSFER_BIT, base::DependencyBit::NONE_BIT, { preResolveBarrierSrc, preResolveBarrierDst });
 		}
 
-		D3D12_RECT srcRect = {};
-		srcRect.left = static_cast<UINT>(resolveRegion.srcOffset.x);
-		srcRect.top = static_cast<UINT>(resolveRegion.srcOffset.y);
-		srcRect.right = static_cast<UINT>(resolveRegion.extent.width);
-		srcRect.bottom = static_cast<UINT>(resolveRegion.extent.height);
-
 		bool formatCheck = srcImage->GetCreateInfo().format == dstImage->GetCreateInfo().format;
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 		if (formatCheck)
@@ -1272,12 +1334,12 @@ void CommandBuffer::ResolveImage(uint32_t index, const base::ImageRef& srcImage,
 		{
 			for (uint32_t i = 0; i < resolveRegion.srcSubresource.arrayLayerCount; i++)
 			{
-				UINT dstSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.dstSubresource.mipLevel, i + resolveRegion.srcSubresource.baseArrayLayer, 0, dstImage->GetCreateInfo().mipLevels, dstImage->GetCreateInfo().arrayLayers);
-				UINT srcSubresoucre = Image::D3D12CalculateSubresource(resolveRegion.srcSubresource.mipLevel, i + resolveRegion.dstSubresource.baseArrayLayer, 0, srcImage->GetCreateInfo().mipLevels, srcImage->GetCreateInfo().arrayLayers);
+				UINT dstSubresoucre = D3D12CalculateSubresource(dstImage->GetCreateInfo(), resolveRegion.dstSubresource, i);
+				UINT srcSubresoucre = D3D12CalculateSubresource(srcImage->GetCreateInfo(), resolveRegion.srcSubresource, i);
 
 				reinterpret_cast<ID3D12GraphicsCommandList1*>(m_CmdBuffers[index])->ResolveSubresourceRegion(
 					ref_cast<Image>(dstImage)->m_Image, dstSubresoucre, static_cast<UINT>(resolveRegion.dstOffset.x), static_cast<UINT>(resolveRegion.dstOffset.y),
-					ref_cast<Image>(srcImage)->m_Image, srcSubresoucre, &srcRect, format, D3D12_RESOLVE_MODE_AVERAGE);
+					ref_cast<Image>(srcImage)->m_Image, srcSubresoucre, &srcRect, format, d3d12ResolveMode);
 			}
 		}
 		else
