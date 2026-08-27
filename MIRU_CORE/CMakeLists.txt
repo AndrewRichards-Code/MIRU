@@ -214,7 +214,7 @@ if (Vulkan_FOUND)
 	target_link_directories(MIRU_CORE PRIVATE "${Vulkan_SDK_DIR}/Lib")
 	target_link_libraries(MIRU_CORE PRIVATE vulkan-1.lib optimized spirv-cross-core.lib debug spirv-cross-cored.lib) #Linux?
 
-	#Vulkan SDK does not distrub spirv-cross-cored.pdb, so ignore MSVC's warning]
+	#Vulkan SDK does not distrub spirv-cross-cored.pdb, so ignore MSVC's warning
 	if(MSVC)
 		target_link_options(MIRU_CORE PRIVATE "/ignore:4099")
 	endif()
@@ -223,6 +223,8 @@ if (Vulkan_FOUND)
 		target_link_libraries(MIRU_CORE PRIVATE dxcompiler.lib)
 		set(DXCOMPILER_FOUND TRUE)
 		message(STATUS "dxcompiler found.")
+
 		CopyToBinaryDirPostBuild(MIRU_CORE "${Vulkan_SDK_DIR}/Bin/dxcompiler.dll")
+		CopyToBinaryDirPostBuild(MIRU_CORE "${Vulkan_SDK_DIR}/Bin/dxcompiler.pdb")
 	endif()
 endif()

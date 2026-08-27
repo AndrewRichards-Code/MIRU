@@ -305,7 +305,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 					char* shaderBinaryPtr = (char*)shaderBinary->GetBufferPointer();
 					std::vector<char> contents(shaderBinaryPtr, shaderBinaryPtr + shaderBinary->GetBufferSize());
 					std::filesystem::path shaderBinaryPath = arc::ToString(shaderName->GetStringPointer());
-					std::filesystem::create_directory(shaderBinaryPath.parent_path());
+					std::filesystem::create_directories(shaderBinaryPath.parent_path());
 					arc::SaveBinaryFile(shaderBinaryPath, contents);
 				}
 				else
@@ -326,7 +326,7 @@ void Shader::CompileShaderFromSource(const CompileArguments& arguments)
 						char* pdbBinaryPtr = (char*)pdbBinary->GetBufferPointer();
 						std::vector<char> contents(pdbBinaryPtr, pdbBinaryPtr + pdbBinary->GetBufferSize());
 						std::filesystem::path pdbBinaryPath = arc::ToString(pdbName->GetStringPointer());
-						std::filesystem::create_directory(pdbBinaryPath.parent_path());
+						std::filesystem::create_directories(pdbBinaryPath.parent_path());
 						arc::SaveBinaryFile(pdbBinaryPath, contents);
 					}
 					else
