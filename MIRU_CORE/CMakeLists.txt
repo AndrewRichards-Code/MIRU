@@ -208,6 +208,8 @@ if (Vulkan_FOUND)
 		target_link_libraries(MIRU_CORE PRIVATE dxcompiler.lib)
 		set(DXCOMPILER_FOUND TRUE)
 		message(STATUS "dxcompiler found.")
+		
 		CopyToBinaryDirPostBuild(MIRU_CORE "${Vulkan_SDK_DIR}/Bin/dxcompiler.dll")
+		CopyToBinaryDirPostBuild(MIRU_CORE "${Vulkan_SDK_DIR}/Bin/dxcompiler.pdb")
 	endif()
 endif()

@@ -12,7 +12,7 @@ All paths are either absolute or relative to the current working directory.
 -pause -PAUSE                 : Pauses the program at the end of shader compilation, sets the -h flag. Optional.
 -nologo, -NOLOGO              : Disables copyright message. Optional.
 -nooutput, -NOOUTPUT          : Disables output messages. Optional.
--raf:, -RAF: [filepaths]      : Use to .json files to compile multiple HLSL files with multiple entry points. No other compile flags must be passed.
+-raf:, -RAF:[filepaths]       : Use to .json files to compile multiple HLSL files with multiple entry points. No other compile flags must be passed.
 -rafd:, -RAFD:                : Defines for the .json files to compile multiple HLSL files with multiple entry points. No other compile flags must be passed.
 -f:, -F:[filepath]            : Filepath to a .hlsl file to be compiled. This argument must be set.
 -o:, -O:[directory]           : Directory for the output binaries. Default is the filepath directory.
