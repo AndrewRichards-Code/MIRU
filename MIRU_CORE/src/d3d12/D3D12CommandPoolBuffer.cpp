@@ -239,8 +239,12 @@ void CommandBuffer::Submit(const std::vector<base::CommandBuffer::SubmitInfo>& s
 			{
 				value = ref_cast<Semaphore>(wait)->GetValue();
 			}
-			MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
 			waitIndex++;
+
+			if (value > 0)
+			{
+				MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+			}
 		}
 
 		for (auto& index : submitInfo.indices)
@@ -296,7 +300,11 @@ void CommandBuffer::Submit2(const std::vector<base::CommandBuffer::SubmitInfo2>&
 			{
 				value = ref_cast<Semaphore>(wait)->GetValue();
 			}
-			MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+
+			if (value > 0)
+			{
+				MIRU_FATAL(queue->Wait(ref_cast<Semaphore>(wait)->m_Semaphore, value), "ERROR: D3D12: Failed to Wait on the wait Semaphore.");
+			}
 		}
 
 		for (auto& commandBufferInfo : submitInfo.commandBufferInfos)
