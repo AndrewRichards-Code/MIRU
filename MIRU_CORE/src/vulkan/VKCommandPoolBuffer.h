@@ -67,6 +67,14 @@ namespace vulkan
 		void BuildAccelerationStructures(uint32_t index, const std::vector<base::AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<base::AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) override;
 		void TraceRays(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) override;
 
+		void DrawIndexedIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) override;
+		void DrawIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) override;
+		void DrawMeshTasksIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) override;
+
+		void DispatchIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset) override;
+
+		void TraceRaysIndirect(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, const base::BufferRef& buffer) override;
+
 		void CopyBuffer(uint32_t index, const base::BufferRef& srcBuffer, const base::BufferRef& dstBuffer, const std::vector<base::Buffer::Copy>& copyRegions) override;
 		void CopyImage(uint32_t index, const base::ImageRef& srcImage, base::Image::Layout srcImageLayout, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::Copy>& copyRegions) override;
 		void CopyBufferToImage(uint32_t index, const base::BufferRef& srcBuffer, const base::ImageRef& dstImage, base::Image::Layout dstImageLayout, const std::vector<base::Image::BufferImageCopy>& regions) override;

@@ -340,6 +340,46 @@ namespace base
 		VIEW_LOCAL_BIT = 0x00000002
 	};
 
+	//Indirect Arguments
+
+	struct DrawIndexedIndirectCommand
+	{
+		uint32_t	indexCount;
+		uint32_t	instanceCount;
+		uint32_t	firstIndex;
+		int32_t		vertexOffset;
+		uint32_t	firstInstance;
+	};
+
+	struct DrawIndirectCommand
+	{
+		uint32_t	vertexCount;
+		uint32_t	instanceCount;
+		uint32_t	firstVertex;
+		uint32_t	firstInstance;
+	};
+
+	struct DrawMeshTasksIndirectCommand
+	{
+		uint32_t	groupCountX;
+		uint32_t	groupCountY;
+		uint32_t	groupCountZ;
+	};
+
+	struct DispatchIndirectCommand
+	{
+		uint32_t	x;
+		uint32_t	y;
+		uint32_t	z;
+	};
+
+	struct TraceRaysIndirectCommand
+	{
+		uint32_t	width;
+		uint32_t	height;
+		uint32_t	depth;
+	};
+
 	//Index Type
 
 	enum class IndexType : uint32_t

@@ -10,6 +10,7 @@ set(SRC_HEADERS
 set(SRC_CPP_FILES
 	"src/basic.cpp"
 	"src/dynamic_state.cpp"
+	"src/indirect_draw.cpp"
 	"src/main.cpp"
 	"src/mesh_shader.cpp"
 	"src/multiview.cpp"

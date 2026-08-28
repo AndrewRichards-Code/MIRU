@@ -18,6 +18,7 @@ void DynamicState(uint32_t maxFrames = UINT32_MAX);
 void Multiview(uint32_t maxFrames = UINT32_MAX);
 void MeshShader(uint32_t maxFrames = UINT32_MAX);
 void Sync2(uint32_t maxFrames = UINT32_MAX);
+void IndirectDraw(uint32_t maxFrames = UINT32_MAX);
 
 #define MIRU_TEST_BASIC			1
 #define MIRU_TEST_RAYTRACING	1
@@ -25,6 +26,7 @@ void Sync2(uint32_t maxFrames = UINT32_MAX);
 #define MIRU_TEST_MULTIVIEW		1
 #define MIRU_TEST_MESH_SHADER	1
 #define MIRU_TEST_SYNC2			0
+#define MIRU_TEST_INDIRECT_DRAW	1
 
 #define MIRU_TEST_NO_FRAME_LIMIT 0
 
@@ -61,6 +63,9 @@ int main()
 #endif
 #if MIRU_TEST_SYNC2
 	Sync2(maxFrames);
+#endif
+#if MIRU_TEST_INDIRECT_DRAW
+	IndirectDraw(maxFrames);
 #endif
 
 }

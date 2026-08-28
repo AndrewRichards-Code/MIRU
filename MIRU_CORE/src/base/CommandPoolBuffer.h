@@ -155,6 +155,14 @@ namespace base
 		virtual void BuildAccelerationStructures(uint32_t index, const std::vector<AccelerationStructureBuildInfoRef>& buildGeometryInfos, const std::vector<std::vector<AccelerationStructureBuildInfo::BuildRangeInfo>>& buildRangeInfos) = 0;
 		virtual void TraceRays(uint32_t index, const StridedDeviceAddressRegion* pRaygenShaderBindingTable, const StridedDeviceAddressRegion* pMissShaderBindingTable, const StridedDeviceAddressRegion* pHitShaderBindingTable, const StridedDeviceAddressRegion* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
 
+		virtual void DrawIndexedIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) = 0; //
+		virtual void DrawIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) = 0;
+		virtual void DrawMeshTasksIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride) = 0;
+		
+		virtual void DispatchIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset) = 0;
+
+		virtual void TraceRaysIndirect(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, const base::BufferRef& buffer) = 0;
+		
 		virtual void CopyBuffer(uint32_t index, const BufferRef& srcBuffer, const BufferRef& dstBuffer, const std::vector<Buffer::Copy>& copyRegions) = 0;
 		virtual void CopyImage(uint32_t index, const ImageRef& srcImage, Image::Layout srcImageLayout, const ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<Image::Copy>& copyRegions) = 0;
 		virtual void CopyBufferToImage(uint32_t index, const BufferRef& srcBuffer, const ImageRef& dstImage, Image::Layout dstImageLayout, const std::vector<Image::BufferImageCopy>& regions) = 0;

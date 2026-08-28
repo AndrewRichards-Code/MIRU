@@ -721,6 +721,56 @@ void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRe
 	vkCmdTraceRaysKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, width, height, depth);
 }
 
+void CommandBuffer::DrawIndexedIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDrawIndexedIndirect(m_CmdBuffers[index], ref_cast<Buffer>(buffer)->m_Buffer, offset, drawCount, stride);
+}
+
+void CommandBuffer::DrawIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDrawIndirect(m_CmdBuffers[index], ref_cast<Buffer>(buffer)->m_Buffer, offset, drawCount, stride);
+}
+
+void CommandBuffer::DrawMeshTasksIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDrawMeshTasksIndirectEXT(m_CmdBuffers[index], ref_cast<Buffer>(buffer)->m_Buffer, offset, drawCount, stride);
+}
+
+void CommandBuffer::DispatchIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	vkCmdDispatchIndirect(m_CmdBuffers[index], ref_cast<Buffer>(buffer)->m_Buffer, offset);
+}
+
+void CommandBuffer::TraceRaysIndirect(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, const base::BufferRef& buffer)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	VkStridedDeviceAddressRegionKHR emptySbtEntry;
+	emptySbtEntry.deviceAddress = 0;
+	emptySbtEntry.stride = 0;
+	emptySbtEntry.size = 0;
+
+	const VkStridedDeviceAddressRegionKHR* raygenSBT = pRaygenShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pRaygenShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* missSBT = pMissShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pMissShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* hitSBT = pHitShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pHitShaderBindingTable) : &emptySbtEntry;
+	const VkStridedDeviceAddressRegionKHR* callableSBT = pCallableShaderBindingTable ? reinterpret_cast<const VkStridedDeviceAddressRegionKHR*>(pCallableShaderBindingTable) : &emptySbtEntry;
+	VkDeviceAddress indirectCommands = GetBufferDeviceAddress(m_CI.commandPool->GetCreateInfo().device, buffer);
+	vkCmdTraceRaysIndirectKHR(m_CmdBuffers[index], raygenSBT, missSBT, hitSBT, callableSBT, indirectCommands);
+}
+
 void CommandBuffer::CopyBuffer(uint32_t index, const base::BufferRef& srcBuffer, const base::BufferRef& dstBuffer, const std::vector<Buffer::Copy>& copyRegions)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

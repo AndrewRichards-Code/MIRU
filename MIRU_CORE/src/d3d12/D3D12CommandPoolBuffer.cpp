@@ -865,32 +865,149 @@ void CommandBuffer::TraceRays(uint32_t index, const base::StridedDeviceAddressRe
 	MIRU_CPU_PROFILE_FUNCTION();
 
 	CHECK_VALID_INDEX_RETURN(index);
-	D3D12_DISPATCH_RAYS_DESC desc;
 
+	D3D12_DISPATCH_RAYS_DESC desc = { 0 };
 	if (pRaygenShaderBindingTable)
 		desc.RayGenerationShaderRecord = { pRaygenShaderBindingTable->deviceAddress, pRaygenShaderBindingTable->size };
-	else
-		desc.RayGenerationShaderRecord = { 0, 0 };
-
 	if (pMissShaderBindingTable)
 		desc.MissShaderTable = { pMissShaderBindingTable->deviceAddress, pMissShaderBindingTable->size, pMissShaderBindingTable->stride };
-	else
-		desc.MissShaderTable = { 0, 0, 0 };
-
 	if (pHitShaderBindingTable)
 		desc.HitGroupTable = { pHitShaderBindingTable->deviceAddress, pHitShaderBindingTable->size, pHitShaderBindingTable->stride };
-	else
-		desc.HitGroupTable = { 0, 0, 0 };
-
 	if (pCallableShaderBindingTable)
 		desc.CallableShaderTable = { pCallableShaderBindingTable->deviceAddress, pCallableShaderBindingTable->size, pCallableShaderBindingTable->stride };
-	else
-		desc.CallableShaderTable = { 0, 0, 0 };
 
 	desc.Width = static_cast<UINT>(width);
 	desc.Height = static_cast<UINT>(height);
 	desc.Depth = static_cast<UINT>(depth);
 	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->DispatchRays(&desc);
+}
+
+void CommandBuffer::DrawIndexedIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_INDIRECT_ARGUMENT_DESC indirectArgumentDesc;
+	indirectArgumentDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+	D3D12_COMMAND_SIGNATURE_DESC cmdSignatureDesc;
+	cmdSignatureDesc.ByteStride = stride;
+	cmdSignatureDesc.NumArgumentDescs = 1;
+	cmdSignatureDesc.pArgumentDescs = &indirectArgumentDesc;
+	cmdSignatureDesc.NodeMask = 0;
+
+	ID3D12CommandSignature* cmdSignature = nullptr;
+	//No resources changes for the root signature, so it can be nullptr.
+	//https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+	MIRU_FATAL(m_Device->CreateCommandSignature(&cmdSignatureDesc, nullptr, IID_PPV_ARGS(&cmdSignature)), "ERROR: D3D12: Failed to Create CommandSignature.");
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->ExecuteIndirect(cmdSignature, drawCount, ref_cast<Buffer>(buffer)->m_Buffer, offset, nullptr, 0);
+}
+
+void CommandBuffer::DrawIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_INDIRECT_ARGUMENT_DESC indirectArgumentDesc;
+	indirectArgumentDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+
+	D3D12_COMMAND_SIGNATURE_DESC cmdSignatureDesc;
+	cmdSignatureDesc.ByteStride = stride;
+	cmdSignatureDesc.NumArgumentDescs = 1;
+	cmdSignatureDesc.pArgumentDescs = &indirectArgumentDesc;
+	cmdSignatureDesc.NodeMask = 0;
+
+	ID3D12CommandSignature* cmdSignature = nullptr;
+	//No resources changes for the root signature, so it can be nullptr.
+	//https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+	MIRU_FATAL(m_Device->CreateCommandSignature(&cmdSignatureDesc, nullptr, IID_PPV_ARGS(&cmdSignature)), "ERROR: D3D12: Failed to Create CommandSignature.");
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->ExecuteIndirect(cmdSignature, drawCount, ref_cast<Buffer>(buffer)->m_Buffer, offset, nullptr, 0);
+}
+
+void CommandBuffer::DrawMeshTasksIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset, uint32_t drawCount, uint32_t stride)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_INDIRECT_ARGUMENT_DESC indirectArgumentDesc;
+	indirectArgumentDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH;
+
+	D3D12_COMMAND_SIGNATURE_DESC cmdSignatureDesc;
+	cmdSignatureDesc.ByteStride = stride;
+	cmdSignatureDesc.NumArgumentDescs = 1;
+	cmdSignatureDesc.pArgumentDescs = &indirectArgumentDesc;
+	cmdSignatureDesc.NodeMask = 0;
+
+	ID3D12CommandSignature* cmdSignature = nullptr;
+	//No resources changes for the root signature, so it can be nullptr.
+	//https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+	MIRU_FATAL(m_Device->CreateCommandSignature(&cmdSignatureDesc, nullptr, IID_PPV_ARGS(&cmdSignature)), "ERROR: D3D12: Failed to Create CommandSignature.");
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->ExecuteIndirect(cmdSignature, drawCount, ref_cast<Buffer>(buffer)->m_Buffer, offset, nullptr, 0);
+}
+
+void CommandBuffer::DispatchIndirect(uint32_t index, const base::BufferRef& buffer, size_t offset)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_INDIRECT_ARGUMENT_DESC indirectArgumentDesc;
+	indirectArgumentDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+
+	D3D12_COMMAND_SIGNATURE_DESC cmdSignatureDesc;
+	cmdSignatureDesc.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
+	cmdSignatureDesc.NumArgumentDescs = 1;
+	cmdSignatureDesc.pArgumentDescs = &indirectArgumentDesc;
+	cmdSignatureDesc.NodeMask = 0;
+
+	ID3D12CommandSignature* cmdSignature = nullptr;
+	//No resources changes for the root signature, so it can be nullptr.
+	//https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+	MIRU_FATAL(m_Device->CreateCommandSignature(&cmdSignatureDesc, nullptr, IID_PPV_ARGS(&cmdSignature)), "ERROR: D3D12: Failed to Create CommandSignature.");
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->ExecuteIndirect(cmdSignature, 1, ref_cast<Buffer>(buffer)->m_Buffer, offset, nullptr, 0);
+}
+
+void CommandBuffer::TraceRaysIndirect(uint32_t index, const base::StridedDeviceAddressRegion* pRaygenShaderBindingTable, const base::StridedDeviceAddressRegion* pMissShaderBindingTable, const base::StridedDeviceAddressRegion* pHitShaderBindingTable, const base::StridedDeviceAddressRegion* pCallableShaderBindingTable, const base::BufferRef& buffer)
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+	CHECK_VALID_INDEX_RETURN(index);
+	D3D12_INDIRECT_ARGUMENT_DESC indirectArgumentDesc;
+	indirectArgumentDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_RAYS;
+
+	D3D12_COMMAND_SIGNATURE_DESC cmdSignatureDesc;
+	cmdSignatureDesc.ByteStride = sizeof(D3D12_DISPATCH_RAYS_DESC);
+	cmdSignatureDesc.NumArgumentDescs = 1;
+	cmdSignatureDesc.pArgumentDescs = &indirectArgumentDesc;
+	cmdSignatureDesc.NodeMask = 0;
+
+	ID3D12CommandSignature* cmdSignature = nullptr;
+	//No resources changes for the root signature, so it can be nullptr.
+	//https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+	MIRU_FATAL(m_Device->CreateCommandSignature(&cmdSignatureDesc, nullptr, IID_PPV_ARGS(&cmdSignature)), "ERROR: D3D12: Failed to Create CommandSignature.");
+
+	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = { 0 };
+	if (pRaygenShaderBindingTable)
+		dispatchRaysDesc.RayGenerationShaderRecord = { pRaygenShaderBindingTable->deviceAddress, pRaygenShaderBindingTable->size };
+	if (pMissShaderBindingTable)
+		dispatchRaysDesc.MissShaderTable = { pMissShaderBindingTable->deviceAddress, pMissShaderBindingTable->size, pMissShaderBindingTable->stride };
+	if (pHitShaderBindingTable)
+		dispatchRaysDesc.HitGroupTable = { pHitShaderBindingTable->deviceAddress, pHitShaderBindingTable->size, pHitShaderBindingTable->stride };
+	if (pCallableShaderBindingTable)
+		dispatchRaysDesc.CallableShaderTable = { pCallableShaderBindingTable->deviceAddress, pCallableShaderBindingTable->size, pCallableShaderBindingTable->stride };
+
+	buffer->GetCreateInfo().allocator->AccessData(buffer->GetAllocation(), 0, sizeof(base::TraceRaysIndirectCommand), reinterpret_cast<void*>(&dispatchRaysDesc.Width));
+
+	Buffer::CreateInfo indirectArgumentBufferCI = buffer->GetCreateInfo();
+	indirectArgumentBufferCI.debugName += " - D3D12_DISPATCH_RAYS_DESC";
+	indirectArgumentBufferCI.size = sizeof(D3D12_DISPATCH_RAYS_DESC);
+	indirectArgumentBufferCI.data = &dispatchRaysDesc;
+	base::BufferRef indirectArgumentBuffer = base::Buffer::Create(&indirectArgumentBufferCI);
+
+	reinterpret_cast<ID3D12GraphicsCommandList4*>(m_CmdBuffers[index])->ExecuteIndirect(cmdSignature, 1, ref_cast<Buffer>(indirectArgumentBuffer)->m_Buffer, 0, nullptr, 0);
 }
 
 void CommandBuffer::CopyBuffer(uint32_t index, const base::BufferRef& srcBuffer, const base::BufferRef& dstBuffer, const std::vector<base::Buffer::Copy>& copyRegions) 
