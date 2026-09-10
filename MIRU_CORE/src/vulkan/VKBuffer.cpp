@@ -33,7 +33,7 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	MIRU_FATAL(vmaCreateBuffer(allocator, &m_BufferCI, &m_VmaACI, &m_Buffer, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Buffer.");
 	VKSetName<VkBuffer>(m_Device, m_Buffer, m_CI.debugName);
 
-	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
+	m_Allocation.nativeAllocations[0] = (base::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.rowPitch = m_CI.imageDimension.width * m_CI.imageDimension.pixelSize;
 	m_Allocation.rowCount = m_CI.imageDimension.height;
 	m_Allocation.rowPadding = 0;

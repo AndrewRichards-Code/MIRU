@@ -66,7 +66,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	MIRU_FATAL(allocator->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, useClear ? &clear : nullptr, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Image)), "ERROR: D3D12: Failed to place Image.");
 	D3D12SetName(m_Image, m_CI.debugName);
 
-	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
+	m_Allocation.nativeAllocations[0] = (base::NativeAllocation)m_D3D12MAllocation;
 	m_Allocation.rowPitch = 0;
 	m_Allocation.rowCount = 0;
 	m_Allocation.rowPadding = 0;

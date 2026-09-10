@@ -76,6 +76,5 @@ double QueryPool::ConvertTimingDataMilliseconds(uint64_t datum)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	const float& timestampPeriod = 1.0f;//ref_cast<PhysicalDevice>(m_CI.device->GetCreateInfo().physicalDevice)->m_Properties.limits.timestampPeriod;
-	return (static_cast<double>(datum) / static_cast<double>(timestampPeriod)) / 1000000.0;
+	return static_cast<double>(datum) / 1000000.0;
 }

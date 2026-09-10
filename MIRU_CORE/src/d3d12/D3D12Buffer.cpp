@@ -49,14 +49,17 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;				//How the resource is to be used
 	D3D12_CLEAR_VALUE* clear = nullptr;
 
+	D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON;
 	D3D12_HEAP_TYPE heapType = ref_cast<Allocator>(m_CI.allocator)->GetHeapProperties().Type;
 	if (heapType == D3D12_HEAP_TYPE_DEFAULT)
 	{
-		m_InitialResourceState = ToD3D12BufferType(m_CI.usage);
+		initialResourceState = ToD3D12BufferType(m_CI.usage);
 		m_ResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}
 	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
-		m_InitialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+	{
+		initialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+	}
 
 	m_D3D12MAllocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;
 	m_D3D12MAllocationDesc.HeapType = heapType;
@@ -64,14 +67,31 @@ Buffer::Buffer(Buffer::CreateInfo* pCreateInfo)
 	m_D3D12MAllocationDesc.CustomPool = nullptr;
 
 	D3D12MA::Allocator* allocator = reinterpret_cast<D3D12MA::Allocator*>(m_CI.allocator->GetNativeAllocator());
-	MIRU_FATAL(allocator->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, m_InitialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
+	MIRU_FATAL(allocator->CreateResource(&m_D3D12MAllocationDesc, &m_ResourceDesc, initialResourceState, clear, &m_D3D12MAllocation, IID_PPV_ARGS(&m_Buffer)), "ERROR: D3D12: Failed to create Buffer.");
 	D3D12SetName(m_Buffer, m_CI.debugName);
 	
-	m_Allocation.nativeAllocation = (base::NativeAllocation)m_D3D12MAllocation;
+	m_Allocation.nativeAllocations[0] = (base::NativeAllocation)m_D3D12MAllocation;
 
 	if (m_CI.data)
 	{
 		m_CI.allocator->SubmitData(m_Allocation, 0, m_CI.size, m_CI.data);
+	}
+
+	//Readback Allocation
+	if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+	{
+		m_ReadbackD3D12MAllocationDesc = m_D3D12MAllocationDesc;
+		m_ReadbackD3D12MAllocationDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+
+		MIRU_FATAL(allocator->CreateResource(&m_ReadbackD3D12MAllocationDesc, &m_ResourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, clear, &m_ReadbackD3D12MAllocation, IID_PPV_ARGS(&m_ReadbackBuffer)), "ERROR: D3D12: Failed to create ReadbackBuffer.");
+		D3D12SetName(m_ReadbackBuffer, m_CI.debugName + " Readback");
+
+		m_Allocation.nativeAllocations[1] = (base::NativeAllocation)m_ReadbackD3D12MAllocation;
+	}
+	else
+	{
+		m_ReadbackBuffer = nullptr;
+		m_Allocation.nativeAllocations[1] = m_ReadbackD3D12MAllocation = nullptr;
 	}
 }
 
@@ -81,6 +101,9 @@ Buffer::~Buffer()
 
 	MIRU_D3D12_SAFE_RELEASE(m_D3D12MAllocation);
 	MIRU_D3D12_SAFE_RELEASE(m_Buffer);
+
+	MIRU_D3D12_SAFE_RELEASE(m_ReadbackD3D12MAllocation);
+	MIRU_D3D12_SAFE_RELEASE(m_ReadbackBuffer);
 }
 
 D3D12_RESOURCE_STATES Buffer::ToD3D12BufferType(Buffer::UsageBit usage) const

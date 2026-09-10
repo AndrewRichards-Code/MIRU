@@ -11,7 +11,7 @@ namespace base
 
 	struct MIRU_API Allocation
 	{
-		NativeAllocation	nativeAllocation;
+		NativeAllocation	nativeAllocations[2];
 		size_t				rowPitch;
 		size_t				rowCount;
 		size_t				rowPadding;

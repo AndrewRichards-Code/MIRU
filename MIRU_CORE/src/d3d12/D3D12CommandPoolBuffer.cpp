@@ -479,7 +479,7 @@ void CommandBuffer::ClearDepthStencilImage(uint32_t index, const base::ImageRef&
 		{
 			ImageView::CreateInfo imageViewCI;
 			imageViewCI.debugName = "CommandBuffer::ClearColourImage DSV: " + std::to_string(h) + " MIP: " + std::to_string(i);
-			imageViewCI.device = m_CI.commandPool->GetCreateInfo().device;;
+			imageViewCI.device = m_CI.commandPool->GetCreateInfo().device;
 			imageViewCI.image = image;
 			imageViewCI.viewType = image->GetCreateInfo().type;
 			imageViewCI.subresourceRange = subresourceRanges[h];
@@ -1389,6 +1389,5 @@ void CommandBuffer::CopyQueryPoolToBuffer(uint32_t index, const base::QueryPoolR
 	QueryPoolRef d3d12QueryPool = ref_cast<QueryPool>(queryPool);
 	reinterpret_cast<ID3D12GraphicsCommandList*>(m_CmdBuffers[index])->ResolveQueryData(
 		d3d12QueryPool->m_QueryHeap, d3d12QueryPool->GetQueryType(), firstQuery, queryCount,
-		ref_cast<Buffer>(buffer)->m_Buffer, offset);
+		ref_cast<Buffer>(buffer)->m_ReadbackBuffer, offset);
 }
-

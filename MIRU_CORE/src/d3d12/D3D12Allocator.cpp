@@ -38,10 +38,9 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, si
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-
-	if (allocation.nativeAllocation && size > 0  && data)
+	if (allocation.nativeAllocations[0] && size > 0  && data)
 	{
-		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocation)->GetResource();
+		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocations[0])->GetResource();
 
 		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
 		if (uploadHeap)
@@ -86,9 +85,9 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t offset, si
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (allocation.nativeAllocation && size > 0 && data)
+	if (allocation.nativeAllocations[1] && size > 0 && data)
 	{
-		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocation)->GetResource();
+		ID3D12Resource* d3d12Resource = reinterpret_cast<D3D12MA::Allocation*>(allocation.nativeAllocations[1])->GetResource();
 
 		bool uploadHeap = GetHeapProperties().Type == D3D12_HEAP_TYPE_UPLOAD;
 		if (uploadHeap)

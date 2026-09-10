@@ -53,9 +53,9 @@ void Allocator::SubmitData(const base::Allocation& allocation, size_t offset, si
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (allocation.nativeAllocation && size > 0 && data)
+	if (allocation.nativeAllocations[0] && size > 0 && data)
 	{
-		const VmaAllocation& vmaAllocation = *reinterpret_cast<VmaAllocation*>(allocation.nativeAllocation);
+		const VmaAllocation& vmaAllocation = *reinterpret_cast<VmaAllocation*>(allocation.nativeAllocations[0]);
 
 		const bool& hostVisible = arc::BitwiseCheck(static_cast<VkMemoryPropertyFlagBits>(m_CI.properties), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 		const bool& hostCoherent = arc::BitwiseCheck(static_cast<VkMemoryPropertyFlagBits>(m_CI.properties), VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -76,9 +76,9 @@ void Allocator::AccessData(const base::Allocation& allocation, size_t offset, si
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
-	if (allocation.nativeAllocation && size > 0 && data)
+	if (allocation.nativeAllocations[0] && size > 0 && data)
 	{
-		const VmaAllocation& vmaAllocation = *reinterpret_cast<VmaAllocation*>(allocation.nativeAllocation);
+		const VmaAllocation& vmaAllocation = *reinterpret_cast<VmaAllocation*>(allocation.nativeAllocations[0]);
 		
 		const bool& hostVisible = arc::BitwiseCheck(static_cast<VkMemoryPropertyFlagBits>(m_CI.properties), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 		const bool& hostCoherent = arc::BitwiseCheck(static_cast<VkMemoryPropertyFlagBits>(m_CI.properties), VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);

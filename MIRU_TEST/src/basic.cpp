@@ -845,11 +845,7 @@ void Basic(uint32_t maxFrames)
 
 			cmdBuffer->WriteTimestamp(frameIndex, queryPool, 2 * frameIndex + 1, PipelineStageBit::BOTTOM_OF_PIPE_BIT);
 
-			//TODO: WIP - Only works in Vulkan
-			if (GraphicsAPI::IsVulkan())
-			{
-				cmdBuffer->CopyQueryPoolToBuffer(frameIndex, queryPool, 2 * frameIndex, 2, queryPool->GetReadbackBuffer(), 2 * frameIndex * sizeof(uint64_t), sizeof(uint64_t));
-			}
+			cmdBuffer->CopyQueryPoolToBuffer(frameIndex, queryPool, 2 * frameIndex, 2, queryPool->GetReadbackBuffer(), 2 * frameIndex * sizeof(uint64_t), sizeof(uint64_t));
 
 			cmdBuffer->End(frameIndex);
 
@@ -873,15 +869,12 @@ void Basic(uint32_t maxFrames)
 			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
 			cpu_alloc_0->SubmitData(ub2->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
 
-			//TODO: WIP - Only works in Vulkan
-			if (GraphicsAPI::IsVulkan())
-			{
-				uint64_t timingData[2] = { 0, 0 };
-				cpu_alloc_0->AccessData(queryPool->GetReadbackBuffer()->GetAllocation(), frameIndex * sizeof(timingData), sizeof(timingData), timingData);
-				uint64_t timingDatum = timingData[1] - timingData[0];
-				double excutionTime = queryPool->ConvertTimingDataMilliseconds(timingDatum);
-				ARC_INFO(0, "Excution Time: {:.9f}ms\n", excutionTime);
-			}
+			//GPU Timing Queries
+			uint64_t timingData[2] = { 0, 0 };
+			cpu_alloc_0->AccessData(queryPool->GetReadbackBuffer()->GetAllocation(), frameIndex * sizeof(timingData), sizeof(timingData), timingData);
+			uint64_t timingDatum = timingData[1] - timingData[0];
+			double excutionTime = queryPool->ConvertTimingDataMilliseconds(timingDatum);
+			ARC_INFO(0, "Excution Time: {:.9f}ms\n", excutionTime);
 
 			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;

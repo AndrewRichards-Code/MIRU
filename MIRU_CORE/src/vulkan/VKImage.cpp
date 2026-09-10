@@ -45,7 +45,7 @@ Image::Image(Image::CreateInfo* pCreateInfo)
 	MIRU_FATAL(vmaCreateImage(allocator, &m_ImageCI, &m_VmaACI, &m_Image, &m_VmaAllocation, &m_VmaAI), "ERROR: VULKAN: Failed to create Image.");
 	VKSetName<VkImage>(m_Device, m_Image, m_CI.debugName);
 
-	m_Allocation.nativeAllocation = (base::NativeAllocation)&m_VmaAllocation;
+	m_Allocation.nativeAllocations[0] = (base::NativeAllocation)&m_VmaAllocation;
 	m_Allocation.rowPitch = 0;
 	m_Allocation.rowCount = 0;
 	m_Allocation.rowPadding = 0;
