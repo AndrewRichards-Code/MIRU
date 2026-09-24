@@ -97,6 +97,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	m_BSI.updateScratchSize			= m_RASPBI.UpdateScratchDataSizeInBytes;
 	m_BSI.buildScratchSize			= m_RASPBI.ScratchDataSizeInBytes;
 }
+
 AccelerationStructureBuildInfo::~AccelerationStructureBuildInfo()
 {
 	MIRU_CPU_PROFILE_FUNCTION();

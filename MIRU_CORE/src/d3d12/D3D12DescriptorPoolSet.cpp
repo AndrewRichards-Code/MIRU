@@ -29,10 +29,10 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 
 	m_CI = *pCreateInfo;
 
-	UINT countCBV = 0;
-	UINT countSRV = 0;
-	UINT countUAV = 0;
-	UINT countSampler = 0;
+	UINT64 countCBV = 0;
+	UINT64 countSRV = 0;
+	UINT64 countUAV = 0;
+	UINT64 countSampler = 0;
 
 	INT baseBindingSRV = ~0U;
 	INT baseBindingUAV = ~0U;
@@ -52,7 +52,7 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		}
 		case base::DescriptorType::COMBINED_IMAGE_SAMPLER:
 		{
-			countSRV++;
+			countSRV += descriptorSetLayoutBinding.descriptorCount;
 			countSampler += descriptorSetLayoutBinding.descriptorCount;
 			if (baseBindingSRV == ~0U)
 				baseBindingSRV = descriptorSetLayoutBinding.binding;
@@ -123,10 +123,16 @@ DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout::CreateInfo* pCreat
 		}
 	}
 
+	//Unbounded arrays plus other descriptors may overflow a uint32_t.
+	countCBV = std::clamp<UINT64>(countCBV, 0, UINT32_MAX);
+	countSRV = std::clamp<UINT64>(countSRV, 0, UINT32_MAX);
+	countUAV = std::clamp<UINT64>(countUAV, 0, UINT32_MAX);
+	countSampler = std::clamp<UINT64>(countSampler, 0, UINT32_MAX);
+
 	for (size_t i = 0; i < m_DescriptorRanges.size(); i++)
 	{
 		m_DescriptorRanges[i].RangeType = static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(i);
-		m_DescriptorRanges[i].NumDescriptors = i == 0 ? countSRV : i == 1 ? countUAV : i == 2 ? countCBV : countSampler;
+		m_DescriptorRanges[i].NumDescriptors = static_cast<UINT>(i == 0 ? countSRV : i == 1 ? countUAV : i == 2 ? countCBV : countSampler);
 		m_DescriptorRanges[i].BaseShaderRegister = i == 0 ? baseBindingSRV : i == 1 ? baseBindingUAV : i == 2 ? baseBindingCBV : baseBindingSampler;
 		m_DescriptorRanges[i].RegisterSpace = ~0U;
 		m_DescriptorRanges[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -170,12 +176,27 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 		{
 			if (descriptorSetLayoutBinding.type == base::DescriptorType::SAMPLER)
 			{
-				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
+				if (arc::BitwiseCheck(descriptorSetLayoutBinding.flags, DescriptorSetLayout::Binding::FlagBit::VARIABLE_DESCRIPTOR_COUNT_BIT))
+				{
+					numDescriptors_Sampler += m_CI.descriptorCounts[index];
+				}
+				else
+				{
+					numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
+				}
 			}
 			else if (descriptorSetLayoutBinding.type == base::DescriptorType::COMBINED_IMAGE_SAMPLER)
 			{
-				numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
-				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
+				if (arc::BitwiseCheck(descriptorSetLayoutBinding.flags, DescriptorSetLayout::Binding::FlagBit::VARIABLE_DESCRIPTOR_COUNT_BIT))
+				{
+					numDescriptors_Sampler += m_CI.descriptorCounts[index];
+					numDescriptors_CBV_SRV_UAV += m_CI.descriptorCounts[index];
+				}
+				else
+				{
+					numDescriptors_Sampler += descriptorSetLayoutBinding.descriptorCount;
+					numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
+				}
 			}
 			else if (descriptorSetLayoutBinding.type == base::DescriptorType::D3D12_RENDER_TARGET_VIEW)
 			{
@@ -186,7 +207,16 @@ DescriptorSet::DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo)
 				numDescriptors_DSV += descriptorSetLayoutBinding.descriptorCount;
 			}
 			else
-				numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
+			{
+				if (arc::BitwiseCheck(descriptorSetLayoutBinding.flags, DescriptorSetLayout::Binding::FlagBit::VARIABLE_DESCRIPTOR_COUNT_BIT))
+				{
+					numDescriptors_CBV_SRV_UAV += m_CI.descriptorCounts[index];
+				}
+				else
+				{
+					numDescriptors_CBV_SRV_UAV += descriptorSetLayoutBinding.descriptorCount;
+				}
+			}
 		}
 
 		m_DescriptorHeaps.push_back({});
@@ -300,7 +330,7 @@ DescriptorSet::~DescriptorSet()
 	ref_cast<DescriptorPool>(m_CI.descriptorPool)->m_AssignedSets -= m_CI.descriptorSetLayouts.size();
 }
 
-void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t descriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -349,7 +379,7 @@ void DescriptorSet::AddBuffer(uint32_t index, uint32_t bindingIndex, const std::
 	}
 }
 
-void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t descriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -421,7 +451,7 @@ void DescriptorSet::AddImage(uint32_t index, uint32_t bindingIndex, const std::v
 	}
 }
 
-void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t desriptorArrayIndex)
+void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t descriptorArrayIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 
@@ -453,6 +483,12 @@ void DescriptorSet::AddAccelerationStructure(uint32_t index, uint32_t bindingInd
 }
 
 void DescriptorSet::Update()
+{
+	MIRU_CPU_PROFILE_FUNCTION();
+
+}
+
+void DescriptorSet::Clear()
 {
 	MIRU_CPU_PROFILE_FUNCTION();
 

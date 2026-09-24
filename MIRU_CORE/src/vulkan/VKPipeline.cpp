@@ -16,7 +16,7 @@ Pipeline::Pipeline(Pipeline::CreateInfo* pCreateInfo)
 
 	std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 	vkDescriptorSetLayouts.reserve(m_CI.layout.descriptorSetLayouts.size());
-	for(auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
+	for (auto& descriptorSetLayout : m_CI.layout.descriptorSetLayouts)
 		vkDescriptorSetLayouts.push_back(ref_cast<DescriptorSetLayout>(descriptorSetLayout)->m_DescriptorSetLayout);
 
 	std::vector<VkPushConstantRange> vkPushConstantRanges;

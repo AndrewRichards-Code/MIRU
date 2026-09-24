@@ -20,7 +20,7 @@ namespace miru
 				//Vulkan: VK_KHR_ray_tracing_pipeline, VK_KHR_ray_query and VK_KHR_acceleration_structure: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap38.html#ray-tracing
 				RAY_TRACING = 0x00000001,
 
-				//STATUS: X
+				//STATUS: 0
 				//D3D12: Core: https://docs.microsoft.com/en-us/windows/win32/direct3d12/example-root-signatures#streaming-shader-resource-views
 				//Vulkan: VK_EXT_descriptor_indexing: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap52.html#VK_EXT_descriptor_indexing
 				DESCRIPTOR_INDEXING = 0x00000002,
@@ -35,7 +35,7 @@ namespace miru
 				//Vulkan: VK_KHR_synchronization2: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/chap52.html#VK_KHR_synchronization2
 				SYNCHRONISATION_2 = 0x00000008,
 
-				//STATUS: X
+				//STATUS: O 
 				//D3D12: https://microsoft.github.io/DirectX-Specs/d3d/MeshShader.html
 				//Vulkan: VK_EXT_mesh_shader: https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap52.html#VK_EXT_mesh_shader
 				MESH_SHADER = 0x00000010,

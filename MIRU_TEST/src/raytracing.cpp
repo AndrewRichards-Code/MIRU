@@ -2,6 +2,8 @@
 #include "common.h"
 #include "maths.h"
 
+#include "stb/stb_image.h"
+
 using namespace miru;
 using namespace base;
 
@@ -74,7 +76,7 @@ void Raytracing(uint32_t maxFrames)
 	Device::CreateInfo deviceCI;
 	deviceCI.physicalDevice = physicalDevice;
 	deviceCI.debugValidationLayers = true;
-	deviceCI.extensions = Device::ExtensionsBit::RAY_TRACING;
+	deviceCI.extensions = Device::ExtensionsBit::RAY_TRACING | Device::ExtensionsBit::DESCRIPTOR_INDEXING;
 	deviceCI.debugName = "GPU Device";
 	DeviceRef device = Device::Create(&deviceCI);
 
@@ -171,6 +173,12 @@ void Raytracing(uint32_t maxFrames)
 		4, 5, 1, 1, 0, 4
 	};
 
+	int img_width;
+	int img_height;
+	int bpp;
+	std::string logoFilepath = std::string(SOLUTION_DIR) + std::string("/Branding/logo.png");
+	uint8_t* imageData = stbi_load(logoFilepath.c_str(), &img_width, &img_height, &bpp, 4);
+
 	Buffer::CreateInfo verticesBufferCI;
 	verticesBufferCI.debugName = "Vertices Buffer";
 	verticesBufferCI.device = device;
@@ -179,7 +187,7 @@ void Raytracing(uint32_t maxFrames)
 	verticesBufferCI.data = vertices;
 	verticesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_vb = Buffer::Create(&verticesBufferCI);
-	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT;
+	verticesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::VERTEX_BIT | Buffer::UsageBit::STORAGE_BIT;
 	verticesBufferCI.data = nullptr;
 	verticesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_vb = Buffer::Create(&verticesBufferCI);
@@ -192,10 +200,39 @@ void Raytracing(uint32_t maxFrames)
 	indicesBufferCI.data = indices;
 	indicesBufferCI.allocator = cpu_alloc_0;
 	BufferRef c_ib = Buffer::Create(&indicesBufferCI);
-	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT;
+	indicesBufferCI.usage = Buffer::UsageBit::TRANSFER_DST_BIT | Buffer::UsageBit::INDEX_BIT | Buffer::UsageBit::STORAGE_BIT;
 	indicesBufferCI.data = nullptr;
 	indicesBufferCI.allocator = gpu_alloc_0;
 	BufferRef g_ib = Buffer::Create(&indicesBufferCI);
+
+	Buffer::CreateInfo imageBufferCI;
+	imageBufferCI.debugName = "MIRU logo upload buffer";
+	imageBufferCI.device = device;
+	imageBufferCI.usage = Buffer::UsageBit::TRANSFER_SRC_BIT;
+	imageBufferCI.size = img_width * img_height * 4;
+	imageBufferCI.data = imageData;
+	imageBufferCI.allocator = cpu_alloc_0;
+	BufferRef c_imageBuffer = Buffer::Create(&imageBufferCI);
+	stbi_image_free(imageData);
+
+	Image::CreateInfo imageCI;
+	imageCI.debugName = "MIRU logo Image";
+	imageCI.device = device;
+	imageCI.type = Image::Type::TYPE_2D;
+	imageCI.format = Image::Format::R8G8B8A8_UNORM;
+	imageCI.width = img_width;
+	imageCI.height = img_height;
+	imageCI.depth = 1;
+	imageCI.mipLevels = 1;
+	imageCI.arrayLayers = 1;
+	imageCI.sampleCount = Image::SampleCountBit::SAMPLE_COUNT_1_BIT;
+	imageCI.usage = Image::UsageBit::TRANSFER_DST_BIT | Image::UsageBit::SAMPLED_BIT;
+	imageCI.layout = Image::Layout::UNKNOWN;
+	imageCI.size = img_width * img_height * 4;
+	imageCI.data = nullptr;
+	imageCI.allocator = gpu_alloc_0;
+	imageCI.externalImage = nullptr;
+	ImageRef image = Image::Create(&imageCI);
 
 	//Uniform buffers
 	Mat4 proj = Mat4::Perspective(3.14159 / 2.0, float(width) / float(height), 0.1f, 100.0f);
@@ -257,6 +294,26 @@ void Raytracing(uint32_t maxFrames)
 	ubSceneConstantsCI.stride = 0;
 	BufferViewRef ubViewSceneConstants = BufferView::Create(&ubSceneConstantsCI);
 
+	BufferView::CreateInfo vbViewCI;
+	vbViewCI.debugName = "VerticesBufferView";
+	vbViewCI.device = device;
+	vbViewCI.type = BufferView::Type::STORAGE;
+	vbViewCI.buffer = g_vb;
+	vbViewCI.offset = 0;
+	vbViewCI.size = sizeof(vertices);
+	vbViewCI.stride = 4 * sizeof(float);
+	BufferViewRef vbv = BufferView::Create(&vbViewCI);
+
+	BufferView::CreateInfo ibViewCI;
+	ibViewCI.debugName = "IndicesBufferView";
+	ibViewCI.device = device;
+	ibViewCI.type = BufferView::Type::STORAGE;
+	ibViewCI.buffer = g_ib;
+	ibViewCI.offset = 0;
+	ibViewCI.size = sizeof(indices);
+	ibViewCI.stride = sizeof(uint32_t);
+	BufferViewRef ibv = BufferView::Create(&ibViewCI);
+
 	//RW Image
 	Image::CreateInfo RT_RWImageCI;
 	RT_RWImageCI.debugName = "RT_RWImage";
@@ -287,17 +344,17 @@ void Raytracing(uint32_t maxFrames)
 
 	//Acceleration structure building
 	//BLAS
-	AccelerationStructureBuildInfo::BuildGeometryInfo asbiGBI;
-	asbiGBI.device = device;
-	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::BOTTOM_LEVEL;
-	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
-	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
-	asbiGBI.srcAccelerationStructure = nullptr;
-	asbiGBI.dstAccelerationStructure = nullptr;
-	asbiGBI.geometries.clear();
-	asbiGBI.geometries.push_back({});
-	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES;
-	asbiGBI.geometries[0].triangles = {
+	AccelerationStructureBuildInfo::BuildGeometryInfo blasbiGBI;
+	blasbiGBI.device = device;
+	blasbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::BOTTOM_LEVEL;
+	blasbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT | AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::ALLOW_UPDATE_BIT;
+	blasbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
+	blasbiGBI.srcAccelerationStructure = nullptr;
+	blasbiGBI.dstAccelerationStructure = nullptr;
+	blasbiGBI.geometries.clear();
+	blasbiGBI.geometries.push_back({});
+	blasbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::TRIANGLES;
+	blasbiGBI.geometries[0].triangles = {
 				VertexType::FLOAT3,
 				GetBufferDeviceAddress(device, c_vb),
 				static_cast<uint64_t>(4 * sizeof(float)),
@@ -307,49 +364,49 @@ void Raytracing(uint32_t maxFrames)
 				std::size(indices),
 				GetBufferDeviceAddress(device, ub1)
 	};
-	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
-	asbiGBI.scratchData = DeviceOrHostAddressNull;
-	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
-	asbiGBI.maxPrimitiveCounts.clear();
-	asbiGBI.maxPrimitiveCounts.push_back({});
-	asbiGBI.maxPrimitiveCounts[0] = std::size(indices) / 3;
-	AccelerationStructureBuildInfoRef blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	blasbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
+	blasbiGBI.scratchData = DeviceOrHostAddressNull;
+	blasbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
+	blasbiGBI.maxPrimitiveCounts.clear();
+	blasbiGBI.maxPrimitiveCounts.push_back({});
+	blasbiGBI.maxPrimitiveCounts[0] = std::size(indices) / 3;
+	AccelerationStructureBuildInfoRef blas_asbi = AccelerationStructureBuildInfo::Create(&blasbiGBI);
 
-	Buffer::CreateInfo asBufferCI;
-	asBufferCI.debugName = "BLASBuffer";
-	asBufferCI.device = device;
-	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-	asBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
-	asBufferCI.data = nullptr;
-	asBufferCI.allocator = gpu_alloc_0;
-	BufferRef asBuffer_BLAS = Buffer::Create(&asBufferCI);
+	Buffer::CreateInfo blasBufferCI;
+	blasBufferCI.debugName = "BLASBuffer";
+	blasBufferCI.device = device;
+	blasBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	blasBufferCI.size = blas_asbi->GetBuildSizesInfo().accelerationStructureSize;
+	blasBufferCI.data = nullptr;
+	blasBufferCI.allocator = gpu_alloc_0;
+	BufferRef blasBuffer_BLAS = Buffer::Create(&blasBufferCI);
 
-	Buffer::CreateInfo scratchBufferCI;
-	scratchBufferCI.debugName = "BLASScratchBuffer";
-	scratchBufferCI.device = device;
-	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-	scratchBufferCI.size = blas_asbi->GetBuildSizesInfo().buildScratchSize;
-	scratchBufferCI.data = nullptr;
-	scratchBufferCI.allocator = gpu_alloc_0;
-	BufferRef scratchBuffer_BLAS = Buffer::Create(&scratchBufferCI);
+	Buffer::CreateInfo blasScratchBufferCI;
+	blasScratchBufferCI.debugName = "BLASScratchBuffer";
+	blasScratchBufferCI.device = device;
+	blasScratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	blasScratchBufferCI.size = blas_asbi->GetBuildSizesInfo().buildScratchSize;
+	blasScratchBufferCI.data = nullptr;
+	blasScratchBufferCI.allocator = gpu_alloc_0;
+	BufferRef scratchBuffer_BLAS = Buffer::Create(&blasScratchBufferCI);
 
-	AccelerationStructure::CreateInfo asCI;
-	asCI.debugName = "BLAS";
-	asCI.device = device;
-	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
-	asCI.buffer = asBuffer_BLAS;
-	asCI.offset = 0;
-	asCI.size = asBufferCI.size;
-	asCI.type = AccelerationStructure::Type::BOTTOM_LEVEL;
-	asCI.deviceAddress = DeviceAddressNull;
-	AccelerationStructureRef blas = AccelerationStructure::Create(&asCI);
+	AccelerationStructure::CreateInfo blasCI;
+	blasCI.debugName = "BLAS";
+	blasCI.device = device;
+	blasCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
+	blasCI.buffer = blasBuffer_BLAS;
+	blasCI.offset = 0;
+	blasCI.size = blasBufferCI.size;
+	blasCI.type = AccelerationStructure::Type::BOTTOM_LEVEL;
+	blasCI.deviceAddress = DeviceAddressNull;
+	AccelerationStructureRef blas = AccelerationStructure::Create(&blasCI);
 
-	asbiGBI.dstAccelerationStructure = blas;
-	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_BLAS);
-	blas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	blasbiGBI.dstAccelerationStructure = blas;
+	blasbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_BLAS);
+	blas_asbi = AccelerationStructureBuildInfo::Create(&blasbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo blas_bri;
-	blas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts[0];
+	blas_bri.primitiveCount = blasbiGBI.maxPrimitiveCounts[0];
 	blas_bri.primitiveOffset = 0;
 	blas_bri.firstVertex = 0;
 	blas_bri.transformOffset = 0;
@@ -375,56 +432,60 @@ void Raytracing(uint32_t maxFrames)
 	idBufferCI.allocator = cpu_alloc_0;
 	BufferRef idBuffer_TLAS = Buffer::Create(&idBufferCI);
 
-	asbiGBI.device = device;
-	asbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::TOP_LEVEL;
-	asbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT;
-	asbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
-	asbiGBI.srcAccelerationStructure = nullptr;
-	asbiGBI.dstAccelerationStructure = nullptr;
-	asbiGBI.geometries.clear();
-	asbiGBI.geometries.push_back({});
-	asbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::INSTANCES;
-	asbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(device, idBuffer_TLAS) };
-	asbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
-	asbiGBI.scratchData = DeviceOrHostAddressNull;
-	asbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
-	asbiGBI.maxPrimitiveCounts.clear();
-	asbiGBI.maxPrimitiveCounts.push_back({});
-	asbiGBI.maxPrimitiveCounts[0] = 1;
-	AccelerationStructureBuildInfoRef tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	AccelerationStructureBuildInfo::BuildGeometryInfo tlasbiGBI;
+	tlasbiGBI.device = device;
+	tlasbiGBI.type = AccelerationStructureBuildInfo::BuildGeometryInfo::Type::TOP_LEVEL;
+	tlasbiGBI.flags = AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::PREFER_FAST_TRACE_BIT | AccelerationStructureBuildInfo::BuildGeometryInfo::FlagBit::ALLOW_UPDATE_BIT;
+	tlasbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::BUILD;
+	tlasbiGBI.srcAccelerationStructure = nullptr;
+	tlasbiGBI.dstAccelerationStructure = nullptr;
+	tlasbiGBI.geometries.clear();
+	tlasbiGBI.geometries.push_back({});
+	tlasbiGBI.geometries[0].type = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::Type::INSTANCES;
+	tlasbiGBI.geometries[0].instances = { false, GetBufferDeviceAddress(device, idBuffer_TLAS) };
+	tlasbiGBI.geometries[0].flags = AccelerationStructureBuildInfo::BuildGeometryInfo::Geometry::FlagBit::OPAQUE_BIT;
+	tlasbiGBI.scratchData = DeviceOrHostAddressNull;
+	tlasbiGBI.buildType = AccelerationStructureBuildInfo::BuildGeometryInfo::BuildType::DEVICE;
+	tlasbiGBI.maxPrimitiveCounts.clear();
+	tlasbiGBI.maxPrimitiveCounts.push_back({});
+	tlasbiGBI.maxPrimitiveCounts[0] = 1;
+	AccelerationStructureBuildInfoRef tlas_asbi = AccelerationStructureBuildInfo::Create(&tlasbiGBI);
 
-	asBufferCI.debugName = "TLASBuffer";
-	asBufferCI.device = device;
-	asBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
-	asBufferCI.size = tlas_asbi->GetBuildSizesInfo().accelerationStructureSize;
-	asBufferCI.data = nullptr;
-	asBufferCI.allocator = gpu_alloc_0;
-	BufferRef asBuffer_TLAS = Buffer::Create(&asBufferCI);
+	Buffer::CreateInfo tlasBufferCI;
+	tlasBufferCI.debugName = "TLASBuffer";
+	tlasBufferCI.device = device;
+	tlasBufferCI.usage = Buffer::UsageBit::ACCELERATION_STRUCTURE_STORAGE_BIT;
+	tlasBufferCI.size = tlas_asbi->GetBuildSizesInfo().accelerationStructureSize;
+	tlasBufferCI.data = nullptr;
+	tlasBufferCI.allocator = gpu_alloc_0;
+	BufferRef asBuffer_TLAS = Buffer::Create(&tlasBufferCI);
 
-	scratchBufferCI.debugName = "TLASScratchBuffer";
-	scratchBufferCI.device = device;
-	scratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
-	scratchBufferCI.size = tlas_asbi->GetBuildSizesInfo().buildScratchSize;
-	scratchBufferCI.data = nullptr;
-	scratchBufferCI.allocator = gpu_alloc_0;
-	BufferRef scratchBuffer_TLAS = Buffer::Create(&scratchBufferCI);
+	Buffer::CreateInfo tlasScratchBufferCI;
+	tlasScratchBufferCI.debugName = "TLASScratchBuffer";
+	tlasScratchBufferCI.device = device;
+	tlasScratchBufferCI.usage = Buffer::UsageBit::STORAGE_BIT | Buffer::UsageBit::SHADER_DEVICE_ADDRESS_BIT;
+	tlasScratchBufferCI.size = tlas_asbi->GetBuildSizesInfo().buildScratchSize;
+	tlasScratchBufferCI.data = nullptr;
+	tlasScratchBufferCI.allocator = gpu_alloc_0;
+	BufferRef scratchBuffer_TLAS = Buffer::Create(&tlasScratchBufferCI);
 
-	asCI.debugName = "TLAS";
-	asCI.device = device;
-	asCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
-	asCI.buffer = asBuffer_TLAS;
-	asCI.offset = 0;
-	asCI.size = asBufferCI.size;
-	asCI.type = AccelerationStructure::Type::TOP_LEVEL;
-	asCI.deviceAddress = DeviceAddressNull;
-	AccelerationStructureRef tlas = AccelerationStructure::Create(&asCI);
+	AccelerationStructure::CreateInfo tlasCI;
+	tlasCI.debugName = "TLAS";
+	tlasCI.device = device;
+	tlasCI.flags = AccelerationStructure::FlagBit::NONE_BIT;
+	tlasCI.buffer = asBuffer_TLAS;
+	tlasCI.offset = 0;
+	tlasCI.size = tlasBufferCI.size;
+	tlasCI.type = AccelerationStructure::Type::TOP_LEVEL;
+	tlasCI.deviceAddress = DeviceAddressNull;
+	AccelerationStructureRef tlas = AccelerationStructure::Create(&tlasCI);
 
-	asbiGBI.dstAccelerationStructure = tlas;
-	asbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_TLAS);
-	tlas_asbi = AccelerationStructureBuildInfo::Create(&asbiGBI);
+	tlasbiGBI.dstAccelerationStructure = tlas;
+	tlasbiGBI.scratchData.deviceAddress = GetBufferDeviceAddress(device, scratchBuffer_TLAS);
+	tlas_asbi = AccelerationStructureBuildInfo::Create(&tlasbiGBI);
 
 	AccelerationStructureBuildInfo::BuildRangeInfo tlas_bri;
-	tlas_bri.primitiveCount = asbiGBI.maxPrimitiveCounts[0];
+	tlas_bri.primitiveCount = tlasbiGBI.maxPrimitiveCounts[0];
 	tlas_bri.primitiveOffset = 0;
 	tlas_bri.firstVertex = 0;
 	tlas_bri.transformOffset = 0;
@@ -450,18 +511,80 @@ void Raytracing(uint32_t maxFrames)
 
 		cmdBuffer->BuildAccelerationStructures(2, { blas_asbi, tlas_asbi }, { { blas_bri }, { tlas_bri } });
 
+		cmdBuffer->CopyBuffer(2, c_vb, g_vb, { { 0, 0, sizeof(vertices) } });
+		cmdBuffer->CopyBuffer(2, c_ib, g_ib, { { 0, 0, sizeof(indices) } });
+
+		if (GraphicsAPI::IsVulkan())
+		{
+			Barrier::CreateInfo bCI;
+			bCI.type = Barrier::Type::IMAGE;
+			bCI.srcAccess = Barrier::AccessBit::NONE_BIT;
+			bCI.dstAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+			bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+			bCI.image = image;
+			bCI.oldLayout = Image::Layout::UNKNOWN;
+			bCI.newLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+			bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+			BarrierRef b = Barrier::Create(&bCI);
+			cmdBuffer->PipelineBarrier(2, PipelineStageBit::TOP_OF_PIPE_BIT, PipelineStageBit::TRANSFER_BIT, DependencyBit::NONE_BIT, { b });
+		}
+		cmdBuffer->CopyBufferToImage(2, c_imageBuffer, image, Image::Layout::TRANSFER_DST_OPTIMAL, {
+			{0, 0, 0, {Image::AspectBit::COLOUR_BIT, 0, 0, 1}, {0,0,0}, {imageCI.width, imageCI.height, imageCI.depth}}
+			});
+
+		bCI.type = Barrier::Type::IMAGE;
+		bCI.srcAccess = Barrier::AccessBit::TRANSFER_WRITE_BIT;
+		bCI.dstAccess = Barrier::AccessBit::SHADER_READ_BIT;
+		bCI.srcQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+		bCI.dstQueueFamilyIndex = Barrier::QueueFamilyIgnored;
+		bCI.image = image;
+		bCI.oldLayout = Image::Layout::TRANSFER_DST_OPTIMAL;
+		bCI.newLayout = Image::Layout::SHADER_READ_ONLY_OPTIMAL;
+		bCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+		b = Barrier::Create(&bCI);
+		cmdBuffer->PipelineBarrier(2, PipelineStageBit::TRANSFER_BIT, PipelineStageBit::RAY_TRACING_SHADER_BIT, DependencyBit::NONE_BIT, { b });
+
 		cmdBuffer->End(2);
 	}
 	CommandBuffer::SubmitInfo copySI = { { 2 }, {}, {}, {}, {}, {} };
 	cmdBuffer->Submit({ copySI }, transferFence);
 	transferFence->Wait();
 
+	ImageView::CreateInfo imageViewCI;
+	imageViewCI.debugName = "MIRU logo ImageView";
+	imageViewCI.device = device;
+	imageViewCI.image = image;
+	imageViewCI.viewType = Image::Type::TYPE_2D;
+	imageViewCI.subresourceRange = { Image::AspectBit::COLOUR_BIT, 0, 1, 0, 1 };
+	ImageViewRef imageView = ImageView::Create(&imageViewCI);
+
+	Sampler::CreateInfo samplerCI;
+	samplerCI.debugName = "Default Sampler";
+	samplerCI.device = device;
+	samplerCI.magFilter = Sampler::Filter::LINEAR;
+	samplerCI.minFilter = Sampler::Filter::LINEAR;
+	samplerCI.mipmapMode = Sampler::MipmapMode::LINEAR;
+	samplerCI.addressModeU = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.addressModeV = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.addressModeW = Sampler::AddressMode::CLAMP_TO_EDGE;
+	samplerCI.mipLodBias = 1;
+	samplerCI.anisotropyEnable = false;
+	samplerCI.maxAnisotropy = 1.0f;
+	samplerCI.compareEnable = false;
+	samplerCI.compareOp = CompareOp::NEVER;
+	samplerCI.minLod = 0;
+	samplerCI.maxLod = 1;
+	samplerCI.borderColour = Sampler::BorderColour::FLOAT_OPAQUE_BLACK;
+	samplerCI.unnormalisedCoordinates = false;
+	SamplerRef sampler = Sampler::Create(&samplerCI);
+
 	//Ray tracing descriptor sets and pipeline
 	DescriptorPool::CreateInfo descriptorPoolCI;
 	descriptorPoolCI.debugName = "RayTracing: Descriptor Pool";
 	descriptorPoolCI.device = device;
-	descriptorPoolCI.poolSizes = { {DescriptorType::UNIFORM_BUFFER, 1}, {DescriptorType::STORAGE_IMAGE, 1}, {DescriptorType::ACCELERATION_STRUCTURE, 1} };
-	descriptorPoolCI.maxSets = 1;
+	descriptorPoolCI.poolSizes = { {DescriptorType::UNIFORM_BUFFER, 1}, {DescriptorType::STORAGE_IMAGE, 1}, {DescriptorType::ACCELERATION_STRUCTURE, 1}, {DescriptorType::STORAGE_BUFFER, 2}, {DescriptorType::SAMPLER, 1}, {DescriptorType::SAMPLED_IMAGE, DescriptorUnboundedArrayCount} };
+	descriptorPoolCI.maxSets = 2;
 	DescriptorPoolRef descriptorPoolRT = DescriptorPool::Create(&descriptorPoolCI);
 	DescriptorSetLayout::CreateInfo setLayoutCI;
 	setLayoutCI.debugName = "RayTracing: DescSetLayout1";
@@ -472,15 +595,28 @@ void Raytracing(uint32_t maxFrames)
 		{2, DescriptorType::ACCELERATION_STRUCTURE, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT }
 	};
 	DescriptorSetLayoutRef setLayout1RT = DescriptorSetLayout::Create(&setLayoutCI);
+	setLayoutCI.debugName = "RayTracing: DescSetLayout2";
+	setLayoutCI.descriptorSetLayoutBinding = {
+		{0, DescriptorType::SAMPLER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{1, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{2, GraphicsAPI::IsD3D12() ? DescriptorType::D3D12_STRUCTURED_BUFFER : DescriptorType::STORAGE_BUFFER, 1, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT },
+		{3, DescriptorType::SAMPLED_IMAGE, DescriptorUnboundedArrayCount, Shader::StageBit::RAYGEN_BIT | Shader::StageBit::ANY_HIT_BIT | Shader::StageBit::CLOSEST_HIT_BIT | Shader::StageBit::MISS_BIT, DescriptorSetLayout::Binding::FlagBit::PARTIALLY_BOUND_BIT | DescriptorSetLayout::Binding::FlagBit::VARIABLE_DESCRIPTOR_COUNT_BIT },
+	};
+	DescriptorSetLayoutRef setLayout2RT = DescriptorSetLayout::Create(&setLayoutCI);
 	DescriptorSet::CreateInfo descriptorSetRTCI;
 	descriptorSetRTCI.debugName = "RayTracing: DescSet1";
 	descriptorSetRTCI.descriptorPool = descriptorPoolRT;
-	descriptorSetRTCI.descriptorSetLayouts = { setLayout1RT };
-	DescriptorSetRef descriptorSetRT_Global = DescriptorSet::Create(&descriptorSetRTCI);
-	descriptorSetRT_Global->AddBuffer(0, 0, { { ubViewSceneConstants } });
-	descriptorSetRT_Global->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
-	descriptorSetRT_Global->AddAccelerationStructure(0, 2, { tlas });
-	descriptorSetRT_Global->Update();
+	descriptorSetRTCI.descriptorSetLayouts = { setLayout1RT, setLayout2RT };
+	descriptorSetRTCI.descriptorCounts = { 0, 16 };
+	DescriptorSetRef descriptorSetRT = DescriptorSet::Create(&descriptorSetRTCI);
+	descriptorSetRT->AddBuffer(0, 0, { { ubViewSceneConstants } });
+	descriptorSetRT->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
+	descriptorSetRT->AddAccelerationStructure(0, 2, { tlas });
+	descriptorSetRT->AddImage(1, 0, { {sampler, nullptr, Image::Layout::UNKNOWN} });
+	descriptorSetRT->AddBuffer(1, 1, { { vbv } });
+	descriptorSetRT->AddBuffer(1, 2, { { ibv } });
+	descriptorSetRT->AddImage(1, 3, { {nullptr, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL} });
+	descriptorSetRT->Update();
 
 	Pipeline::CreateInfo raytracingPipelineCI;
 	raytracingPipelineCI.debugName = "Ray Tracing Pipeline";
@@ -494,7 +630,7 @@ void Raytracing(uint32_t maxFrames)
 		{ ShaderGroupType::GENERAL, 3, Pipeline::ShaderUnused, Pipeline::ShaderUnused, Pipeline::ShaderUnused },
 	};
 	raytracingPipelineCI.rayTracingInfo = { 1, 16, 8, cpu_alloc_0 };
-	raytracingPipelineCI.layout = { {setLayout1RT }, {} };
+	raytracingPipelineCI.layout = { { setLayout1RT, setLayout2RT }, {} };
 	PipelineRef raytracingPipeline = Pipeline::Create(&raytracingPipelineCI);
 	auto handles = raytracingPipeline->GetShaderGroupHandles();
 
@@ -566,12 +702,16 @@ void Raytracing(uint32_t maxFrames)
 			RT_RWImageViewCI.image = RT_RWImage;
 			RT_RWImageView = ImageView::Create(&RT_RWImageViewCI);
 
-			descriptorSetRT_Global = nullptr;
-			descriptorSetRT_Global = DescriptorSet::Create(&descriptorSetRTCI);
-			descriptorSetRT_Global->AddBuffer(0, 0, { { ubViewSceneConstants } });
-			descriptorSetRT_Global->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
-			descriptorSetRT_Global->AddAccelerationStructure(0, 2, { tlas });
-			descriptorSetRT_Global->Update();
+			descriptorSetRT = nullptr;
+			descriptorSetRT = DescriptorSet::Create(&descriptorSetRTCI);
+			descriptorSetRT->AddBuffer(0, 0, { { ubViewSceneConstants } });
+			descriptorSetRT->AddImage(0, 1, { {nullptr, RT_RWImageView, Image::Layout::GENERAL} });
+			descriptorSetRT->AddAccelerationStructure(0, 2, { tlas });
+			descriptorSetRT->AddImage(1, 0, { {sampler, nullptr, Image::Layout::UNKNOWN} });
+			descriptorSetRT->AddBuffer(1, 1, { { vbv } });
+			descriptorSetRT->AddBuffer(1, 2, { { ibv } });
+			descriptorSetRT->AddImage(1, 3, { {nullptr, imageView, Image::Layout::SHADER_READ_ONLY_OPTIMAL} });
+			descriptorSetRT->Update();
 
 			cmdBuffer = CommandBuffer::Create(&cmdBufferCI);
 
@@ -602,8 +742,11 @@ void Raytracing(uint32_t maxFrames)
 
 				cmdBuffer->End(2);
 			}
+			Fence::CreateInfo updateFenceCI = { "UpdateFence", device, false, UINT64_MAX };
+			FenceRef updateFence = Fence::Create(&updateFenceCI);
 			CommandBuffer::SubmitInfo si = { { 2 }, {}, {}, {}, {}, {}, };
-			cmdBuffer->Submit({ si }, nullptr);
+			cmdBuffer->Submit({ si }, updateFence);
+			updateFence->Wait();
 		}
 
 		{
@@ -634,7 +777,7 @@ void Raytracing(uint32_t maxFrames)
 			cmdBuffer->Reset(frameIndex, false);
 			cmdBuffer->Begin(frameIndex, CommandBuffer::UsageBit::SIMULTANEOUS);
 			cmdBuffer->BindPipeline(frameIndex, raytracingPipeline);
-			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSetRT_Global }, 0, raytracingPipeline);
+			cmdBuffer->BindDescriptorSets(frameIndex, { descriptorSetRT }, 0, raytracingPipeline);
 			cmdBuffer->TraceRays(frameIndex, &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::RAYGEN), &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::MISS), &sbt->GetStridedDeviceAddressRegion(ShaderGroupHandleType::HIT_GROUP), nullptr, width, height, 1);
 
 			Barrier::CreateInfo bCI;
@@ -709,7 +852,42 @@ void Raytracing(uint32_t maxFrames)
 			memcpy(ubData + 0 * 16, &proj.a, sizeof(Mat4));
 			memcpy(ubData + 1 * 16, &view.a, sizeof(Mat4));
 
-			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
+			//cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, 2 * sizeof(Mat4), ubData);
+			cpu_alloc_0->SubmitData(ub1->GetAllocation(), 0, sizeof(Mat4), (void*)&modl.a);
+
+			//Update BLAS and TLAS
+			{
+				blasbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::UPDATE;
+				blasbiGBI.srcAccelerationStructure = blas;
+				blasbiGBI.dstAccelerationStructure = blas;
+				blas_asbi = AccelerationStructureBuildInfo::Create(&blasbiGBI);
+
+				blas_bri.primitiveCount = blasbiGBI.maxPrimitiveCounts[0];
+				blas_bri.primitiveOffset = 0;
+				blas_bri.firstVertex = 0;
+				blas_bri.transformOffset = 0;
+
+				tlasbiGBI.mode = AccelerationStructureBuildInfo::BuildGeometryInfo::Mode::UPDATE;
+				tlasbiGBI.srcAccelerationStructure = tlas;
+				tlasbiGBI.dstAccelerationStructure = tlas;
+				tlas_asbi = AccelerationStructureBuildInfo::Create(&tlasbiGBI);
+
+				tlas_bri.primitiveCount = tlasbiGBI.maxPrimitiveCounts[0];
+				tlas_bri.primitiveOffset = 0;
+				tlas_bri.firstVertex = 0;
+				tlas_bri.transformOffset = 0;
+
+				cmdBuffer->Reset(2, false);
+				cmdBuffer->Begin(2, CommandBuffer::UsageBit::ONE_TIME_SUBMIT);
+				cmdBuffer->BuildAccelerationStructures(2, { blas_asbi, tlas_asbi }, { { blas_bri }, { tlas_bri } });
+				cmdBuffer->End(2);
+
+				Fence::CreateInfo asUpdateFenceCI = { "AccelStructUpdateFence", device, false, UINT64_MAX };
+				FenceRef asUpdateFence = Fence::Create(&asUpdateFenceCI);
+				CommandBuffer::SubmitInfo updateSI = { { 2 }, {}, {}, {}, {}, {} };
+				cmdBuffer->Submit({ updateSI }, asUpdateFence);
+				asUpdateFence->Wait();
+			}
 
 			frameIndex = (frameIndex + 1) % 2;
 			frameCount++;

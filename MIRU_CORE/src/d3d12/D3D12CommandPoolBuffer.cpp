@@ -720,7 +720,7 @@ void CommandBuffer::BindDescriptorSets(uint32_t index, const std::vector<base::D
 
 	UINT totalDescriptorSets = 0;
 
-	for(auto& descriptorSet : descriptorSets)
+	for (auto& descriptorSet : descriptorSets)
 	{
 		DescriptorSetRef d3d12DescriptorSet = ref_cast<DescriptorSet>(descriptorSet);
 		const auto& heap = d3d12DescriptorSet->m_DescriptorHeaps;

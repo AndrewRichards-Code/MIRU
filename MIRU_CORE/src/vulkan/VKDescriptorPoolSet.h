@@ -37,6 +37,8 @@ namespace vulkan
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkDescriptorSetLayoutCreateInfo m_DescriptorSetLayoutCI;
 		std::vector<VkDescriptorSetLayoutBinding> m_DescriptorSetLayoutBindings;
+		VkDescriptorSetLayoutBindingFlagsCreateInfo m_DescriptorSetLayoutBindingFlagsCreateInfo;
+		std::vector<VkDescriptorBindingFlags> m_DescriptorSetLayoutBindingFlags;
 	};
 
 	class DescriptorSet final : public base::DescriptorSet
@@ -46,10 +48,11 @@ namespace vulkan
 		DescriptorSet(DescriptorSet::CreateInfo* pCreateInfo);
 		~DescriptorSet();
 
-		void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
-		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
-		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t desriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
+		void AddBuffer(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorBufferInfo>& descriptorBufferInfos, uint32_t descriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
+		void AddImage(uint32_t index, uint32_t bindingIndex, const std::vector<DescriptorImageInfo>& descriptorImageInfos, uint32_t descriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
+		void AddAccelerationStructure(uint32_t index, uint32_t bindingIndex, const std::vector<base::AccelerationStructureRef>& accelerationStructures, uint32_t descriptorArrayIndex = 0) override; //If descriptor is an array, desriptorArrayIndex is the base index in that array.
 		void Update() override;
+		void Clear() override;
 
 		//Members
 	public:
@@ -58,6 +61,7 @@ namespace vulkan
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 		VkDescriptorSetAllocateInfo m_DescriptorSetAI;
 		std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
+		VkDescriptorSetVariableDescriptorCountAllocateInfo m_DescriptorSetVariableDescriptorCountAI;
 
 		std::vector<VkWriteDescriptorSet> m_WriteDescriptorSets;
 		std::map<uint32_t, std::map<uint32_t, std::vector<VkDescriptorBufferInfo>>> m_DescriptorBufferInfo;

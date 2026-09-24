@@ -94,6 +94,7 @@ AccelerationStructureBuildInfo::AccelerationStructureBuildInfo(AccelerationStruc
 	m_BSI.updateScratchSize			= m_ASBSI.updateScratchSize;
 	m_BSI.buildScratchSize			= m_ASBSI.buildScratchSize;
 }
+
 AccelerationStructureBuildInfo::~AccelerationStructureBuildInfo()
 {
 	MIRU_CPU_PROFILE_FUNCTION();

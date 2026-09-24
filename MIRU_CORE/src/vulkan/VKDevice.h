@@ -21,6 +21,8 @@ namespace vulkan
 			VkPhysicalDeviceAccelerationStructureFeaturesKHR	m_AccelerationStructureFeatures = {};	//VK_KHR_acceleration_structure
 			VkPhysicalDeviceAccelerationStructurePropertiesKHR	m_AccelerationStructureProperties = {};	//VK_KHR_acceleration_structure
 			VkPhysicalDeviceBufferDeviceAddressFeatures			m_BufferDeviceAddressFeatures = {};		//VK_KHR_buffer_device_address
+			VkPhysicalDeviceDescriptorIndexingFeaturesEXT		m_DescriptorIndexingFeatures = {};		//VK_EXT_descriptor_indexing
+			VkPhysicalDeviceDescriptorIndexingPropertiesEXT		m_DescriptorIndexingProperties = {};	//VK_EXT_descriptor_indexing
 			VkPhysicalDeviceTimelineSemaphoreFeatures			m_TimelineSemaphoreFeatures = {};		//VK_KHR_timeline_semaphore
 			VkPhysicalDeviceTimelineSemaphoreProperties			m_TimelineSemaphoreProperties = {};		//VK_KHR_timeline_semaphore
 			VkPhysicalDeviceSynchronization2Features			m_Synchronization2Features = {};		//VK_KHR_synchronization2

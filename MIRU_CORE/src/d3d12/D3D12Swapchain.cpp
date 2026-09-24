@@ -97,7 +97,7 @@ Swapchain::Swapchain(CreateInfo* pCreateInfo)
 
 	m_SwapchainRTVs.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
 	m_SwapchainRTV_CPU_Desc_Handles.reserve(m_SwapchainRTVDescHeapDesc.NumDescriptors);
-	for(UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
+	for (UINT i = 0; i < m_SwapchainRTVDescHeapDesc.NumDescriptors; i++)
 	{
 		ID3D12Resource* swapchainRTV;
 		MIRU_FATAL(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&swapchainRTV)), "ERROR: D3D12: Failed to get Swapchain Image.");
@@ -178,6 +178,7 @@ void Swapchain::AcquireNextImage(const base::SemaphoreRef& acquire, uint32_t& im
 	imageIndex = static_cast<uint32_t>(m_Swapchain->GetCurrentBackBufferIndex());
 }
 
+#include "../../../External/ARC/src/WindowsErrorHandling.h"
 void Swapchain::Present(const base::CommandPoolRef& cmdPool, const base::SemaphoreRef& submit, uint32_t& imageIndex)
 {
 	MIRU_CPU_PROFILE_FUNCTION();

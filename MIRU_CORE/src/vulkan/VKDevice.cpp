@@ -176,6 +176,12 @@ void Device::AddExtensions()
 			//Required by VK_KHR_timeline_semaphore.
 			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
 		}
+		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::DESCRIPTOR_INDEXING))
+		{
+			m_Extensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+			//Required by VK_EXT_descriptor_indexing.
+			//VK_KHR_get_physical_device_properties2 already loaded, if needed.
+		}
 		if (arc::BitwiseCheck(m_CI.extensions, ExtensionsBit::SYNCHRONISATION_2))
 		{
 			m_Extensions.push_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
@@ -251,17 +257,21 @@ void Device::SetResultInfo()
 	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME) && Instance::IsActive(m_ActiveExtensions, VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
 		m_RI.activeExtensions |= ExtensionsBit::RAY_TRACING;
 
+	//VK_EXT_descriptor_indexing
+	if (Instance::IsActive(m_ActiveExtensions, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan12Features.descriptorIndexing)
+		m_RI.activeExtensions |= ExtensionsBit::DESCRIPTOR_INDEXING;
+
 	//VK_KHR_timeline_semaphore
 	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan12Features.timelineSemaphore)
 		m_RI.activeExtensions |= ExtensionsBit::TIMELINE_SEMAPHORE;
 
-	//VK_EXT_mesh_shader
-	if (Instance::IsActive(m_ActiveExtensions, VK_EXT_MESH_SHADER_EXTENSION_NAME))
-		m_RI.activeExtensions |= ExtensionsBit::MESH_SHADER;
-
 	//VK_KHR_synchronization2
 	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan13Features.synchronization2)
 		m_RI.activeExtensions |= ExtensionsBit::SYNCHRONISATION_2;
+
+	//VK_EXT_mesh_shader
+	if (Instance::IsActive(m_ActiveExtensions, VK_EXT_MESH_SHADER_EXTENSION_NAME))
+		m_RI.activeExtensions |= ExtensionsBit::MESH_SHADER;
 
 	//VK_KHR_dynamic_rendering
 	if (Instance::IsActive(m_ActiveExtensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) || m_FeatureAndProperties.m_Vulkan13Features.dynamicRendering)
@@ -361,6 +371,12 @@ Device::FeaturesAndProperties::FeaturesAndProperties(const Device* device)
 			*nextPropsAddr = &m_BufferDeviceAddressFeatures;
 			nextPropsAddr = &m_BufferDeviceAddressFeatures.pNext;
 		}
+		if (Instance::IsActive(device->m_ActiveExtensions, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+		{
+			m_DescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+			*nextPropsAddr = &m_DescriptorIndexingFeatures;
+			nextPropsAddr = &m_DescriptorIndexingFeatures.pNext;
+		}
 		if (Instance::IsActive(device->m_ActiveExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 		{
 			m_TimelineSemaphoreFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
@@ -446,6 +462,12 @@ Device::FeaturesAndProperties::FeaturesAndProperties(const Device* device)
 			m_AccelerationStructureProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
 			*nextPropsAddr = &m_AccelerationStructureProperties;
 			nextPropsAddr = &m_AccelerationStructureProperties.pNext;
+		}
+		if (Instance::IsActive(device->m_ActiveExtensions, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
+		{
+			m_DescriptorIndexingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES_EXT;
+			*nextPropsAddr = &m_DescriptorIndexingProperties;
+			nextPropsAddr = &m_DescriptorIndexingProperties.pNext;
 		}
 		if (Instance::IsActive(device->m_ActiveExtensions, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME) && deviceApiVersion < VK_API_VERSION_1_2) //Promoted to Vulkan 1.2
 		{
